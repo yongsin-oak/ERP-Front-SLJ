@@ -1,0 +1,13 @@
+$lightTheme: (
+  white_: #FFFFFF,
+  black_: #000000,
+);
+@function getColor($name) {
+  @return map-get($lightTheme, $name);
+}
+// theme.scss
+:export {
+  @each $color, $value in $lightTheme {
+    #{$color}: #{$value};
+  }
+}
