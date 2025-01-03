@@ -1,6 +1,6 @@
 $lightTheme: (
-  white_: #FFFFFF,
-  black_: #000000,
+  background_:#FFFFFF,
+  splitLine_:rgba(5, 5, 5, 0.06),
 );
 @function getColor($name) {
   @return map-get($lightTheme, $name);

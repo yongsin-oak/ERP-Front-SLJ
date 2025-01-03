@@ -1,12 +1,26 @@
 import { Route, Routes } from "react-router-dom";
-import Test from "../pages/Test";
 import Mainlayout from "../layout/Mainlayout";
+import Home from "../pages/Home";
+import ProductStock from "../pages/ProductStock";
 
 const Routers = () => {
+  const routes = [
+    {
+      path: "/",
+      element: <Home />,
+    },
+    {
+      path: "/product-stock",
+      element: <ProductStock />,
+    },
+  ];
   return (
     <Routes>
-      <Route path="/" element={<Mainlayout />}>
-        <Route path="/" element={<Test />} />
+      <Route element={<Mainlayout />}>
+        {routes.map((route) => (
+          <Route key={route.path} {...route} />
+        ))}
+        <Route path="*" element={<div>Not Found</div>} />
       </Route>
     </Routes>
   );
