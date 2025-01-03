@@ -1,6 +1,6 @@
 $darkTheme: (
-  white_: #141414,
-  black_: #FFFFFF,
+  background_:#000000,
+  splitLine_:rgb(38, 38, 38),
 );
 @function getColor($name) {
   @return map-get($darkTheme, $name);

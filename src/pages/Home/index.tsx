@@ -1,7 +1,13 @@
-import React from "react";
+import Text from "../../components/Text";
 
 const Home = () => {
-  return <div>Home</div>;
+  return (
+    <div>
+      <Text ellipsis color="black">
+        Home
+      </Text>
+    </div>
+  );
 };
 
 export default Home;

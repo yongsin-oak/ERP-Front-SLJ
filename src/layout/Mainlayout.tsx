@@ -1,101 +1,104 @@
-import { Button, Layout, Menu, MenuProps } from "antd";
+import { Layout, Menu } from "antd";
 import Sider from "antd/es/layout/Sider";
-import React, { useState } from "react";
+import { CSSProperties, useState } from "react";
 import {
-  AppstoreOutlined,
-  ArrowsAltOutlined,
-  BarChartOutlined,
-  CloudOutlined,
-  SearchOutlined,
-  ShopOutlined,
-  ShrinkOutlined,
-  TeamOutlined,
-  UploadOutlined,
-  UserOutlined,
-  VideoCameraOutlined,
+  LeftOutlined,
+  MoonFilled,
+  RightOutlined,
+  SunFilled,
 } from "@ant-design/icons";
 import { Content } from "antd/es/layout/layout";
-import { Outlet } from "react-router-dom";
-import styled from "@emotion/styled";
+import { Outlet, useNavigate } from "react-router-dom";
+import { HeadSider } from "./styles";
+import { useStoreTheme } from "../store";
+import { useTheme } from "@emotion/react";
+import { menuItems } from "./menu";
 
 const Mainlayout = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const items: MenuProps["items"] = [
-    UserOutlined,
-    VideoCameraOutlined,
-    UploadOutlined,
-    BarChartOutlined,
-    CloudOutlined,
-    AppstoreOutlined,
-    TeamOutlined,
-    ShopOutlined,
-  ].map((icon, index) => ({
-    key: String(index + 1),
-    icon: React.createElement(icon),
-    label: `nav ${index + 1}`,
-  }));
-  const HeadSider = styled.div`
-    width: calc(100% - 8px);
-    margin-block: 4px;
-    margin-inline: 4px;
-    text-align: start;
-    display: flex;
-    padding: 8px;
-    justify-content: ${collapsed ? "center" : "space-between"};
-  `;
-  const iconSize = 20;
+  const { setTheme, themeMode } = useStoreTheme();
+  const theme = useTheme();
+  const isDark = themeMode === "dark";
+  const iconSize = collapsed ? 18 : 16;
+  const navigate = useNavigate();
+  const siderStyles: CSSProperties = {
+    overflow: "auto",
+    height: "100vh",
+    top: 0,
+    bottom: 0,
+    insetInlineStart: 0,
+    scrollbarWidth: "thin",
+    position: "fixed",
+    borderInlineEnd: `1px solid ${theme.splitLine_}`,
+  };
+  const trigger: React.ReactNode = collapsed ? (
+    <div
+      style={{
+        borderInlineEnd: `1px solid ${theme.splitLine_}`,
+      }}
+    >
+      <RightOutlined />
+    </div>
+  ) : (
+    <div
+      style={{
+        borderInlineEnd: `1px solid ${theme.splitLine_}`,
+      }}
+    >
+      <LeftOutlined />
+    </div>
+  );
   return (
-    <Layout hasSider style={{ minHeight: "100vh", width: "100%" }}>
+    <Layout
+      hasSider
+      style={{
+        minHeight: "100vh",
+        width: "100%",
+      }}
+    >
       <Sider
-        trigger={null}
         collapsible
         collapsed={collapsed}
         width={200}
+        trigger={trigger}
         collapsedWidth={80}
-        theme="light"
-        style={{
-          overflow: "auto",
-          height: "100vh",
-          top: 0,
-          bottom: 0,
-          insetInlineStart: 0,
-          scrollbarWidth: "thin",
-          position: "fixed",
+        onCollapse={(collapsed) => {
+          setCollapsed(collapsed);
         }}
+        theme={themeMode}
+        style={siderStyles}
       >
-        <HeadSider>
-          <ShrinkOutlined
-            style={{ fontSize: iconSize, display: collapsed ? "none" : "flex" }}
-            onClick={() => {
-              setCollapsed(true);
-            }}
-          />
-          <ArrowsAltOutlined
-            style={{
-              fontSize: iconSize,
-              display: collapsed ? "flex" : "none",
-              justifySelf: "center",
-            }}
-            onClick={() => {
-              setCollapsed(false);
-            }}
-          />
-          <SearchOutlined
-            style={{ fontSize: iconSize, display: collapsed ? "none" : "flex" }}
-          />
+        <HeadSider justifyContent={collapsed ? "center" : "start"}>
+          {isDark ? (
+            <MoonFilled
+              style={{
+                fontSize: iconSize,
+                transition: "font-size .2s",
+                color: "white",
+              }}
+              onClick={() => setTheme("light")}
+            />
+          ) : (
+            <SunFilled
+              style={{ fontSize: iconSize, transition: "font-size .2s" }}
+              onClick={() => setTheme("dark")}
+            />
+          )}
         </HeadSider>
         <Menu
-          theme="light"
+          theme={themeMode}
           mode="inline"
           defaultSelectedKeys={["1"]}
-          items={items}
+          items={menuItems(navigate)}
+          style={{ borderInlineEnd: "none" }}
         />
       </Sider>
       <Layout
         style={{
           overflow: "auto",
-          // width: collapsed ? "calc(100% - 80px)" : "calc(100vw - 200px)",
           marginInlineStart: collapsed ? 80 : 200,
+          backgroundColor: theme.background_,
+          padding: 32,
         }}
       >
         <Content>
