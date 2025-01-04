@@ -35,6 +35,11 @@ const Routers = () => {
           <Route key={route.path} {...route} />
         ))}
         <Route path="*" element={<div>Not Found</div>} />
+      <Route element={<Mainlayout />}>
+        {routes.map((route) => (
+          <Route key={route.path} {...route} />
+        ))}
+        <Route path="*" element={<div>Not Found</div>} />
       </Route>
     </Routes>
   );

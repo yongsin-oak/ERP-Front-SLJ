@@ -1,4 +1,5 @@
 import "./App.scss";
+import "./App.scss";
 import { ConfigProvider } from "antd";
 import { ThemeProvider } from "@emotion/react";
 import lightTheme from "./theme/lightMode.module.scss";
