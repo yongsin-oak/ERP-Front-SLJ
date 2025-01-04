@@ -1,7 +1,6 @@
 import { Layout, Menu } from "antd";
 import Sider from "antd/es/layout/Sider";
 import { CSSProperties, useState } from "react";
-import { CSSProperties, useState } from "react";
 import {
   LeftOutlined,
   MoonFilled,
@@ -87,7 +86,6 @@ const Mainlayout = () => {
           )}
         </HeadSider>
         <Menu
-          theme={themeMode}
           theme={themeMode}
           mode="inline"
           defaultSelectedKeys={["1"]}
