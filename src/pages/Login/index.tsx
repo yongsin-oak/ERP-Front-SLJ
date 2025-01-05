@@ -16,7 +16,7 @@ const Login: React.FC = () => {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        minWidth: "100vw",
+        width: "100%",
         backgroundColor: "#f0f2f5",
       }}
     >
