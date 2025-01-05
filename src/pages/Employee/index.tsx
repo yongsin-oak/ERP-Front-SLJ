@@ -17,20 +17,26 @@ const Employee = () => {
   ];
   const data = [
     {
+      key: "1",
       name: "ยงศิลป์ ลิ้มวิไลกุล",
       position: "Developer",
     },
     {
+      key: "2",
       name: "Jim Green",
       position: "Developer",
     },
     {
+      key: "3",
       name: "Joe Black",
+      position: "Developer",
     },
   ];
   return (
     <Flex vertical gap={8}>
-      <Text h3 semiBold>รายชื่อพนักงาน</Text>
+      <Text h3 semiBold>
+        รายชื่อพนักงาน
+      </Text>
       <Table columns={columns} dataSource={data} />
     </Flex>
   );

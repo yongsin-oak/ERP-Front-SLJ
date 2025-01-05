@@ -1,7 +1,12 @@
-import React from "react";
+import { Flex } from "antd";
+import Card from "../../../components/Card";
 
 const ECommerce = () => {
-  return <div>ECommerce</div>;
+  return (
+    <Flex vertical gap={8}>
+      <Card title="สแกนสินค้า"></Card>
+    </Flex>
+  );
 };
 
 export default ECommerce;

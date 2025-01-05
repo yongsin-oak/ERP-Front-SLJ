@@ -56,7 +56,6 @@ const ProductStock = () => {
                   fixed: index < 2 ? "left" : undefined,
                 })
               );
-              console.log(columns);
               setColumns(columns);
               setData(json);
             };
