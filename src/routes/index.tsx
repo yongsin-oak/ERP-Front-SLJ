@@ -9,6 +9,7 @@ import ECommerce from "../pages/Sell/ECommerce";
 import User from "../pages/User";
 import Finance from "../pages/Finance";
 import Employee from "../pages/Employee";
+import Login from "../pages/Login";
 
 const Routers = () => {
   const genR = (path: string, element: React.ReactNode) => {
@@ -28,14 +29,19 @@ const Routers = () => {
     genR("finance", <Finance />),
     genR("employee", <Employee />),
   ];
+  const test = false;
   return (
     <Routes>
-      <Route element={<Mainlayout />}>
-        {routes.map((route) => (
-          <Route key={route.path} {...route} />
-        ))}
-        <Route path="*" element={<div>Not Found</div>} />
-      </Route>
+      {test ? (
+        <Route path="/" element={<Login />} />
+      ) : (
+        <Route element={<Mainlayout />}>
+          {routes.map((route) => (
+            <Route key={route.path} {...route} />
+          ))}
+          <Route path="*" element={<div>Not Found</div>} />
+        </Route>
+      )}
     </Routes>
   );
 };
