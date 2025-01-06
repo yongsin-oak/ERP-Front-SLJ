@@ -36,9 +36,6 @@ function App() {
               siderBg: theme.background_,
               triggerBg: theme.background_,
             },
-            Table: {
-              headerBg: theme.red100_,
-            },
           },
         }}
       >

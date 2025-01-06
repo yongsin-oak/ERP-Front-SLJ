@@ -1,3 +1,4 @@
+import { useTheme } from "@emotion/react";
 import styled from "@emotion/styled";
 import { Typography } from "antd";
 import { TextProps } from "antd/es/typography/Text";
@@ -17,7 +18,6 @@ type Text = {
   semiBold?: boolean;
   bold?: boolean;
   center?: boolean;
-  color?: string;
 };
 
 const allowedProps = [
@@ -34,10 +34,10 @@ const allowedProps = [
   "semiBold",
   "bold",
   "center",
-  "color",
 ];
 interface Props extends Text, TextProps {
   children: React.ReactNode;
+  error?: boolean;
 }
 const TextComponent = styled(Typography.Text, {
   shouldForwardProp: (prop) => !allowedProps.includes(prop.toString()),
@@ -56,11 +56,20 @@ const TextComponent = styled(Typography.Text, {
   font-weight: ${(props) => props.semiBold && "600"};
   font-weight: ${(props) => props.bold && "700"};
   text-align: ${(props) => props.center && "center"};
-  color: ${(props) => props.color};
   font-family: "Kanit", sans-serif;
 `;
-const Text = ({ children, ...props }: Props) => {
-  return <TextComponent {...props}>{children}</TextComponent>;
+const Text = ({ children, error, color, ...props }: Props) => {
+  const theme = useTheme();
+  return (
+    <TextComponent
+      style={{
+        color: error ? theme.red300_ : color,
+      }}
+      {...props}
+    >
+      {children}
+    </TextComponent>
+  );
 };
 
 export default Text;

@@ -121,18 +121,20 @@ const MainLayout = () => {
       )}
 
       <Layout>
-        <StickyButton theme={theme}>
-          <Button
-            type="text"
-            icon={<MenuOutlined />}
-            onClick={() => setShowDrawer(true)}
-            style={{ display: mobileSize ? "inline-block" : "none" }}
-          />
-        </StickyButton>
+        {isMobile(windowWidth) && (
+          <StickyButton theme={theme}>
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setShowDrawer(true)}
+              style={{ display: mobileSize ? "inline-block" : "none" }}
+            />
+          </StickyButton>
+        )}
+
         <Content
           style={{
             padding: mobileSize ? 16 : 32,
-            overflow: "auto",
             marginInlineStart: mobileSize ? 0 : collapsed ? 80 : 200,
             backgroundColor: theme.background_,
           }}

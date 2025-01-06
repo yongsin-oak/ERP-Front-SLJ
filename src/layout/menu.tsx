@@ -1,8 +1,8 @@
 import { MenuProps } from "antd";
 import {
   BankOutlined,
+  CommentOutlined,
   HomeOutlined,
-  ScanOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
@@ -29,13 +29,13 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
         {
           key: "sell/pos",
           label: "หน้าร้าน",
-          icon: <ScanOutlined />,
+          icon: <ShopOutlined />,
           onClick: () => navigate("/sell-pos"),
         },
         {
           key: "sell/online",
           label: "ขายโดยตรง",
-          icon: <ShopOutlined />,
+          icon: <CommentOutlined />,
           onClick: () => navigate("/sell-online"),
         },
         {
