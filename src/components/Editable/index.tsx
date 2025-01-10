@@ -124,7 +124,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
 interface DataType {
   order: number;
   productName: string;
-  productQuantity: number;
+  productAmount: number;
   productBarcode: string;
 }
 
@@ -138,9 +138,13 @@ interface EditableProps {
       dataIndex: string;
     }[];
   onCancel?: () => void;
-  onConfirm?: (data: DataType[]) => void;
+  onConfirm?: (data: any) => void;
 }
-const Editable = ({ columns: columnsProp, onCancel }: EditableProps) => {
+const Editable = ({
+  columns: columnsProp,
+  onCancel,
+  onConfirm,
+}: EditableProps) => {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
   const [count, setCount] = useState<number>(1);
   const [productBarcodeForm] = useForm();
@@ -185,7 +189,7 @@ const Editable = ({ columns: columnsProp, onCancel }: EditableProps) => {
     if (exitsIndex !== -1) {
       setDataSource((prev) => {
         const newData = [...prev];
-        newData[exitsIndex].productQuantity += 1;
+        newData[exitsIndex].productAmount += 1;
         return newData;
       });
       return;
@@ -193,7 +197,7 @@ const Editable = ({ columns: columnsProp, onCancel }: EditableProps) => {
     const newData: DataType = {
       order: count,
       productName: `สินค้าที่ ${count}`,
-      productQuantity: 1,
+      productAmount: 1,
       productBarcode,
     };
     setDataSource([...dataSource, newData]);
@@ -276,7 +280,7 @@ const Editable = ({ columns: columnsProp, onCancel }: EditableProps) => {
         <Button type="default" onClick={onCancel}>
           ยกเลิก
         </Button>
-        <Button type="primary" onClick={() => console.log(dataSource)}>
+        <Button type="primary" onClick={() => onConfirm?.(dataSource)}>
           บันทึก
         </Button>
       </Flex>

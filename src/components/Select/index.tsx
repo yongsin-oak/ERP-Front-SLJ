@@ -6,7 +6,7 @@ const Select = ({ optionFilterProp, ...props }: SelectProps) => {
     <ASelect
       style={{ width: "100%" }}
       showSearch
-      fieldNames={{ label: "label", value: "label" }}
+      // fieldNames={{ label: "label", value: "label" }}
       optionFilterProp={optionFilterProp || "label"}
       optionRender={(option: Options) => {
         return option.data.icon ? (
@@ -22,7 +22,9 @@ const Select = ({ optionFilterProp, ...props }: SelectProps) => {
             {option.data.label}
           </Space>
         ) : (
-          <Text s1>{option.data.label}</Text>
+          <Text s1 color={option.data.color}>
+            {option.data.label}
+          </Text>
         );
       }}
       {...props}

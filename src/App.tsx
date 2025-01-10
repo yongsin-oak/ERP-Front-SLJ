@@ -7,11 +7,20 @@ import darkTheme from "./theme/darkMode.module.scss";
 import { BrowserRouter } from "react-router-dom";
 import Routers from "./routes";
 import { useStoreTheme } from "./store";
+import buddhistEra from "dayjs/plugin/buddhistEra";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import dayjs from "dayjs";
+
+dayjs.extend(buddhistEra);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 function App() {
   const { themeMode } = useStoreTheme();
   const isDark = themeMode === "dark";
   const theme = isDark ? darkTheme : lightTheme;
+
   return (
     <>
       <ConfigProvider

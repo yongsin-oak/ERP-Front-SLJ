@@ -27,25 +27,25 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       label: "การขาย",
       children: [
         {
-          key: "sell/pos",
+          key: "sell-pos",
           label: "หน้าร้าน",
           icon: <ShopOutlined />,
           onClick: () => navigate("/sell-pos"),
         },
         {
-          key: "sell/online",
+          key: "sell-online",
           label: "ขายโดยตรง",
           icon: <CommentOutlined />,
           onClick: () => navigate("/sell-online"),
         },
         {
-          key: "sell/delivery",
+          key: "sell-delivery",
           label: "เดลิเวอรี่",
           icon: <DeliveryIcon />,
           onClick: () => navigate("/sell-delivery"),
         },
         {
-          key: "sell/ecommerce",
+          key: "sell-ecommerce",
           label: "อีคอมเมิร์ซ",
           icon: <ShoppingOutlined />,
           onClick: () => navigate("/sell-ecommerce"),
@@ -53,7 +53,7 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       ],
     },
     {
-      key: "stock",
+      key: "product-stock",
       icon: <TableOutlined />, //<ProductOutlined />
       label: "สต๊อกสินค้า",
       onClick: () => navigate("/product-stock"),
@@ -62,7 +62,7 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       key: "employee",
       icon: <TeamOutlined />,
       label: "พนักงาน",
-      onClick: () => navigate("/employee"),
+      onClick: () => navigate("/employees"),
     },
     {
       key: "finance",
@@ -71,7 +71,7 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       onClick: () => navigate("/finance"),
     },
     {
-      key: "delivery",
+      key: "user",
       icon: <UserOutlined />,
       label: "ผู้ใช้งาน",
       onClick: () => navigate("/user"),

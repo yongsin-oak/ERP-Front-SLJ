@@ -20,15 +20,15 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import Text from "../../../components/Text";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DefaultOptionType } from "antd/es/select";
 import { allShop, platform, tiktokShop } from "./allShop";
 import ShopeeIcon from "../../../assets/icon/platform/Shopee";
 import LazadaIcon from "../../../assets/icon/platform/Lazada";
-import { isEmpty } from "lodash";
 import { onInputNoSpecialChars } from "../../../utils/filteredInput";
 import Editable from "../../../components/Editable";
 import { ColumnType } from "antd/es/table";
+import req from "../../../utils/req";
 
 const RecordOrder = () => {
   const orderNumberText = "หมายเลขคำสั่งซื้อ / หมายเลขพัสดุ";
@@ -37,20 +37,11 @@ const RecordOrder = () => {
     ""
   );
   const [recording, setRecording] = useState<boolean>(false);
+  const [employees, setEmployees] = useState<DefaultOptionType[]>([]);
   const [orderNumberForm] = useForm();
   const currentEmployee = useWatch("employee", orderNumberForm);
   const currentPlatform = useWatch("platform", orderNumberForm);
   const currentShop = useWatch("shop", orderNumberForm);
-  const employee: DefaultOptionType[] = [
-    {
-      label: "เดฟ",
-      value: "Dave",
-    },
-    {
-      label: "มอส",
-      value: "Mos",
-    },
-  ];
   const platformIcon = () => {
     switch (currentPlatform) {
       case "Shopee":
@@ -94,7 +85,7 @@ const RecordOrder = () => {
     },
     {
       title: "จำนวน",
-      dataIndex: "productQuantity",
+      dataIndex: "productAmount",
       editable: true,
       number: true,
       ellipsis: true,
@@ -106,6 +97,48 @@ const RecordOrder = () => {
       ellipsis: true,
     },
   ];
+  const onPostOrder = async (data: any) => {
+    try {
+      const res = await req.post("/orders", {
+        employeeId: currentEmployee,
+        platform: currentPlatform,
+        shop: currentShop,
+        id: currentOrderNumber,
+        products: data.map((product: any) => ({
+          productBarcode: product.productBarcode,
+          productAmount: product.productAmount,
+        })),
+      });
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const onGetEmployees = async (limit: number) => {
+    try {
+      const res = await req.get("/employees", {
+        params: {
+          page: 1,
+          limit,
+        },
+      });
+      if (res.data.total > limit) {
+        onGetEmployees(res.data.total);
+        return;
+      }
+      setEmployees(
+        res.data.data.map((employee: { nickname: string; id: number }) => ({
+          label: employee.nickname,
+          value: employee.id,
+        }))
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    onGetEmployees(300);
+  }, []);
   return (
     <Card>
       <Flex gap={16} vertical>
@@ -123,7 +156,7 @@ const RecordOrder = () => {
                   disabled={recording}
                   allowClear
                   style={{ width: "100%" }}
-                  options={employee}
+                  options={employees}
                 />
               </FormItem>
             </Col>
@@ -136,7 +169,6 @@ const RecordOrder = () => {
                 <Select
                   prefix={<ShoppingOutlined />}
                   placeholder="แพลตฟอร์ม"
-                  disabled={isEmpty(currentEmployee) || recording}
                   allowClear
                   style={{ width: "100%" }}
                   options={platform}
@@ -152,7 +184,6 @@ const RecordOrder = () => {
               >
                 <Select
                   prefix={<ShopOutlined />}
-                  disabled={isEmpty(currentPlatform) || recording}
                   placeholder="ร้านค้า"
                   allowClear
                   style={{ width: "100%" }}
@@ -170,7 +201,6 @@ const RecordOrder = () => {
                   <Input
                     prefix={<ScanOutlined />}
                     placeholder={orderNumberText}
-                    disabled={isEmpty(currentShop) || recording}
                     onInput={onInputNoSpecialChars}
                   />
                   <Button type="primary" htmlType="submit">
@@ -201,6 +231,7 @@ const RecordOrder = () => {
               onCancel={() => {
                 setRecording(false);
               }}
+              onConfirm={onPostOrder}
             />
           </>
         )}

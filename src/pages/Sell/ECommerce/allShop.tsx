@@ -5,6 +5,7 @@ import { TikTokFilled } from "@ant-design/icons";
 
 export interface Options extends DefaultOptionType {
   icon?: React.ReactNode;
+  color?: string;
 }
 export const platform: Options[] = [
   {
@@ -26,19 +27,19 @@ export const platform: Options[] = [
 export const allShop: Options[] = [
   {
     label: "ทรัพย์ล้นใจ",
-    value: "slj1",
+    value: "SupLonJai",
   },
   {
     label: "เจ้าสัวบรรจุภัณฑ์",
-    value: "slj2",
+    value: "JaoSua",
   },
   {
     label: "Super-A",
-    value: "slj3",
+    value: "SuperA",
   },
   {
     label: "สมหวังบรรจุภัณฑ์",
-    value: "slj4",
+    value: "SomWang",
   },
 ];
 

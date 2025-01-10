@@ -1,74 +1,101 @@
-import { UploadOutlined } from "@ant-design/icons";
-import { Button, Upload } from "antd";
+import { Flex } from "antd";
 import { ColumnsType } from "antd/es/table";
-import { useState } from "react";
-import * as XLSX from "xlsx";
+import { useEffect, useState } from "react";
 import req from "../../utils/req";
 import Table from "../../components/Table";
+import dayjs from "dayjs";
+import ExcelUpload from "../../components/ExcelUpload";
 
 const ProductStock = () => {
-  const [data, setData] = useState<any[]>();
-  const [columns, setColumns] = useState<ColumnsType>();
-  const [fileList, setFileList] = useState<any[]>([]);
-  const testBack = async () => {
-    const res = await req.get("/hello/oak");
-    console.log(res);
+  const [data, setData] = useState<
+    {
+      barcode: string;
+      name: string;
+      brand: string;
+      category: string;
+      costPrice: number;
+      currentPrice: number;
+      createdAt: string;
+      updatedAt: string;
+    }[]
+  >();
+  const onGetProducts = async () => {
+    try {
+      const res = await req.get("/products", {
+        params: {
+          page: 1,
+          limit: 10,
+        },
+      });
+      setData(res.data.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
+  const onUploadProducts = async (data: unknown[]) => {
+    try {
+      const res = await req.post("/products", {
+        data 
+
+      });
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      onGetProducts();
+    }
+  };
+  const columns: ColumnsType = [
+    {
+      title: "บาร์โค้ด",
+      dataIndex: "barcode",
+    },
+    {
+      title: "ชื่อสินค้า",
+      dataIndex: "name",
+    },
+    {
+      title: "ยี่ห้อ",
+      dataIndex: "brand",
+    },
+    {
+      title: "หมวดหมู่",
+      dataIndex: "category",
+    },
+    {
+      title: "ราคาต้นทุน",
+      dataIndex: "costPrice",
+    },
+    {
+      title: "ราคาปัจจุบัน",
+      dataIndex: "currentPrice",
+    },
+    {
+      title: "วันที่เพิ่ม",
+      dataIndex: "createdAt",
+      render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
+    },
+    {
+      title: "วันที่แก้ไข",
+      dataIndex: "updatedAt",
+      render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
+    },
+  ];
+  // console.log(currentDataUpload);
+  useEffect(() => {
+    onGetProducts();
+  }, []);
   return (
-    <div style={{ gap: 4 }}>
-      <Button onClick={testBack}>test back</Button>
-      <Upload
-        name="file"
-        accept=".xlsx"
-        beforeUpload={(file) => {
-          if (
-            file.type !==
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          ) {
-            return Promise.reject("File type must be .xlsx");
-          }
-          setFileList([...fileList, file]);
-          return file;
-        }}
-        fileList={fileList}
-        showUploadList={{
-          extra: ({ size = 0 }) => (
-            <span style={{ color: "#cccccc" }}>
-              ({(size / 1024 / 1024).toFixed(2)}MB)
-            </span>
-          ),
-        }}
-        onChange={(info) => {
-          const { file } = info;
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const data = new Uint8Array(e?.target?.result as ArrayBuffer);
-              const workbook = XLSX.read(data, { type: "array" });
-              const sheetName = workbook.SheetNames[0];
-              const sheet = workbook.Sheets[sheetName];
-              const json = XLSX.utils.sheet_to_json(sheet);
-              const columns: ColumnsType = Object.keys(json?.[0] as object).map(
-                (key, index) => ({
-                  title: key,
-                  dataIndex: key,
-                  key,
-                  fixed: index < 2 ? "left" : undefined,
-                })
-              );
-              setColumns(columns);
-              setData(json);
-            };
-            reader.readAsArrayBuffer(file.originFileObj as Blob);
-          }
-        }}
-      >
-        <Button icon={<UploadOutlined />}>Upload</Button>
-      </Upload>
-      <div>
-        <Table columns={columns} dataSource={data} size="small" key="key" />
-      </div>
-    </div>
+    <Flex vertical gap={10}>
+      <ExcelUpload onSave={onUploadProducts} />
+      {/* <Button onClick={onUploadProducts}>test back</Button> */}
+      <Table
+        columns={columns}
+        dataSource={data}
+        size="small"
+        rowKey="barcode"
+      />
+    </Flex>
   );
 };
 

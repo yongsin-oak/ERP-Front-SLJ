@@ -9,7 +9,7 @@ import {
   MenuOutlined,
 } from "@ant-design/icons";
 import { Content } from "antd/es/layout/layout";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { HeadSider, StickyButton } from "./styles";
 import { useStoreTheme } from "../store";
 import { useTheme } from "@emotion/react";
@@ -27,6 +27,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const { width: windowWidth } = useWindowSize();
   const mobileSize = windowWidth && isMobile(windowWidth);
+  const location = useLocation();
 
   const siderStyles: CSSProperties = {
     overflow: "auto",
@@ -91,7 +92,8 @@ const MainLayout = () => {
           <Menu
             theme={themeMode}
             mode="inline"
-            defaultSelectedKeys={["1"]}
+            defaultSelectedKeys={["home"]}
+            selectedKeys={[location?.pathname.replace("/", "")]}
             items={menuItems(navigate)}
             style={{ borderInlineEnd: "none" }}
           />
