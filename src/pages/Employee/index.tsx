@@ -1,4 +1,4 @@
-import { Button, Flex, Modal, SelectProps } from "antd";
+import { Button, Flex, Form, Modal, SelectProps } from "antd";
 import Table from "../../components/Table";
 import Text from "../../components/Text";
 import { useEffect, useState } from "react";
@@ -8,7 +8,8 @@ import dayjs from "dayjs";
 import ExcelUpload from "../../components/ExcelUpload";
 import FormInputs from "../../components/FormInputs";
 import { addEmployeeInputFields } from "./inputField";
-
+import { findIndex } from "lodash";
+import { useForm } from "antd/es/form/Form";
 interface Employee {
   id: string;
   firstName: string;
@@ -24,17 +25,21 @@ const Employee = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [visibleAddEmployeeModal, setVisibleAddEmployeeModal] = useState(false);
   const [bankNames, setBankNames] = useState<SelectProps["options"]>([]);
+  const [form] = useForm();
   const columns: ColumnType[] = [
     {
-      title: "ชื่อจริง",
-      dataIndex: "firstName",
-      key: "firstName",
+      title: "ชื่อ - นามสกุล",
+      dataIndex: "name",
+      key: "name",
+      render(_value, record) {
+        return `${record.firstName} ${record.lastName}`;
+      },
     },
-    {
-      title: "นามสกุล",
-      dataIndex: "lastName",
-      key: "lastName",
-    },
+    // {
+    //   title: "นามสกุล",
+    //   dataIndex: "lastName",
+    //   key: "lastName",
+    // },
     {
       title: "ชื่อเล่น",
       dataIndex: "nickname",
@@ -58,32 +63,69 @@ const Employee = () => {
     },
     {
       title: "บัญชีธนาคาร",
-      dataIndex: "bankName",
-      key: "bankName",
-      render: (val, record) => `${val} ${record.bankAccount}`,
+      dataIndex: "bank",
+      key: "bank",
+      render: (val) =>
+        `${bankNames?.[findIndex(bankNames, (b) => b.value === val)]?.label}`,
+    },
+    {
+      title: "เลขบัญชี",
+      dataIndex: "bankAccount",
+      key: "bankAccount",
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: () => (
+        <Flex gap={8}>
+          <Button type="link">แก้ไข</Button>
+        </Flex>
+      ),
+      width: 80,
     },
   ];
-
   const onGetBankName = async () => {
-    const res = await req.get("/bankNames");
-    setBankNames(
-      Object.keys(res.data.data.th).map((key: string) => ({
-        label: res.data.data.th[key].thai_name,
-        value: key,
-      }))
-    );
+    try {
+      const res = await req.get("/bankNames");
+      setBankNames(
+        Object.keys(res.data.data.th).map((key: string) => ({
+          label: res.data.data.th[key].thai_name,
+          value: key,
+        }))
+      );
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const onGetEmployees = async () => {
-    const res = await req.get("/employees", {
-      params: {
-        limit: 10,
-        page: 1,
-      },
-    });
-    setEmployees(res.data.data);
+  const onGetEmployee = async () => {
+    try {
+      const res = await req.get("/employee", {
+        params: {
+          limit: 10,
+          page: 1,
+        },
+      });
+      setEmployees(res.data.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const onPostEmployee = async (values: any) => {
+    try {
+      console.log(values);
+      const res = await req.post("/employee", values);
+      setVisibleAddEmployeeModal(false);
+      onGetEmployee();
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
   };
   useEffect(() => {
-    onGetEmployees();
+    form.resetFields();
+  }, [visibleAddEmployeeModal]);
+  useEffect(() => {
+    onGetEmployee();
     onGetBankName();
   }, []);
   return (
@@ -92,27 +134,28 @@ const Employee = () => {
         รายชื่อพนักงาน
       </Text>
       <Flex justify="end" gap={8}>
-        <ExcelUpload onSave={() => {}}></ExcelUpload>
+        <ExcelUpload onSave={() => {}} />
         <Button type="primary" onClick={() => setVisibleAddEmployeeModal(true)}>
           เพิ่มพนักงาน
         </Button>
       </Flex>
       <Modal
         open={visibleAddEmployeeModal}
-        okText="เพิ่มพนักงาน"
-        cancelText="ยกเลิก"
-        onCancel={() => setVisibleAddEmployeeModal(false)}
-        onOk={() => setVisibleAddEmployeeModal(false)}
+        footer={null}
         closable={false}
         title="เพิ่มพนักงาน"
       >
-        <Flex vertical gap={16}>
+        <Form form={form} onFinish={onPostEmployee} layout="vertical">
           <FormInputs
-            onFinish={(val) => console.log(val)}
+            formProps={form}
+            onFinish={(vals) => {
+              console.log(vals);
+            }}
+            gutter={[16, 16]}
             inputFields={[
               ...addEmployeeInputFields,
               {
-                name: "bankName",
+                name: "bank",
                 label: "ชื่อธนาคาร",
                 span: 24,
                 selectInput: true,
@@ -130,11 +173,28 @@ const Employee = () => {
                 },
               },
             ]}
-            layout="horizontal"
-          />
-        </Flex>
+          >
+            <Flex justify="end" gap={8}>
+              <Button htmlType="submit" type="primary">
+                เพิ่มพนักงาน
+              </Button>
+              <Button
+                onClick={() => setVisibleAddEmployeeModal(false)}
+                type="default"
+              >
+                ยกเลิก
+              </Button>
+            </Flex>
+          </FormInputs>
+        </Form>
       </Modal>
-      <Table columns={columns} dataSource={employees} bordered rowKey="id" />
+      <Table
+        columns={columns}
+        dataSource={employees}
+        bordered
+        rowKey="id"
+        size="small"
+      />
     </Flex>
   );
 };

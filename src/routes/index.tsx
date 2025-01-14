@@ -27,7 +27,7 @@ const Routers = () => {
     genR("/product-stock", <ProductStock />),
     genR("/user", <User />),
     genR("/finance", <Finance />),
-    genR("/employees", <Employee />),
+    genR("/employee", <Employee />),
   ];
   const test = false;
   return (

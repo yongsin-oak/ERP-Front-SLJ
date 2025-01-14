@@ -116,7 +116,7 @@ const RecordOrder = () => {
   };
   const onGetEmployees = async (limit: number) => {
     try {
-      const res = await req.get("/employees", {
+      const res = await req.get("/employee", {
         params: {
           page: 1,
           limit,

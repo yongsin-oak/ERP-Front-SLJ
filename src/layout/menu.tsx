@@ -62,7 +62,7 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       key: "employee",
       icon: <TeamOutlined />,
       label: "พนักงาน",
-      onClick: () => navigate("/employees"),
+      onClick: () => navigate("/employee"),
     },
     {
       key: "finance",

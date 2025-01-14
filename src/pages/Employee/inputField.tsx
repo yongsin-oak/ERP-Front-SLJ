@@ -20,7 +20,7 @@ export const addEmployeeInputFields: InputFields[] = [
   {
     name: "nickname",
     label: "ชื่อเล่น",
-    span: 8,
+    span: 10,
     inputProps: {
       placeholder: "ชื่อเล่น",
     },
@@ -28,7 +28,7 @@ export const addEmployeeInputFields: InputFields[] = [
   {
     name: "phoneNumber",
     label: "เบอร์โทร",
-    span: 16,
+    span: 14,
     inputProps: {
       placeholder: "เบอร์โทร",
     },
@@ -40,6 +40,12 @@ export const addEmployeeInputFields: InputFields[] = [
     selectInput: true,
     inputProps: {
       placeholder: "แผนก",
+      options: [
+        { label: "บัญชี", value: "Accounting" },
+        { label: "แอดมิน", value: "Admin" },
+        { label: "บุคคล", value: "HR" },
+        { label: "ผู้ปฏิบัตงาน", value: "Operator" },
+      ],
     },
   },
   {
