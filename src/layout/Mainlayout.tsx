@@ -1,4 +1,4 @@
-import { Layout, Menu, Button, Drawer } from "antd";
+import { Layout, Menu, Button, Drawer, Flex } from "antd";
 import Sider from "antd/es/layout/Sider";
 import { CSSProperties, useState } from "react";
 import {
@@ -11,7 +11,7 @@ import {
 import { Content } from "antd/es/layout/layout";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { HeadSider, StickyButton } from "./styles";
-import { useStoreTheme } from "../store";
+import { useAuth, useStoreTheme } from "../store";
 import { useTheme } from "@emotion/react";
 import { menuItems } from "./menu";
 import { isMobile } from "../utils/responsive";
@@ -28,7 +28,12 @@ const MainLayout = () => {
   const { width: windowWidth } = useWindowSize();
   const mobileSize = windowWidth && isMobile(windowWidth);
   const location = useLocation();
+  const { logout } = useAuth();
 
+  const onLogout = () => {
+    logout();
+    navigate("/");
+  };
   const siderStyles: CSSProperties = {
     overflow: "auto",
     height: "100vh",
@@ -97,6 +102,9 @@ const MainLayout = () => {
             items={menuItems(navigate)}
             style={{ borderInlineEnd: "none" }}
           />
+          <Flex justify="center" style={{ padding: 16 }} onClick={onLogout}>
+            Logout
+          </Flex>
         </Sider>
       )}
 

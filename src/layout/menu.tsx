@@ -1,6 +1,5 @@
 import { MenuProps } from "antd";
 import {
-  BankOutlined,
   CommentOutlined,
   HomeOutlined,
   ShopOutlined,
@@ -63,12 +62,6 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       icon: <TeamOutlined />,
       label: "พนักงาน",
       onClick: () => navigate("/employee"),
-    },
-    {
-      key: "finance",
-      icon: <BankOutlined />,
-      label: "การเงิน",
-      onClick: () => navigate("/finance"),
     },
     {
       key: "user",

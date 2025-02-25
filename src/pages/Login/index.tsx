@@ -1,14 +1,27 @@
 import React from "react";
 import { Form, Input, Button, Typography, Checkbox } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import req from "../../utils/req";
+import { useAuth } from "../../store";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
-  const onFinish = (values: any) => {
-    console.log("Login Success:", values);
+  const { setToken, setUser: setUserRole } = useAuth();
+  const onLogin = async (values: {
+    username: string;
+    password: string;
+    remember: boolean;
+  }) => {
+    const res = await req.post("/login", {
+      username: values.username,
+      password: values.password,
+    });
+    console.log(res.data);
+    const { token, role } = res.data;
+    setToken(token);
+    setUserRole(role);
   };
-
   return (
     <div
       style={{
@@ -34,7 +47,7 @@ const Login: React.FC = () => {
         </Title>
         <Form
           name="login_form"
-          onFinish={onFinish}
+          onFinish={onLogin}
           initialValues={{ remember: true }}
           layout="vertical"
         >

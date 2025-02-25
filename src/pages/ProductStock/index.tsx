@@ -35,8 +35,7 @@ const ProductStock = () => {
   const onUploadProducts = async (data: unknown[]) => {
     try {
       const res = await req.post("/products", {
-        data 
-
+        data,
       });
       console.log(res);
     } catch (error) {
@@ -49,36 +48,44 @@ const ProductStock = () => {
     {
       title: "บาร์โค้ด",
       dataIndex: "barcode",
+      key: "barcode",
     },
     {
       title: "ชื่อสินค้า",
       dataIndex: "name",
+      key: "name",
     },
     {
       title: "ยี่ห้อ",
       dataIndex: "brand",
+      key: "brand",
     },
     {
       title: "หมวดหมู่",
       dataIndex: "category",
+      key: "category",
     },
     {
       title: "ราคาต้นทุน",
       dataIndex: "costPrice",
+      key: "costPrice",
     },
     {
       title: "ราคาปัจจุบัน",
       dataIndex: "currentPrice",
+      key: "currentPrice",
     },
     {
       title: "วันที่เพิ่ม",
       dataIndex: "createdAt",
       render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
+      key: "createdAt",
     },
     {
       title: "วันที่แก้ไข",
       dataIndex: "updatedAt",
       render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
+      key: "updatedAt",
     },
   ];
   // console.log(currentDataUpload);
@@ -87,7 +94,7 @@ const ProductStock = () => {
   }, []);
   return (
     <Flex vertical gap={10}>
-      <ExcelUpload onSave={onUploadProducts} />
+      <ExcelUpload onSave={onUploadProducts} columns={columns} />
       {/* <Button onClick={onUploadProducts}>test back</Button> */}
       <Table
         columns={columns}

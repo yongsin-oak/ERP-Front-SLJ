@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import ExcelUpload from "../../components/ExcelUpload";
 import FormInputs from "../../components/FormInputs";
 import { addEmployeeInputFields } from "./inputField";
-import { findIndex } from "lodash";
+import { findIndex, isEmpty } from "lodash";
 import { useForm } from "antd/es/form/Form";
 interface Employee {
   id: string;
@@ -26,7 +26,10 @@ const Employee = () => {
   const [visibleAddEmployeeModal, setVisibleAddEmployeeModal] = useState(false);
   const [bankNames, setBankNames] = useState<SelectProps["options"]>([]);
   const [form] = useForm();
-  const columns: ColumnType[] = [
+  const columns: ColumnType[] &
+    {
+      information?: string;
+    }[] = [
     {
       title: "ชื่อ - นามสกุล",
       dataIndex: "name",
@@ -54,6 +57,7 @@ const Employee = () => {
       title: "วันที่เริ่มงาน",
       dataIndex: "startDate",
       key: "startDate",
+      information: "ตัวอย่าง: 01/01/2564",
       render: (val) => dayjs(val).format("DD/MM/BBBB"),
     },
     {
@@ -122,8 +126,10 @@ const Employee = () => {
     }
   };
   useEffect(() => {
-    form.resetFields();
-  }, [visibleAddEmployeeModal]);
+    if (visibleAddEmployeeModal && !isEmpty(form.getFieldsValue())) {
+      form.resetFields();
+    }
+  }, [visibleAddEmployeeModal, form]);
   useEffect(() => {
     onGetEmployee();
     onGetBankName();
@@ -133,8 +139,21 @@ const Employee = () => {
       <Text h3 semiBold>
         รายชื่อพนักงาน
       </Text>
-      <Flex justify="end" gap={8}>
-        <ExcelUpload onSave={() => {}} />
+      <Flex justify="space-between" gap={8}>
+        <ExcelUpload
+          onSave={() => {}}
+          columns={[
+            {
+              title: "ชื่อจริง",
+              key: "firstName",
+            },
+            {
+              title: "นามสกุล",
+              key: "lastName",
+            },
+            ...columns.filter((c) => c.key !== "action" && c.key !== "name"),
+          ]}
+        />
         <Button type="primary" onClick={() => setVisibleAddEmployeeModal(true)}>
           เพิ่มพนักงาน
         </Button>

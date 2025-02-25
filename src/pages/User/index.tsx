@@ -1,7 +1,8 @@
-import React from "react";
+import { useAuth } from "../../store";
 
 const User = () => {
-  return <div>User</div>;
+  const { user } = useAuth();
+  return <div>{user}</div>;
 };
 
 export default User;
