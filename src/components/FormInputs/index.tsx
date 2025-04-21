@@ -35,15 +35,10 @@ const FormInputs = ({
     <Flex vertical gap={16}>
       <Row gutter={gutter}>
         {inputFields.map((inputField: InputFields, index: number) => {
-          const {
-            customInput,
-            datePickerInput,
-            inputProps,
-            selectInput,
-            label,
-            name,
-            span,
-          } = inputField;
+          const { customInput, inputComponent, inputProps, label, name, span } =
+            inputField;
+          const datePickerInput = inputComponent === "datePicker";
+          const selectInput = inputComponent === "select";
           const requiredTypeMessage = selectInput ? "เลือก" : "กรอก";
           return (
             <Col span={span || 24} key={index}>

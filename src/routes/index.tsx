@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import Mainlayout from "../layout/Mainlayout";
 import Home from "../pages/Home";
-import ProductStock from "../pages/ProductStock";
 import POS from "../pages/Sell/POS";
 import DirectSell from "../pages/Sell/DirectSell";
 import Deliver from "../pages/Sell/Delivery";
@@ -9,11 +8,12 @@ import ECommerce from "../pages/Sell/ECommerce";
 import User from "../pages/User";
 import Employee from "../pages/Employee";
 import Login from "../pages/Login";
-import { useAuth } from "../store";
 import { isEmpty } from "lodash";
+import { useToken } from "../store/BearerToken";
+import ProductStock from "../pages/product-stock";
 
 const Routers = () => {
-  const { token } = useAuth();
+  const { token } = useToken();
   const genR = (path: string, element: React.ReactNode) => {
     return {
       path,
@@ -32,7 +32,7 @@ const Routers = () => {
   ];
   return (
     <Routes>
-      {isEmpty(token) ? (
+      {!isEmpty(token) ? (
         <Route path="/" element={<Login />} />
       ) : (
         <Route element={<Mainlayout />}>

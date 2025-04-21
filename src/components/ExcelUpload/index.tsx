@@ -20,7 +20,7 @@ interface Props extends UploadProps {
   columns: Column[]; // คอลัมน์ที่ต้องการให้เลือก
 }
 
-const ExcelUpload = ({ onSave, columns, ...props }: Props) => {
+const ExcelUpload = ({ columns, ...props }: Props) => {
   const [file, setFile] = useState<RcFile>();
   const [modalVisible, setModalVisible] = useState(false);
   const [options, setOptions] = useState<DefaultOptionType[]>([]);
@@ -29,7 +29,7 @@ const ExcelUpload = ({ onSave, columns, ...props }: Props) => {
   );
   const [form] = useForm();
   const beforeUpload = async (file: RcFile) => {
-    const data = await new Promise<any[]>((resolve, reject) => {
+    const data = await new Promise<unknown[]>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
@@ -101,14 +101,13 @@ const ExcelUpload = ({ onSave, columns, ...props }: Props) => {
         }
         // footer={null}
         onOk={() => setModalVisible(false)}
-        // onCancel={() => setModalVisible(false)}
+        onCancel={() => setModalVisible(false)}
       >
         <Form form={form} layout="horizontal">
           {columns?.map((column, index) => (
             <Flex
               key={index}
               gap={10}
-              // justify="space-between"
               align="center"
               style={{ paddingBlock: 4 }}
             >

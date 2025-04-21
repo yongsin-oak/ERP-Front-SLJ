@@ -1,11 +1,13 @@
+import Cookies from "js-cookie";
 import { create } from "zustand";
+import req from "../utils/req";
+import { useToken } from "./BearerToken";
 
 type StateTheme = {
   themeMode: "dark" | "light";
 };
 
 type StateAuth = {
-  token: string | null;
   user: string | null;
 };
 
@@ -13,9 +15,8 @@ type ActionTheme = {
   setTheme: (theme: StateTheme["themeMode"]) => void;
 };
 type ActionAuth = {
-  setToken: (token: string) => void;
-  setUser: (role: string) => void;
   logout: () => void;
+  login: (username: string, password: string) => void;
 };
 
 export const useStoreTheme = create<StateTheme & ActionTheme>((set) => ({
@@ -29,25 +30,20 @@ export const useStoreTheme = create<StateTheme & ActionTheme>((set) => ({
 }));
 
 export const useAuth = create<StateAuth & ActionAuth>((set) => ({
-  token:
-    document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1] || null,
   user: null,
-  setToken: (token) => {
-    const expires = new Date();
-    expires.setDate(expires.getDate() + 7);
-    document.cookie = `token=${token}; path=/; expires=${expires.toUTCString()};`;
-    set({ token });
-  },
-  setUser: (role) => {
+  login: async (username, password) => {
+    const res = await req.post("/login", {
+      username: username,
+      password: password,
+    });
+    const { token, role } = res.data;
+    useToken.getState().setToken(token);
     set({ user: role });
   },
   logout: () => {
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     set({ user: null });
-    set({ token: null });
+    Cookies.remove("token");
+    useToken.getState().setToken("");
   },
 }));
 

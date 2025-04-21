@@ -1,24 +1,19 @@
-import { Flex } from "antd";
+import { Button, Col, Flex, Form, Modal } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import req from "../../utils/req";
 import Table from "../../components/Table";
 import dayjs from "dayjs";
 import ExcelUpload from "../../components/ExcelUpload";
+import { ProductProp } from "./interface";
+import FormInputs from "../../components/FormInputs";
+import { useForm } from "antd/es/form/Form";
+import { addProductInputFields } from "./inputField";
 
 const ProductStock = () => {
-  const [data, setData] = useState<
-    {
-      barcode: string;
-      name: string;
-      brand: string;
-      category: string;
-      costPrice: number;
-      currentPrice: number;
-      createdAt: string;
-      updatedAt: string;
-    }[]
-  >();
+  const [data, setData] = useState<ProductProp[]>();
+  const [uploadModal, setUploadModal] = useState(false);
+  const [form] = useForm();
   const onGetProducts = async () => {
     try {
       const res = await req.get("/products", {
@@ -57,13 +52,13 @@ const ProductStock = () => {
     },
     {
       title: "ยี่ห้อ",
-      dataIndex: "brand",
-      key: "brand",
+      dataIndex: "brandId",
+      key: "brandId",
     },
     {
       title: "หมวดหมู่",
-      dataIndex: "category",
-      key: "category",
+      dataIndex: "categoryId",
+      key: "categoryId",
     },
     {
       title: "ราคาต้นทุน",
@@ -88,20 +83,61 @@ const ProductStock = () => {
       key: "updatedAt",
     },
   ];
-  // console.log(currentDataUpload);
+  console.log(data);
   useEffect(() => {
     onGetProducts();
   }, []);
   return (
     <Flex vertical gap={10}>
-      <ExcelUpload onSave={onUploadProducts} columns={columns} />
-      {/* <Button onClick={onUploadProducts}>test back</Button> */}
+      <Flex justify="space-between" align="center">
+        <Col>
+          <ExcelUpload onSave={onUploadProducts} columns={columns} />
+        </Col>
+        <Col>
+          <Button
+            onClick={() => {
+              setUploadModal(true);
+            }}
+          >
+            Upload
+          </Button>
+        </Col>
+      </Flex>
       <Table
         columns={columns}
         dataSource={data}
         size="small"
         rowKey="barcode"
       />
+      <Modal
+        title="Upload Products"
+        open={uploadModal}
+        onCancel={() => {
+          setUploadModal(false);
+        }}
+        footer={null}
+        centered
+      >
+        <Form form={form} onFinish={() => {}} layout="vertical">
+          <FormInputs
+            formProps={form}
+            onFinish={(vals) => {
+              console.log(vals);
+            }}
+            gutter={[16, 16]}
+            inputFields={addProductInputFields}
+          >
+            <Flex justify="end" gap={8}>
+              <Button htmlType="submit" type="primary">
+                เพิ่มสินค้า
+              </Button>
+              <Button onClick={() => setUploadModal(false)} type="default">
+                ยกเลิก
+              </Button>
+            </Flex>
+          </FormInputs>
+        </Form>
+      </Modal>
     </Flex>
   );
 };

@@ -1,27 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, Input, Button, Typography, Checkbox } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import req from "../../utils/req";
 import { useAuth } from "../../store";
+import req from "../../utils/req";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
-  const { setToken, setUser: setUserRole } = useAuth();
+  const { login } = useAuth();
   const onLogin = async (values: {
     username: string;
     password: string;
     remember: boolean;
   }) => {
-    const res = await req.post("/login", {
-      username: values.username,
-      password: values.password,
-    });
-    console.log(res.data);
-    const { token, role } = res.data;
-    setToken(token);
-    setUserRole(role);
+    login(values.username, values.password);
   };
+
   return (
     <div
       style={{

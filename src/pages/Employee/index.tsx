@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import ExcelUpload from "../../components/ExcelUpload";
 import FormInputs from "../../components/FormInputs";
 import { addEmployeeInputFields } from "./inputField";
-import { findIndex, isEmpty } from "lodash";
+import { isEmpty } from "lodash";
 import { useForm } from "antd/es/form/Form";
 interface Employee {
   id: string;
@@ -38,11 +38,6 @@ const Employee = () => {
         return `${record.firstName} ${record.lastName}`;
       },
     },
-    // {
-    //   title: "นามสกุล",
-    //   dataIndex: "lastName",
-    //   key: "lastName",
-    // },
     {
       title: "ชื่อเล่น",
       dataIndex: "nickname",
@@ -64,18 +59,6 @@ const Employee = () => {
       title: "แผนก",
       dataIndex: "department",
       key: "department",
-    },
-    {
-      title: "บัญชีธนาคาร",
-      dataIndex: "bank",
-      key: "bank",
-      render: (val) =>
-        `${bankNames?.[findIndex(bankNames, (b) => b.value === val)]?.label}`,
-    },
-    {
-      title: "เลขบัญชี",
-      dataIndex: "bankAccount",
-      key: "bankAccount",
     },
     {
       title: "Action",
@@ -177,7 +160,7 @@ const Employee = () => {
                 name: "bank",
                 label: "ชื่อธนาคาร",
                 span: 24,
-                selectInput: true,
+                inputComponent: "select",
                 inputProps: {
                   options: bankNames,
                   placeholder: "ชื่อธนาคาร",

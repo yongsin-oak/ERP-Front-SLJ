@@ -37,7 +37,7 @@ export const addEmployeeInputFields: InputFields[] = [
     name: "department",
     label: "แผนก",
     span: 12,
-    selectInput: true,
+    inputComponent: "select",
     inputProps: {
       placeholder: "แผนก",
       options: [
@@ -52,7 +52,7 @@ export const addEmployeeInputFields: InputFields[] = [
     name: "startDate",
     label: "วันที่เริ่มงาน",
     span: 12,
-    datePickerInput: true,
+    inputComponent: "datePicker",
     inputProps: {
       placeholder: "วันที่เริ่มงาน",
     },

@@ -6,8 +6,7 @@ export interface InputFields {
   label?: string;
   span?: number;
   inputProps?: InputProps | SelectProps | DatePickerProps;
-  datePickerInput?: boolean;
-  selectInput?: boolean;
   customInput?: React.ReactNode;
   required?: boolean;
+  inputComponent?: "datePicker" | "select" | "input";
 }
