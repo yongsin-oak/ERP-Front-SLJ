@@ -32,7 +32,7 @@ const Routers = () => {
   ];
   return (
     <Routes>
-      {!isEmpty(token) ? (
+      {isEmpty(token) ? (
         <Route path="/" element={<Login />} />
       ) : (
         <Route element={<Mainlayout />}>

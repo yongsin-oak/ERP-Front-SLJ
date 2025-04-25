@@ -52,13 +52,13 @@ const ProductStock = () => {
     },
     {
       title: "ยี่ห้อ",
-      dataIndex: "brandId",
-      key: "brandId",
+      dataIndex: "brandName",
+      key: "brandName",
     },
     {
       title: "หมวดหมู่",
-      dataIndex: "categoryId",
-      key: "categoryId",
+      dataIndex: "category",
+      key: "category",
     },
     {
       title: "ราคาต้นทุน",
@@ -83,7 +83,6 @@ const ProductStock = () => {
       key: "updatedAt",
     },
   ];
-  console.log(data);
   useEffect(() => {
     onGetProducts();
   }, []);

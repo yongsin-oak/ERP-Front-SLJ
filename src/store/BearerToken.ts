@@ -10,7 +10,7 @@ interface TokenType {
 const cookieStorage = {
   getItem: (key: string) => Cookies.get(key) ?? null,
   setItem: (key: string, value: string) =>
-    Cookies.set(key, value, { expires: 7, secure: true }),
+    Cookies.set(key, value, { expires: 1, secure: true }),
   removeItem: (key: string) => Cookies.remove(key),
 };
 
