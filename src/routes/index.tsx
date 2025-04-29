@@ -8,13 +8,15 @@ import ECommerce from "../pages/Sell/ECommerce";
 import User from "../pages/User";
 import Employee from "../pages/Employee";
 import Login from "../pages/Login";
-import { isEmpty } from "lodash";
 import { useToken } from "../store/BearerToken";
 import ProductStock from "../pages/product-stock";
+import NotFoundPage from "../pages/Error/404";
+import ErrorPage from "../pages/Error/500";
+import PrivateRoute from "./PrivateRoute";
 
 const Routers = () => {
   const { token } = useToken();
-  const genR = (path: string, element: React.ReactNode) => {
+  const genR = (path: string, element: React.ReactElement) => {
     return {
       path,
       element,
@@ -32,16 +34,18 @@ const Routers = () => {
   ];
   return (
     <Routes>
-      {isEmpty(token) ? (
-        <Route path="/" element={<Login />} />
-      ) : (
-        <Route element={<Mainlayout />}>
-          {routes.map((route) => (
-            <Route key={route.path} {...route} />
-          ))}
-          <Route path="*" element={<div>Not Found</div>} />
-        </Route>
-      )}
+      <Route path="/login" element={<Login />} />
+      <Route path="*" element={<NotFoundPage />} />
+      <Route element={token ? <Mainlayout /> : null}>
+        {routes.map((route) => (
+          <Route
+            key={route.path}
+            errorElement={<ErrorPage />}
+            element={<PrivateRoute element={route.element} />}
+            path={route.path}
+          />
+        ))}
+      </Route>
     </Routes>
   );
 };

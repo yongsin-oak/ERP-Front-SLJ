@@ -1,13 +1,15 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Form, Input, Button, Typography, Checkbox } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { useAuth } from "../../store";
-import req from "../../utils/req";
+import { useToken } from "../../store/BearerToken";
+import { Navigate } from "react-router-dom";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
   const { login } = useAuth();
+  const { token } = useToken();
   const onLogin = async (values: {
     username: string;
     password: string;
@@ -15,8 +17,9 @@ const Login: React.FC = () => {
   }) => {
     login(values.username, values.password);
   };
-
-  return (
+  return token ? (
+    <Navigate to="/" replace />
+  ) : (
     <div
       style={{
         display: "flex",

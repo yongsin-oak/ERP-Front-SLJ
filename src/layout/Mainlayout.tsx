@@ -9,13 +9,14 @@ import {
   MenuOutlined,
 } from "@ant-design/icons";
 import { Content } from "antd/es/layout/layout";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { HeadSider, StickyButton } from "./styles";
 import { useAuth, useStoreTheme } from "../store";
 import { useTheme } from "@emotion/react";
 import { menuItems } from "./menu";
 import { isMobile } from "../utils/responsive";
 import { useWindowSize } from "@uidotdev/usehooks";
+import { useToken } from "../store/BearerToken";
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -29,10 +30,10 @@ const MainLayout = () => {
   const mobileSize = windowWidth && isMobile(windowWidth);
   const location = useLocation();
   const { logout } = useAuth();
+  const { token } = useToken();
 
   const onLogout = () => {
     logout();
-    navigate("/");
   };
   const siderStyles: CSSProperties = {
     overflow: "auto",
@@ -62,7 +63,7 @@ const MainLayout = () => {
       />
     );
   };
-  return (
+  return token ? (
     <Layout
       hasSider
       style={{
@@ -153,6 +154,8 @@ const MainLayout = () => {
         </Content>
       </Layout>
     </Layout>
+  ) : (
+    <Navigate to="/login" replace />
   );
 };
 
