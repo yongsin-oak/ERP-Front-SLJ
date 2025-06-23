@@ -1,6 +1,6 @@
 import { Select as ASelect, SelectProps, Space } from "antd";
 import Text from "../Text";
-import { Options } from "../../../pages/sell/ecommerce/allShop";
+import { Options } from "../../../pages/_sell/_ecommerce/allShop";
 const MSelect = ({ optionFilterProp, ...props }: SelectProps) => {
   return (
     <ASelect
