@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 
 const req = axios.create({
-  baseURL: process.env.BACKEND_API_URL || "http://localhost:3000",
+  baseURL: process.env.BACKEND_API_URL || "https://erp-back-slj-production.up.railway.app",
   headers: {
     "Content-Type": "application/json",
   },
