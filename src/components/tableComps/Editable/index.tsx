@@ -233,9 +233,6 @@ const Editable = ({
 
   return (
     <Flex vertical gap={8}>
-      {/* <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
-        Add a row
-      </Button> */}
       {dataSource.length > 0 && (
         <Table<DataType>
           components={components}

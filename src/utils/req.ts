@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 
 const req = axios.create({
-  baseURL: "http://localhost:3001/",
+  baseURL: process.env.BACKEND_API_URL || "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },

@@ -12,6 +12,7 @@ import ECommerce from "../pages/sell/ecommerce";
 import Deliver from "../pages/sell/Delivery";
 import DirectSell from "../pages/sell/DirectSell";
 import POS from "../pages/sell/POS";
+import Example from "../pages/example";
 
 const Routers = () => {
   const genR = (path: string, element: React.ReactElement) => {
@@ -29,6 +30,7 @@ const Routers = () => {
     genR("/product-stock", <ProductStock />),
     genR("/user", <User />),
     genR("/employee", <Employee />),
+    genR("/example", <Example />),
   ];
 
   return (

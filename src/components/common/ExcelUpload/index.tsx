@@ -1,7 +1,7 @@
 import { UploadOutlined } from "@ant-design/icons";
 import { Flex, Form, Modal, Tooltip, Upload, UploadProps } from "antd";
 import { RcFile } from "antd/es/upload";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 
 import { InfoCircleOutlined } from "@ant-design/icons";
@@ -49,7 +49,7 @@ const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
     });
     setFile(file);
     setOptions(
-      Object.keys(data[0]).map((key) => ({
+      Object.keys(data?.[0] as object).map((key) => ({
         label: key,
         value: key,
         key,
@@ -76,6 +76,9 @@ const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
 
     form.setFieldsValue({ [key]: value });
   };
+  useEffect(() => {
+    console.log(file);
+  }, [file]);
   return (
     <Flex align="center" gap={8}>
       <Upload
