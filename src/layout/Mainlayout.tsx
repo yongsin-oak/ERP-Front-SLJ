@@ -1,22 +1,22 @@
-import { Layout, Menu, Button, Drawer, Flex } from "antd";
-import Sider from "antd/es/layout/Sider";
-import { CSSProperties, useState } from "react";
 import {
   LeftOutlined,
+  MenuOutlined,
   MoonFilled,
   RightOutlined,
   SunFilled,
-  MenuOutlined,
 } from "@ant-design/icons";
-import { Content } from "antd/es/layout/layout";
-import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { HeadSider, StickyButton } from "./styles";
-import { useAuth, useStoreTheme } from "../store";
 import { useTheme } from "@emotion/react";
-import { menuItems } from "./menu";
-import { isMobile } from "../utils/responsive";
 import { useWindowSize } from "@uidotdev/usehooks";
-import { useToken } from "../store/BearerToken";
+import { Drawer, Flex, Layout, Menu } from "antd";
+import { Content } from "antd/es/layout/layout";
+import Sider from "antd/es/layout/Sider";
+import { CSSProperties, useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import MButton from "../components/common/MButton";
+import { useAuth, useStoreTheme } from "../store";
+import { isMobile } from "../utils/responsive";
+import { menuItems } from "./menu";
+import { HeadSider, StickyButton } from "./styles";
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -30,7 +30,6 @@ const MainLayout = () => {
   const mobileSize = windowWidth && isMobile(windowWidth);
   const location = useLocation();
   const { logout } = useAuth();
-  const { token } = useToken();
 
   const onLogout = () => {
     logout();
@@ -45,7 +44,6 @@ const MainLayout = () => {
     position: "fixed",
     borderInlineEnd: `1px solid ${theme.splitLine_}`,
   };
-
   const SwitchThemeButton = () => {
     return isDark ? (
       <MoonFilled
@@ -63,7 +61,7 @@ const MainLayout = () => {
       />
     );
   };
-  return token ? (
+  return (
     <Layout
       hasSider
       style={{
@@ -103,8 +101,12 @@ const MainLayout = () => {
             items={menuItems(navigate)}
             style={{ borderInlineEnd: "none" }}
           />
-          <Flex justify="center" style={{ padding: 16 }} onClick={onLogout}>
-            Logout
+          <Flex
+            justify="center"
+            style={{ padding: 16, cursor: "pointer" }}
+            onClick={onLogout}
+          >
+            ออกจากระบบ
           </Flex>
         </Sider>
       )}
@@ -126,7 +128,15 @@ const MainLayout = () => {
               defaultSelectedKeys={["1"]}
               items={menuItems(navigate)}
               style={{ borderInlineEnd: "none" }}
+              onClick={() => setShowDrawer(false)}
             />
+            <Flex
+              justify="center"
+              style={{ padding: 16, cursor: "pointer" }}
+              onClick={onLogout}
+            >
+              ออกจากระบบ
+            </Flex>
           </Drawer>
         </>
       )}
@@ -134,7 +144,7 @@ const MainLayout = () => {
       <Layout>
         {isMobile(windowWidth) && (
           <StickyButton theme={theme}>
-            <Button
+            <MButton
               type="text"
               icon={<MenuOutlined />}
               onClick={() => setShowDrawer(true)}
@@ -150,12 +160,10 @@ const MainLayout = () => {
             backgroundColor: theme.background_,
           }}
         >
-          <Outlet></Outlet>
+          <Outlet />
         </Content>
       </Layout>
     </Layout>
-  ) : (
-    <Navigate to="/login" replace />
   );
 };
 

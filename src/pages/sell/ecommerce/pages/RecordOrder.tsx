@@ -1,38 +1,30 @@
 import {
-  Button,
-  Card,
-  Col,
-  Divider,
-  Flex,
-  Form,
-  Input,
-  Row,
-  Space,
-} from "antd";
-import FormItem from "../../../components/FormItem";
-import Select from "../../../components/Select";
-import { useForm, useWatch } from "antd/es/form/Form";
-import {
   ScanOutlined,
   ShopOutlined,
   ShoppingOutlined,
   TikTokFilled,
   UserOutlined,
 } from "@ant-design/icons";
-import Text from "../../../components/Text";
-import { useEffect, useState } from "react";
+import { Card, Col, Divider, Flex, Form, Input, Row, Space } from "antd";
+import { useForm, useWatch } from "antd/es/form/Form";
 import { DefaultOptionType } from "antd/es/select";
-import { allShop, platform, tiktokShop } from "./allShop";
-import ShopeeIcon from "../../../assets/icon/platform/Shopee";
-import LazadaIcon from "../../../assets/icon/platform/Lazada";
-import { onInputNoSpecialChars } from "../../../utils/filteredInput";
-import Editable from "../../../components/Editable";
 import { ColumnType } from "antd/es/table";
-import req from "../../../utils/req";
+import { useEffect, useState } from "react";
+import LazadaIcon from "../../../../assets/icon/platform/Lazada";
+import ShopeeIcon from "../../../../assets/icon/platform/Shopee";
+import MButton from "../../../../components/common/MButton";
+import MSelect from "../../../../components/common/MSelect";
+import Text from "../../../../components/common/Text";
+import { onInputNoSpecialChars } from "../../../../utils/filteredInput";
+import req from "../../../../utils/req";
+import { allShop, platform, tiktokShop } from "../allShop";
+import MFormItem from "../../../../components/Form/MFormItem";
+import Editable from "../../../../components/tableComps/Editable";
+
+const ICON_SIZE = 30;
 
 const RecordOrder = () => {
   const orderNumberText = "หมายเลขคำสั่งซื้อ / หมายเลขพัสดุ";
-  const iconSize = 30;
   const [currentOrderNumber, setCurrentOrderNumber] = useState<string | null>(
     ""
   );
@@ -42,14 +34,18 @@ const RecordOrder = () => {
   const currentEmployee = useWatch("employee", orderNumberForm);
   const currentPlatform = useWatch("platform", orderNumberForm);
   const currentShop = useWatch("shop", orderNumberForm);
-  const platformIcon = () => {
+  const platformIcon = (size?: number | string) => {
     switch (currentPlatform) {
       case "Shopee":
-        return <ShopeeIcon width={iconSize} height={iconSize} />;
+        return (
+          <ShopeeIcon width={size ?? ICON_SIZE} height={size ?? ICON_SIZE} />
+        );
       case "Lazada":
-        return <LazadaIcon width={iconSize} height={iconSize} />;
+        return (
+          <LazadaIcon width={size ?? ICON_SIZE} height={size ?? ICON_SIZE} />
+        );
       case "Tiktok":
-        return <TikTokFilled style={{ fontSize: iconSize }} />;
+        return <TikTokFilled style={{ fontSize: size ?? ICON_SIZE }} />;
       default:
         return <></>;
     }
@@ -145,12 +141,12 @@ const RecordOrder = () => {
         <Form form={orderNumberForm} onFinish={onFinish} layout="vertical">
           <Row gutter={[16, 16]}>
             <Col lg={8} sm={24} xs={24}>
-              <FormItem
+              <MFormItem
                 name={["employee"]}
                 requiredMessage="กรุณาเลือกผู้บันทึก"
                 label="ผู้บันทึก"
               >
-                <Select
+                <MSelect
                   prefix={<UserOutlined />}
                   placeholder="ผู้บันทึก"
                   disabled={recording}
@@ -158,41 +154,43 @@ const RecordOrder = () => {
                   style={{ width: "100%" }}
                   options={employees}
                 />
-              </FormItem>
+              </MFormItem>
             </Col>
             <Col lg={8} sm={24} xs={24}>
-              <FormItem
+              <MFormItem
                 name={["platform"]}
                 requiredMessage="กรุณาเลือกแพลตฟอร์ม"
                 label="แพลตฟอร์ม"
               >
-                <Select
-                  prefix={<ShoppingOutlined />}
+                <MSelect
+                  prefix={
+                    currentPlatform ? platformIcon("1em") : <ShoppingOutlined />
+                  }
                   placeholder="แพลตฟอร์ม"
                   allowClear
                   style={{ width: "100%" }}
                   options={platform}
                   onChange={onPlatformChange}
                 />
-              </FormItem>
+              </MFormItem>
             </Col>
             <Col lg={8} sm={24} xs={24}>
-              <FormItem
+              <MFormItem
                 name={["shop"]}
                 requiredMessage="กรุณาเลือกร้านค้า"
                 label="ร้านค้า"
               >
-                <Select
+                <MSelect
                   prefix={<ShopOutlined />}
                   placeholder="ร้านค้า"
                   allowClear
                   style={{ width: "100%" }}
                   options={currentPlatform === "Tiktok" ? tiktokShop : allShop}
                 />
-              </FormItem>
+              </MFormItem>
             </Col>
             <Col lg={24} sm={24} xs={24}>
-              <FormItem
+              <MFormItem
                 name={["orderNumber"]}
                 requiredMessage={`กรุณากรอก${orderNumberText}`}
                 label={orderNumberText}
@@ -203,11 +201,9 @@ const RecordOrder = () => {
                     placeholder={orderNumberText}
                     onInput={onInputNoSpecialChars}
                   />
-                  <Button type="primary" htmlType="submit">
-                    บันทึก
-                  </Button>
+                  <MButton htmlType="submit">บันทึก</MButton>
                 </Space.Compact>
-              </FormItem>
+              </MFormItem>
             </Col>
           </Row>
         </Form>

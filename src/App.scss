@@ -2,15 +2,14 @@
   /* max-width: 1280px; */
   margin: 0 auto;
   padding: 2rem;
-
 }
 * {
-  font-family: 'Kanit', sans-serif !important;
-  transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-  -webkit-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-  -moz-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-  -ms-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
-  -o-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+  font-family: "Kanit", sans-serif !important;
+  transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  -webkit-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  -moz-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  -ms-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  -o-transition: background 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
 }
 .logo {
   height: 6em;
@@ -51,7 +50,12 @@
   color: #888;
 }
 
-
 .ant-form-item .ant-form-item-label {
   padding: 0 0 4px !important;
+}
+
+.ant-select-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

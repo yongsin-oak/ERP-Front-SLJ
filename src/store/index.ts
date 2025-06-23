@@ -1,14 +1,18 @@
-import Cookies from "js-cookie";
 import { create } from "zustand";
 import req from "../utils/req";
-import { useToken } from "./BearerToken";
+import { Role } from "../enum/Role.enum";
 
 type StateTheme = {
   themeMode: "dark" | "light";
 };
 
 type StateAuth = {
-  user: string | null;
+  user: {
+    username: string;
+    role: Role;
+  } | null;
+  isLoadingUser: boolean;
+  isAuth: boolean;
 };
 
 type ActionTheme = {
@@ -17,6 +21,7 @@ type ActionTheme = {
 type ActionAuth = {
   logout: () => void;
   login: (username: string, password: string) => void;
+  getMe: () => void;
 };
 
 export const useStoreTheme = create<StateTheme & ActionTheme>((set) => ({
@@ -29,21 +34,47 @@ export const useStoreTheme = create<StateTheme & ActionTheme>((set) => ({
   },
 }));
 
-export const useAuth = create<StateAuth & ActionAuth>((set) => ({
+export const useAuth = create<StateAuth & ActionAuth>((set, get) => ({
   user: null,
+  isAuth: false,
+  isLoadingUser: true,
   login: async (username, password) => {
-    const res = await req.post("/login", {
-      username: username,
-      password: password,
-    });
-    const { token, role } = res.data;
-    useToken.getState().setToken(token);
-    set({ user: role });
+    try {
+      const res = await req.post("/login", { username, password });
+      const { user } = res.data;
+      set({ user, isAuth: true });
+    } catch (error) {
+      set({ user: null, isAuth: false });
+      throw error;
+    } finally {
+      get().getMe(); // เรียก getMe เพื่อโหลดข้อมูลผู้ใช้หลังจากล็อกอิน
+      set({ isLoadingUser: false });
+    }
   },
-  logout: () => {
-    set({ user: null });
-    Cookies.remove("token");
-    useToken.getState().setToken("");
+  logout: async () => {
+    set({ isLoadingUser: true });
+    try {
+      await req.post("/logout");
+    } catch (e) {
+      console.error("Logout error:", e);
+    } finally {
+      set({ isLoadingUser: false });
+      set({ user: null, isAuth: false });
+    }
+  },
+  getMe: async () => {
+    if (get().user) return; //
+    try {
+      set({ isLoadingUser: true });
+      const res = await req.get("/me");
+      const user = res.data;
+      set({ user, isAuth: true });
+    } catch (err) {
+      set({ user: null, isAuth: false });
+      throw err;
+    } finally {
+      set({ isLoadingUser: false });
+    }
   },
 }));
 

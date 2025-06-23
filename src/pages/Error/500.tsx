@@ -1,5 +1,6 @@
+import { Result } from "antd";
 import React from "react";
-import { Button, Result } from "antd";
+import MButton from "../../components/common/MButton";
 
 const ErrorPage: React.FC = () => (
   <Result
@@ -7,9 +8,7 @@ const ErrorPage: React.FC = () => (
     title="500"
     subTitle="Sorry, something went wrong."
     extra={
-      <Button type="primary" onClick={() => (window.location.href = "/")}>
-        Back Home
-      </Button>
+      <MButton onClick={() => (window.location.href = "/")}>Back Home</MButton>
     }
   />
 );

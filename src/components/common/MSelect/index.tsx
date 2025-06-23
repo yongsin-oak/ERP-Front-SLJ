@@ -1,7 +1,7 @@
 import { Select as ASelect, SelectProps, Space } from "antd";
-import { Options } from "../../pages/Sell/ECommerce/allShop";
 import Text from "../Text";
-const Select = ({ optionFilterProp, ...props }: SelectProps) => {
+import { Options } from "../../../pages/sell/ecommerce/allShop";
+const MSelect = ({ optionFilterProp, ...props }: SelectProps) => {
   return (
     <ASelect
       style={{ width: "100%" }}
@@ -32,4 +32,4 @@ const Select = ({ optionFilterProp, ...props }: SelectProps) => {
   );
 };
 
-export default Select;
+export default MSelect;

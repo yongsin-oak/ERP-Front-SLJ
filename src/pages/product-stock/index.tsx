@@ -1,141 +1,107 @@
-import { Button, Col, Flex, Form, Modal } from "antd";
-import { ColumnsType } from "antd/es/table";
-import { useEffect, useState } from "react";
-import req from "../../utils/req";
-import Table from "../../components/Table";
-import dayjs from "dayjs";
-import ExcelUpload from "../../components/ExcelUpload";
-import { ProductProp } from "./interface";
-import FormInputs from "../../components/FormInputs";
+import { useWindowSize } from "@uidotdev/usehooks";
+import { Card, Col, Flex, Modal, Row, Typography } from "antd";
 import { useForm } from "antd/es/form/Form";
-import { addProductInputFields } from "./inputField";
+import { useEffect, useState } from "react";
+import MButton from "../../components/common/MButton";
+import Table from "../../components/tableComps/Table";
+import { isMobile } from "../../utils/responsive";
+import ProductFormComp from "./form/ProductForm";
+import { onGetProducts } from "./hooks/product.hook";
+import { ProductData } from "./interface/interface";
+import { additionalColumns, essentialColumns } from "./table/productColumns";
+
+const { Text } = Typography;
 
 const ProductStock = () => {
-  const [data, setData] = useState<ProductProp[]>();
-  const [uploadModal, setUploadModal] = useState(false);
+  const [data, setData] = useState<ProductData[] | undefined>();
+  const [open, setOpen] = useState(false);
   const [form] = useForm();
-  const onGetProducts = async () => {
-    try {
-      const res = await req.get("/products", {
-        params: {
-          page: 1,
-          limit: 10,
-        },
-      });
-      setData(res.data.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const onUploadProducts = async (data: unknown[]) => {
-    try {
-      const res = await req.post("/products", {
-        data,
-      });
-      console.log(res);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      onGetProducts();
-    }
-  };
-  const columns: ColumnsType = [
-    {
-      title: "บาร์โค้ด",
-      dataIndex: "barcode",
-      key: "barcode",
-    },
-    {
-      title: "ชื่อสินค้า",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "ยี่ห้อ",
-      dataIndex: "brandName",
-      key: "brandName",
-    },
-    {
-      title: "หมวดหมู่",
-      dataIndex: "category",
-      key: "category",
-    },
-    {
-      title: "ราคาต้นทุน",
-      dataIndex: "costPrice",
-      key: "costPrice",
-    },
-    {
-      title: "ราคาปัจจุบัน",
-      dataIndex: "currentPrice",
-      key: "currentPrice",
-    },
-    {
-      title: "วันที่เพิ่ม",
-      dataIndex: "createdAt",
-      render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
-      key: "createdAt",
-    },
-    {
-      title: "วันที่แก้ไข",
-      dataIndex: "updatedAt",
-      render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
-      key: "updatedAt",
-    },
-  ];
+  const { width } = useWindowSize();
+  const mobile = isMobile(width);
+
   useEffect(() => {
-    onGetProducts();
+    onGetProducts({ setData });
   }, []);
+
+  useEffect(() => {
+    form.resetFields();
+  }, [open, form]);
+
+  const renderCardList = () => (
+    <Flex vertical gap={12}>
+      {data?.map((item) => (
+        <Card key={item.barcode} title={item.name} size="small">
+          <Row justify="space-between">
+            <Col span={12}>
+              <Text strong>บาร์โค้ด:</Text> {item.barcode}
+            </Col>
+            <Col span={12}>
+              <Text strong>คงเหลือ:</Text> {item.remaining}
+            </Col>
+          </Row>
+          <Row justify="space-between">
+            <Col span={12}>
+              <Text strong>ยี่ห้อ:</Text> {item?.brand?.name || "-"}
+            </Col>
+            <Col span={12}>
+              <Text strong>หมวดหมู่:</Text> {item?.category?.name || "-"}
+            </Col>
+          </Row>
+          <Row justify="space-between">
+            <Col span={12}>
+              <Text strong>ราคาขาย/แพ็ค:</Text> {item.sellPrice?.pack || 0}
+            </Col>
+            <Col span={12}>
+              <Text strong>ราคาขาย/ลัง:</Text> {item.sellPrice?.carton || 0}
+            </Col>
+          </Row>
+        </Card>
+      ))}
+    </Flex>
+  );
+
   return (
     <Flex vertical gap={10}>
       <Flex justify="space-between" align="center">
         <Col>
-          <ExcelUpload onSave={onUploadProducts} columns={columns} />
+          {/* <ExcelUpload onSave={onUploadProducts} columns={columns} /> */}
         </Col>
         <Col>
-          <Button
-            onClick={() => {
-              setUploadModal(true);
-            }}
-          >
-            Upload
-          </Button>
+          <MButton onClick={() => setOpen(true)}>Upload</MButton>
         </Col>
       </Flex>
-      <Table
-        columns={columns}
-        dataSource={data}
-        size="small"
-        rowKey="barcode"
-      />
+
+      {mobile ? (
+        renderCardList()
+      ) : (
+        <Table
+          columns={essentialColumns}
+          dataSource={data}
+          expandable={{
+            expandedRowRender: (record) => (
+              <Table
+                columns={additionalColumns}
+                dataSource={[record]}
+                pagination={false}
+                scroll={{ x: 800 }}
+              />
+            ),
+            defaultExpandedRowKeys: ["0"],
+          }}
+          scroll={{ x: 800 }}
+          size="small"
+          rowKey="barcode"
+        />
+      )}
+
       <Modal
         title="Upload Products"
-        open={uploadModal}
-        onCancel={() => {
-          setUploadModal(false);
-        }}
+        open={open}
+        onCancel={() => setOpen(false)}
         footer={null}
         centered
       >
-        <Form form={form} onFinish={() => {}} layout="vertical">
-          <FormInputs
-            formProps={form}
-            onFinish={(vals) => {
-              console.log(vals);
-            }}
-            gutter={[16, 16]}
-            inputFields={addProductInputFields}
-          >
-            <Flex justify="end" gap={8}>
-              <Button htmlType="submit" type="primary">
-                เพิ่มสินค้า
-              </Button>
-              <Button onClick={() => setUploadModal(false)} type="default">
-                ยกเลิก
-              </Button>
-            </Flex>
-          </FormInputs>
-        </Form>
+        <ProductFormComp form={form} setData={setData} setOpen={setOpen} />
       </Modal>
     </Flex>
   );

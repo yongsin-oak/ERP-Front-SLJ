@@ -1,15 +1,14 @@
-import React from "react";
-import { Form, Input, Button, Typography, Checkbox } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { useAuth } from "../../store";
-import { useToken } from "../../store/BearerToken";
+import { Checkbox, Form, Input, Typography } from "antd";
+import React from "react";
 import { Navigate } from "react-router-dom";
+import MButton from "../../components/common/MButton";
+import { useAuth } from "../../store";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
-  const { token } = useToken();
+  const { isLoadingUser, isAuth, login } = useAuth();
   const onLogin = async (values: {
     username: string;
     password: string;
@@ -17,7 +16,11 @@ const Login: React.FC = () => {
   }) => {
     login(values.username, values.password);
   };
-  return token ? (
+  if (isLoadingUser) {
+    return <div>Loading...</div>;
+  }
+
+  return isAuth ? (
     <Navigate to="/" replace />
   ) : (
     <div
@@ -72,15 +75,14 @@ const Login: React.FC = () => {
             <Checkbox>Remember me</Checkbox>
           </Form.Item>
           <Form.Item>
-            <Button
-              type="primary"
+            <MButton
               htmlType="submit"
               block
               size="large"
               style={{ marginBottom: 16 }}
             >
               Login
-            </Button>
+            </MButton>
             <div style={{ textAlign: "center" }}>
               <a href="/forgot-password">Forgot password?</a>
             </div>

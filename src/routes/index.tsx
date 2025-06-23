@@ -1,21 +1,19 @@
 import { Route, Routes } from "react-router-dom";
 import Mainlayout from "../layout/Mainlayout";
-import Home from "../pages/Home";
-import POS from "../pages/Sell/POS";
-import DirectSell from "../pages/Sell/DirectSell";
-import Deliver from "../pages/Sell/Delivery";
-import ECommerce from "../pages/Sell/ECommerce";
-import User from "../pages/User";
-import Employee from "../pages/Employee";
-import Login from "../pages/Login";
-import { useToken } from "../store/BearerToken";
+import Home from "../pages/home";
+import User from "../pages/user";
+import Employee from "../pages/employee";
+import Login from "../pages/login";
 import ProductStock from "../pages/product-stock";
-import NotFoundPage from "../pages/Error/404";
-import ErrorPage from "../pages/Error/500";
+import NotFoundPage from "../pages/error/404";
+import ErrorPage from "../pages/error/500";
 import PrivateRoute from "./PrivateRoute";
+import ECommerce from "../pages/sell/ecommerce";
+import Deliver from "../pages/sell/Delivery";
+import DirectSell from "../pages/sell/DirectSell";
+import POS from "../pages/sell/POS";
 
 const Routers = () => {
-  const { token } = useToken();
   const genR = (path: string, element: React.ReactElement) => {
     return {
       path,
@@ -24,24 +22,31 @@ const Routers = () => {
   };
   const routes = [
     genR("/", <Home />),
-    genR("/sell-pos", <POS />),
-    genR("/sell-online", <DirectSell />),
-    genR("/sell-delivery", <Deliver />),
-    genR("/sell-ecommerce", <ECommerce />),
+    genR("/sell/pos", <POS />),
+    genR("/sell/online", <DirectSell />),
+    genR("/sell/delivery", <Deliver />),
+    genR("/sell/ecommerce", <ECommerce />),
     genR("/product-stock", <ProductStock />),
     genR("/user", <User />),
     genR("/employee", <Employee />),
   ];
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="*" element={<NotFoundPage />} />
-      <Route element={token ? <Mainlayout /> : null}>
+      <Route
+        element={
+          <PrivateRoute>
+            <Mainlayout />
+          </PrivateRoute>
+        }
+      >
         {routes.map((route) => (
           <Route
             key={route.path}
             errorElement={<ErrorPage />}
-            element={<PrivateRoute element={route.element} />}
+            element={<PrivateRoute>{route.element}</PrivateRoute>}
             path={route.path}
           />
         ))}

@@ -1,4 +1,5 @@
-import { InputFields } from "../../components/FormInputs/interface";
+import { InputFields } from "../../components/Form/FormInputs/interface";
+import { Role } from "../../enum/Role.enum";
 
 export const addEmployeeInputFields: InputFields[] = [
   {
@@ -41,10 +42,13 @@ export const addEmployeeInputFields: InputFields[] = [
     inputProps: {
       placeholder: "แผนก",
       options: [
-        { label: "บัญชี", value: "Accounting" },
-        { label: "แอดมิน", value: "Admin" },
-        { label: "บุคคล", value: "HR" },
-        { label: "ผู้ปฏิบัตงาน", value: "Operator" },
+        { label: "ผู้ปฏิบัติงาน", value: Role.Operator },
+        { label: "คลังสินค้า", value: Role.Warehouse },
+        { label: "แอดมิน", value: Role.Admin },
+        { label: "บัญชี", value: Role.Accountant },
+        { label: "บุคคล", value: Role.HR },
+        { label: "การตลาด", value: Role.Marketing },
+        { label: "ขาย", value: Role.Sales },
       ],
     },
   },

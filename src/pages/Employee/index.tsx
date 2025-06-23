@@ -1,30 +1,21 @@
-import { Button, Flex, Form, Modal, SelectProps } from "antd";
-import Table from "../../components/Table";
-import Text from "../../components/Text";
-import { useEffect, useState } from "react";
-import req from "../../utils/req";
+import { Flex, Form, Modal } from "antd";
+import { useForm } from "antd/es/form/Form";
 import { ColumnType } from "antd/es/table";
 import dayjs from "dayjs";
-import ExcelUpload from "../../components/ExcelUpload";
-import FormInputs from "../../components/FormInputs";
-import { addEmployeeInputFields } from "./inputField";
 import { isEmpty } from "lodash";
-import { useForm } from "antd/es/form/Form";
-interface Employee {
-  id: string;
-  firstName: string;
-  lastName: string;
-  nickname: string;
-  phoneNumber: string;
-  startDate: string;
-  department: string;
-  bankName: string;
-  bankAccount: string;
-}
+import { useEffect, useState } from "react";
+import ExcelUpload from "../../components/common/ExcelUpload";
+import FormInputs from "../../components/Form/FormInputs";
+import MButton from "../../components/common/MButton";
+import Table from "../../components/tableComps/Table";
+import Text from "../../components/common/Text";
+import req from "../../utils/req";
+import { EmployeeType } from "./employee.interface";
+import { addEmployeeInputFields } from "./inputField";
+
 const Employee = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<EmployeeType[]>([]);
   const [visibleAddEmployeeModal, setVisibleAddEmployeeModal] = useState(false);
-  const [bankNames, setBankNames] = useState<SelectProps["options"]>([]);
   const [form] = useForm();
   const columns: ColumnType[] &
     {
@@ -65,25 +56,13 @@ const Employee = () => {
       key: "action",
       render: () => (
         <Flex gap={8}>
-          <Button type="link">แก้ไข</Button>
+          <MButton type="link">แก้ไข</MButton>
         </Flex>
       ),
       width: 80,
     },
   ];
-  const onGetBankName = async () => {
-    try {
-      const res = await req.get("/bankNames");
-      setBankNames(
-        Object.keys(res.data.data.th).map((key: string) => ({
-          label: res.data.data.th[key].thai_name,
-          value: key,
-        }))
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  };
+
   const onGetEmployee = async () => {
     try {
       const res = await req.get("/employee", {
@@ -115,7 +94,6 @@ const Employee = () => {
   }, [visibleAddEmployeeModal, form]);
   useEffect(() => {
     onGetEmployee();
-    onGetBankName();
   }, []);
   return (
     <Flex vertical gap={8}>
@@ -137,9 +115,9 @@ const Employee = () => {
             ...columns.filter((c) => c.key !== "action" && c.key !== "name"),
           ]}
         />
-        <Button type="primary" onClick={() => setVisibleAddEmployeeModal(true)}>
+        <MButton onClick={() => setVisibleAddEmployeeModal(true)}>
           เพิ่มพนักงาน
-        </Button>
+        </MButton>
       </Flex>
       <Modal
         open={visibleAddEmployeeModal}
@@ -150,42 +128,17 @@ const Employee = () => {
         <Form form={form} onFinish={onPostEmployee} layout="vertical">
           <FormInputs
             formProps={form}
-            onFinish={(vals) => {
-              console.log(vals);
-            }}
             gutter={[16, 16]}
-            inputFields={[
-              ...addEmployeeInputFields,
-              {
-                name: "bank",
-                label: "ชื่อธนาคาร",
-                span: 24,
-                inputComponent: "select",
-                inputProps: {
-                  options: bankNames,
-                  placeholder: "ชื่อธนาคาร",
-                },
-              },
-              {
-                name: "bankAccount",
-                label: "เลขบัญชี",
-                span: 24,
-                inputProps: {
-                  placeholder: "เลขบัญชี",
-                },
-              },
-            ]}
+            inputFields={addEmployeeInputFields}
           >
             <Flex justify="end" gap={8}>
-              <Button htmlType="submit" type="primary">
-                เพิ่มพนักงาน
-              </Button>
-              <Button
+              <MButton htmlType="submit">เพิ่มพนักงาน</MButton>
+              <MButton
                 onClick={() => setVisibleAddEmployeeModal(false)}
                 type="default"
               >
                 ยกเลิก
-              </Button>
+              </MButton>
             </Flex>
           </FormInputs>
         </Form>

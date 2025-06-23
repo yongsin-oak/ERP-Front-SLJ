@@ -1,19 +1,16 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
-import { useToken } from "../store/BearerToken";
 
 const req = axios.create({
   baseURL: "http://localhost:3001/",
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // ใช้สำหรับการส่งคุกกี้
+  timeout: 10000, // กำหนดเวลา timeout เป็น 10 วินาที
 });
 
 req.interceptors.request.use(
   function (config: InternalAxiosRequestConfig) {
-    const token = useToken.getState().token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     return config;
   },
   function (error) {

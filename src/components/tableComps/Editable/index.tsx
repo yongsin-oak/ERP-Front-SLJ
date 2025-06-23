@@ -1,21 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import type { GetRef, InputRef, TableProps } from "antd";
-import {
-  Button,
-  Flex,
-  Form,
-  Input,
-  InputNumber,
-  Popconfirm,
-  Space,
-  Table,
-} from "antd";
+import { Flex, Form, Input, InputNumber, Popconfirm, Space, Table } from "antd";
 
 import { ScanOutlined } from "@ant-design/icons";
-import FormItem from "../FormItem";
-import { onInputNoSpecialChars } from "../../utils/filteredInput";
 import { useForm } from "antd/es/form/Form";
 import { findIndex, isEmpty } from "lodash";
+import MFormItem from "../../Form/MFormItem";
+import { onInputNoSpecialChars } from "../../../utils/filteredInput";
+import MButton from "../../common/MButton";
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
 
@@ -260,7 +252,7 @@ const Editable = ({
       )}
       <Form form={productBarcodeForm} layout="vertical" onFinish={handleAdd}>
         <Flex gap={16}>
-          <FormItem name={["productBarcode"]}>
+          <MFormItem name={["productBarcode"]}>
             <Space.Compact style={{ width: "100%" }}>
               <Input
                 placeholder="บาร์โค้ดสินค้า"
@@ -269,20 +261,16 @@ const Editable = ({
                 onInput={onInputNoSpecialChars}
                 autoComplete="off"
               />
-              <Button type="primary" htmlType="submit">
-                เพิ่มสินค้า
-              </Button>
+              <MButton htmlType="submit">เพิ่มสินค้า</MButton>
             </Space.Compact>
-          </FormItem>
+          </MFormItem>
         </Flex>
       </Form>
       <Flex gap={8} justify="end" style={{ marginTop: 16 }}>
-        <Button type="default" onClick={onCancel}>
+        <MButton type="default" onClick={onCancel}>
           ยกเลิก
-        </Button>
-        <Button type="primary" onClick={() => onConfirm?.(dataSource)}>
-          บันทึก
-        </Button>
+        </MButton>
+        <MButton onClick={() => onConfirm?.(dataSource)}>บันทึก</MButton>
       </Flex>
     </Flex>
   );

@@ -1,6 +1,6 @@
 interface IconProps {
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   color?: string;
 }
 const ShopeeIcon = ({ width = 16, height = 16 }: IconProps) => (

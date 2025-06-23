@@ -1,8 +1,9 @@
 import { Flex } from "antd";
 import { useState } from "react";
-import BackButton from "../../../components/BackButton";
-import ButtonPath from "./ButtonPath";
-import RecordOrder from "./RecordOrder";
+import ButtonPath from "./components/ButtonPath";
+import RecordOrder from "./pages/RecordOrder";
+import HistoryOrder from "./pages/HistoryOrder";
+import BackButton from "../../../components/common/BackButton";
 
 const ECommerce = () => {
   const [showButton, setShowButton] = useState<boolean>(true);
@@ -28,7 +29,7 @@ const ECommerce = () => {
               recordOrder ? "บันทึกคำสั่งซื้อ" : "ประวัติการบันทึกคำสั่งซื้อ"
             }
           />
-          {recordOrder ? <RecordOrder /> : <div>History</div>}
+          {recordOrder ? <RecordOrder /> : <HistoryOrder />}
         </Flex>
       )}
     </>

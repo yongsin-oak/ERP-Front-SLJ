@@ -1,16 +1,17 @@
-import { useState } from "react";
-import { Button, Flex, Form, Modal, Tooltip, Upload, UploadProps } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import * as XLSX from "xlsx";
+import { Flex, Form, Modal, Tooltip, Upload, UploadProps } from "antd";
 import { RcFile } from "antd/es/upload";
+import { useState } from "react";
+import * as XLSX from "xlsx";
 
-import Select from "../Select";
-import { useForm } from "antd/es/form/Form";
-import FormItem from "../FormItem";
-import { DefaultOptionType } from "antd/es/select";
 import { InfoCircleOutlined } from "@ant-design/icons";
-import Text from "../Text";
+import { useForm } from "antd/es/form/Form";
+import { DefaultOptionType } from "antd/es/select";
 import { ColumnType } from "antd/es/table";
+import MButton from "../MButton";
+import Text from "../Text";
+import MFormItem from "../../Form/MFormItem";
+import MSelect from "../MSelect";
 
 interface Column extends ColumnType {
   information?: string;
@@ -18,9 +19,10 @@ interface Column extends ColumnType {
 interface Props extends UploadProps {
   onSave: (data: unknown[]) => void; // ฟังก์ชันสำหรับบันทึกข้อมูล
   columns: Column[]; // คอลัมน์ที่ต้องการให้เลือก
+  pastable?: boolean; // อนุญาตให้วางข้อมูลจากคลิปบอร์ดได้หรือไม่
 }
 
-const ExcelUpload = ({ columns, ...props }: Props) => {
+const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
   const [file, setFile] = useState<RcFile>();
   const [modalVisible, setModalVisible] = useState(false);
   const [options, setOptions] = useState<DefaultOptionType[]>([]);
@@ -82,9 +84,10 @@ const ExcelUpload = ({ columns, ...props }: Props) => {
         maxCount={1}
         showUploadList={false}
         beforeUpload={beforeUpload}
+        pastable={pastable}
         {...props}
       >
-        <Button icon={<UploadOutlined />}>อัพโหลด Excel</Button>
+        <MButton icon={<UploadOutlined />}>อัพโหลด Excel</MButton>
       </Upload>
       <Modal
         open={modalVisible}
@@ -111,8 +114,8 @@ const ExcelUpload = ({ columns, ...props }: Props) => {
               align="center"
               style={{ paddingBlock: 4 }}
             >
-              <FormItem name={column.key} label={column.title as string}>
-                <Select
+              <MFormItem name={column.key} label={column.title as string}>
+                <MSelect
                   allowClear
                   style={{ width: "100%" }}
                   options={options}
@@ -120,7 +123,7 @@ const ExcelUpload = ({ columns, ...props }: Props) => {
                     handleSelectChange(column.key as string, value)
                   }
                 />
-              </FormItem>
+              </MFormItem>
               {column?.information && (
                 <Tooltip title={column.information}>
                   <InfoCircleOutlined />
