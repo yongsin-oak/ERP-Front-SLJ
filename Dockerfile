@@ -14,7 +14,11 @@ COPY . .
 RUN bun install
 RUN bun run build
 
-EXPOSE 8080
+FROM nginx:stable-alpine
 
-# serve แบบ static
-CMD ["serve", "-s", "dist", "-l", "8080"]
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 8080
+CMD ["nginx", "-g", "daemon off;"]
+
