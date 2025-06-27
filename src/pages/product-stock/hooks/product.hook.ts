@@ -1,3 +1,4 @@
+import { convertUnit } from "../../../utils/convertUnit";
 import req from "../../../utils/req";
 import {
   onGetProductsProps,
@@ -36,8 +37,26 @@ export const onUploadProducts = async ({
     remaining,
     minStock,
     piecesPerPack,
+    unit,
     ...rest
   } = data;
+  const pWeight =
+    unit?.productWeight === "kg"
+      ? convertUnit(productDimensions?.weight ?? 0, "kg", "g")
+      : productDimensions?.weight;
+
+  const cWeight =
+    unit?.cartonWeight === "kg"
+      ? convertUnit(cartonDimensions?.weight ?? 0, "kg", "g")
+      : cartonDimensions?.weight;
+
+  const packRemaining =
+    unit?.remaining === "carton" ? remaining * (packPerCarton || 1) : remaining;
+
+  const packMinStock =
+    unit?.minStock === "carton"
+      ? (minStock || 0) * (packPerCarton || 1)
+      : minStock;
   try {
     const res = await req.post("/products", {
       ...rest,
@@ -53,18 +72,18 @@ export const onUploadProducts = async ({
         length: Number(productDimensions?.length),
         width: Number(productDimensions?.width),
         height: Number(productDimensions?.height),
-        weight: Number(productDimensions?.weight),
+        weight: Number(pWeight),
       },
       cartonDimensions: {
         length: Number(cartonDimensions?.length),
         width: Number(cartonDimensions?.width),
         height: Number(cartonDimensions?.height),
-        weight: Number(cartonDimensions?.weight),
+        weight: Number(cWeight),
       },
       piecesPerPack: Number(piecesPerPack),
       packPerCarton: Number(packPerCarton),
-      remaining: Number(remaining),
-      minStock: Number(minStock),
+      remaining: Number(packRemaining),
+      minStock: Number(packMinStock),
     });
     console.log(res);
   } catch (error) {

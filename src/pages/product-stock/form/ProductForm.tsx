@@ -3,21 +3,24 @@ import React from "react";
 import FormInputs from "../../../components/Form/FormInputs";
 import MButton from "../../../components/common/MButton";
 import { onGetProducts, onUploadProducts } from "../hooks/product.hook";
-import { ProductData } from "../interface/interface";
+import { FormProductData, ProductData } from "../interface/interface";
 import { addProductInputFields } from "./inputField";
+import { useWatch } from "antd/es/form/Form";
 
 export interface ProductFormCompProps {
-  form: FormInstance<ProductData>;
+  form: FormInstance<FormProductData>;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setData: React.Dispatch<React.SetStateAction<ProductData[] | undefined>>;
 }
 const ProductFormComp = ({ form, setOpen, setData }: ProductFormCompProps) => {
+  const remainingUnit = useWatch(["unit", "remaining"], form);
+  const minStockUnit = useWatch(["unit", "minStock"], form);
   return (
     <Form
       form={form}
       onFinish={(vals) => {
         onUploadProducts({
-          data: vals as ProductData,
+          data: vals,
           final: () => {
             setOpen(false);
             onGetProducts({ setData });
@@ -25,11 +28,15 @@ const ProductFormComp = ({ form, setOpen, setData }: ProductFormCompProps) => {
         });
       }}
       layout="vertical"
+      noValidate
     >
       <FormInputs
         formProps={form}
         gutter={[16, 16]}
-        inputFields={addProductInputFields}
+        inputFields={addProductInputFields({
+          remainingUnit,
+          minStockUnit,
+        })}
       >
         <Flex justify="end" gap={8}>
           <MButton htmlType="submit">เพิ่มสินค้า</MButton>

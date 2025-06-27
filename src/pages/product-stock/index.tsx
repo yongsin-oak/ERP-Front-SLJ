@@ -24,6 +24,7 @@ const ProductStock = () => {
   }, []);
 
   useEffect(() => {
+    if (!open) return;
     form.resetFields();
   }, [open, form]);
 
@@ -99,6 +100,7 @@ const ProductStock = () => {
         open={open}
         onCancel={() => setOpen(false)}
         footer={null}
+        width={mobile ? "100%" : 800}
         centered
       >
         <ProductFormComp form={form} setData={setData} setOpen={setOpen} />

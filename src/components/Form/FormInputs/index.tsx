@@ -50,6 +50,7 @@ const FormInputs = ({
                     ? undefined
                     : `กรุณา${requiredTypeMessage}${label}`
                 }
+                {...inputField.formItemProps}
               >
                 {customInput ? (
                   customInput
@@ -65,6 +66,13 @@ const FormInputs = ({
                     type="number"
                     min={0}
                     defaultValue={0}
+                    precision={inputProps?.nofloat ? 0 : undefined}
+                    step={inputProps?.nofloat ? 1 : undefined}
+                    parser={(value) => {
+                      const parsed = parseInt(value || "0");
+                      console.log(value);
+                      return isNaN(parsed) ? 0 : Math.max(0, parsed);
+                    }}
                     {...inputProps}
                   />
                 ) : (

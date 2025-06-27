@@ -6,6 +6,7 @@ import {
   SelectProps,
 } from "antd";
 import { NamePath } from "antd/es/form/interface";
+import { MFormItemProps } from "../MFormItem";
 // Base fields ที่ใช้ร่วมกันทุก input
 type InputFieldBase = {
   name?: NamePath;
@@ -14,6 +15,7 @@ type InputFieldBase = {
   customInput?: React.ReactNode;
   required?: boolean;
   colProps?: ColProps;
+  formItemProps?: MFormItemProps;
 };
 
 // กรณีที่เจาะจง inputComponent
@@ -29,7 +31,9 @@ type InputFieldSelect = InputFieldBase & {
 
 type InputFieldNumber = InputFieldBase & {
   inputComponent: "number";
-  inputProps?: InputNumberProps;
+  inputProps?: InputNumberProps & {
+    nofloat?: boolean; // กรณีไม่ต้องการให้มีจุดทศนิยม
+  };
 };
 
 // ✅ กรณี default = "input" สามารถเว้น inputComponent ไปได้

@@ -38,7 +38,15 @@ export interface onGetProductsProps {
   limit?: number;
 }
 
+export interface FormProductData extends ProductData {
+  unit: {
+    cartonWeight: string;
+    minStock: string;
+    productWeight: string;
+    remaining: string;
+  };
+}
 export interface onUploadProductsProps {
-  data: ProductData;
+  data: FormProductData;
   final?: () => void;
 }

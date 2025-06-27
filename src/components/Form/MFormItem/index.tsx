@@ -1,10 +1,10 @@
 import AFormItem, { FormItemProps } from "antd/es/form/FormItem";
 import Text from "../../common/Text";
 
-interface Props extends FormItemProps {
+export interface MFormItemProps extends FormItemProps {
   requiredMessage?: string;
 }
-const MFormItem = ({ requiredMessage, ...props }: Props) => {
+const MFormItem = ({ requiredMessage, ...props }: MFormItemProps) => {
   return (
     <AFormItem
       style={{ marginBottom: 0, flex: 1, width: "100%" }}
