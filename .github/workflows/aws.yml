@@ -82,6 +82,9 @@ jobs:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
+          environment-variables: |
+            VITE_ENV_MODE=${{ secrets.VITE_ENV_MODE }}
+            VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
