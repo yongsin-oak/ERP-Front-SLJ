@@ -1,7 +1,6 @@
 steps:
   # 1. Build Docker image for frontend
   - name: "gcr.io/cloud-builders/docker"
-    dir: "./frontend"
     args:
       [
         "build",
