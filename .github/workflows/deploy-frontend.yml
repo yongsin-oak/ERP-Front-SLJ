@@ -49,6 +49,9 @@ jobs:
             # ตรวจสอบว่าโฟลเดอร์ปลายทางมีอยู่หรือไม่
             mkdir -p /home/${{ secrets.GCE_USER }}/frontend
             
+            eval "$(ssh-agent -s)" # เริ่ม ssh-agent
+            ssh-add ~/.ssh/gce_key # เพิ่ม private key เข้าไปใน ssh-agent
+            
             # เข้าไปที่โฟลเดอร์หลักของ user เพื่อ git clone/pull
             cd /home/${{ secrets.GCE_USER }}
 
