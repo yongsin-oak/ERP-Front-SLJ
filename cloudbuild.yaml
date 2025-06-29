@@ -49,7 +49,8 @@ steps:
         # 4. Start the new frontend container with the pulled image
         docker compose up -d
     id: DeployFrontendOnGCE # ID สำหรับ Step นี้
-
+options:
+  logging: CLOUD_LOGGING_ONLY
 # ----------------------------------------------------------------------
 # global substitutions (ตัวแปรที่ Cloud Build มีให้โดยอัตโนมัติ)
 # ----------------------------------------------------------------------
