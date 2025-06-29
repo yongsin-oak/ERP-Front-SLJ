@@ -33,7 +33,13 @@ jobs:
       - name: Push image to Artifact Registry
         run: |
           docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
-
+          
+      - name: Upload docker-compose.yml to GCE VM
+        run: |
+          gcloud compute scp docker-compose.yml ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }}:/home/${{ secrets.GCE_USER }}/frontend/docker-compose.yml \
+            --zone=${{ secrets.GCE_INSTANCE_ZONE }} \
+            --quiet
+            
       # Step 7: Deploy to GCE VM
       # เชื่อมต่อผ่าน SSH เข้าไปใน GCE VM และรันคำสั่งเพื่อ deploy แอปพลิเคชัน
       - name: Deploy to GCE VM
@@ -71,6 +77,7 @@ jobs:
               # เพื่อให้การตั้งค่าล่าสุดถูกใช้งานเสมอ
               echo "Creating/Updating .env.production..."
               echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
+              
 
               # 6. Update and restart services with Docker Compose
               # สั่งให้ Docker Compose รัน container ใหม่จาก image ที่เพิ่ง pull ลงมา
