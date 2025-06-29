@@ -1,41 +1,58 @@
+# ชื่อไฟล์: frontend/cloudbuild.yaml
+
 steps:
-  # 1. Build Docker image for frontend
-  - name: "gcr.io/cloud-builders/docker"
+  # ----------------------------------------------------------------------
+  # Step 1: Build the Frontend Docker Image
+  # ใช้ Docker builder เพื่อสร้าง Docker Image ของ Frontend
+  # ----------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker' # Builder image สำหรับคำสั่ง Docker
     args:
-      [
-        "build",
-        "-t",
-        "asia-southeast1-docker.pkg.dev/slj-supply-center/frontend-repo/frontend:latest",
-        ".",
-      ]
+      - 'build' # คำสั่ง Docker: build image
+      - '-t' # ตั้งชื่อและ tag image
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/my-app-repo/frontend:$COMMIT_SHA' # ชื่อ Image และ Tag (ใช้ $COMMIT_SHA เป็นเวอร์ชัน)
+      - '-f' # ระบุ Dockerfile ที่จะใช้
+      - 'Dockerfile' # ไฟล์ Dockerfile ของ Frontend อยู่ในโฟลเดอร์เดียวกัน
+      - '.' # Build context คือโฟลเดอร์ปัจจุบัน (frontend/)
+    dir: 'frontend' # บอก Cloud Build ว่าให้ทำงานในโฟลเดอร์ 'frontend' ของ repo
+    id: BuildFrontendImage # ID สำหรับ Step นี้
 
-  # 2. Push image to Artifact Registry
-  - name: "gcr.io/cloud-builders/docker"
+  # ----------------------------------------------------------------------
+  # Step 2: Push the Frontend Docker Image to Google Artifact Registry
+  # เมื่อ Build เสร็จแล้ว ก็ Push Image ไปเก็บที่ Artifact Registry
+  # ----------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker' # ใช้ Docker builder อีกครั้ง
     args:
-      [
-        "push",
-        "asia-southeast1-docker.pkg.dev/slj-supply-center/frontend-repo/frontend:latest",
-      ]
+      - 'push' # คำสั่ง Docker: push image
+      - 'asia-southeast1-docker.pkg.dev/$PROJECT_ID/my-app-repo/frontend:$COMMIT_SHA' # Image ที่จะ Push (ต้องตรงกับชื่อที่ Build)
+    dir: 'frontend'
+    id: PushFrontendImage # ID สำหรับ Step นี้
 
-  # 3. SSH into GCE VM and redeploy only frontend service
-  - name: "gcr.io/cloud-builders/gcloud"
-    entrypoint: bash
+  # ----------------------------------------------------------------------
+  # Step 3: Deploy to GCE VM
+  # SSH เข้าไปใน GCE VM และรันคำสั่ง Docker Compose เพื่อ Deploy เวอร์ชันใหม่
+  # ----------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/gcloud' # ใช้ gcloud builder สำหรับคำสั่ง gcloud compute ssh
     args:
-      - -c
-      - |
-        gcloud compute ssh $GCE_SSH_USER@$GCE_INSTANCE_NAME \
-          --zone=$GCE_ZONE \
-          --command='
-            cd ~/erp-app &&
-            gcloud auth configure-docker asia-southeast1-docker.pkg.dev &&
-            docker compose pull frontend &&
-            docker compose up -d frontend
-          '
+      - 'compute'
+      - 'ssh'
+      - 'yongsin_oak@slj-instance' # ชื่อผู้ใช้ SSH และชื่อ VM Instance ของคุณ
+      - '--zone=asia-southeast1-c' # Zone ที่ VM ของคุณอยู่
+      - '--command' # คำสั่งที่จะรันบน GCE VM
+      - | # ใช้ Multi-line String เพื่อรันหลายคำสั่งบน VM
+        # 1. Change directory to the frontend project on the VM
+        cd /home/yongsin_oak/frontend && \
+        # 2. Stop and remove the old frontend container
+        docker compose down && \
+        # 3. Pull the latest Docker image from Artifact Registry
+        # (สำคัญ: ตรวจสอบให้แน่ใจว่า docker-compose.yml ของคุณใช้ image จาก Artifact Registry)
+        docker pull asia-southeast1-docker.pkg.dev/$PROJECT_ID/my-app-repo/frontend:$COMMIT_SHA && \
+        # 4. Start the new frontend container with the pulled image
+        docker compose up -d
+    id: DeployFrontendOnGCE # ID สำหรับ Step นี้
 
-substitutions:
-  _GCE_INSTANCE_NAME: "slj-instance"
-  _GCE_ZONE: "asia-southeast1-c	"
-  _GCE_SSH_USER: "yongsin_oak"
-
-images:
-  - "asia-southeast1-docker.pkg.dev/slj-supply-center/frontend-repo/frontend:latest"
+# ----------------------------------------------------------------------
+# global substitutions (ตัวแปรที่ Cloud Build มีให้โดยอัตโนมัติ)
+# ----------------------------------------------------------------------
+# $PROJECT_ID: Project ID ของ Google Cloud ของคุณ
+# $COMMIT_SHA: Hash ของ Git commit ที่ Trigger Build นี้
+# ----------------------------------------------------------------------
