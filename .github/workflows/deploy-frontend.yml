@@ -1,0 +1,45 @@
+name: Build & Deploy Frontend to GCE
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Build Docker image
+        run: |
+          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} ./frontend
+
+      - name: Push image to Artifact Registry
+        run: |
+          docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GCE_SSH_PRIVATE_KEY }}" > ~/.ssh/gce_key
+          chmod 600 ~/.ssh/gce_key
+          ssh-keyscan -H ${{ secrets.GCE_INSTANCE_NAME }} >> ~/.ssh/known_hosts
+
+      - name: Deploy on GCE VM
+        run: |
+          ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} <<EOF
+            echo "${{ secrets.ENV_PRODUCTION }}" > /home/${{ secrets.GCE_USER }}/frontend/.env.production
+            cd /home/${{ secrets.GCE_USER }}/frontend
+            docker-compose down
+            docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
+            docker-compose up -d
+          EOF
