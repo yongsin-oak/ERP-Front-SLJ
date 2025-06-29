@@ -1,12 +1,7 @@
-version: "3.8"
 
 services:
   frontend:
-    image: asia-southeast1-docker.pkg.dev/slj-supply-center/slj-repo/frontend:$COMMIT_SHA
+    image: ${FRONTEND_IMAGE_TAG}
     ports:
       - "80:80"
-    environment:
-      VITE_ENV_MODE: production
-      VITE_BACKEND_API_URL: ${VITE_BACKEND_API_URL}
-    env_file:
-      - .env.production
+    restart: always
