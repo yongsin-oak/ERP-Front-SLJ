@@ -43,14 +43,23 @@ jobs:
           chmod 600 ~/.ssh/gce_key
           ssh-keyscan -H ${{ secrets.GCE_INSTANCE_NAME }} >> ~/.ssh/known_hosts
 
+      - name: Copy SSH Key to GCE VM # <<<< เพิ่ม Step นี้
+        run: |
+          gcloud compute scp \
+          ~/.ssh/gce_key \ # ต้นทาง: Key ที่สร้างบน Runner
+          ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }}:/home/${{ secrets.GCE_USER }}/.ssh/gce_key \ # ปลายทางบน VM
+          --zone=${{ secrets.GCE_INSTANCE_ZONE }} # ต้องมี Secret นี้ด้วย
+          # ตั้งค่า permissions บน VM หลังจาก copy
+          ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} --zone=${{ secrets.GCE_INSTANCE_ZONE }} \
+          "chmod 600 /home/${{ secrets.GCE_USER }}/.ssh/gce_key" # ตั้ง chmod ให้ถูกต้องบน VM
       - name: Deploy on GCE VM
         run: |
-          ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} << 'EOF'
+          ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} << EOF
             # ตรวจสอบว่าโฟลเดอร์ปลายทางมีอยู่หรือไม่
             mkdir -p /home/${{ secrets.GCE_USER }}/frontend
             
             eval "$(ssh-agent -s)" # เริ่ม ssh-agent
-            ssh-add ~/.ssh/gce_key # เพิ่ม private key เข้าไปใน ssh-agent
+            ssh-add /home/${{ secrets.GCE_USER }}/.ssh/gce_key # <<<< เปลี่ยน Path เป็น Key บน VM
             
             # เข้าไปที่โฟลเดอร์หลักของ user เพื่อ git clone/pull
             cd /home/${{ secrets.GCE_USER }}
