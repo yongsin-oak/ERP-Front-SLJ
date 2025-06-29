@@ -28,6 +28,10 @@ jobs:
         run: |
           docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-supply-center/slj-repo/frontend:${{ github.sha }} .
 
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+          
       - name: Push image to Artifact Registry
         run: |
           docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-supply-center/slj-repo/frontend:${{ github.sha }}
