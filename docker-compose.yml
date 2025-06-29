@@ -9,7 +9,7 @@ services:
         VITE_BACKEND_API_URL: ${VITE_BACKEND_API_URL}
         VITE_ENV_MODE: production
     ports:
-      - "8080:8080"
+      - "80:80"
     environment:
       VITE_ENV_MODE: production
       VITE_BACKEND_API_URL: ${VITE_BACKEND_API_URL}

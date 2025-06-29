@@ -1,0 +1,42 @@
+steps:
+  # 1. Build Docker image for frontend
+  - name: "gcr.io/cloud-builders/docker"
+    dir: "./frontend"
+    args:
+      [
+        "build",
+        "-t",
+        "asia-southeast1-docker.pkg.dev/slj-supply-center/frontend-repo/frontend:latest",
+        ".",
+      ]
+
+  # 2. Push image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "asia-southeast1-docker.pkg.dev/slj-supply-center/frontend-repo/frontend:latest",
+      ]
+
+  # 3. SSH into GCE VM and redeploy only frontend service
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud compute ssh $GCE_SSH_USER@$GCE_INSTANCE_NAME \
+          --zone=$GCE_ZONE \
+          --command='
+            cd ~/erp-app &&
+            gcloud auth configure-docker asia-southeast1-docker.pkg.dev &&
+            docker compose pull frontend &&
+            docker compose up -d frontend
+          '
+
+substitutions:
+  _GCE_INSTANCE_NAME: "slj-instance"
+  _GCE_ZONE: "asia-southeast1-c	"
+  _GCE_SSH_USER: "yongsin_oak"
+
+images:
+  - "asia-southeast1-docker.pkg.dev/slj-supply-center/frontend-repo/frontend:latest"
