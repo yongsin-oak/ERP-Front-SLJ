@@ -70,9 +70,7 @@ jobs:
               # เขียนไฟล์ environment variables จาก GitHub Secrets
               # เพื่อให้การตั้งค่าล่าสุดถูกใช้งานเสมอ
               echo "Creating/Updating .env.production..."
-              cat << EOT > .env.production
-              ${{ secrets.ENV_PRODUCTION }}
-              EOT
+              echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
 
               # 6. Update and restart services with Docker Compose
               # สั่งให้ Docker Compose รัน container ใหม่จาก image ที่เพิ่ง pull ลงมา
