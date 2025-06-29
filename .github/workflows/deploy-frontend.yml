@@ -46,11 +46,11 @@ jobs:
       - name: Deploy on GCE VM
         run: |
           ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} << EOF
-cat << EOT > /home/${{ secrets.GCE_USER }}/frontend/.env.production
-${{ secrets.ENV_PRODUCTION }}
-EOT
-cd /home/${{ secrets.GCE_USER }}/frontend
-docker-compose down
-docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
-docker-compose up -d
-EOF
+          cat << EOT > /home/${{ secrets.GCE_USER }}/frontend/.env.production
+          ${{ secrets.ENV_PRODUCTION }}
+          EOT
+          cd /home/${{ secrets.GCE_USER }}/frontend
+          docker-compose down
+          docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
+          docker-compose up -d
+          EOF
