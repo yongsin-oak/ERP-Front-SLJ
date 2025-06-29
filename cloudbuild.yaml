@@ -38,7 +38,7 @@ steps:
       - "--command"
       - |
         # บน VM ก็ต้องไปที่ root ของโฟลเดอร์ ERP-Front-SLJ ที่คุณ unzip ไว้
-        cd /home/yongsin_oak/ERP-Front-SLJ && \ # <<<<<< แก้ตรงนี้!
+        cd /home/yongsin_oak/frontend && \
         docker compose down && \
         docker pull asia-southeast1-docker.pkg.dev/$PROJECT_ID/frontend-repo/frontend:$COMMIT_SHA && \
         docker compose up -d
