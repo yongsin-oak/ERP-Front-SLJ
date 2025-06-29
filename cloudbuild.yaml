@@ -9,7 +9,7 @@ steps:
     args:
       - "build" # คำสั่ง Docker: build image
       - "-t" # ตั้งชื่อและ tag image
-      - "asia-southeast1-docker.pkg.dev/$PROJECT_ID/slj-repo/frontend:$COMMIT_SHA" # ชื่อ Image และ Tag (ใช้ $COMMIT_SHA เป็นเวอร์ชัน)
+      - "asia-southeast1-docker.pkg.dev/slj-supply-center/slj-repo/frontend:$COMMIT_SHA" # ชื่อ Image และ Tag (ใช้ $COMMIT_SHA เป็นเวอร์ชัน)
       - "-f" # ระบุ Dockerfile ที่จะใช้
       - "Dockerfile" # ไฟล์ Dockerfile ของ Frontend อยู่ในโฟลเดอร์เดียวกัน
       - "." # Build context คือโฟลเดอร์ปัจจุบัน (frontend/)
@@ -22,7 +22,7 @@ steps:
   - name: "gcr.io/cloud-builders/docker" # ใช้ Docker builder อีกครั้ง
     args:
       - "push" # คำสั่ง Docker: push image
-      - "asia-southeast1-docker.pkg.dev/$PROJECT_ID/slj-repo/frontend:$COMMIT_SHA" # Image ที่จะ Push (ต้องตรงกับชื่อที่ Build)
+      - "asia-southeast1-docker.pkg.dev/slj-supply-center/slj-repo/frontend:$COMMIT_SHA" # Image ที่จะ Push (ต้องตรงกับชื่อที่ Build)
     id: PushFrontendImage # ID สำหรับ Step นี้
 
   # ----------------------------------------------------------------------
@@ -40,7 +40,7 @@ steps:
         # บน VM ก็ต้องไปที่ root ของโฟลเดอร์ ERP-Front-SLJ ที่คุณ unzip ไว้
         cd /home/yongsin_oak/frontend && \
         docker-compose down && \
-        docker pull asia-southeast1-docker.pkg.dev/$PROJECT_ID/slj-repo/frontend:$COMMIT_SHA && \
+        docker pull asia-southeast1-docker.pkg.dev/slj-supply-center/slj-repo/frontend:$COMMIT_SHA && \
         docker-compose up -d
     id: DeployFrontendOnGCE
 options:
