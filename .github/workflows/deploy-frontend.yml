@@ -26,11 +26,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} ./frontend
+          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-supply-center/slj-repo/frontend:${{ github.sha }} .
 
       - name: Push image to Artifact Registry
         run: |
-          docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
+          docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-supply-center/slj-repo/frontend:${{ github.sha }}
 
       - name: Setup SSH
         run: |
@@ -45,6 +45,6 @@ jobs:
             echo "${{ secrets.ENV_PRODUCTION }}" > /home/${{ secrets.GCE_USER }}/frontend/.env.production
             cd /home/${{ secrets.GCE_USER }}/frontend
             docker-compose down
-            docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
+            docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-supply-center/slj-repo/frontend:${{ github.sha }}
             docker-compose up -d
           EOF
