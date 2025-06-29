@@ -2,12 +2,7 @@ version: "3.8"
 
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        VITE_BACKEND_API_URL: ${VITE_BACKEND_API_URL}
-        VITE_ENV_MODE: production
+    image: asia-southeast1-docker.pkg.dev/slj-supply-center/slj-repo/frontend:$COMMIT_SHA
     ports:
       - "80:80"
     environment:
