@@ -80,7 +80,7 @@ jobs:
               #   frontend:
               #     image: ${FRONTEND_IMAGE_TAG}
               echo "Starting Docker Compose..."
-              FRONTEND_IMAGE_TAG=$IMAGE_NAME docker compose -f docker-compose.yml up -d
+              FRONTEND_IMAGE_TAG=$IMAGE_NAME docker-compose -f docker-compose.yml up -d
 
               # 7. Clean up old, unused Docker images
               # ลบ image เก่าๆ ที่ไม่ได้ใช้งานแล้วออกไปเพื่อประหยัดพื้นที่
