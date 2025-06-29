@@ -45,12 +45,31 @@ jobs:
 
       - name: Deploy on GCE VM
         run: |
-          ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} << EOF
-          cat << EOT > /home/${{ secrets.GCE_USER }}/frontend/.env.production
-          ${{ secrets.ENV_PRODUCTION }}
-          EOT
-          cd /home/${{ secrets.GCE_USER }}/frontend
-          docker-compose down
-          docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
-          docker-compose up -d
+          ssh -i ~/.ssh/gce_key ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} << 'EOF'
+            # ตรวจสอบว่าโฟลเดอร์ปลายทางมีอยู่หรือไม่
+            mkdir -p /home/${{ secrets.GCE_USER }}/frontend
+            
+            # เข้าไปที่โฟลเดอร์หลักของ user เพื่อ git clone/pull
+            cd /home/${{ secrets.GCE_USER }}
+
+            # ตรวจสอบว่า Repository ถูกโคลนมาแล้วหรือยัง
+            if [ -d "frontend" ]; then
+              # ถ้ามีแล้ว ให้เข้าไปในโฟลเดอร์และ git pull
+              cd frontend
+              git pull
+            else
+              # ถ้ายังไม่มี ให้ git clone
+              git clone git@github.com:yongsin-oak/ERP-Front-SLJ.git frontend
+              cd frontend
+            fi
+
+            # เขียน .env.production ทับลงไป (จาก Secret)
+            cat << EOT > .env.production
+            ${{ secrets.ENV_PRODUCTION }}
+            EOT
+
+            # สั่ง Docker Compose
+            docker compose down # แนะนำให้ใช้ docker compose (ไม่มี hyphen)
+            docker pull asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }}
+            docker compose up -d # แนะนำให้ใช้ docker compose (ไม่มี hyphen)
           EOF
