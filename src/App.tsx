@@ -26,6 +26,9 @@ function App() {
   useEffect(() => {
     getMe();
   }, [getMe]);
+  useEffect(() => {
+    console.log('Backend API URL:', import.meta.env.VITE_BACKEND_API_URL);
+  }, []);
   return (
     <>
       <ConfigProvider
