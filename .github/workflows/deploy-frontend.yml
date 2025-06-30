@@ -22,14 +22,23 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
 
-      - name: Upload .env.production to GCE VM
+      - name: Extract ENV vars as build-args
+        id: envargs
         run: |
-          echo "${{ secrets.ENV_PRODUCTION }}" | gcloud compute ssh ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} \
-            --zone=${{ secrets.GCE_INSTANCE_ZONE }} --quiet --command="cat > /home/${{ secrets.GCE_USER }}/frontend/.env.production"
+          echo "Parsing .env.production..."
+          echo "${{ secrets.ENV_PRODUCTION }}" | grep -v '^#' | grep '=' | while read line; do
+            key=$(echo "$line" | cut -d '=' -f 1)
+            value=$(echo "$line" | cut -d '=' -f 2-)
+            echo "BUILD_ARG_$key=$value" >> $GITHUB_OUTPUT
+          done
 
       - name: Build Docker image
         run: |
-          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
+          docker build \
+            --build-arg VITE_BACKEND_API_URL=${{ steps.envargs.outputs.BUILD_ARG_VITE_BACKEND_API_URL }} \
+            --build-arg VITE_ENV_MODE=${{ steps.envargs.outputs.BUILD_ARG_VITE_ENV_MODE }} \
+            --build-arg VITE_PUBLIC_KEY=${{ steps.envargs.outputs.BUILD_ARG_VITE_PUBLIC_KEY }} \
+            -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
 
       - name: Configure Docker for Artifact Registry
         run: |
