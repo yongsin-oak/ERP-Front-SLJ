@@ -16,18 +16,23 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-        
+
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT }}
 
-      - name: Build Docker image
+      - name: Upload .env.production to GCE VM
         run: |
-          docker build \
-            --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
-            --build-arg VITE_ENV_MODE=production \
-            -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
+          echo "${{ secrets.ENV_PRODUCTION }}" | gcloud compute ssh ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCE_INSTANCE_ZONE }} --quiet --command="cat > /home/${{ secrets.GCE_USER }}/frontend/.env.production"
+
+      - name: Build Docker image on GCE VM
+        run: |
+          gcloud compute ssh ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} --zone=${{ secrets.GCE_INSTANCE_ZONE }} --quiet --command="
+            cd /home/${{ secrets.GCE_USER }}/frontend
+            docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
+          "
 
       - name: Configure Docker for Artifact Registry
         run: |
@@ -74,15 +79,8 @@ jobs:
               APP_DIR="/home/${{ secrets.GCE_USER }}/frontend"
               mkdir -p $APP_DIR
               cd $APP_DIR
-
-              # 5. Create/Update .env.production file
-              # เขียนไฟล์ environment variables จาก GitHub Secrets
-              # เพื่อให้การตั้งค่าล่าสุดถูกใช้งานเสมอ
-              echo "Creating/Updating .env.production..."
-              echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
               
-
-              # 6. Update and restart services with Docker Compose
+              # 5. Update and restart services with Docker Compose
               # สั่งให้ Docker Compose รัน container ใหม่จาก image ที่เพิ่ง pull ลงมา
               # เราจะส่งชื่อ image เข้าไปเป็น environment variable ให้กับ docker-compose
               # ในไฟล์ docker-compose.yml ของคุณ ควรอ้างอิงถึงตัวแปรนี้ เช่น:
@@ -92,7 +90,7 @@ jobs:
               echo "Starting Docker Compose..."
               FRONTEND_IMAGE_TAG=$IMAGE_NAME docker-compose -f docker-compose.yml up -d
 
-              # 7. Clean up old, unused Docker images
+              # 6. Clean up old, unused Docker images
               # ลบ image เก่าๆ ที่ไม่ได้ใช้งานแล้วออกไปเพื่อประหยัดพื้นที่
               echo "Cleaning up old Docker images..."
               docker image prune -af
