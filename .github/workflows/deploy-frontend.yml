@@ -24,7 +24,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
+          docker build \
+            --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
+            --build-arg VITE_ENV_MODE=production \
+            -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
 
       - name: Configure Docker for Artifact Registry
         run: |
