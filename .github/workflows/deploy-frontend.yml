@@ -27,12 +27,9 @@ jobs:
           echo "${{ secrets.ENV_PRODUCTION }}" | gcloud compute ssh ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} \
             --zone=${{ secrets.GCE_INSTANCE_ZONE }} --quiet --command="cat > /home/${{ secrets.GCE_USER }}/frontend/.env.production"
 
-      - name: Build Docker image on GCE VM
+      - name: Build Docker image
         run: |
-          gcloud compute ssh ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} --zone=${{ secrets.GCE_INSTANCE_ZONE }} --quiet --command="
-            cd /home/${{ secrets.GCE_USER }}/frontend
-            docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
-          "
+          docker build -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend:${{ github.sha }} .
 
       - name: Configure Docker for Artifact Registry
         run: |
