@@ -18,6 +18,7 @@
     "@types/react-helmet": "^6.1.11",
     "@uidotdev/usehooks": "^2.4.1",
     "@vitejs/plugin-react": "^4.6.0",
+    "add": "^2.0.6",
     "antd": "^5.26.0",
     "axios": "^1.7.9",
     "dayjs": "^1.11.13",
@@ -28,7 +29,7 @@
     "react-dom": "^19.1.0",
     "react-helmet": "^6.1.0",
     "react-router-dom": "^7.1.1",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
