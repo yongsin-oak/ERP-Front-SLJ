@@ -61,6 +61,10 @@ const MainLayout = () => {
       />
     );
   };
+  const pathSnippets = location.pathname.split("/").filter((i) => i);
+  const selectedKeys = pathSnippets.map((_, index) => {
+    return `/${pathSnippets.slice(0, index + 1).join("/")}`;
+  });
   return (
     <Layout
       hasSider
@@ -97,7 +101,7 @@ const MainLayout = () => {
             theme={themeMode}
             mode="inline"
             defaultSelectedKeys={["home"]}
-            selectedKeys={[location?.pathname.replace("/", "")]}
+            selectedKeys={selectedKeys}
             items={menuItems(navigate)}
             style={{ borderInlineEnd: "none" }}
           />

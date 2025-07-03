@@ -15,36 +15,36 @@ import { NavigateFunction } from "react-router-dom";
 export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
   return [
     {
-      key: "home",
+      key: "/home",
       icon: <HomeOutlined />,
       label: "หน้าหลัก",
       onClick: () => navigate("/"),
     },
     {
-      key: "sell",
+      key: "/sell",
       icon: <ShoppingCartOutlined />,
       label: "การขาย",
       children: [
         {
-          key: "sell-pos",
+          key: "/sell/pos",
           label: "หน้าร้าน",
           icon: <ShopOutlined />,
           onClick: () => navigate("/sell/pos"),
         },
         {
-          key: "sell-online",
+          key: "/sell/online",
           label: "ขายโดยตรง",
           icon: <CommentOutlined />,
           onClick: () => navigate("/sell/online"),
         },
         {
-          key: "sell-delivery",
+          key: "/sell/delivery",
           label: "เดลิเวอรี่",
           icon: <DeliveryIcon />,
           onClick: () => navigate("/sell/delivery"),
         },
         {
-          key: "sell-ecommerce",
+          key: "/sell/ecommerce",
           label: "อีคอมเมิร์ซ",
           icon: <ShoppingOutlined />,
           onClick: () => navigate("/sell/ecommerce"),
@@ -52,19 +52,19 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       ],
     },
     {
-      key: "product-stock",
+      key: "/product-stock",
       icon: <TableOutlined />, //<ProductOutlined />
       label: "สต๊อกสินค้า",
       onClick: () => navigate("/product-stock"),
     },
     {
-      key: "employee",
+      key: "/employee",
       icon: <TeamOutlined />,
       label: "พนักงาน",
       onClick: () => navigate("/employee"),
     },
     {
-      key: "user",
+      key: "/user",
       icon: <UserOutlined />,
       label: "ผู้ใช้งาน",
       onClick: () => navigate("/user"),

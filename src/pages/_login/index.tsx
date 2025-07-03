@@ -43,7 +43,7 @@ const Login: React.FC = () => {
         }}
       >
         <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
-          Login
+          เข้าสู่ระบบ
         </Title>
         <Form
           name="login_form"
@@ -71,21 +71,14 @@ const Login: React.FC = () => {
               size="large"
             />
           </Form.Item>
-          <Form.Item name="remember" valuePropName="checked">
-            <Checkbox>Remember me</Checkbox>
-          </Form.Item>
           <Form.Item>
             <MButton
               htmlType="submit"
               block
               size="large"
-              style={{ marginBottom: 16 }}
             >
-              Login
+              เข้าสู่ระบบ
             </MButton>
-            <div style={{ textAlign: "center" }}>
-              <a href="/forgot-password">Forgot password?</a>
-            </div>
           </Form.Item>
         </Form>
       </div>

@@ -1,39 +1,274 @@
-import { Flex } from "antd";
-import { useState } from "react";
-import ButtonPath from "./components/ButtonPath";
-import RecordOrder from "./pages/RecordOrder";
-import HistoryOrder from "./pages/HistoryOrder";
-import BackButton from "../../../components/common/BackButton";
+import {
+  ScanOutlined,
+  ShopOutlined,
+  ShoppingOutlined,
+  TikTokFilled,
+  UserOutlined,
+} from "@ant-design/icons";
+import { Card, Col, Divider, Flex, Form, Input, Row, Space } from "antd";
+import { useForm, useWatch } from "antd/es/form/Form";
+import { DefaultOptionType } from "antd/es/select";
+import { ColumnType } from "antd/es/table";
+import { useEffect, useState } from "react";
+import LazadaIcon from "../../../assets/icon/platform/Lazada";
+import ShopeeIcon from "../../../assets/icon/platform/Shopee";
+import MButton from "../../../components/common/MButton";
+import MSelect from "../../../components/common/MSelect";
+import Text from "../../../components/common/Text";
+import { onInputNoSpecialChars } from "../../../utils/filteredInput";
+import req from "../../../utils/req";
+import { allShop, platform, tiktokShop } from "./allShop";
+import MFormItem from "../../../components/Form/MFormItem";
+import OrderEditable from "../../../components/tableComps/OrderEditable";
+import { useNavigate } from "react-router-dom";
 
-const ECommerce = () => {
-  const [showButton, setShowButton] = useState<boolean>(true);
-  const [recordOrder, setRecordOrder] = useState<boolean>(false);
+const ICON_SIZE = 30;
 
-  const handleButton = (path?: string) => {
-    setRecordOrder(false);
-    if (path === "record") {
-      setRecordOrder(true);
+const Ecommerce = () => {
+  const orderNumberText = "หมายเลขคำสั่งซื้อ / หมายเลขพัสดุ";
+  const [currentOrderNumber, setCurrentOrderNumber] = useState<string | null>(
+    ""
+  );
+  const [recording, setRecording] = useState<boolean>(false);
+  const [employees, setEmployees] = useState<DefaultOptionType[]>([]);
+  const [orderNumberForm] = useForm();
+  const currentEmployee = useWatch("employee", orderNumberForm);
+  const currentPlatform = useWatch("platform", orderNumberForm);
+  const currentShop = useWatch("shop", orderNumberForm);
+  const navigation = useNavigate();
+  const platformIcon = (size?: number | string) => {
+    switch (currentPlatform) {
+      case "Shopee":
+        return (
+          <ShopeeIcon width={size ?? ICON_SIZE} height={size ?? ICON_SIZE} />
+        );
+      case "Lazada":
+        return (
+          <LazadaIcon width={size ?? ICON_SIZE} height={size ?? ICON_SIZE} />
+        );
+      case "Tiktok":
+        return <TikTokFilled style={{ fontSize: size ?? ICON_SIZE }} />;
+      default:
+        return <></>;
     }
-    setShowButton(!showButton);
   };
+  const onFinish = () => {
+    const { orderNumber } = orderNumberForm.getFieldsValue();
+    setCurrentOrderNumber(orderNumber);
+    setRecording(true);
+    orderNumberForm.resetFields(["orderNumber"]);
+  };
+  const onPlatformChange = (val: string) => {
+    const tiktokShops = ["ทรัพย์ล้นใจ", "เจ้าสัวบรรจุภัณฑ์"];
+    if (val === "Tiktok" && !tiktokShops.includes(currentShop)) {
+      orderNumberForm.setFieldsValue({ shop: undefined });
+    }
+  };
+  const columns: ColumnType[] &
+    {
+      editable?: boolean;
+      number?: boolean;
+      dataIndex: string;
+    }[] = [
+    {
+      title: "ลำดับ",
+      dataIndex: "order",
+      width: 50,
+      align: "center",
+    },
+    {
+      title: "ชื่อสินค้า",
+      dataIndex: "productName",
+      ellipsis: true,
+    },
+    {
+      title: "จำนวน",
+      dataIndex: "productAmount",
+      editable: true,
+      number: true,
+      ellipsis: true,
+    },
+    {
+      title: "บาร์โค้ด",
+      dataIndex: "productBarcode",
+      editable: true,
+      ellipsis: true,
+    },
+  ];
+  const onPostOrder = async (data: any) => {
+    try {
+      const res = await req.post("/orders", {
+        employeeId: currentEmployee,
+        platform: currentPlatform,
+        shop: currentShop,
+        id: currentOrderNumber,
+        products: data.map((product: any) => ({
+          productBarcode: product.productBarcode,
+          productAmount: product.productAmount,
+        })),
+      });
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const onGetEmployees = async (limit: number) => {
+    try {
+      const res = await req.get("/employee", {
+        params: {
+          page: 1,
+          limit,
+        },
+      });
+      if (res.data.total > limit) {
+        onGetEmployees(res.data.total);
+        return;
+      }
+      setEmployees(
+        res.data.data.map((employee: { nickname: string; id: number }) => ({
+          label: employee.nickname,
+          value: employee.id,
+        }))
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    onGetEmployees(300);
+  }, []);
   return (
-    <>
-      {showButton ? (
-        <ButtonPath handleButton={handleButton}></ButtonPath>
-      ) : (
-        <Flex vertical gap={8}>
-          <BackButton
-            onBack={handleButton}
-            sticky
-            text={
-              recordOrder ? "บันทึกคำสั่งซื้อ" : "ประวัติการบันทึกคำสั่งซื้อ"
-            }
-          />
-          {recordOrder ? <RecordOrder /> : <HistoryOrder />}
+    <Flex vertical>
+      <MButton
+        style={{
+          width: "fit-content",
+          marginBottom: 16,
+          alignSelf: "flex-end",
+        }}
+        type="primary"
+        size="large"
+        onClick={() => navigation("/sell/ecommerce/history")}
+      >
+        ประวัติการบันทึก
+      </MButton>
+      <Card>
+        <Flex gap={16} vertical>
+          <Form form={orderNumberForm} onFinish={onFinish} layout="vertical">
+            <Row gutter={[16, 16]}>
+              <Col lg={8} sm={24} xs={24}>
+                <MFormItem
+                  name={["employee"]}
+                  requiredMessage="กรุณาเลือกผู้บันทึก"
+                  label="ผู้บันทึก"
+                >
+                  <MSelect
+                    prefix={<UserOutlined />}
+                    placeholder="ผู้บันทึก"
+                    disabled={recording}
+                    allowClear
+                    style={{ width: "100%" }}
+                    options={employees}
+                  />
+                </MFormItem>
+              </Col>
+              <Col lg={8} sm={24} xs={24}>
+                <MFormItem
+                  name={["platform"]}
+                  requiredMessage="กรุณาเลือกแพลตฟอร์ม"
+                  label="แพลตฟอร์ม"
+                >
+                  <MSelect
+                    prefix={
+                      currentPlatform ? (
+                        platformIcon("1em")
+                      ) : (
+                        <ShoppingOutlined />
+                      )
+                    }
+                    placeholder="แพลตฟอร์ม"
+                    allowClear
+                    style={{ width: "100%" }}
+                    options={platform}
+                    onChange={onPlatformChange}
+                  />
+                </MFormItem>
+              </Col>
+              <Col lg={8} sm={24} xs={24}>
+                <MFormItem
+                  name={["shop"]}
+                  requiredMessage="กรุณาเลือกร้านค้า"
+                  label="ร้านค้า"
+                >
+                  <MSelect
+                    prefix={<ShopOutlined />}
+                    placeholder="ร้านค้า"
+                    allowClear
+                    style={{ width: "100%" }}
+                    options={
+                      currentPlatform === "Tiktok" ? tiktokShop : allShop
+                    }
+                  />
+                </MFormItem>
+              </Col>
+              <Col lg={24} sm={24} xs={24}>
+                <MFormItem
+                  name={["orderNumber"]}
+                  requiredMessage={`กรุณากรอก${orderNumberText}`}
+                  label={orderNumberText}
+                >
+                  <Space.Compact style={{ width: "100%" }}>
+                    <Input
+                      prefix={<ScanOutlined />}
+                      placeholder={orderNumberText}
+                      onInput={onInputNoSpecialChars}
+                    />
+                    <MButton htmlType="submit">บันทึก</MButton>
+                  </Space.Compact>
+                </MFormItem>
+              </Col>
+            </Row>
+          </Form>
+          {recording && (
+            <>
+              <Divider>รายการสินค้า</Divider>
+              <Flex justify="space-between" align="center" gap={16}>
+                <Flex align="center" gap={8}>
+                  {platformIcon()}
+                  <Text h6 medium>
+                    {currentShop}
+                  </Text>
+                </Flex>
+                <Text h6 medium center>
+                  {`หมายเลขคำสั่งซื้อ : `}
+                  {currentOrderNumber}
+                </Text>
+              </Flex>
+              <OrderEditable
+                columns={columns}
+                onCancel={() => {
+                  setRecording(false);
+                }}
+                onConfirm={(data) => {
+                  onPostOrder(data);
+                  setRecording(false);
+                }}
+                onAddItem={(productBarcode, dataSource, setDataSource) => {
+                  const newData = {
+                    order: dataSource.length + 1,
+                    productName: "",
+                    productAmount: 1,
+                    productBarcode,
+                  };
+                  setDataSource([...dataSource, newData]);
+                  console.log(newData);
+                }}
+              />
+            </>
+          )}
         </Flex>
-      )}
-    </>
+      </Card>
+    </Flex>
   );
 };
 
-export default ECommerce;
+export default Ecommerce;

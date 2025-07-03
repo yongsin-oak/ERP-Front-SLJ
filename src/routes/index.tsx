@@ -13,6 +13,7 @@ import Example from "../pages/example";
 import Login from "../pages/_login";
 import NotFoundPage from "../pages/_error/404";
 import ErrorPage from "../pages/_error/500";
+import HistoryOrder from "../pages/_sell/_ecommerce/history/HistoryOrder";
 
 const Routers = () => {
   const genR = (path: string, element: React.ReactElement) => {
@@ -27,6 +28,7 @@ const Routers = () => {
     genR("/sell/online", <DirectSell />),
     genR("/sell/delivery", <Deliver />),
     genR("/sell/ecommerce", <ECommerce />),
+    genR("/sell/ecommerce/history", <HistoryOrder />),
     genR("/product-stock", <ProductStock />),
     genR("/user", <User />),
     genR("/employee", <Employee />),

@@ -1,17 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { Ref, useContext, useEffect, useRef, useState } from "react";
 import type { GetRef, InputRef, TableProps } from "antd";
-import { Flex, Form, Input, InputNumber, Popconfirm, Space, Table } from "antd";
-
-import { ScanOutlined } from "@ant-design/icons";
-import { useForm } from "antd/es/form/Form";
-import { findIndex, isEmpty } from "lodash";
-import MFormItem from "../../Form/MFormItem";
-import { onInputNoSpecialChars } from "../../../utils/filteredInput";
-import MButton from "../../common/MButton";
+import { Form, Input, InputNumber, Table } from "antd";
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
 
-const EditableContext = React.createContext<FormInstance<any> | null>(null);
+const EditableContext = React.createContext<FormInstance<unknown> | null>(null);
 
 interface Item {
   key: string;
@@ -20,11 +13,9 @@ interface Item {
   address: string;
 }
 
-interface EditableRowProps {
-  index: number;
-}
+interface EditableRowProps {}
 
-const EditableRow: React.FC<EditableRowProps> = ({ index, ...props }) => {
+const EditableRow: React.FC<EditableRowProps> = ({ ...props }) => {
   const [form] = Form.useForm();
   return (
     <Form form={form} component={false}>
@@ -71,7 +62,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
 
   const save = async () => {
     try {
-      const values = await form.validateFields();
+      const values = (await form.validateFields()) as Partial<Item>;
 
       toggleEdit();
       handleSave({ ...record, ...values });
@@ -91,7 +82,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
       >
         {number ? (
           <InputNumber
-            ref={inputRef as any}
+            ref={inputRef as Ref<HTMLInputElement>}
             onPressEnter={save}
             onBlur={save}
           />
@@ -113,100 +104,31 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
   return <td {...restProps}>{childNode}</td>;
 };
 
-interface DataType {
+export interface DataType {
   order: number;
   productName: string;
   productAmount: number;
   productBarcode: string;
+  [key: string]: string | number;
 }
 
 type ColumnTypes = Exclude<TableProps<DataType>["columns"], undefined>;
 
-interface EditableProps {
-  columns: ColumnTypes &
-    {
-      editable?: boolean;
-      number?: boolean;
-      dataIndex: string;
-    }[];
-  onCancel?: () => void;
-  onConfirm?: (data: any) => void;
-}
-const Editable = ({
-  columns: columnsProp,
-  onCancel,
-  onConfirm,
-}: EditableProps) => {
-  const [dataSource, setDataSource] = useState<DataType[]>([]);
-  const [count, setCount] = useState<number>(1);
-  const [productBarcodeForm] = useForm();
-  const handleDelete = (order: React.Key) => {
-    const newData = dataSource.filter((item) => item.order !== order);
-    setDataSource(newData);
-  };
-
-  const defaultColumns: (ColumnTypes[number] & {
+export interface EditableTableProps {
+  columns: (ColumnTypes[number] & {
     editable?: boolean;
     number?: boolean;
     dataIndex: string;
-  })[] = [
-    ...columnsProp,
-    {
-      title: "",
-      dataIndex: "operation",
-      render: (_, record: DataType) => {
-        return dataSource.length >= 1 ? (
-          <Popconfirm
-            title="ลบรายการนี้?"
-            onConfirm={() => handleDelete(record.order)}
-            cancelText="ยกเลิก"
-            okText="ลบ"
-          >
-            <a>Delete</a>
-          </Popconfirm>
-        ) : null;
-      },
-      width: 80,
-      ellipsis: true,
-    },
-  ];
-  const handleAdd = () => {
-    const { productBarcode } = productBarcodeForm.getFieldsValue();
-    if (isEmpty(productBarcode)) return;
-    const exitsIndex = findIndex(
-      dataSource,
-      (item) => item.productBarcode === productBarcode
-    );
-    productBarcodeForm.resetFields(["productBarcode"]);
-    if (exitsIndex !== -1) {
-      setDataSource((prev) => {
-        const newData = [...prev];
-        newData[exitsIndex].productAmount += 1;
-        return newData;
-      });
-      return;
-    }
-    const newData: DataType = {
-      order: count,
-      productName: `สินค้าที่ ${count}`,
-      productAmount: 1,
-      productBarcode,
-    };
-    setDataSource([...dataSource, newData]);
-    setCount(count + 1);
-  };
+  })[];
+  dataSource: DataType[];
+  handleSave: (row: DataType) => void;
+}
 
-  const handleSave = (row: DataType) => {
-    const newData = [...dataSource];
-    const index = newData.findIndex((item) => row.order === item.order);
-    const item = newData[index];
-    newData.splice(index, 1, {
-      ...item,
-      ...row,
-    });
-    setDataSource(newData);
-  };
-
+const Editable: React.FC<EditableTableProps> = ({
+  columns: propColumns,
+  dataSource,
+  handleSave,
+}) => {
   const components = {
     body: {
       row: EditableRow,
@@ -214,7 +136,7 @@ const Editable = ({
     },
   };
 
-  const columns = defaultColumns.map((col) => {
+  const columns = propColumns.map((col) => {
     if (!col.editable) {
       return col;
     }
@@ -232,44 +154,18 @@ const Editable = ({
   });
 
   return (
-    <Flex vertical gap={8}>
-      {dataSource.length > 0 && (
-        <Table<DataType>
-          components={components}
-          size="small"
-          rowKey={(record) => record.order}
-          rowClassName={() => "editable-row"}
-          bordered
-          pagination={false}
-          dataSource={dataSource}
-          columns={columns as ColumnTypes}
-          scroll={{ y: 400 }}
-          sticky
-        />
-      )}
-      <Form form={productBarcodeForm} layout="vertical" onFinish={handleAdd}>
-        <Flex gap={16}>
-          <MFormItem name={["productBarcode"]}>
-            <Space.Compact style={{ width: "100%" }}>
-              <Input
-                placeholder="บาร์โค้ดสินค้า"
-                name="productBarcode"
-                prefix={<ScanOutlined />}
-                onInput={onInputNoSpecialChars}
-                autoComplete="off"
-              />
-              <MButton htmlType="submit">เพิ่มสินค้า</MButton>
-            </Space.Compact>
-          </MFormItem>
-        </Flex>
-      </Form>
-      <Flex gap={8} justify="end" style={{ marginTop: 16 }}>
-        <MButton type="default" onClick={onCancel}>
-          ยกเลิก
-        </MButton>
-        <MButton onClick={() => onConfirm?.(dataSource)}>บันทึก</MButton>
-      </Flex>
-    </Flex>
+    <Table<DataType>
+      components={components}
+      size="small"
+      rowKey={(record) => record.order}
+      rowClassName={() => "editable-row"}
+      bordered
+      pagination={false}
+      dataSource={dataSource}
+      columns={columns as ColumnTypes}
+      scroll={{ y: 400 }}
+      sticky
+    />
   );
 };
 

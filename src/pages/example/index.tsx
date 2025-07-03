@@ -1,4 +1,4 @@
-import EditableComp from "../../components/tableComps/Edit";
+import EditableComp from "../../components/tableComps/Editable";
 
 const Example = () => {
   return <EditableComp />;
