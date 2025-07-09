@@ -1,14 +1,17 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Checkbox, Form, Input, Typography } from "antd";
+import { Flex, Form, Input, Typography } from "antd";
 import React from "react";
 import { Navigate } from "react-router-dom";
 import MButton from "../../components/common/MButton";
 import { useAuth } from "../../store";
+import { useTheme } from "@emotion/react";
+import { BORDER_RADIUS, SPACING } from "../../theme/constants";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
   const { isLoadingUser, isAuth, login } = useAuth();
+  const theme = useTheme();
   const onLogin = async (values: {
     username: string;
     password: string;
@@ -23,23 +26,25 @@ const Login: React.FC = () => {
   return isAuth ? (
     <Navigate to="/" replace />
   ) : (
-    <div
+    <Flex
       style={{
-        display: "flex",
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
         width: "100%",
-        backgroundColor: "#f0f2f5",
+        backgroundColor: theme.background_,
       }}
+      justify="center"
+      align="center"
     >
       <div
         style={{
           width: 300,
-          padding: 24,
-          backgroundColor: "#fff",
-          borderRadius: 8,
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+          padding: SPACING["2xl"],
+          backgroundColor: theme.backgroundBox_ || theme.backgroundElevated_,
+          borderRadius: BORDER_RADIUS.lg,
+          border: `1px solid ${theme.border_}`,
+          boxShadow: theme.boxShadow_,
         }}
       >
         <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
@@ -76,13 +81,16 @@ const Login: React.FC = () => {
               htmlType="submit"
               block
               size="large"
+              style={{
+                margin: "auto",
+              }}
             >
               เข้าสู่ระบบ
             </MButton>
           </Form.Item>
         </Form>
       </div>
-    </div>
+    </Flex>
   );
 };
 

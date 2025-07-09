@@ -1,39 +1,27 @@
-import {
-  LeftOutlined,
-  MenuOutlined,
-  MoonFilled,
-  RightOutlined,
-  SunFilled,
-} from "@ant-design/icons";
+import { LeftOutlined, MenuOutlined, RightOutlined } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
 import { useWindowSize } from "@uidotdev/usehooks";
-import { Drawer, Flex, Layout, Menu } from "antd";
+import { Drawer, Layout, Menu } from "antd";
 import { Content } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
 import { CSSProperties, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MButton from "../components/common/MButton";
-import { useAuth, useStoreTheme } from "../store";
+import LogoutButton from "../components/LogoutButton";
+import { useStoreTheme } from "../store";
 import { isMobile } from "../utils/responsive";
 import { menuItems } from "./menu";
-import { HeadSider, StickyButton } from "./styles";
+import { StickyButton } from "./styles";
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
-  const { setTheme, themeMode } = useStoreTheme();
+  const { themeMode } = useStoreTheme();
   const theme = useTheme();
-  const isDark = themeMode === "dark";
-  const iconSize = collapsed ? 18 : 16;
   const navigate = useNavigate();
   const { width: windowWidth } = useWindowSize();
   const mobileSize = windowWidth && isMobile(windowWidth);
   const location = useLocation();
-  const { logout } = useAuth();
-
-  const onLogout = () => {
-    logout();
-  };
   const siderStyles: CSSProperties = {
     overflow: "auto",
     height: "100vh",
@@ -43,23 +31,6 @@ const MainLayout = () => {
     scrollbarWidth: "thin",
     position: "fixed",
     borderInlineEnd: `1px solid ${theme.splitLine_}`,
-  };
-  const SwitchThemeButton = () => {
-    return isDark ? (
-      <MoonFilled
-        style={{
-          fontSize: iconSize,
-          transition: "font-size .2s",
-          color: "white",
-        }}
-        onClick={() => setTheme("light")}
-      />
-    ) : (
-      <SunFilled
-        style={{ fontSize: iconSize, transition: "font-size .2s" }}
-        onClick={() => setTheme("dark")}
-      />
-    );
   };
   const pathSnippets = location.pathname.split("/").filter((i) => i);
   const selectedKeys = pathSnippets.map((_, index) => {
@@ -94,9 +65,6 @@ const MainLayout = () => {
           theme={themeMode}
           style={siderStyles}
         >
-          <HeadSider justifyContent={collapsed ? "center" : "start"}>
-            <SwitchThemeButton />
-          </HeadSider>
           <Menu
             theme={themeMode}
             mode="inline"
@@ -105,13 +73,7 @@ const MainLayout = () => {
             items={menuItems(navigate)}
             style={{ borderInlineEnd: "none" }}
           />
-          <Flex
-            justify="center"
-            style={{ padding: 16, cursor: "pointer" }}
-            onClick={onLogout}
-          >
-            ออกจากระบบ
-          </Flex>
+          <LogoutButton />
         </Sider>
       )}
 
@@ -123,9 +85,6 @@ const MainLayout = () => {
             placement="left"
             styles={{ body: { padding: 0 } }}
           >
-            <HeadSider justifyContent="start" style={{ height: 24 }}>
-              <SwitchThemeButton />
-            </HeadSider>
             <Menu
               theme={themeMode}
               mode="inline"
@@ -134,13 +93,7 @@ const MainLayout = () => {
               style={{ borderInlineEnd: "none" }}
               onClick={() => setShowDrawer(false)}
             />
-            <Flex
-              justify="center"
-              style={{ padding: 16, cursor: "pointer" }}
-              onClick={onLogout}
-            >
-              ออกจากระบบ
-            </Flex>
+            <LogoutButton />
           </Drawer>
         </>
       )}
@@ -164,7 +117,7 @@ const MainLayout = () => {
             backgroundColor: theme.background_,
           }}
         >
-          <Outlet />
+          <Outlet />{" "}
         </Content>
       </Layout>
     </Layout>

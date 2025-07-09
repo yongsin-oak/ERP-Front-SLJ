@@ -1,18 +1,17 @@
-import "./App.scss";
-import "./App.scss";
-import { ConfigProvider } from "antd";
 import { ThemeProvider } from "@emotion/react";
-import lightTheme from "./theme/lightMode.module.scss";
-import darkTheme from "./theme/darkMode.module.scss";
+import { ConfigProvider } from "antd";
+import dayjs from "dayjs";
+import buddhistEra from "dayjs/plugin/buddhistEra";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import { useEffect } from "react";
+import { CookiesProvider } from "react-cookie";
 import { BrowserRouter } from "react-router-dom";
+import "./App.scss";
+import FloatingThemeButton from "./components/common/FloatingThemeButton";
 import Routers from "./routes";
 import { useAuth, useStoreTheme } from "./store";
-import buddhistEra from "dayjs/plugin/buddhistEra";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
-import dayjs from "dayjs";
-import { CookiesProvider } from "react-cookie";
-import { useEffect } from "react";
+import { themes } from "./theme";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(utc);
@@ -20,48 +19,26 @@ dayjs.extend(timezone);
 
 function App() {
   const { themeMode } = useStoreTheme();
+  const theme = themes[themeMode];
   const { getMe } = useAuth();
-  const isDark = themeMode === "dark";
-  const theme = isDark ? darkTheme : lightTheme;
   useEffect(() => {
     getMe();
   }, [getMe]);
   useEffect(() => {
-    console.log('Backend API URL:', import.meta.env.VITE_BACKEND_API_URL);
+    console.log("Backend API URL:", import.meta.env.VITE_BACKEND_API_URL);
   }, []);
   return (
     <>
-      <ConfigProvider
-        theme={{
-          token: {
-            colorPrimary: theme.red100_,
-            colorInfo: theme.red100_,
-            colorSuccess: theme.green100_,
-            colorWarning: theme.orange100_,
-            colorError: theme.red300_,
-            colorLink: theme.red200_,
-            colorTextBase: isDark ? "#fff" : "#000",
-            colorBgBase: isDark ? "#000" : "#fff",
-          },
-          components: {
-            Menu: {
-              darkItemBg: theme.background_,
-              darkPopupBg: theme.background_,
-              darkSubMenuItemBg: theme.background_,
-            },
-            Layout: {
-              siderBg: theme.background_,
-              triggerBg: theme.background_,
-            },
-          },
-        }}
-      >
-        <ThemeProvider theme={theme}>
+      <ConfigProvider theme={theme.antd}>
+        <ThemeProvider theme={theme.emotion}>
           <CookiesProvider>
             <BrowserRouter>
               <Routers></Routers>
             </BrowserRouter>
           </CookiesProvider>
+
+          {/* Floating Theme Button - Available on all pages */}
+          <FloatingThemeButton />
         </ThemeProvider>
       </ConfigProvider>
     </>
