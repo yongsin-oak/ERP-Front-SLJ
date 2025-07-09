@@ -1,0 +1,71 @@
+/* Sidebar transition fixes */
+.ant-layout-sider {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-layout-sider-children {
+  overflow: hidden !important;
+  position: relative;
+}
+
+.ant-layout-sider-trigger {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Menu transition fixes */
+.ant-menu {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-menu-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-menu-submenu-title {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ป้องกัน horizontal scrollbar */
+.ant-layout-sider-children {
+  overflow-x: hidden !important;
+}
+
+/* ป้องกัน content shifting ระหว่าง animation */
+.ant-layout-sider-collapsed .ant-menu-item-icon {
+  margin-inline-end: 0 !important;
+}
+
+.ant-layout-sider-collapsed .ant-menu-submenu-title .ant-menu-item-icon {
+  margin-inline-end: 0 !important;
+}
+
+/* ป้องกัน text วิบวับ */
+.ant-layout-sider-collapsed .ant-menu-title-content {
+  opacity: 0 !important;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-layout-sider:not(.ant-layout-sider-collapsed) .ant-menu-title-content {
+  opacity: 1 !important;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s !important;
+}
+
+/* ป้องกัน submenu arrow วิบวับ */
+.ant-layout-sider-collapsed .ant-menu-submenu-arrow {
+  opacity: 0 !important;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-layout-sider:not(.ant-layout-sider-collapsed) .ant-menu-submenu-arrow {
+  opacity: 1 !important;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s !important;
+}
+
+/* ป้องกัน scrollbar flash ระหว่าง transition */
+.ant-layout-sider.ant-layout-sider-collapsed {
+  overflow: hidden !important;
+}
+
+.ant-layout-sider:not(.ant-layout-sider-collapsed) {
+  overflow: hidden !important;
+}

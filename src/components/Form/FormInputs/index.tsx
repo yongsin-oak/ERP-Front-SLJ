@@ -4,6 +4,7 @@ import MInputNumber from "../../common/MInputNumber";
 import MSelect from "../../common/MSelect";
 import MFormItem from "../MFormItem";
 import { InputFields } from "./interface";
+import _ from "lodash";
 
 interface Props {
   onFinish?: (values: unknown) => void;
@@ -69,9 +70,13 @@ const FormInputs = ({
                     precision={inputProps?.nofloat ? 0 : undefined}
                     step={inputProps?.nofloat ? 1 : undefined}
                     parser={(value) => {
-                      const parsed = parseInt(value || "0");
-                      console.log(value);
-                      return isNaN(parsed) ? 0 : Math.max(0, parsed);
+                      if (inputProps?.nofloat) {
+                        const parsed = parseInt(value || "0", 10);
+                        return isNaN(parsed) ? 0 : Math.max(0, parsed);
+                      } else {
+                        const parsed = parseFloat(value || "0");
+                        return isNaN(parsed) ? 0 : Math.max(0, parsed);
+                      }
                     }}
                     {...inputProps}
                   />

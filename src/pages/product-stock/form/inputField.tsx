@@ -99,6 +99,7 @@ export const addProductInputFields = ({
       inputProps: {
         placeholder: "ราคาต้นทุนต่อแพ็ค",
         prefix: "฿",
+        precision: 2,
       },
       required: false,
     },
@@ -117,6 +118,7 @@ export const addProductInputFields = ({
       inputProps: {
         placeholder: "ราคาต้นทุนต่อลัง",
         prefix: "฿",
+        precision: 2,
       },
       required: false,
     },
@@ -135,6 +137,7 @@ export const addProductInputFields = ({
       inputProps: {
         placeholder: "ราคาขายต่อแพ็ค",
         prefix: "฿",
+        precision: 2,
       },
       required: false,
     },
@@ -153,6 +156,7 @@ export const addProductInputFields = ({
       inputProps: {
         placeholder: "ราคาขายต่อลัง",
         prefix: "฿",
+        precision: 2,
       },
       required: false,
     },
@@ -172,6 +176,7 @@ export const addProductInputFields = ({
         placeholder: "จำนวนชิ้นต่อแพ็ค",
         suffix: "ชิ้น",
         nofloat: true,
+        precision: 2,
       },
       required: false,
     },
@@ -191,6 +196,7 @@ export const addProductInputFields = ({
         placeholder: "จำนวนแพ็คต่อลัง",
         suffix: "แพ็ค",
         nofloat: true,
+        precision: 2,
       },
       formItemProps: {
         rules: [
@@ -211,13 +217,17 @@ export const addProductInputFields = ({
       customInput: (
         <Space.Compact style={{ width: "100%" }}>
           <MFormItem name={["productDimensions", "width"]}>
-            <MInputNumber placeholder="กว้าง (ซม.)" suffix="ซม." />
+            <MInputNumber
+              placeholder="กว้าง (ซม.)"
+              suffix="ซม."
+              precision={2}
+            />
           </MFormItem>
           <MFormItem name={["productDimensions", "length"]}>
-            <MInputNumber placeholder="ยาว (ซม.)" suffix="ซม." />
+            <MInputNumber placeholder="ยาว (ซม.)" suffix="ซม." precision={2} />
           </MFormItem>
           <MFormItem name={["productDimensions", "height"]}>
-            <MInputNumber placeholder="สูง (ซม.)" suffix="ซม." />
+            <MInputNumber placeholder="สูง (ซม.)" suffix="ซม." precision={2} />
           </MFormItem>
         </Space.Compact>
       ),
@@ -229,13 +239,25 @@ export const addProductInputFields = ({
       customInput: (
         <Space.Compact style={{ width: "100%" }}>
           <MFormItem name={["cartonDimensions", "width"]}>
-            <MInputNumber placeholder="กว้าง (ซม.)" suffix="ซม." />
+            <MInputNumber
+              placeholder="กว้าง (ซม.)"
+              suffix="ซม."
+              precision={2}
+            />
           </MFormItem>
           <MFormItem name={["cartonDimensions", "length"]}>
-            <MInputNumber placeholder="กว้าง (ซม.)" suffix="ซม." />
+            <MInputNumber
+              placeholder="กว้าง (ซม.)"
+              suffix="ซม."
+              precision={2}
+            />
           </MFormItem>
           <MFormItem name={["cartonDimensions", "height"]}>
-            <MInputNumber placeholder="กว้าง (ซม.)" suffix="ซม." />
+            <MInputNumber
+              placeholder="กว้าง (ซม.)"
+              suffix="ซม."
+              precision={2}
+            />
           </MFormItem>
         </Space.Compact>
       ),
@@ -263,6 +285,7 @@ export const addProductInputFields = ({
             </Select>
           </MFormItem>
         ),
+        precision: 2,
       },
       required: false,
     },
@@ -288,6 +311,7 @@ export const addProductInputFields = ({
             </Select>
           </MFormItem>
         ),
+        precision: 2,
       },
       required: false,
     },
@@ -313,6 +337,7 @@ export const addProductInputFields = ({
             </Select>
           </MFormItem>
         ),
+        precision: 2,
       },
       required: false,
     },
@@ -338,6 +363,7 @@ export const addProductInputFields = ({
             </Select>
           </MFormItem>
         ),
+        precision: 2,
       },
     },
   ];

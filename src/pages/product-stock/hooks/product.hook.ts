@@ -1,9 +1,11 @@
-import { convertUnit } from "../../../utils/convertUnit";
 import req from "../../../utils/req";
 import {
   onGetProductsProps,
   onUploadProductsProps,
+  ProductData,
+  FormProductData,
 } from "../interface/interface";
+import { transformFormToProductData } from "../utils/transformProductData";
 
 export const onGetProducts = async ({
   setData,
@@ -28,67 +30,94 @@ export const onUploadProducts = async ({
   data,
   final,
 }: onUploadProductsProps) => {
-  const {
-    costPrice,
-    sellPrice,
-    cartonDimensions,
-    packPerCarton,
-    productDimensions,
-    remaining,
-    minStock,
-    piecesPerPack,
-    unit,
-    ...rest
-  } = data;
-  const pWeight =
-    unit?.productWeight === "kg"
-      ? convertUnit(productDimensions?.weight ?? 0, "kg", "g")
-      : productDimensions?.weight;
-
-  const cWeight =
-    unit?.cartonWeight === "kg"
-      ? convertUnit(cartonDimensions?.weight ?? 0, "kg", "g")
-      : cartonDimensions?.weight;
-
-  const packRemaining =
-    unit?.remaining === "carton" ? remaining * (packPerCarton || 1) : remaining;
-
-  const packMinStock =
-    unit?.minStock === "carton"
-      ? (minStock || 0) * (packPerCarton || 1)
-      : minStock;
   try {
-    const res = await req.post("/products", {
-      ...rest,
-      costPrice: {
-        pack: Number(costPrice?.pack),
-        carton: Number(costPrice?.carton),
-      },
-      sellPrice: {
-        pack: Number(sellPrice?.pack),
-        carton: Number(sellPrice?.carton),
-      },
-      productDimensions: {
-        length: Number(productDimensions?.length),
-        width: Number(productDimensions?.width),
-        height: Number(productDimensions?.height),
-        weight: Number(pWeight),
-      },
-      cartonDimensions: {
-        length: Number(cartonDimensions?.length),
-        width: Number(cartonDimensions?.width),
-        height: Number(cartonDimensions?.height),
-        weight: Number(cWeight),
-      },
-      piecesPerPack: Number(piecesPerPack),
-      packPerCarton: Number(packPerCarton),
-      remaining: Number(packRemaining),
-      minStock: Number(packMinStock),
-    });
+    const transformedData = transformFormToProductData(data);
+    const res = await req.post("/products", transformedData);
     console.log(res);
   } catch (error) {
     console.log(error);
   } finally {
     final?.();
+  }
+};
+
+// Single product operations
+export const onGetProduct = async (barcode: string) => {
+  try {
+    const res = await req.get(`/products/${barcode}`);
+    return res.data.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const onUpdateProduct = async (
+  barcode: string,
+  data: Partial<ProductData>
+) => {
+  try {
+    const res = await req.patch(`/products/${barcode}`, data);
+    return res.data.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const onUpdateProductFromForm = async (
+  barcode: string,
+  formData: FormProductData
+) => {
+  try {
+    const transformedData = transformFormToProductData(formData);
+    const res = await req.patch(`/products/${barcode}`, transformedData);
+    return res.data.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const onDeleteProduct = async (barcode: string) => {
+  try {
+    const res = await req.delete(`/products/${barcode}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+// Bulk operations
+export const onBulkCreateProducts = async (products: FormProductData[]) => {
+  try {
+    const res = await req.post("/products/bulk", { products });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const onBulkUpdateProducts = async (
+  products: Partial<ProductData>[]
+) => {
+  try {
+    const res = await req.patch("/products/bulk", { products });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const onBulkDeleteProducts = async (barcodes: string[]) => {
+  try {
+    const res = await req.delete("/products/bulk", { data: { barcodes } });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };

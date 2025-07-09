@@ -1,6 +1,7 @@
 import { TableColumnsType } from "antd";
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import { get } from "lodash";
 
 export const essentialColumns: ColumnsType = [
   {
@@ -10,12 +11,16 @@ export const essentialColumns: ColumnsType = [
     width: 150,
     ellipsis: true,
     fixed: "left",
+    sorter: (a, b) => a.barcode.localeCompare(b.barcode),
+    sortDirections: ["descend", "ascend"],
   },
   {
     title: "ชื่อสินค้า",
     dataIndex: "name",
     key: "name",
     ellipsis: true,
+    sorter: (a, b) => a.name.localeCompare(b.name),
+    sortDirections: ["descend", "ascend"],
   },
   {
     title: "จำนวนคงเหลือ",
@@ -23,22 +28,36 @@ export const essentialColumns: ColumnsType = [
     key: "remaining",
     width: 120,
     render: (val) => val || 0,
+    sorter: (a, b) => (a.remaining || 0) - (b.remaining || 0),
+    sortDirections: ["descend", "ascend"],
   },
   {
     title: "ยี่ห้อ",
-    dataIndex: "brandName",
-    key: "brandName",
+    dataIndex: ["brand", "name"],
+    key: "brand",
     width: 150,
     ellipsis: true,
     render: (val) => val || "-",
+    sorter: (a, b) => {
+      const brandA = get(a, "brand.name", "") || "";
+      const brandB = get(b, "brand.name", "") || "";
+      return brandA.localeCompare(brandB);
+    },
+    sortDirections: ["descend", "ascend"],
   },
   {
     title: "หมวดหมู่",
-    dataIndex: "category",
+    dataIndex: ["category", "name"],
     key: "category",
     width: 150,
     ellipsis: true,
     render: (val) => val || "-",
+    sorter: (a, b) => {
+      const categoryA = get(a, "category.name", "") || "";
+      const categoryB = get(b, "category.name", "") || "";
+      return categoryA.localeCompare(categoryB);
+    },
+    sortDirections: ["descend", "ascend"],
   },
 ];
 

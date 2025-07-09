@@ -1,7 +1,7 @@
-import EditableComp from "../../components/tableComps/Editable";
+import TextExample from "./TextExample";
 
 const Example = () => {
-  return <EditableComp />;
+  return <TextExample />;
 };
 
 export default Example;
