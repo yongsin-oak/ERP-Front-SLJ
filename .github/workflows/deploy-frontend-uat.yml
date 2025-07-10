@@ -1,0 +1,96 @@
+name: Build & Deploy Frontend to GCE (UAT)
+
+on:
+  push:
+    branches: [uat]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Extract ENV vars as build-args
+        id: envargs
+        run: |
+          echo "Parsing .env.production..."
+          echo "${{ secrets.ENV_PRODUCTION }}" | grep -v '^#' | grep '=' | while read line; do
+            key=$(echo "$line" | cut -d '=' -f 1)
+            value=$(echo "$line" | cut -d '=' -f 2-)
+            echo "BUILD_ARG_$key=$value" >> $GITHUB_OUTPUT
+          done
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg VITE_BACKEND_API_URL=${{ steps.envargs.outputs.BUILD_ARG_VITE_BACKEND_API_URL }} \
+            --build-arg VITE_ENV_MODE=${{ steps.envargs.outputs.BUILD_ARG_VITE_ENV_MODE }} \
+            --build-arg VITE_PUBLIC_KEY=${{ steps.envargs.outputs.BUILD_ARG_VITE_PUBLIC_KEY }} \
+            -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend-uat:${{ github.sha }} .
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+
+      - name: Push image to Artifact Registry
+        run: |
+          docker push asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend-uat:${{ github.sha }}
+          
+      - name: Upload docker-compose-uat.yml to GCE VM
+        run: |
+          gcloud compute scp docker-compose-uat.yml ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }}:/home/${{ secrets.GCE_USER }}/frontend-uat/docker-compose-uat.yml \
+            --zone=${{ secrets.GCE_INSTANCE_ZONE }} \
+            --quiet
+            
+      # Step 7: Deploy to GCE VM
+      # เชื่อมต่อผ่าน SSH เข้าไปใน GCE VM และรันคำสั่งเพื่อ deploy แอปพลิเคชัน UAT
+      - name: Deploy to GCE VM (UAT)
+        run: |
+          gcloud compute ssh ${{ secrets.GCE_USER }}@${{ secrets.GCE_INSTANCE_NAME }} \
+            --zone=${{ secrets.GCE_INSTANCE_ZONE }} \
+            --quiet \
+            --command='''
+              # --- Script to run on the GCE VM for UAT deployment ---
+
+              # 1. Authenticate Docker with Artifact Registry ON THE VM
+              echo "Configuring Docker on VM for UAT..."
+              gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+
+              # 2. Define Image Name for UAT
+              IMAGE_NAME="asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend-uat:${{ github.sha }}"
+              
+              # 3. Pull the new Docker image for UAT
+              echo "Pulling new UAT image: $IMAGE_NAME"
+              docker pull $IMAGE_NAME
+              
+              # 4. Navigate to the UAT application directory
+              APP_DIR="/home/${{ secrets.GCE_USER }}/frontend-uat"
+              mkdir -p $APP_DIR
+              cd $APP_DIR
+              
+              # 5. Update and restart UAT services with Docker Compose
+              # UAT จะรันบน port 8081
+              echo "Starting Docker Compose for UAT (port 8081)..."
+              FRONTEND_UAT_IMAGE_TAG=$IMAGE_NAME docker-compose -f docker-compose-uat.yml up -d
+
+              # 6. Clean up old, unused Docker images
+              echo "Cleaning up old Docker images..."
+              docker image prune -af
+
+              echo "UAT Deployment successful on port 8081!"
+            '''
