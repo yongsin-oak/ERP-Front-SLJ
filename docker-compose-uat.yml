@@ -1,0 +1,12 @@
+services:
+  frontend-uat:
+    image: \${FRONTEND_UAT_IMAGE_TAG}
+    container_name: frontend-uat
+    ports:
+      - "8081:80"
+    networks:
+      - default
+
+networks:
+  default:
+    external: false
