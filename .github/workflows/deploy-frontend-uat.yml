@@ -40,7 +40,6 @@ jobs:
           docker build \
             --build-arg VITE_BACKEND_API_URL=${{ steps.envargs.outputs.BUILD_ARG_VITE_BACKEND_API_URL }} \
             --build-arg VITE_ENV_MODE=${{ steps.envargs.outputs.BUILD_ARG_VITE_ENV_MODE }} \
-            --build-arg VITE_PUBLIC_KEY=${{ steps.envargs.outputs.BUILD_ARG_VITE_PUBLIC_KEY }} \
             -t asia-southeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/slj-repo/frontend-uat:${{ github.sha }} .
 
       - name: Configure Docker for Artifact Registry

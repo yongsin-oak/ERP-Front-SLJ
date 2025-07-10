@@ -1,4 +1,3 @@
-import { ThemeProvider } from "@emotion/react";
 import { ConfigProvider } from "antd";
 import dayjs from "dayjs";
 import buddhistEra from "dayjs/plugin/buddhistEra";
@@ -12,6 +11,7 @@ import FloatingThemeButton from "./components/common/FloatingThemeButton";
 import Routers from "./routes";
 import { useAuth, useStoreTheme } from "./store";
 import { themes } from "./theme";
+import { ThemeProvider } from "@emotion/react";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(utc);
@@ -24,9 +24,6 @@ function App() {
   useEffect(() => {
     getMe();
   }, [getMe]);
-  useEffect(() => {
-    console.log("Backend API URL:", import.meta.env.VITE_BACKEND_API_URL);
-  }, []);
   return (
     <>
       <ConfigProvider theme={theme.antd}>

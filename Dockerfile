@@ -14,9 +14,12 @@ COPY . .
 RUN bun install
 RUN bun run build
 
+# Production build with security headers
 FROM nginx:stable-alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# Use production nginx config with full security headers
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
