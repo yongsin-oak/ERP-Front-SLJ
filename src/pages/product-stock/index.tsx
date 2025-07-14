@@ -1,14 +1,5 @@
 import { useWindowSize } from "@uidotdev/usehooks";
-import {
-  Col,
-  Flex,
-  Modal,
-  Checkbox,
-  Button,
-  message,
-  Upload,
-  Table as AntTable,
-} from "antd";
+import { Col, Flex, Checkbox, message } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -27,6 +18,9 @@ import * as XLSX from "xlsx";
 
 // Components
 import MButton from "../../components/common/MButton";
+import MModal from "../../components/common/MModal";
+import MUpload from "../../components/common/MUpload";
+import ExcelImport from "../../components/common/ExcelImport";
 import Table from "../../components/tableComps/Table";
 import ProductFormComp from "./form/ProductForm";
 import DesktopControls from "./components/DesktopControls";
@@ -61,11 +55,6 @@ const ProductStock = () => {
 
   // State for Excel import modal
   const [excelImportModalOpen, setExcelImportModalOpen] = useState(false);
-  const [excelFile, setExcelFile] = useState<File | null>(null);
-  const [excelData, setExcelData] = useState<Record<string, unknown>[]>([]);
-  const [columnMapping, setColumnMapping] = useState<Record<string, string>>(
-    {}
-  );
 
   // Check if user is superadmin
   const isSuperAdmin = user?.role === Role.SuperAdmin;
@@ -355,116 +344,46 @@ const ProductStock = () => {
   };
 
   // Excel import handlers
-  const handleExcelFileSelect = (file: File) => {
-    setExcelFile(file);
-
-    // Read Excel file
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-        setExcelData(jsonData as Record<string, unknown>[]);
-
-        // Auto-detect column mapping
-        if (jsonData.length > 0) {
-          const excelColumns = Object.keys(
-            jsonData[0] as Record<string, unknown>
-          );
-          const autoMapping: Record<string, string> = {};
-
-          // Auto-map common column names
-          excelColumns.forEach((col) => {
-            const lowerCol = col.toLowerCase();
-            if (lowerCol.includes("barcode") || lowerCol.includes("รหัส")) {
-              autoMapping[col] = "barcode";
-            } else if (lowerCol.includes("name") || lowerCol.includes("ชื่อ")) {
-              autoMapping[col] = "name";
-            } else if (
-              lowerCol.includes("brand") ||
-              lowerCol.includes("ยี่ห้อ")
-            ) {
-              autoMapping[col] = "brand";
-            } else if (
-              lowerCol.includes("category") ||
-              lowerCol.includes("หมวดหมู่")
-            ) {
-              autoMapping[col] = "category";
-            } else if (
-              lowerCol.includes("price") ||
-              lowerCol.includes("ราคา")
-            ) {
-              autoMapping[col] = "sellPrice";
-            } else if (
-              lowerCol.includes("stock") ||
-              lowerCol.includes("คงเหลือ")
-            ) {
-              autoMapping[col] = "remaining";
-            }
-          });
-
-          setColumnMapping(autoMapping);
-        }
-      } catch (error) {
-        console.error("Error reading Excel file:", error);
-        message.error("ไม่สามารถอ่านไฟล์ Excel ได้");
-      }
-    };
-    reader.readAsArrayBuffer(file);
+  const handleExcelImport = async (data: FormProductData[]) => {
+    // Upload each item
+    for (const item of data) {
+      await onUploadProducts({
+        data: item,
+        final: () => {},
+      });
+    }
+    
+    await loadProducts(); // Refresh data
   };
 
-  const handleExcelImportConfirm = async () => {
-    if (!excelData.length) {
-      message.error("ไม่พบข้อมูลในไฟล์ Excel");
-      return;
-    }
+  const autoDetectMapping = (excelColumns: string[]): Record<string, string> => {
+    const autoMapping: Record<string, string> = {};
 
-    try {
-      // Transform Excel data to FormProductData format
-      const transformedData: FormProductData[] = excelData.map(
-        (row: Record<string, unknown>) => {
-          const formData: Partial<FormProductData> = {};
-
-          Object.entries(columnMapping).forEach(([excelCol, formField]) => {
-            if (row[excelCol] !== undefined && row[excelCol] !== null) {
-              (formData as Record<string, unknown>)[formField] = row[excelCol];
-            }
-          });
-
-          return formData as FormProductData;
-        }
-      );
-
-      // Upload each item
-      for (const item of transformedData) {
-        await onUploadProducts({
-          data: item,
-          final: () => {},
-        });
+    // Auto-map common column names
+    excelColumns.forEach((col) => {
+      const lowerCol = col.toLowerCase();
+      if (lowerCol.includes("barcode") || lowerCol.includes("รหัส")) {
+        autoMapping[col] = "barcode";
+      } else if (lowerCol.includes("name") || lowerCol.includes("ชื่อ")) {
+        autoMapping[col] = "name";
+      } else if (lowerCol.includes("brand") || lowerCol.includes("ยี่ห้อ")) {
+        autoMapping[col] = "brand";
+      } else if (lowerCol.includes("category") || lowerCol.includes("หมวดหมู่")) {
+        autoMapping[col] = "category";
+      } else if (lowerCol.includes("price") || lowerCol.includes("ราคา")) {
+        autoMapping[col] = "sellPrice";
+      } else if (lowerCol.includes("stock") || lowerCol.includes("คงเหลือ")) {
+        autoMapping[col] = "remaining";
       }
+    });
 
-      message.success(
-        `นำเข้าข้อมูล ${transformedData.length} รายการเรียบร้อยแล้ว`
-      );
-      setExcelImportModalOpen(false);
-      setExcelFile(null);
-      setExcelData([]);
-      setColumnMapping({});
-    } catch (error) {
-      console.error("Excel import error:", error);
-      message.error("เกิดข้อผิดพลาดในการนำเข้าข้อมูล");
-    }
+    return autoMapping;
   };
 
-  const handleExcelImportCancel = () => {
-    setExcelImportModalOpen(false);
-    setExcelFile(null);
-    setExcelData([]);
-    setColumnMapping({});
+  const transformExcelData = (rawData: Record<string, unknown>[]): FormProductData[] => {
+    // Since ExcelImport component handles column mapping internally,
+    // this will receive the already mapped data
+    return rawData.map(row => row as FormProductData);
   };
 
   // Enhanced table columns with selection and actions
@@ -509,14 +428,14 @@ const ProductStock = () => {
         const productRecord = record as ProductData;
         return (
           <div style={{ display: "flex", gap: 4 }}>
-            <Button
+            <MButton
               type="text"
               size="small"
               icon={<EditOutlined />}
               onClick={() => openEditModal(productRecord)}
               title="แก้ไข"
             />
-            <Button
+            <MButton
               type="text"
               size="small"
               icon={<EyeOutlined />}
@@ -524,7 +443,7 @@ const ProductStock = () => {
               title="ดูรายละเอียด"
             />
             {isSuperAdmin && (
-              <Button
+              <MButton
                 type="text"
                 size="small"
                 icon={<DeleteOutlined />}
@@ -550,16 +469,18 @@ const ProductStock = () => {
         {/* Header with Upload button */}
         <Flex justify="space-between" align="center">
           <Col>
-            <Button
+            <MButton
               icon={<FileExcelOutlined />}
               onClick={() => setExcelImportModalOpen(true)}
               size="large"
             >
               นำเข้า Excel
-            </Button>
+            </MButton>
           </Col>
           <Col>
-            <MButton onClick={openUploadModal}>Upload</MButton>
+            <MButton type="primary" onClick={openUploadModal}>
+              Upload
+            </MButton>
           </Col>
         </Flex>
 
@@ -589,7 +510,7 @@ const ProductStock = () => {
               เลือกแล้ว {selectedItems.length} รายการ
             </div>
             {isSuperAdmin && (
-              <Button
+              <MButton
                 type="primary"
                 danger
                 icon={<DeleteOutlined />}
@@ -597,7 +518,7 @@ const ProductStock = () => {
                 size="small"
               >
                 ลบรายการที่เลือก
-              </Button>
+              </MButton>
             )}
           </Flex>
         )}
@@ -627,19 +548,11 @@ const ProductStock = () => {
           />
         ) : (
           <Table
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            columns={tableColumns as any}
+            columns={tableColumns as never}
             dataSource={filteredAndSortedData}
             scroll={{ x: 800 }}
             rowKey="barcode"
-            pagination={{
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              defaultPageSize: 20,
-            }}
+            limit={20}
           />
         )}
 
@@ -650,29 +563,27 @@ const ProductStock = () => {
         <AdvancedFilter />
 
         {/* Upload Modal */}
-        <Modal
+        <MModal
           title="Upload Products"
           open={uploadModalOpen}
           onCancel={closeUploadModal}
           footer={null}
-          width={mobile ? "100%" : 800}
-          centered
+          responsive
         >
           <ProductFormComp
             form={form}
             setData={loadProducts}
             setOpen={closeUploadModal}
           />
-        </Modal>
+        </MModal>
 
         {/* Single Product Edit Modal */}
-        <Modal
+        <MModal
           title={`แก้ไขสินค้า: ${editingProduct?.name || ""}`}
           open={editModalOpen}
           onCancel={closeEditModal}
           footer={null}
-          width={mobile ? "100%" : 800}
-          centered
+          responsive
         >
           <ProductFormComp
             form={editForm}
@@ -681,10 +592,10 @@ const ProductStock = () => {
             onSubmit={handleEditSubmit}
             isEdit={true}
           />
-        </Modal>
+        </MModal>
 
         {/* Delete Confirmation Modal */}
-        <Modal
+        <MModal
           title="ยืนยันการลบสินค้า"
           open={deleteModalOpen}
           onCancel={handleDeleteCancel}
@@ -692,38 +603,37 @@ const ProductStock = () => {
             <div
               style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}
             >
-              <Button onClick={handleDeleteCancel}>ยกเลิก</Button>
-              <Button type="primary" danger onClick={handleDeleteConfirm}>
+              <MButton onClick={handleDeleteCancel}>ยกเลิก</MButton>
+              <MButton type="primary" danger onClick={handleDeleteConfirm}>
                 ยืนยันการลบ
-              </Button>
+              </MButton>
             </div>
           }
         >
           <p>คุณแน่ใจหรือว่าต้องการลบสินค้า {selectedItems.length} รายการ?</p>
-        </Modal>
+        </MModal>
 
         {/* Excel Import Modal */}
-        <Modal
+        <MModal
           title="นำเข้าสินค้าจาก Excel"
           open={excelImportModalOpen}
           onCancel={handleExcelImportCancel}
           footer={null}
-          width={mobile ? "100%" : 800}
-          centered
+          responsive
         >
           <div style={{ padding: 16 }}>
-            <Upload
+            <MUpload
               accept=".xls,.xlsx"
-              beforeUpload={(file) => {
+              beforeUpload={(file: File) => {
                 handleExcelFileSelect(file);
                 return false; // Prevent automatic upload
               }}
               showUploadList={false}
             >
-              <Button icon={<UploadOutlined />} size="large" block>
+              <MButton icon={<UploadOutlined />} size="large" fullWidth>
                 เลือกไฟล์ Excel
-              </Button>
-            </Upload>
+              </MButton>
+            </MUpload>
 
             {excelFile && (
               <div style={{ marginTop: 16 }}>
@@ -734,16 +644,17 @@ const ProductStock = () => {
             {excelData.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <strong>ตัวอย่างข้อมูลในไฟล์:</strong>
-                <AntTable
+                <Table
                   columns={Object.keys(excelData[0]).map((key) => ({
                     title: key,
                     dataIndex: key,
                     key,
                   }))}
                   dataSource={excelData}
-                  pagination={false}
+                  responsive={false}
+                  limit={5}
+                  jumper={false}
                   rowKey={(_, index) => index || 0}
-                  style={{ marginTop: 8 }}
                 />
               </div>
             )}
@@ -751,7 +662,7 @@ const ProductStock = () => {
             {Object.keys(columnMapping).length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <strong>การแมปคอลัมน์:</strong>
-                <AntTable
+                <Table
                   columns={[
                     {
                       title: "คอลัมน์ในไฟล์ Excel",
@@ -770,32 +681,33 @@ const ProductStock = () => {
                       formField,
                     })
                   )}
-                  pagination={false}
-                  style={{ marginTop: 8 }}
+                  responsive={false}
+                  limit={10}
+                  jumper={false}
                 />
               </div>
             )}
 
             <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-              <Button
+              <MButton
                 type="primary"
                 onClick={handleExcelImportConfirm}
                 size="large"
-                block
+                fullWidth
               >
                 นำเข้าข้อมูล
-              </Button>
-              <Button
+              </MButton>
+              <MButton
                 onClick={handleExcelImportCancel}
                 size="large"
-                block
+                fullWidth
                 danger
               >
                 ยกเลิก
-              </Button>
+              </MButton>
             </div>
           </div>
-        </Modal>
+        </MModal>
       </Flex>
     </ProductStockContainer>
   );

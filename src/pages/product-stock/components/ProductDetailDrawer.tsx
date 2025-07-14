@@ -1,24 +1,26 @@
-import React from "react";
-import { Drawer, Space, Button } from "antd";
 import {
-  InfoCircleOutlined,
-  DollarOutlined,
-  BoxPlotOutlined,
   BarChartOutlined,
+  BoxPlotOutlined,
+  DollarOutlined,
+  InfoCircleOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
+import { useWindowSize } from "@uidotdev/usehooks";
+import { Button, Drawer, Space } from "antd";
+import React from "react";
+import InfoRow from "../../../components/common/InfoRow";
+import StockBadge from "../../../components/common/StockBadge";
 import Text from "../../../components/common/Text";
+import { isMobile } from "../../../utils/responsive";
+import { useProductStore } from "../store/productStore";
+import { DrawerActions, ProductDetails } from "../styles";
 import {
   formatDimensions,
-  formatWeight,
   formatPrice,
   formatQuantity,
+  formatWeight,
 } from "../utils/formatters";
-import { ProductDetails, DrawerActions, InfoRow, StockBadge } from "../styles";
-import { useProductStore } from "../store/productStore";
-import { isMobile } from "../../../utils/responsive";
-import { useWindowSize } from "@uidotdev/usehooks";
 
 const ProductDetailDrawer: React.FC = () => {
   const theme = useTheme();
@@ -31,32 +33,7 @@ const ProductDetailDrawer: React.FC = () => {
   } = useProductStore();
 
   const renderStockBadge = (remaining: number, minStock?: number | null) => {
-    if (remaining === 0) {
-      return (
-        <StockBadge status="error" theme={theme}>
-          หมด
-        </StockBadge>
-      );
-    }
-    if (minStock && remaining <= minStock) {
-      return (
-        <StockBadge status="warning" theme={theme}>
-          {remaining} ชิ้น (ต่ำ)
-        </StockBadge>
-      );
-    }
-    if (remaining < 10) {
-      return (
-        <StockBadge status="warning" theme={theme}>
-          {remaining} ชิ้น
-        </StockBadge>
-      );
-    }
-    return (
-      <StockBadge status="success" theme={theme}>
-        {remaining} ชิ้น
-      </StockBadge>
-    );
+    return <StockBadge remaining={remaining} minStock={minStock} />;
   };
 
   if (!product) return null;
@@ -98,41 +75,28 @@ const ProductDetailDrawer: React.FC = () => {
           </div>
 
           <div className="info-grid">
-            <InfoRow theme={theme}>
-              <span className="label">ยี่ห้อ:</span>
-              <span
-                className={`value ${
-                  !product?.brand?.name ? "value--empty" : ""
-                }`}
-              >
-                {product?.brand?.name || "ไม่ระบุ"}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ยี่ห้อ"
+              value={product?.brand?.name || "ไม่ระบุ"}
+              valueType={!product?.brand?.name ? "empty" : "default"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">หมวดหมู่:</span>
-              <span
-                className={`value ${
-                  !product?.category?.name ? "value--empty" : ""
-                }`}
-              >
-                {product?.category?.name || "ไม่ระบุ"}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="หมวดหมู่"
+              value={product?.category?.name || "ไม่ระบุ"}
+              valueType={!product?.category?.name ? "empty" : "default"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">จำนวนคงเหลือ:</span>
-              <span className="value">{formatQuantity(product.remaining)}</span>
-            </InfoRow>
+            <InfoRow
+              label="จำนวนคงเหลือ"
+              value={formatQuantity(product.remaining)}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">จำนวนขั้นต่ำ:</span>
-              <span
-                className={`value ${!product.minStock ? "value--empty" : ""}`}
-              >
-                {formatQuantity(product.minStock)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="จำนวนขั้นต่ำ"
+              value={formatQuantity(product.minStock)}
+              valueType={!product.minStock ? "empty" : "default"}
+            />
           </div>
         </div>
 
@@ -146,49 +110,29 @@ const ProductDetailDrawer: React.FC = () => {
           </div>
 
           <div className="info-grid">
-            <InfoRow theme={theme}>
-              <span className="label">ราคาซื้อ/แพ็ค:</span>
-              <span
-                className={`value ${
-                  !product.costPrice?.pack ? "value--empty" : "value--price"
-                }`}
-              >
-                {formatPrice(product.costPrice?.pack)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ราคาซื้อ/แพ็ค"
+              value={formatPrice(product.costPrice?.pack)}
+              valueType={!product.costPrice?.pack ? "empty" : "price"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">ราคาซื้อ/ลัง:</span>
-              <span
-                className={`value ${
-                  !product.costPrice?.carton ? "value--empty" : "value--price"
-                }`}
-              >
-                {formatPrice(product.costPrice?.carton)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ราคาซื้อ/ลัง"
+              value={formatPrice(product.costPrice?.carton)}
+              valueType={!product.costPrice?.carton ? "empty" : "price"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">ราคาขาย/แพ็ค:</span>
-              <span
-                className={`value ${
-                  !product.sellPrice?.pack ? "value--empty" : "value--price"
-                }`}
-              >
-                {formatPrice(product.sellPrice?.pack)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ราคาขาย/แพ็ค"
+              value={formatPrice(product.sellPrice?.pack)}
+              valueType={!product.sellPrice?.pack ? "empty" : "price"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">ราคาขาย/ลัง:</span>
-              <span
-                className={`value ${
-                  !product.sellPrice?.carton ? "value--empty" : "value--price"
-                }`}
-              >
-                {formatPrice(product.sellPrice?.carton)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ราคาขาย/ลัง"
+              value={formatPrice(product.sellPrice?.carton)}
+              valueType={!product.sellPrice?.carton ? "empty" : "price"}
+            />
           </div>
         </div>
 
@@ -202,27 +146,17 @@ const ProductDetailDrawer: React.FC = () => {
           </div>
 
           <div className="info-grid">
-            <InfoRow theme={theme}>
-              <span className="label">จำนวนต่อแพ็ค:</span>
-              <span
-                className={`value ${
-                  !product.piecesPerPack ? "value--empty" : ""
-                }`}
-              >
-                {formatQuantity(product.piecesPerPack, "ชิ้น/แพ็ค")}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="จำนวนต่อแพ็ค"
+              value={formatQuantity(product.piecesPerPack, "ชิ้น/แพ็ค")}
+              valueType={!product.piecesPerPack ? "empty" : "default"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">แพ็คต่อลัง:</span>
-              <span
-                className={`value ${
-                  !product.packPerCarton ? "value--empty" : ""
-                }`}
-              >
-                {formatQuantity(product.packPerCarton, "แพ็ค/ลัง")}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="แพ็คต่อลัง"
+              value={formatQuantity(product.packPerCarton, "แพ็ค/ลัง")}
+              valueType={!product.packPerCarton ? "empty" : "default"}
+            />
           </div>
         </div>
 
@@ -236,57 +170,29 @@ const ProductDetailDrawer: React.FC = () => {
           </div>
 
           <div className="info-grid">
-            <InfoRow theme={theme}>
-              <span className="label">ขนาดสินค้า:</span>
-              <span
-                className={`value ${
-                  formatDimensions(product.productDimensions) === "ไม่ระบุ"
-                    ? "value--empty"
-                    : ""
-                }`}
-              >
-                {formatDimensions(product.productDimensions)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ขนาดสินค้า"
+              value={formatDimensions(product.productDimensions)}
+              valueType={formatDimensions(product.productDimensions) === "ไม่ระบุ" ? "empty" : "default"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">น้ำหนักสินค้า:</span>
-              <span
-                className={`value ${
-                  formatWeight(product.productDimensions?.weight) === "ไม่ระบุ"
-                    ? "value--empty"
-                    : ""
-                }`}
-              >
-                {formatWeight(product.productDimensions?.weight)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="น้ำหนักสินค้า"
+              value={formatWeight(product.productDimensions?.weight)}
+              valueType={formatWeight(product.productDimensions?.weight) === "ไม่ระบุ" ? "empty" : "default"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">ขนาดลัง:</span>
-              <span
-                className={`value ${
-                  formatDimensions(product.cartonDimensions) === "ไม่ระบุ"
-                    ? "value--empty"
-                    : ""
-                }`}
-              >
-                {formatDimensions(product.cartonDimensions)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="ขนาดลัง"
+              value={formatDimensions(product.cartonDimensions)}
+              valueType={formatDimensions(product.cartonDimensions) === "ไม่ระบุ" ? "empty" : "default"}
+            />
 
-            <InfoRow theme={theme}>
-              <span className="label">น้ำหนักลัง:</span>
-              <span
-                className={`value ${
-                  formatWeight(product.cartonDimensions?.weight) === "ไม่ระบุ"
-                    ? "value--empty"
-                    : ""
-                }`}
-              >
-                {formatWeight(product.cartonDimensions?.weight)}
-              </span>
-            </InfoRow>
+            <InfoRow
+              label="น้ำหนักลัง"
+              value={formatWeight(product.cartonDimensions?.weight)}
+              valueType={formatWeight(product.cartonDimensions?.weight) === "ไม่ระบุ" ? "empty" : "default"}
+            />
           </div>
         </div>
 

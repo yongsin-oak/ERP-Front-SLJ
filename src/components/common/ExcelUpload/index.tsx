@@ -1,5 +1,5 @@
 import { UploadOutlined } from "@ant-design/icons";
-import { Flex, Form, Modal, Tooltip, Upload, UploadProps } from "antd";
+import { Flex, Form, Tooltip, UploadProps } from "antd";
 import { RcFile } from "antd/es/upload";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
@@ -9,6 +9,8 @@ import { useForm } from "antd/es/form/Form";
 import { DefaultOptionType } from "antd/es/select";
 import { ColumnType } from "antd/es/table";
 import MButton from "../MButton";
+import MUpload from "../MUpload";
+import MModal from "../MModal";
 import Text from "../Text";
 import MFormItem from "../../Form/MFormItem";
 import MSelect from "../MSelect";
@@ -22,7 +24,7 @@ interface Props extends UploadProps {
   pastable?: boolean; // อนุญาตให้วางข้อมูลจากคลิปบอร์ดได้หรือไม่
 }
 
-const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
+const ExcelUpload = ({ columns, ...props }: Props) => {
   const [file, setFile] = useState<RcFile>();
   const [modalVisible, setModalVisible] = useState(false);
   const [options, setOptions] = useState<DefaultOptionType[]>([]);
@@ -81,18 +83,17 @@ const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
   }, [file]);
   return (
     <Flex align="center" gap={8}>
-      <Upload
+      <MUpload
         name="file"
         accept=".xlsx"
         maxCount={1}
         showUploadList={false}
         beforeUpload={beforeUpload}
-        pastable={pastable}
         {...props}
       >
         <MButton icon={<UploadOutlined />}>อัพโหลด Excel</MButton>
-      </Upload>
-      <Modal
+      </MUpload>
+      <MModal
         open={modalVisible}
         closable={false}
         title={
@@ -105,7 +106,6 @@ const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
             </Tooltip>
           </Flex>
         }
-        // footer={null}
         onOk={() => setModalVisible(false)}
         onCancel={() => setModalVisible(false)}
       >
@@ -135,7 +135,7 @@ const ExcelUpload = ({ columns, pastable = true, ...props }: Props) => {
             </Flex>
           ))}
         </Form>
-      </Modal>
+      </MModal>
     </Flex>
   );
 };
