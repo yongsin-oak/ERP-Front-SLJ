@@ -1,23 +1,34 @@
 import React from "react";
+import {
+  Flex,
+  Typography,
+  Checkbox,
+  Tooltip,
+  Collapse,
+  Space,
+  Button,
+} from "antd";
+import {
+  InfoCircleOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
-import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Checkbox, Space } from "antd";
-import { orderBy, get } from "lodash";
+import Text from "../../../components/common/Text";
+import { ProductData } from "../interface/interface";
+import { formatDimensions, formatWeight } from "../utils/formatters";
+import { highlightText } from "../utils/highlightText";
+import {
+  ProductCard,
+  ProductCardHeader,
+  ProductCardBody,
+  InfoRow,
+  StockBadge,
+  EmptyState,
+} from "../styles";
 import { useProductStore } from "../store/productStore";
 import { useAuth } from "../../../store";
 import { Role } from "../../../enum/Role.enum";
-import { ProductData } from "../interface/interface";
-
-// Shared Components
-import DataCard from "../../../components/common/DataCard";
-import StockBadge from "../../../components/common/StockBadge";
-import MButton from "../../../components/common/MButton";
-import InfoRow from "../../../components/common/InfoRow";
-import EmptyState from "../../../components/common/EmptyState";
-import Text from "../../../components/common/Text";
-
-// Utils
-import { formatPrice } from "../utils/formatters";
 
 interface ProductCardListProps {
   onEditProduct: (product: ProductData) => void;
@@ -30,207 +41,319 @@ const ProductCardList: React.FC<ProductCardListProps> = ({
 }) => {
   const theme = useTheme();
   const { user } = useAuth();
-  const isSuperAdmin = user?.role === Role.SuperAdmin;
-
   const {
     data,
-    searchTerm,
     selectedItems,
-    filters,
-    sortField,
-    sortOrder,
+    searchTerm,
     addSelectedItem,
     removeSelectedItem,
-    openDetailDrawer,
   } = useProductStore();
 
-  // Filter and sort logic (same as main component)
-  const filteredAndSortedData = React.useMemo(() => {
-    if (!data) return [];
+  // Check if user is superadmin
+  const isSuperAdmin = user?.role === Role.SuperAdmin;
 
-    let filtered = data;
-
-    // Apply search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchLower) ||
-          item.barcode.toLowerCase().includes(searchLower) ||
-          item.brand?.name?.toLowerCase().includes(searchLower) ||
-          item.category?.name?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply advanced filters
-    if (filters.stockLevel !== "all") {
-      filtered = filtered.filter((item) => {
-        switch (filters.stockLevel) {
-          case "low":
-            return item.minStock && item.remaining <= item.minStock;
-          case "out":
-            return item.remaining === 0;
-          case "normal":
-            return item.remaining > (item.minStock || 0);
-          default:
-            return true;
-        }
-      });
-    }
-
-    if (filters.brands.length > 0) {
-      filtered = filtered.filter(
-        (item) => item.brand && filters.brands.includes(item.brand.id)
-      );
-    }
-
-    if (filters.categories.length > 0) {
-      filtered = filtered.filter(
-        (item) => item.category && filters.categories.includes(item.category.id)
-      );
-    }
-
-    // Price range filter
-    filtered = filtered.filter((item) => {
-      const price = item.sellPrice?.pack || 0;
-      return price >= filters.priceRange[0] && price <= filters.priceRange[1];
-    });
-
-    // Sort data
-    return orderBy(
-      filtered,
-      [
-        (item: ProductData) => {
-          switch (sortField) {
-            case "brand":
-              return get(item, "brand.name", "") || "";
-            case "category":
-              return get(item, "category.name", "") || "";
-            case "remaining":
-              return item.remaining || 0;
-            default:
-              return item[sortField] || "";
-          }
-        },
-      ],
-      [sortOrder]
-    );
-  }, [data, searchTerm, filters, sortField, sortOrder]);
-
-  const handleSelectItem = (barcode: string, checked: boolean) => {
+  const onSelectItem = (barcode: string, checked: boolean) => {
     if (checked) {
       addSelectedItem(barcode);
     } else {
       removeSelectedItem(barcode);
     }
   };
-
-  if (!filteredAndSortedData.length) {
+  const renderStockBadge = (remaining: number, minStock?: number | null) => {
+    if (remaining === 0) {
+      return (
+        <StockBadge status="error" theme={theme}>
+          หมด
+        </StockBadge>
+      );
+    }
+    if (minStock && remaining <= minStock) {
+      return (
+        <StockBadge status="warning" theme={theme}>
+          {remaining} ชิ้น (ต่ำ)
+        </StockBadge>
+      );
+    }
+    if (remaining < 10) {
+      return (
+        <StockBadge status="warning" theme={theme}>
+          {remaining} ชิ้น
+        </StockBadge>
+      );
+    }
     return (
-      <EmptyState
-        title="ไม่พบสินค้า"
-        description="ไม่พบสินค้าที่ตรงกับเงื่อนไขที่กำหนด"
-      />
+      <StockBadge status="success" theme={theme}>
+        {remaining} ชิ้น
+      </StockBadge>
+    );
+  };
+
+  if (!data || data.length === 0) {
+    return (
+      <EmptyState theme={theme}>
+        <Typography.Text type="secondary">ไม่พบข้อมูลสินค้า</Typography.Text>
+      </EmptyState>
     );
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-        gap: "16px",
-      }}
-    >
-      {filteredAndSortedData.map((product) => (
-        <DataCard key={product.barcode}>
-          <DataCard.Header>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+    <Flex vertical gap={16}>
+      {data.map((item) => (
+        <ProductCard key={item.barcode} theme={theme}>
+          <ProductCardHeader theme={theme}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Checkbox
-                checked={selectedItems.includes(product.barcode)}
-                onChange={(e) =>
-                  handleSelectItem(product.barcode, e.target.checked)
-                }
-                style={{ marginTop: 2 }}
+                checked={selectedItems.includes(item.barcode)}
+                onChange={(e) => onSelectItem(item.barcode, e.target.checked)}
               />
-              <div className="product-title" style={{ flex: 1 }}>
-                <Text h6 bold style={{ margin: 0, marginBottom: 4 }}>
-                  {product.name}
+              <div className="product-title">
+                <Text h6 bold style={{ margin: 0, lineHeight: 1.3 }}>
+                  {searchTerm
+                    ? highlightText(item.name, searchTerm)
+                    : item.name}
                 </Text>
-                <div className="barcode" style={{
-                  fontFamily: "Courier New, monospace",
-                  background: theme.backgroundSecondary_,
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "11px",
-                  color: theme.textSecondary_,
-                  display: "inline-block"
-                }}>
-                  {product.barcode}
+                <div className="barcode">
+                  {searchTerm
+                    ? highlightText(item.barcode, searchTerm)
+                    : item.barcode}
                 </div>
               </div>
-              <div className="stock-info">
-                <StockBadge
-                  remaining={product.remaining}
-                  minStock={product.minStock}
-                />
-              </div>
             </div>
-          </DataCard.Header>
-
-          <DataCard.Body>
-            <div style={{ marginBottom: 16 }}>
-              <InfoRow
-                label="ยี่ห้อ"
-                value={product.brand?.name || "ไม่ระบุ"}
-                valueType={!product.brand?.name ? "empty" : "default"}
-              />
-              <InfoRow
-                label="หมวดหมู่"
-                value={product.category?.name || "ไม่ระบุ"}
-                valueType={!product.category?.name ? "empty" : "default"}
-              />
-              <InfoRow
-                label="ราคาขาย"
-                value={formatPrice(product.sellPrice?.pack)}
-                valueType={!product.sellPrice?.pack ? "empty" : "price"}
-              />
-              <InfoRow
-                label="คงเหลือ"
-                value={`${product.remaining || 0} แพ็ค`}
-              />
-            </div>
-
-            <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-              <MButton
-                type="text"
-                size="small"
-                icon={<EyeOutlined />}
-                onClick={() => openDetailDrawer(product)}
-                title="ดูรายละเอียด"
-              />
-              <MButton
-                type="text"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => onEditProduct(product)}
-                title="แก้ไข"
-              />
-              {isSuperAdmin && (
-                <MButton
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Tooltip title="แก้ไขสินค้า">
+                <Button
                   type="text"
                   size="small"
-                  icon={<DeleteOutlined />}
-                  danger
-                  onClick={() => onDeleteProduct(product)}
-                  title="ลบ"
+                  icon={<EditOutlined />}
+                  onClick={() => onEditProduct(item)}
                 />
+              </Tooltip>
+              {isSuperAdmin && (
+                <Tooltip title="ลบสินค้า">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    danger
+                    onClick={() => onDeleteProduct(item)}
+                  />
+                </Tooltip>
               )}
-            </Space>
-          </DataCard.Body>
-        </DataCard>
+              <div className="stock-info">
+                {renderStockBadge(item.remaining, item.minStock)}
+                {item.minStock && item.remaining <= item.minStock && (
+                  <Tooltip
+                    title={`สินค้าเหลือน้อย (ขั้นต่ำ: ${item.minStock})`}
+                  >
+                    <InfoCircleOutlined
+                      style={{ color: "#faad14", marginLeft: 4 }}
+                    />
+                  </Tooltip>
+                )}
+              </div>
+            </div>
+          </ProductCardHeader>
+
+          <ProductCardBody theme={theme}>
+            <InfoRow theme={theme}>
+              <span className="label">ยี่ห้อ:</span>
+              <span
+                className={`value ${!item?.brand?.name ? "value--empty" : ""}`}
+              >
+                {item?.brand?.name
+                  ? searchTerm
+                    ? highlightText(item.brand.name, searchTerm)
+                    : item.brand.name
+                  : "ไม่ระบุ"}
+              </span>
+            </InfoRow>
+
+            <InfoRow theme={theme}>
+              <span className="label">หมวดหมู่:</span>
+              <span
+                className={`value ${
+                  !item?.category?.name ? "value--empty" : ""
+                }`}
+              >
+                {item?.category?.name
+                  ? searchTerm
+                    ? highlightText(item.category.name, searchTerm)
+                    : item.category.name
+                  : "ไม่ระบุ"}
+              </span>
+            </InfoRow>
+
+            <InfoRow theme={theme}>
+              <span className="label">ราคาขาย/แพ็ค:</span>
+              <span
+                className={`value ${
+                  item.sellPrice?.pack ? "value--price" : "value--empty"
+                }`}
+              >
+                {item.sellPrice?.pack
+                  ? `${item.sellPrice.pack.toLocaleString()} ฿`
+                  : "ไม่ระบุ"}
+              </span>
+            </InfoRow>
+
+            <InfoRow theme={theme}>
+              <span className="label">ราคาขาย/ลัง:</span>
+              <span
+                className={`value ${
+                  item.sellPrice?.carton ? "value--price" : "value--empty"
+                }`}
+              >
+                {item.sellPrice?.carton
+                  ? `${item.sellPrice.carton.toLocaleString()} ฿`
+                  : "ไม่ระบุ"}
+              </span>
+            </InfoRow>
+
+            {/* Additional details */}
+            <Collapse
+              ghost
+              size="small"
+              items={[
+                {
+                  key: "1",
+                  label: (
+                    <span style={{ fontSize: 12, color: theme.textSecondary_ }}>
+                      ข้อมูลเพิ่มเติม
+                    </span>
+                  ),
+                  children: (
+                    <Space
+                      direction="vertical"
+                      size={8}
+                      style={{ width: "100%" }}
+                    >
+                      <InfoRow theme={theme}>
+                        <span className="label">ราคาซื้อ/แพ็ค:</span>
+                        <span
+                          className={`value ${
+                            item.costPrice?.pack ? "" : "value--empty"
+                          }`}
+                        >
+                          {item.costPrice?.pack
+                            ? `${item.costPrice.pack.toLocaleString()} ฿`
+                            : "ไม่ระบุ"}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">ราคาซื้อ/ลัง:</span>
+                        <span
+                          className={`value ${
+                            item.costPrice?.carton ? "" : "value--empty"
+                          }`}
+                        >
+                          {item.costPrice?.carton
+                            ? `${item.costPrice.carton.toLocaleString()} ฿`
+                            : "ไม่ระบุ"}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">จำนวนขั้นต่ำ:</span>
+                        <span
+                          className={`value ${
+                            item.minStock ? "" : "value--empty"
+                          }`}
+                        >
+                          {item.minStock ? `${item.minStock} ชิ้น` : "ไม่ระบุ"}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">จำนวนต่อแพ็ค:</span>
+                        <span
+                          className={`value ${
+                            item.piecesPerPack ? "" : "value--empty"
+                          }`}
+                        >
+                          {item.piecesPerPack
+                            ? `${item.piecesPerPack} ชิ้น/แพ็ค`
+                            : "ไม่ระบุ"}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">แพ็คต่อลัง:</span>
+                        <span
+                          className={`value ${
+                            item.packPerCarton ? "" : "value--empty"
+                          }`}
+                        >
+                          {item.packPerCarton
+                            ? `${item.packPerCarton} แพ็ค/ลัง`
+                            : "ไม่ระบุ"}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">ขนาดสินค้า:</span>
+                        <span
+                          className={`value ${
+                            formatDimensions(item.productDimensions) ===
+                            "ไม่ระบุ"
+                              ? "value--empty"
+                              : ""
+                          }`}
+                        >
+                          {formatDimensions(item.productDimensions)}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">น้ำหนักสินค้า:</span>
+                        <span
+                          className={`value ${
+                            formatWeight(item.productDimensions?.weight) ===
+                            "ไม่ระบุ"
+                              ? "value--empty"
+                              : ""
+                          }`}
+                        >
+                          {formatWeight(item.productDimensions?.weight)}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">ขนาดลัง:</span>
+                        <span
+                          className={`value ${
+                            formatDimensions(item.cartonDimensions) ===
+                            "ไม่ระบุ"
+                              ? "value--empty"
+                              : ""
+                          }`}
+                        >
+                          {formatDimensions(item.cartonDimensions)}
+                        </span>
+                      </InfoRow>
+
+                      <InfoRow theme={theme}>
+                        <span className="label">น้ำหนักลัง:</span>
+                        <span
+                          className={`value ${
+                            formatWeight(item.cartonDimensions?.weight) ===
+                            "ไม่ระบุ"
+                              ? "value--empty"
+                              : ""
+                          }`}
+                        >
+                          {formatWeight(item.cartonDimensions?.weight)}
+                        </span>
+                      </InfoRow>
+                    </Space>
+                  ),
+                },
+              ]}
+            />
+          </ProductCardBody>
+        </ProductCard>
       ))}
-    </div>
+    </Flex>
   );
 };
 
