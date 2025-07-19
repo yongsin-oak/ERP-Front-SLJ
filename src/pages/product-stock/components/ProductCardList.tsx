@@ -27,8 +27,9 @@ import {
   EmptyState,
 } from "../styles";
 import { useProductStore } from "../store/productStore";
-import { useAuth } from "../../../store";
-import { Role } from "../../../enum/Role.enum";
+import { useAuth } from "../../../stores";
+import { Role } from "../../../enums/Role.enum";
+import { SPACING } from "@theme/constants";
 
 interface ProductCardListProps {
   onEditProduct: (product: ProductData) => void;
@@ -101,7 +102,7 @@ const ProductCardList: React.FC<ProductCardListProps> = ({
       {data.map((item) => (
         <ProductCard key={item.barcode} theme={theme}>
           <ProductCardHeader theme={theme}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Flex align="center" gap={SPACING.sm}>
               <Checkbox
                 checked={selectedItems.includes(item.barcode)}
                 onChange={(e) => onSelectItem(item.barcode, e.target.checked)}
@@ -118,8 +119,8 @@ const ProductCardList: React.FC<ProductCardListProps> = ({
                     : item.barcode}
                 </div>
               </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            </Flex>
+            <Flex align="center" gap={SPACING.sm}>
               <Tooltip title="แก้ไขสินค้า">
                 <Button
                   type="text"
@@ -151,7 +152,7 @@ const ProductCardList: React.FC<ProductCardListProps> = ({
                   </Tooltip>
                 )}
               </div>
-            </div>
+            </Flex>
           </ProductCardHeader>
 
           <ProductCardBody theme={theme}>

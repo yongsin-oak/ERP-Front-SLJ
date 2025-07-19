@@ -7,8 +7,8 @@ export const darkAntdTheme: ThemeConfig = {
   token: {
     colorPrimary: red.primary,
     colorInfo: red.primary,
-    colorSuccess: green.primary,
-    colorWarning: orange.primary,
+    colorSuccess: green.success,
+    colorWarning: orange.warning,
     colorError: "#ff4d4f",
 
     colorLink: red.hover,

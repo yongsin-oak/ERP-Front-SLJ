@@ -7,9 +7,9 @@ export const lightAntdTheme: ThemeConfig = {
   token: {
     colorPrimary: red.primary,
     colorInfo: red.primary,
-    colorSuccess: green.primary,
-    colorWarning: orange.primary,
-    colorError: "#ff4d4f",
+    colorSuccess: green.success,
+    colorWarning: orange.warning,
+    colorError: red.error,
     colorLink: red.hover,
 
     colorTextBase: "rgba(0, 0, 0, 0.88)",

@@ -3,7 +3,7 @@ import { Flex, Form, Input, Typography } from "antd";
 import React from "react";
 import { Navigate } from "react-router-dom";
 import MButton from "../../components/common/MButton";
-import { useAuth } from "../../store";
+import { useAuth } from "../../stores";
 import { useTheme } from "@emotion/react";
 import { BORDER_RADIUS, SPACING } from "../../theme/constants";
 

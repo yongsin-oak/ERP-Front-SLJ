@@ -9,9 +9,10 @@ import { BrowserRouter } from "react-router-dom";
 import "./App.scss";
 import FloatingThemeButton from "./components/common/FloatingThemeButton";
 import Routers from "./routes";
-import { useAuth, useStoreTheme } from "./store";
+import { useAuth, useStoreTheme } from "./stores";
 import { themes } from "./theme";
 import { ThemeProvider } from "@emotion/react";
+import "@ant-design/v5-patch-for-react-19";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(utc);

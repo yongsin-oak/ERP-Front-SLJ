@@ -16,9 +16,17 @@ declare module "@emotion/react" {
 
     red100_: string;
     red200_: string;
-    red300_: string;
-    green100_: string;
-    orange100_: string;
+    error_: string;
+    errorBackground_: string;
+    errorBorder_: string;
+
+    success_: string;
+    successBackground_: string;
+    successBorder_: string;
+
+    warning_: string;
+    warningBackground_: string;
+    warningBorder_: string;
 
     border_: string;
     hoverBackground_?: string;

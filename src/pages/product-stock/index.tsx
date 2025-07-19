@@ -3,7 +3,6 @@ import {
   Col,
   Flex,
   Modal,
-  Checkbox,
   Button,
   message,
   Upload,
@@ -26,8 +25,8 @@ import { useTheme } from "@emotion/react";
 import * as XLSX from "xlsx";
 
 // Components
-import MButton from "../../components/common/MButton";
-import Table from "../../components/tableComps/Table";
+import MButton from "@components/common/MButton";
+import MTable from "@components/tableComps/Table";
 import ProductFormComp from "./form/ProductForm";
 import DesktopControls from "./components/DesktopControls";
 import MobileControlsComponent from "./components/MobileControls";
@@ -35,17 +34,16 @@ import SearchAndActions from "./components/SearchAndActions";
 import AdvancedFilter from "./components/AdvancedFilter";
 
 // Hooks and Utils
-import { isMobile } from "../../utils/responsive";
+import { isMobile } from "@utils/responsive";
 import { useProductStore } from "./store/productStore";
 import { onUploadProducts } from "./hooks/product.hook";
-import { useAuth } from "../../store";
-import { Role } from "../../enum/Role.enum";
+import { useAuth } from "@stores/index.ts";
+import { Role } from "@enums/Role.enum.ts";
 
 // Types and Styles
 import { FormProductData, ProductData } from "./interface/interface";
 import { essentialColumns } from "./table/productColumns";
 import { createHighlightedColumns } from "./table/highlightedColumns";
-import { ProductStockContainer } from "./styles";
 
 // Components for rendering
 import ProductCardList from "./components/ProductCardList.tsx";
@@ -85,9 +83,7 @@ const ProductStock = () => {
     // Actions
     loadProducts,
     addSelectedItem,
-    removeSelectedItem,
     clearSelectedItems,
-    selectAllItems,
     setSortField,
     setSortOrder,
     setViewMode,
@@ -182,8 +178,6 @@ const ProductStock = () => {
         },
       };
       editForm.setFieldsValue(formData);
-    } else if (!editModalOpen) {
-      editForm.resetFields();
     }
   }, [editingProduct, editModalOpen, editForm]);
 
@@ -288,23 +282,6 @@ const ProductStock = () => {
 
   const handleViewDetails = (product: ProductData) => {
     openDetailDrawer(product);
-  };
-
-  // Bulk actions
-  const handleSelectItem = (barcode: string, checked: boolean) => {
-    if (checked) {
-      addSelectedItem(barcode);
-    } else {
-      removeSelectedItem(barcode);
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      selectAllItems(filteredAndSortedData);
-    } else {
-      clearSelectedItems();
-    }
   };
 
   const handleEditSubmit = async (values: FormProductData) => {
@@ -469,54 +446,24 @@ const ProductStock = () => {
 
   // Enhanced table columns with selection and actions
   const tableColumns = [
-    {
-      title: (
-        <Checkbox
-          checked={
-            selectedItems.length === filteredAndSortedData.length &&
-            filteredAndSortedData.length > 0
-          }
-          indeterminate={
-            selectedItems.length > 0 &&
-            selectedItems.length < filteredAndSortedData.length
-          }
-          onChange={(e) => handleSelectAll(e.target.checked)}
-        />
-      ),
-      key: "selection",
-      width: 50,
-      render: (_: unknown, record: unknown) => {
-        const productRecord = record as ProductData;
-        return (
-          <Checkbox
-            checked={selectedItems.includes(productRecord.barcode)}
-            onChange={(e) =>
-              handleSelectItem(productRecord.barcode, e.target.checked)
-            }
-          />
-        );
-      },
-    },
-    // Use highlighted columns when search term is present, cast to any to avoid type conflicts
-
     ...(searchTerm ? createHighlightedColumns(searchTerm) : essentialColumns),
     {
-      title: "การดำเนินการ",
+      title: "",
       key: "actions",
       width: 150,
       fixed: "right" as const,
-      render: (_: unknown, record: unknown) => {
-        const productRecord = record as ProductData;
+      render: (_: unknown, record: ProductData) => {
+        const productRecord = record;
         return (
           <div style={{ display: "flex", gap: 4 }}>
-            <Button
+            <MButton
               type="text"
               size="small"
               icon={<EditOutlined />}
               onClick={() => openEditModal(productRecord)}
               title="แก้ไข"
             />
-            <Button
+            <MButton
               type="text"
               size="small"
               icon={<EyeOutlined />}
@@ -524,7 +471,7 @@ const ProductStock = () => {
               title="ดูรายละเอียด"
             />
             {isSuperAdmin && (
-              <Button
+              <MButton
                 type="text"
                 size="small"
                 icon={<DeleteOutlined />}
@@ -545,259 +492,255 @@ const ProductStock = () => {
   ];
 
   return (
-    <ProductStockContainer theme={theme}>
-      <Flex vertical gap={16}>
-        {/* Header with Upload button */}
-        <Flex justify="space-between" align="center">
-          <Col>
-            <Button
-              icon={<FileExcelOutlined />}
-              onClick={() => setExcelImportModalOpen(true)}
-              size="large"
-            >
-              นำเข้า Excel
-            </Button>
-          </Col>
-          <Col>
-            <MButton onClick={openUploadModal}>Upload</MButton>
-          </Col>
-        </Flex>
+    <Flex vertical gap={16}>
+      {/* Header with Upload button */}
+      <Flex justify="space-between" align="center">
+        <Col>
+          <MButton
+            icon={<FileExcelOutlined />}
+            onClick={() => setExcelImportModalOpen(true)}
+            size="large"
+          >
+            นำเข้า Excel
+          </MButton>
+        </Col>
+        <Col>
+          <MButton onClick={openUploadModal}>Upload</MButton>
+        </Col>
+      </Flex>
 
-        {/* Search and Actions */}
-        <SearchAndActions />
+      {/* Search and Actions */}
+      <SearchAndActions />
 
-        {/* Selected Items Actions Bar - Show above table/cards */}
-        {selectedItems.length > 0 && (
-          <Flex
-            justify="space-between"
-            align="center"
+      {/* Selected Items Actions Bar - Show above table/cards */}
+      {selectedItems.length > 0 && (
+        <Flex
+          justify="space-between"
+          align="center"
+          style={{
+            padding: "12px 16px",
+            background: theme.backgroundElevated_,
+            border: `1px solid ${theme.splitLine_}`,
+            borderRadius: "8px",
+            marginBottom: "8px",
+          }}
+        >
+          <div
             style={{
-              padding: "12px 16px",
-              background: theme.backgroundElevated_,
-              border: `1px solid ${theme.splitLine_}`,
-              borderRadius: "8px",
-              marginBottom: "8px",
+              color: theme.textTertiary_,
+              fontSize: "14px",
+              fontWeight: 500,
             }}
           >
-            <div
-              style={{
-                color: theme.textTertiary_,
-                fontSize: "14px",
-                fontWeight: 500,
-              }}
-            >
-              เลือกแล้ว {selectedItems.length} รายการ
-            </div>
-            {isSuperAdmin && (
-              <Button
-                type="primary"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleDeleteSelected}
-                size="small"
-              >
-                ลบรายการที่เลือก
-              </Button>
-            )}
-          </Flex>
-        )}
-
-        {/* Desktop Controls */}
-        {!mobile && <DesktopControls />}
-
-        {/* Mobile Controls */}
-        {mobile ||
-          (viewMode === "card" && (
-            <MobileControlsComponent
-              handleSort={handleSort}
-              getSortIcon={getSortIcon}
-            />
-          ))}
-
-        {/* Content */}
-        {viewMode === "card" || mobile ? (
-          <ProductCardList
-            onEditProduct={openEditModal}
-            onDeleteProduct={(product) => {
-              // Create a temporary selection and delete
-              clearSelectedItems();
-              addSelectedItem(product.barcode);
-              setTimeout(() => handleDeleteSelected(), 0);
-            }}
-          />
-        ) : (
-          <Table
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            columns={tableColumns as any}
-            dataSource={filteredAndSortedData}
-            scroll={{ x: 800 }}
-            rowKey="barcode"
-            pagination={{
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} จาก ${total} รายการ`,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              defaultPageSize: 20,
-            }}
-          />
-        )}
-
-        {/* Product Detail Drawer */}
-        <ProductDetailDrawer />
-
-        {/* Advanced Filter Modal */}
-        <AdvancedFilter />
-
-        {/* Upload Modal */}
-        <Modal
-          title="Upload Products"
-          open={uploadModalOpen}
-          onCancel={closeUploadModal}
-          footer={null}
-          width={mobile ? "100%" : 800}
-          centered
-        >
-          <ProductFormComp
-            form={form}
-            setData={loadProducts}
-            setOpen={closeUploadModal}
-          />
-        </Modal>
-
-        {/* Single Product Edit Modal */}
-        <Modal
-          title={`แก้ไขสินค้า: ${editingProduct?.name || ""}`}
-          open={editModalOpen}
-          onCancel={closeEditModal}
-          footer={null}
-          width={mobile ? "100%" : 800}
-          centered
-        >
-          <ProductFormComp
-            form={editForm}
-            setData={loadProducts}
-            setOpen={closeEditModal}
-            onSubmit={handleEditSubmit}
-            isEdit={true}
-          />
-        </Modal>
-
-        {/* Delete Confirmation Modal */}
-        <Modal
-          title="ยืนยันการลบสินค้า"
-          open={deleteModalOpen}
-          onCancel={handleDeleteCancel}
-          footer={
-            <div
-              style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}
-            >
-              <Button onClick={handleDeleteCancel}>ยกเลิก</Button>
-              <Button type="primary" danger onClick={handleDeleteConfirm}>
-                ยืนยันการลบ
-              </Button>
-            </div>
-          }
-        >
-          <p>คุณแน่ใจหรือว่าต้องการลบสินค้า {selectedItems.length} รายการ?</p>
-        </Modal>
-
-        {/* Excel Import Modal */}
-        <Modal
-          title="นำเข้าสินค้าจาก Excel"
-          open={excelImportModalOpen}
-          onCancel={handleExcelImportCancel}
-          footer={null}
-          width={mobile ? "100%" : 800}
-          centered
-        >
-          <div style={{ padding: 16 }}>
-            <Upload
-              accept=".xls,.xlsx"
-              beforeUpload={(file) => {
-                handleExcelFileSelect(file);
-                return false; // Prevent automatic upload
-              }}
-              showUploadList={false}
-            >
-              <Button icon={<UploadOutlined />} size="large" block>
-                เลือกไฟล์ Excel
-              </Button>
-            </Upload>
-
-            {excelFile && (
-              <div style={{ marginTop: 16 }}>
-                <strong>ไฟล์ที่เลือก:</strong> {excelFile.name}
-              </div>
-            )}
-
-            {excelData.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <strong>ตัวอย่างข้อมูลในไฟล์:</strong>
-                <AntTable
-                  columns={Object.keys(excelData[0]).map((key) => ({
-                    title: key,
-                    dataIndex: key,
-                    key,
-                  }))}
-                  dataSource={excelData}
-                  pagination={false}
-                  rowKey={(_, index) => index || 0}
-                  style={{ marginTop: 8 }}
-                />
-              </div>
-            )}
-
-            {Object.keys(columnMapping).length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <strong>การแมปคอลัมน์:</strong>
-                <AntTable
-                  columns={[
-                    {
-                      title: "คอลัมน์ในไฟล์ Excel",
-                      dataIndex: "excelColumn",
-                      key: "excelColumn",
-                    },
-                    {
-                      title: "ฟิลด์ในระบบ",
-                      dataIndex: "formField",
-                      key: "formField",
-                    },
-                  ]}
-                  dataSource={Object.entries(columnMapping).map(
-                    ([excelCol, formField]) => ({
-                      excelColumn: excelCol,
-                      formField,
-                    })
-                  )}
-                  pagination={false}
-                  style={{ marginTop: 8 }}
-                />
-              </div>
-            )}
-
-            <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
-              <Button
-                type="primary"
-                onClick={handleExcelImportConfirm}
-                size="large"
-                block
-              >
-                นำเข้าข้อมูล
-              </Button>
-              <Button
-                onClick={handleExcelImportCancel}
-                size="large"
-                block
-                danger
-              >
-                ยกเลิก
-              </Button>
-            </div>
+            เลือกแล้ว {selectedItems.length} รายการ
           </div>
-        </Modal>
-      </Flex>
-    </ProductStockContainer>
+          {isSuperAdmin && (
+            <MButton
+              type="primary"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleDeleteSelected}
+              size="small"
+            >
+              ลบรายการที่เลือก
+            </MButton>
+          )}
+        </Flex>
+      )}
+
+      {/* Desktop Controls */}
+      {!mobile && <DesktopControls />}
+
+      {/* Mobile Controls */}
+      {mobile ||
+        (viewMode === "card" && (
+          <MobileControlsComponent
+            handleSort={handleSort}
+            getSortIcon={getSortIcon}
+          />
+        ))}
+
+      {/* Content */}
+      {viewMode === "card" || mobile ? (
+        <ProductCardList
+          onEditProduct={openEditModal}
+          onDeleteProduct={(product) => {
+            // Create a temporary selection and delete
+            clearSelectedItems();
+            addSelectedItem(product.barcode);
+            setTimeout(() => handleDeleteSelected(), 0);
+          }}
+        />
+      ) : (
+        <MTable
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          columns={tableColumns as any}
+          dataSource={filteredAndSortedData}
+          scroll={{ x: 800 }}
+          rowKey="barcode"
+          selectable
+          onSelectionChange={(selectedRowKeys) => {
+            clearSelectedItems();
+            selectedRowKeys.forEach((key) => addSelectedItem(key as string));
+            console.log("Selected items:", selectedItems);
+          }}
+          rowSelection={{
+            selectedRowKeys: selectedItems,
+            onChange: (selectedRowKeys) => {
+              clearSelectedItems();
+              selectedRowKeys.forEach((key) => addSelectedItem(key as string));
+            },
+          }}
+        />
+      )}
+
+      {/* Product Detail Drawer */}
+      <ProductDetailDrawer />
+
+      {/* Advanced Filter Modal */}
+      <AdvancedFilter />
+
+      {/* Upload Modal */}
+      <Modal
+        title="Upload Products"
+        open={uploadModalOpen}
+        onCancel={closeUploadModal}
+        footer={null}
+        width={mobile ? "100%" : 800}
+        centered
+      >
+        <ProductFormComp
+          form={form}
+          setData={loadProducts}
+          setOpen={closeUploadModal}
+        />
+      </Modal>
+
+      {/* Single Product Edit Modal */}
+      <Modal
+        title={`แก้ไขสินค้า: ${editingProduct?.name || ""}`}
+        open={editModalOpen}
+        onCancel={closeEditModal}
+        footer={null}
+        width={mobile ? "100%" : 800}
+        centered
+      >
+        <ProductFormComp
+          form={editForm}
+          setData={loadProducts}
+          setOpen={closeEditModal}
+          onSubmit={handleEditSubmit}
+          isEdit={true}
+        />
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="ยืนยันการลบสินค้า"
+        open={deleteModalOpen}
+        onCancel={handleDeleteCancel}
+        footer={
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <Button onClick={handleDeleteCancel}>ยกเลิก</Button>
+            <Button type="primary" danger onClick={handleDeleteConfirm}>
+              ยืนยันการลบ
+            </Button>
+          </div>
+        }
+      >
+        <p>คุณแน่ใจหรือว่าต้องการลบสินค้า {selectedItems.length} รายการ?</p>
+      </Modal>
+
+      {/* Excel Import Modal */}
+      <Modal
+        title="นำเข้าสินค้าจาก Excel"
+        open={excelImportModalOpen}
+        onCancel={handleExcelImportCancel}
+        footer={null}
+        width={mobile ? "100%" : 800}
+        centered
+      >
+        <div style={{ padding: 16 }}>
+          <Upload
+            accept=".xls,.xlsx"
+            beforeUpload={(file) => {
+              handleExcelFileSelect(file);
+              return false; // Prevent automatic upload
+            }}
+            showUploadList={false}
+          >
+            <Button icon={<UploadOutlined />} size="large" block>
+              เลือกไฟล์ Excel
+            </Button>
+          </Upload>
+
+          {excelFile && (
+            <div style={{ marginTop: 16 }}>
+              <strong>ไฟล์ที่เลือก:</strong> {excelFile.name}
+            </div>
+          )}
+
+          {excelData.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <strong>ตัวอย่างข้อมูลในไฟล์:</strong>
+              <AntTable
+                columns={Object.keys(excelData[0]).map((key) => ({
+                  title: key,
+                  dataIndex: key,
+                  key,
+                }))}
+                dataSource={excelData}
+                pagination={false}
+                rowKey={(_, index) => index || 0}
+                style={{ marginTop: 8 }}
+              />
+            </div>
+          )}
+
+          {Object.keys(columnMapping).length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <strong>การแมปคอลัมน์:</strong>
+              <AntTable
+                columns={[
+                  {
+                    title: "คอลัมน์ในไฟล์ Excel",
+                    dataIndex: "excelColumn",
+                    key: "excelColumn",
+                  },
+                  {
+                    title: "ฟิลด์ในระบบ",
+                    dataIndex: "formField",
+                    key: "formField",
+                  },
+                ]}
+                dataSource={Object.entries(columnMapping).map(
+                  ([excelCol, formField]) => ({
+                    excelColumn: excelCol,
+                    formField,
+                  })
+                )}
+                pagination={false}
+                style={{ marginTop: 8 }}
+              />
+            </div>
+          )}
+
+          <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+            <Button
+              type="primary"
+              onClick={handleExcelImportConfirm}
+              size="large"
+              block
+            >
+              นำเข้าข้อมูล
+            </Button>
+            <Button onClick={handleExcelImportCancel} size="large" block danger>
+              ยกเลิก
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </Flex>
   );
 };
 

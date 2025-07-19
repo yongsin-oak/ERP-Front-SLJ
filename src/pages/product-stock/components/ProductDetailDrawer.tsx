@@ -1,5 +1,5 @@
 import React from "react";
-import { Drawer, Space, Button } from "antd";
+import { Drawer, Space } from "antd";
 import {
   InfoCircleOutlined,
   DollarOutlined,
@@ -19,6 +19,7 @@ import { ProductDetails, DrawerActions, InfoRow, StockBadge } from "../styles";
 import { useProductStore } from "../store/productStore";
 import { isMobile } from "../../../utils/responsive";
 import { useWindowSize } from "@uidotdev/usehooks";
+import MButton from "@components/common/MButton";
 
 const ProductDetailDrawer: React.FC = () => {
   const theme = useTheme();
@@ -292,9 +293,9 @@ const ProductDetailDrawer: React.FC = () => {
 
         {/* Actions */}
         <DrawerActions theme={theme}>
-          <Button type="default" onClick={onClose} block>
+          <MButton type="default" onClick={onClose} block>
             ปิด
-          </Button>
+          </MButton>
         </DrawerActions>
       </ProductDetails>
     </Drawer>

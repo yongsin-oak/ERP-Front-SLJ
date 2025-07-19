@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import ExcelUpload from "../../components/common/ExcelUpload";
 import FormInputs from "../../components/Form/FormInputs";
 import MButton from "../../components/common/MButton";
-import Table from "../../components/tableComps/Table";
+import MTable from "../../components/tableComps/Table";
 import Text from "../../components/common/Text";
 import req from "../../utils/req";
 import { EmployeeType } from "./employee.interface";
@@ -143,7 +143,7 @@ const Employee = () => {
           </FormInputs>
         </Form>
       </Modal>
-      <Table
+      <MTable
         columns={columns}
         dataSource={employees}
         bordered

@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../store";
+import { useAuth } from "../stores";
 import { Spin } from "antd";
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -7,10 +7,10 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   if (isLoadingUser) {
-    return <Spin size="large" fullscreen />
+    return <Spin size="large" fullscreen />;
   }
   return isAuth ? (
-    children  
+    children
   ) : (
     <Navigate to="/login" state={{ from: location }} replace />
   );

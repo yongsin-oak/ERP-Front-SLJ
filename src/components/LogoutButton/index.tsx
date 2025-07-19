@@ -2,7 +2,7 @@ import { LogoutOutlined } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
 import { Flex } from "antd";
 import MButton from "../common/MButton";
-import { useAuth } from "../../store";
+import { useAuth } from "../../stores";
 
 interface LogoutButtonProps {
   collapsed?: boolean;

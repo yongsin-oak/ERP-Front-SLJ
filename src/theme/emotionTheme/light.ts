@@ -19,10 +19,17 @@ const lightTheme: Theme = {
 
   red100_: red.primary,
   red200_: red.hover,
-  red300_: "#ff4d4f",
+  error_: red.error,
+  errorBackground_: red.errorBackground,
+  errorBorder_: red.errorBorder,
 
-  green100_: green.primary,
-  orange100_: orange.primary,
+  success_: green.success,
+  successBackground_: green.successBackground,
+  successBorder_: green.successBorder,
+  
+  warning_: orange.warning,
+  warningBackground_: orange.warningBackground,
+  warningBorder_: orange.warningBorder,
 
   border_: "rgba(0,0,0,0.12)",
   hoverBackground_: "rgba(0,0,0,0.04)",

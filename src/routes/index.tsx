@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import Mainlayout from "../layout/Mainlayout";
+import Mainlayout from "../layouts/Mainlayout";
 import PrivateRoute from "./PrivateRoute";
 import Home from "../pages/_home";
 import POS from "../pages/_sell/_pos";
@@ -10,7 +10,6 @@ import ProductStock from "../pages/product-stock";
 import User from "../pages/_user";
 import Employee from "../pages/_employee";
 import Example from "../pages/example";
-import TextExample from "../pages/example/TextExample";
 import Login from "../pages/login";
 import NotFoundPage from "../pages/_error/404";
 import ErrorPage from "../pages/_error/500";
@@ -34,7 +33,6 @@ const Routers = () => {
     genR("/user", <User />),
     genR("/employee", <Employee />),
     genR("/example", <Example />),
-    genR("/text-example", <TextExample />),
   ];
 
   return (

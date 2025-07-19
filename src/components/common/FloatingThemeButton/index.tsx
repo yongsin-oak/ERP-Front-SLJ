@@ -1,7 +1,7 @@
 import { MoonFilled, SunFilled } from "@ant-design/icons";
 import { useTheme, Theme } from "@emotion/react";
 import styled from "@emotion/styled";
-import { useStoreTheme } from "../../../store";
+import { useStoreTheme } from "../../../stores";
 import {
   BORDER_RADIUS,
   SPACING,

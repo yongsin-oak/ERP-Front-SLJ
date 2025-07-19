@@ -2,7 +2,7 @@ import { Flex } from "antd";
 import { ColumnType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import Table from "../../../../components/tableComps/Table";
+import MTable from "../../../../components/tableComps/Table";
 import Text from "../../../../components/common/Text";
 import req from "../../../../utils/req";
 import { OrderType } from "../../order.interface";
@@ -108,7 +108,7 @@ const HistoryOrder = () => {
       <Text h3 semiBold>
         Order
       </Text>
-      <Table
+      <MTable
         columns={columns}
         dataSource={orderHistory}
         bordered
@@ -118,7 +118,7 @@ const HistoryOrder = () => {
         expandable={{
           expandedRowRender: (record) =>
             record.orderDetails?.length ? (
-              <Table
+              <MTable
                 columns={[
                   {
                     title: "ลำดับ",

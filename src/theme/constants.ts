@@ -91,19 +91,6 @@ export const BREAKPOINTS = {
   "2xl": "1400px",
 } as const;
 
-// Common style mixins
-export const FLEX_CENTER = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-} as const;
-
-export const FLEX_BETWEEN = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-} as const;
-
 export const ABSOLUTE_CENTER = {
   position: "absolute" as const,
   top: "50%",

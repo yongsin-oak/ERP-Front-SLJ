@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import req from "../utils/req";
-import { Role } from "../enum/Role.enum";
+import { Role } from "../enums/Role.enum";
 
 type StateTheme = {
   themeMode: "dark" | "light";

@@ -1,5 +1,5 @@
 import { InputFields } from "../../components/Form/FormInputs/interface";
-import { Role } from "../../enum/Role.enum";
+import { Role } from "../../enums/Role.enum";
 
 export const addEmployeeInputFields: InputFields[] = [
   {

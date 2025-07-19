@@ -1,116 +1,6 @@
 import styled from "@emotion/styled";
 import { Theme } from "@emotion/react";
 import { BORDER_RADIUS, SPACING } from "../../theme/constants";
-
-export const ProductStockContainer = styled.div<{ theme: Theme }>`
-  .ant-table-wrapper {
-    border-radius: ${BORDER_RADIUS.lg};
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    border: 1px solid ${(props) => props.theme.splitLine_};
-    overflow: hidden;
-
-    .ant-table-thead > tr > th {
-      background: ${(props) => props.theme.backgroundSecondary_};
-      font-weight: 600;
-      border-bottom: 2px solid ${(props) => props.theme.splitLine_};
-      color: ${(props) => props.theme.textPrimary_};
-      padding: ${SPACING.md} ${SPACING.lg};
-      font-size: 14px;
-
-      &:hover {
-        background: ${(props) => props.theme.backgroundSecondary_} !important;
-      }
-    }
-
-    .ant-table-tbody > tr > td {
-      border-bottom: 1px solid ${(props) => props.theme.splitLine_};
-      padding: ${SPACING.md} ${SPACING.lg};
-      font-size: 14px;
-
-      &:first-of-type {
-        font-weight: 500;
-      }
-    }
-
-    .ant-table-tbody > tr:hover > td {
-      background: ${(props) => props.theme.hoverBackground_};
-    }
-
-    /* ปรับปรุง expanded row ให้สวยขึ้น */
-    .ant-table-expanded-row > td {
-      background: ${(props) => props.theme.background_} !important;
-      padding: ${SPACING.lg} !important;
-
-      .ant-table-wrapper {
-        background: ${(props) => props.theme.backgroundElevated_};
-        border-radius: ${BORDER_RADIUS.md};
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-
-        .ant-table-thead > tr > th {
-          background: ${(props) => props.theme.backgroundSecondary_};
-          font-size: 13px;
-          padding: ${SPACING.sm} ${SPACING.md};
-        }
-
-        .ant-table-tbody > tr > td {
-          padding: ${SPACING.sm} ${SPACING.md};
-          font-size: 13px;
-          background: ${(props) => props.theme.backgroundElevated_};
-        }
-      }
-    }
-
-    /* ปรับปรุง table size และ spacing */
-    &.ant-table-small {
-      .ant-table-thead > tr > th {
-        padding: ${SPACING.sm} ${SPACING.md};
-        font-size: 13px;
-      }
-
-      .ant-table-tbody > tr > td {
-        padding: ${SPACING.sm} ${SPACING.md};
-        font-size: 13px;
-      }
-    }
-
-    /* เพิ่ม hover effect ให้ row */
-    .ant-table-tbody > tr {
-      transition: all 0.2s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-    }
-
-    /* ปรับปรุง action button */
-    .ant-btn {
-      &:hover {
-        transform: scale(1.1);
-        transition: transform 0.2s ease;
-      }
-    }
-
-    /* ปรับปรุง pagination spacing */
-    .ant-pagination {
-      padding: ${SPACING.lg};
-      margin: 0;
-
-      .ant-pagination-item,
-      .ant-pagination-prev,
-      .ant-pagination-next,
-      .ant-pagination-jump-prev,
-      .ant-pagination-jump-next {
-        margin: 0 ${SPACING.xs};
-      }
-
-      .ant-pagination-options {
-        margin-left: ${SPACING.md};
-      }
-    }
-  }
-`;
-
 export const ViewControls = styled.div<{ theme: Theme }>`
   display: flex;
   justify-content: space-between;
@@ -220,9 +110,7 @@ export const InfoRow = styled.div<{ theme: Theme }>`
   align-items: center;
   padding: ${SPACING.sm} 0;
 
-  &:not(:last-child) {
-    border-bottom: 1px solid ${(props) => props.theme.splitLine_};
-  }
+  border-bottom: 1px solid ${(props) => props.theme.splitLine_};
 
   .label {
     color: ${(props) => props.theme.textSecondary_};

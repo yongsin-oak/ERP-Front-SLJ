@@ -14,7 +14,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import MButton from "../components/common/MButton";
 import Text from "../components/common/Text";
 import LogoutButton from "../components/LogoutButton";
-import { useStoreTheme } from "../store";
+import { useStoreTheme } from "../stores";
 import { isMobile } from "../utils/responsive";
 import { menuItems } from "./menu";
 import {
