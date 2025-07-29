@@ -1,4 +1,4 @@
-import { ProductDimensions } from "../interface/interface";
+import { ProductDimensions } from "../interface";
 
 export const formatDimensions = (
   dimensions: ProductDimensions | null

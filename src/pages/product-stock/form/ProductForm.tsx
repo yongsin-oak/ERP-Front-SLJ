@@ -1,11 +1,12 @@
 import { Flex, Form, FormInstance } from "antd";
+import { useWatch } from "antd/es/form/Form";
 import React from "react";
 import FormInputs from "../../../components/Form/FormInputs";
 import MButton from "../../../components/common/MButton";
 import { onGetProducts, onUploadProducts } from "../hooks/product.hook";
-import { FormProductData, ProductData } from "../interface/interface";
+import { FormProductData, ProductData } from "../interface";
 import { addProductInputFields } from "./inputField";
-import { useWatch } from "antd/es/form/Form";
+// import QuickAddCategory from "./QuickAddCategory";
 
 export interface ProductFormCompProps {
   form: FormInstance<FormProductData>;
@@ -24,6 +25,7 @@ const ProductFormComp = ({
   const remainingUnit = useWatch(["unit", "remaining"], form);
   const minStockUnit = useWatch(["unit", "minStock"], form);
 
+
   const handleSubmit = async (vals: FormProductData) => {
     if (onSubmit) {
       await onSubmit(vals);
@@ -38,7 +40,6 @@ const ProductFormComp = ({
       });
     }
   };
-
   return (
     <Form form={form} onFinish={handleSubmit} layout="vertical" noValidate>
       <FormInputs

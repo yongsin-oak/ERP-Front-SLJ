@@ -1,74 +1,79 @@
-import { Table as ATable, TableProps } from "antd";
-import TableHeader from "../TableHeader";
-import { useState } from "react";
-import CardList, { CardItem } from "../CardList";
 import { highlightText } from "@utils/highlightText";
-import { AnyObject } from "antd/es/_util/type";
+import { Table as ATable, Input, TableProps } from "antd";
 import { ColumnsType, ColumnType } from "antd/es/table";
+import { useState } from "react";
+import CardList from "../CardList";
+import TableHeader from "../TableHeader";
 
-export interface MTableProps extends TableProps {
-  selectable?: boolean;
-  onSelectionChange?: (
-    selectedRowKeys: React.Key[],
-    selectedRows: Record<string, unknown>[]
-  ) => void;
+export interface MTableProps<T> extends TableProps<T> {
+  // ===== Required Props =====
+  columns: ColumnsType<T>;
+  dataSource: T[];
+  tableName?: string; // ชื่อตาราง
+
+  // ===== Basic Configuration =====
+  rowKey: string; // default: "id"
+  titleColumn: string; // default: "name"
+  columnsShow?: string[];
+
+  // ===== Features =====
+  selectable?: boolean; // เลือกได้หรือไม่
+  showViewToggle?: boolean; // สลับ table/card view (default: true)
+
+  // ===== Actions =====
+  onSelectionChange?: (selectedRows: T[]) => void;
+
+  // ===== Advanced (optional) =====
+  viewMode?: "card" | "table"; // force view mode
+  pageSize?: number;
+  // ===== Legacy Props (for backward compatibility) =====
   onShowSizeChange?: (current: number, size: number) => void;
-  viewMode?: "card" | "table";
-  // Props สำหรับ TableHeader
-  tableName?: string;
   totalItems?: number;
-  showViewToggle?: boolean;
   search?: {
     searchTerm?: string;
     searchKey?: string[];
   };
-  onEditItem?: (item: CardItem) => void;
-  onDeleteItem?: (item: CardItem) => void;
-  // Props สำหรับ CardList
-  cardProps?: {
-    emptyStateMessage?: string;
-    additionalDetailsLabel?: string;
-    renderStatusBadge?: (status: CardItem["status"]) => React.ReactNode;
-    // Function to transform table data to card data
-    transformData?: (data: any[]) => CardItem[];
-  };
 }
 
-const MTable = ({
+function MTable<T extends object>({
+  // ====< New simplified props =====
+  tableName = "ข้อมูล",
+  rowKey = "id",
   selectable = false,
+  showViewToggle = true,
   onSelectionChange,
+  pageSize = 10,
+  loading,
+  columnsShow = [], // คอลัมน์ที่จะแสดงใน CardList
+  titleColumn,
+
+  // ===== Legacy props =====
   onShowSizeChange,
   viewMode,
-  dataSource = [],
-  pagination,
-  tableName = "ตาราง",
   totalItems,
-  showViewToggle = true,
-  cardProps,
   search = {},
+
+  // ===== Required props =====
   columns = [],
-  onEditItem,
-  onDeleteItem,
+  dataSource = [],
   ...props
-}: MTableProps) => {
+}: MTableProps<T>) {
   const [defaultViewMode, setDefaultViewMode] = useState<"card" | "table">(
     viewMode || "table"
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-
-  const currentViewMode = viewMode || defaultViewMode;
+  const [searchTerm, setSearchTerm] = useState(search?.searchTerm || "");
 
   const rowSelection = selectable
     ? {
         selectedRowKeys,
-        onChange: (
-          selectedKeys: React.Key[],
-          selectedRows: Record<string, unknown>[]
-        ) => {
+        onChange: (selectedKeys: React.Key[], selectedRows: T[]) => {
           setSelectedRowKeys(selectedKeys);
-          onSelectionChange?.(selectedKeys, selectedRows);
+          // Handle both new and legacy callback formats
+          if (onSelectionChange) {
+            onSelectionChange(selectedRows);
+          }
         },
-        ...props.rowSelection,
       }
     : undefined;
 
@@ -77,140 +82,78 @@ const MTable = ({
     setDefaultViewMode(mode);
   };
 
-  // Transform table data to card data
-  const getCardData = (): CardItem[] => {
-    if (cardProps?.transformData) {
-      return cardProps.transformData(dataSource);
-    }
+  const renderColumns = columns.map((col: ColumnType<T>) => ({
+    ...col,
+    render(value: unknown, record: T, index: number) {
+      const searchTermToUse = search?.searchTerm || searchTerm;
+      return searchTermToUse &&
+        search?.searchKey?.includes(col.dataIndex as string)
+        ? highlightText(String(value || ""), searchTermToUse)
+        : col.render?.(value, record, index) || value;
+    },
+  }));
 
-    // Default transformation (basic mapping)
-    return dataSource.map((item: any, index: number) => ({
-      id: item.key || item.id || index,
-      title: item.name || item.title || `รายการ ${index + 1}`,
-      subtitle: item.code || item.subtitle,
-      status: item.status,
-      mainFields: Object.entries(item)
-        .filter(
-          ([key]) =>
-            ![
-              "key",
-              "id",
-              "name",
-              "title",
-              "code",
-              "subtitle",
-              "status",
-            ].includes(key)
-        )
-        .slice(0, 4) // แสดงแค่ 4 fields หลัก
-        .map(([key, value]) => ({
-          label: key,
-          value: value as string | number | null,
-          type: typeof value === "number" ? "number" : "text",
-        })),
-      additionalFields: Object.entries(item)
-        .filter(
-          ([key]) =>
-            ![
-              "key",
-              "id",
-              "name",
-              "title",
-              "code",
-              "subtitle",
-              "status",
-            ].includes(key)
-        )
-        .slice(4) // fields เพิ่มเติม
-        .map(([key, value]) => ({
-          label: key,
-          value: value as string | number | null,
-          type: typeof value === "number" ? "number" : "text",
-        })),
-    }));
-  };
-
-  const handleCardSelectItem = (id: string | number, checked: boolean) => {
-    let newSelectedKeys: React.Key[];
-
-    if (checked) {
-      newSelectedKeys = [...selectedRowKeys, id];
-    } else {
-      newSelectedKeys = selectedRowKeys.filter((key) => key !== id);
-    }
-
-    setSelectedRowKeys(newSelectedKeys);
-
-    // Find selected rows
-    const selectedRows = dataSource.filter((item: any) =>
-      newSelectedKeys.includes(item.key || item.id)
-    );
-
-    onSelectionChange?.(newSelectedKeys, selectedRows);
-  };
-
-  // Import necessary types at the top
-
-  const renderColumns: ColumnsType<AnyObject> = columns.map(
-    (col: ColumnType<AnyObject>) => ({
-      ...col,
-      render(value: any, record: AnyObject, index: number) {
-        return search?.searchTerm &&
-          search?.searchKey?.includes(col.dataIndex as string)
-          ? highlightText(value, search.searchTerm)
-          : col.render?.(value, record, index) || value;
-      },
-    })
-  );
   return (
     <>
       {!viewMode && (
         <TableHeader
-          viewMode={currentViewMode}
+          viewMode={defaultViewMode}
           setViewMode={handleViewModeChange}
           tableName={tableName}
-          totalItems={totalItems || dataSource.length}
+          totalItems={totalItems || dataSource?.length}
           showViewToggle={showViewToggle}
         />
       )}
-
-      {currentViewMode === "table" ? (
-        <ATable
+      {defaultViewMode === "table" ? (
+        <ATable<T>
+          title={() => {
+            return <Input.Search placeholder="ค้นหาข้อมูล" />;
+          }}
           rowSelection={rowSelection}
           dataSource={dataSource}
-          columns={renderColumns}
+          columns={renderColumns as ColumnType<T>[]}
+          rowKey={rowKey}
+          loading={loading}
           pagination={{
-            total: dataSource.length,
+            total: dataSource?.length,
             showQuickJumper: true,
             showSizeChanger: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} จาก ${total} รายการ`,
             pageSizeOptions: ["10", "20", "50", "100"],
-            defaultPageSize: 10,
+            defaultPageSize: pageSize,
             onShowSizeChange(current, size) {
               onShowSizeChange?.(current, size);
             },
             responsive: true,
-            ...pagination,
           }}
           {...props}
         />
       ) : (
         <CardList
-          data={getCardData()}
+          dataSource={dataSource}
+          columns={columns}
+          columnsShow={columnsShow} // หรือให้ config ผ่าน props
+          titleColumn={titleColumn}
+          rowKey={rowKey}
+          subtitleColumn="barcode"
           selectedItems={selectedRowKeys}
-          selectable={selectable}
-          onSelectItem={handleCardSelectItem}
-          searchTerm={search.searchTerm}
-          onEditItem={onEditItem}
-          onDeleteItem={onDeleteItem}
-          emptyStateMessage={cardProps?.emptyStateMessage}
-          additionalDetailsLabel={cardProps?.additionalDetailsLabel}
-          renderStatusBadge={cardProps?.renderStatusBadge}
+          searchTerm={searchTerm}
+          onSelectItem={(id, checked) => {
+            const newKeys = checked
+              ? [...selectedRowKeys, id]
+              : selectedRowKeys.filter((key) => key !== id);
+            setSelectedRowKeys(newKeys);
+            const selectedRows = dataSource.filter((d: T) =>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              newKeys.includes((d as any)[rowKey])
+            );
+            onSelectionChange?.(selectedRows);
+          }}
         />
       )}
     </>
   );
-};
+}
 
 export default MTable;

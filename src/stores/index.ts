@@ -77,20 +77,3 @@ export const useAuth = create<StateAuth & ActionAuth>((set, get) => ({
     }
   },
 }));
-
-// // Hook เพื่อโหลดค่าธีมจาก Local Storage
-// export const useInitializeTheme = () => {
-//   const { setTheme } = useStoreTheme();
-
-//   useEffect(() => {
-//     // โหลดค่าจาก Local Storage ถ้ามี
-//     const storedTheme = localStorage.getItem("themeMode") as
-//       | "dark"
-//       | "light"
-//       | null;
-
-//     if (storedTheme) {
-//       setTheme(storedTheme);
-//     }
-//   }, [setTheme]);
-// };

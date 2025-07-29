@@ -15,7 +15,7 @@ import {
 } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
 import Text from "../../../components/common/Text";
-import { ProductData } from "../interface/interface";
+import { ProductData } from "../interface";
 import { formatDimensions, formatWeight } from "../utils/formatters";
 import { highlightText } from "../utils/highlightText";
 import {

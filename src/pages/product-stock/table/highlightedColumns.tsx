@@ -2,7 +2,7 @@ import { TableColumnsType } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { get } from "lodash";
 import { highlightText } from "../utils/highlightText";
-import { ProductData } from "../interface/interface";
+import { ProductData } from "../interface";
 
 /**
  * Creates table columns with search term highlighting support
@@ -138,41 +138,3 @@ export const essentialColumns: ColumnsType = [
   },
 ];
 
-export const additionalColumns: TableColumnsType = [
-  {
-    title: "ราคาต้นทุน(แพ็ค)",
-    dataIndex: ["costPrice", "pack"],
-    key: "costPrice.pack",
-  },
-  {
-    title: "ราคาต้นทุน(ลัง)",
-    dataIndex: ["costPrice", "carton"],
-    key: "costPrice.carton",
-  },
-  {
-    title: "ราคาขาย(แพ็ค)",
-    dataIndex: ["sellPrice", "pack"],
-    key: "sellPrice.pack",
-  },
-  {
-    title: "ราคาขาย(ลัง)",
-    dataIndex: ["sellPrice", "carton"],
-    key: "sellPrice.carton",
-  },
-  {
-    title: "จำนวนชิ้นต่อแพ็ค",
-    dataIndex: "piecesPerPack",
-    key: "piecesPerPack",
-  },
-  {
-    title: "จำนวนแพ็คต่อกล่อง",
-    dataIndex: "packPerCarton",
-    key: "packPerCarton",
-  },
-  {
-    title: "มิติสินค้า (ซม.)",
-    dataIndex: "productDimensions",
-    key: "productDimensions",
-    render: (val: any) => `${val.length} x ${val.width} x ${val.height}`,
-  },
-];

@@ -43,48 +43,6 @@ export const addProductInputFields = ({
       },
     },
     {
-      name: "brandId",
-      label: "ยี่ห้อ",
-      colProps: {
-        xs: {
-          span: 24,
-        },
-        sm: {
-          span: 12,
-        },
-      },
-      inputComponent: "select",
-      inputProps: {
-        placeholder: "ยี่ห้อ",
-        options: [
-          { label: "Brand A", value: "Brand A" },
-          { label: "Brand B", value: "Brand B" },
-        ],
-      },
-      required: false,
-    },
-    {
-      name: "categoryId",
-      label: "หมวดหมู่",
-      colProps: {
-        xs: {
-          span: 24,
-        },
-        sm: {
-          span: 12,
-        },
-      },
-      inputComponent: "select",
-      inputProps: {
-        placeholder: "หมวดหมู่",
-        options: [
-          { label: "Category A", value: "Category A" },
-          { label: "Category B", value: "Category B" },
-        ],
-      },
-      required: false,
-    },
-    {
       name: ["costPrice", "pack"],
       label: "ราคาต้นทุนต่อแพ็ค",
       colProps: {
@@ -176,7 +134,6 @@ export const addProductInputFields = ({
         placeholder: "จำนวนชิ้นต่อแพ็ค",
         suffix: "ชิ้น",
         nofloat: true,
-        precision: 2,
       },
       required: false,
     },
@@ -196,7 +153,6 @@ export const addProductInputFields = ({
         placeholder: "จำนวนแพ็คต่อลัง",
         suffix: "แพ็ค",
         nofloat: true,
-        precision: 2,
       },
       formItemProps: {
         rules: [
@@ -328,6 +284,7 @@ export const addProductInputFields = ({
       },
       inputComponent: "number",
       inputProps: {
+        nofloat: true,
         placeholder: "จำนวนสินค้าขั้นต่ำ",
         addonAfter: (
           <MFormItem name={["unit", "minStock"]} initialValue="carton" noStyle>
@@ -337,7 +294,6 @@ export const addProductInputFields = ({
             </Select>
           </MFormItem>
         ),
-        precision: 2,
       },
       required: false,
     },
@@ -354,6 +310,7 @@ export const addProductInputFields = ({
       },
       inputComponent: "number",
       inputProps: {
+        nofloat: true,
         placeholder: "จำนวนสินค้าที่เหลือ",
         addonAfter: (
           <MFormItem name={["unit", "remaining"]} initialValue="carton" noStyle>
@@ -363,7 +320,6 @@ export const addProductInputFields = ({
             </Select>
           </MFormItem>
         ),
-        precision: 2,
       },
     },
   ];

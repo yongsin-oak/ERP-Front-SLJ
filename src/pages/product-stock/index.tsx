@@ -1,52 +1,47 @@
+import {
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  FileExcelOutlined,
+  UploadOutlined
+} from "@ant-design/icons";
+import { useTheme } from "@emotion/react";
 import { useWindowSize } from "@uidotdev/usehooks";
 import {
+  Table as AntTable,
+  Button,
   Col,
   Flex,
-  Modal,
-  Button,
   message,
+  Modal,
   Upload,
-  Table as AntTable,
 } from "antd";
 import { useForm } from "antd/es/form/Form";
+import { get, orderBy } from "lodash";
 import { useEffect, useMemo, useState } from "react";
-import {
-  SortAscendingOutlined,
-  SortDescendingOutlined,
-  FilterOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UploadOutlined,
-  FileExcelOutlined,
-} from "@ant-design/icons";
-import { orderBy, get } from "lodash";
-import { useTheme } from "@emotion/react";
 import * as XLSX from "xlsx";
 
 // Components
 import MButton from "@components/common/MButton";
 import MTable from "@components/tableComps/Table";
-import ProductFormComp from "./form/ProductForm";
-import DesktopControls from "./components/DesktopControls";
-import MobileControlsComponent from "./components/MobileControls";
-import SearchAndActions from "./components/SearchAndActions";
 import AdvancedFilter from "./components/AdvancedFilter";
+import SearchAndActions from "./components/SearchAndActions";
+import ProductFormComp from "./form/ProductForm";
 
 // Hooks and Utils
-import { isMobile } from "@utils/responsive";
-import { useProductStore } from "./store/productStore";
-import { onUploadProducts } from "./hooks/product.hook";
-import { useAuth } from "@stores/index.ts";
 import { Role } from "@enums/Role.enum.ts";
+import { useAuth } from "@stores/index.ts";
+import { isMobile } from "@utils/responsive";
+import { onUploadProducts } from "./hooks/product.hook";
+import { useProductStore } from "./store/productStore";
 
 // Types and Styles
-import { FormProductData, ProductData } from "./interface/interface";
-import { essentialColumns } from "./table/productColumns";
-import { createHighlightedColumns } from "./table/highlightedColumns";
+import { FormProductData, ProductData } from "./interface/index.tsx";
+import {createHighlightedColumns } from "./table/highlightedColumns";
+import { additionalColumns, essentialColumns } from "./table/productColumns";
 
 // Components for rendering
-import ProductCardList from "./components/ProductCardList.tsx";
+import { ColumnsType } from "antd/es/table/InternalTable";
 import ProductDetailDrawer from "./components/ProductDetailDrawer.tsx";
 
 type SortField = "barcode" | "name" | "remaining" | "brand" | "category";
@@ -75,7 +70,6 @@ const ProductStock = () => {
     selectedItems,
     sortField,
     sortOrder,
-    viewMode,
     uploadModalOpen,
     editModalOpen,
     editingProduct,
@@ -84,8 +78,6 @@ const ProductStock = () => {
     loadProducts,
     addSelectedItem,
     clearSelectedItems,
-    setSortField,
-    setSortOrder,
     setViewMode,
     openUploadModal,
     closeUploadModal,
@@ -261,25 +253,6 @@ const ProductStock = () => {
     );
   }, [data, searchTerm, filters, sortField, sortOrder]);
 
-  // Handlers
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-  };
-
-  const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <FilterOutlined style={{ opacity: 0.3 }} />;
-    return sortOrder === "asc" ? (
-      <SortAscendingOutlined />
-    ) : (
-      <SortDescendingOutlined />
-    );
-  };
-
   const handleViewDetails = (product: ProductData) => {
     openDetailDrawer(product);
   };
@@ -445,13 +418,14 @@ const ProductStock = () => {
   };
 
   // Enhanced table columns with selection and actions
-  const tableColumns = [
+  const tableColumns: ColumnsType<ProductData> = [
     ...(searchTerm ? createHighlightedColumns(searchTerm) : essentialColumns),
+    ...additionalColumns,
     {
       title: "",
       key: "actions",
       width: 150,
-      fixed: "right" as const,
+      fixed: "right",
       render: (_: unknown, record: ProductData) => {
         const productRecord = record;
         return (
@@ -549,19 +523,19 @@ const ProductStock = () => {
       )}
 
       {/* Desktop Controls */}
-      {!mobile && <DesktopControls />}
+      {/* {!mobile && <DesktopControls />} */}
 
       {/* Mobile Controls */}
-      {mobile ||
+      {/* {mobile ||
         (viewMode === "card" && (
           <MobileControlsComponent
             handleSort={handleSort}
             getSortIcon={getSortIcon}
           />
-        ))}
+        ))} */}
 
       {/* Content */}
-      {viewMode === "card" || mobile ? (
+      {/* {viewMode === "card" || mobile ? (
         <ProductCardList
           onEditProduct={openEditModal}
           onDeleteProduct={(product) => {
@@ -571,28 +545,23 @@ const ProductStock = () => {
             setTimeout(() => handleDeleteSelected(), 0);
           }}
         />
-      ) : (
-        <MTable
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          columns={tableColumns as any}
-          dataSource={filteredAndSortedData}
-          scroll={{ x: 800 }}
-          rowKey="barcode"
-          selectable
-          onSelectionChange={(selectedRowKeys) => {
-            clearSelectedItems();
-            selectedRowKeys.forEach((key) => addSelectedItem(key as string));
-            console.log("Selected items:", selectedItems);
-          }}
-          rowSelection={{
-            selectedRowKeys: selectedItems,
-            onChange: (selectedRowKeys) => {
-              clearSelectedItems();
-              selectedRowKeys.forEach((key) => addSelectedItem(key as string));
-            },
-          }}
-        />
-      )}
+      ) : ( */}
+      <MTable<ProductData>
+        // ===== ใช้งานง่าย =====
+        tableName="รายการสินค้า"
+        columns={tableColumns}
+        columnsShow={["sellPrice"]}
+        dataSource={filteredAndSortedData}
+        rowKey="barcode"
+        selectable={true}
+        onSelectionChange={(selectedRows) => {
+          clearSelectedItems();
+          selectedRows.forEach((row) => addSelectedItem(row.barcode));
+        }}
+        // ===== Advanced =====
+        scroll={{ x: 800 }}
+      />
+      {/* )} */}
 
       {/* Product Detail Drawer */}
       <ProductDetailDrawer />

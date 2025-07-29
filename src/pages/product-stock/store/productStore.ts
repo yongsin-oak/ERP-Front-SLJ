@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ProductData, FormProductData } from "../interface/interface";
+import { ProductData, FormProductData } from "../interface";
 import {
   onGetProducts,
   onDeleteProduct,

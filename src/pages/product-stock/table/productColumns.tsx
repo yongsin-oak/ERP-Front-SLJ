@@ -1,9 +1,9 @@
-import { TableColumnsType } from "antd";
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { get } from "lodash";
+import { ProductData } from "../interface";
 
-export const essentialColumns: ColumnsType = [
+export const essentialColumns: ColumnsType<ProductData> = [
   {
     title: "บาร์โค้ด",
     dataIndex: "barcode",
@@ -13,6 +13,7 @@ export const essentialColumns: ColumnsType = [
     fixed: "left",
     sorter: (a, b) => a.barcode.localeCompare(b.barcode),
     sortDirections: ["descend", "ascend"],
+    filterSearch: true,
   },
   {
     title: "ชื่อสินค้า",
@@ -61,7 +62,7 @@ export const essentialColumns: ColumnsType = [
   },
 ];
 
-export const additionalColumns: TableColumnsType = [
+export const additionalColumns: ColumnsType<ProductData> = [
   {
     title: "ราคาต้นทุน(แพ็ค)",
     dataIndex: ["costPrice", "pack"],
@@ -93,16 +94,16 @@ export const additionalColumns: TableColumnsType = [
     key: "packPerCarton",
   },
   {
-    title: "มิติสินค้า (ซม.)",
+    title: "ขนาดสินค้า (กว้าง x ยาว x สูง) (ซม.)",
     dataIndex: "productDimensions",
     key: "productDimensions",
-    render: (val) => `${val.length} x ${val.width} x ${val.height}`,
+    render: (val) => `${val.width} x ${val.length} x ${val.height}`,
   },
   {
-    title: "มิติลัง (ซม.)",
+    title: "ขนาดลัง (กว้าง x ยาว x สูง) (ซม.)",
     dataIndex: "cartonDimensions",
     key: "cartonDimensions",
-    render: (val) => `${val.length} x ${val.width} x ${val.height}`,
+    render: (val) => `${val.width} x ${val.length} x ${val.height}`,
   },
   {
     title: "น้ำหนัก (กก.)",
@@ -124,13 +125,13 @@ export const additionalColumns: TableColumnsType = [
   {
     title: "วันที่เพิ่ม",
     dataIndex: "createdAt",
-    render: (val) => dayjs(val).format("DD/MM/YYYY HH:mm:ss"),
     key: "createdAt",
+    render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
   },
   {
     title: "วันที่แก้ไข",
     dataIndex: "updatedAt",
-    render: (val) => dayjs(val).format("DD/MM/YYYY HH:mm:ss"),
     key: "updatedAt",
+    render: (val) => dayjs(val).format("DD/MM/BBBB HH:mm:ss"),
   },
 ];

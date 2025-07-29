@@ -1,10 +1,10 @@
-import req from "../../../utils/req";
+import req from "@utils/req";
 import {
   onGetProductsProps,
   onUploadProductsProps,
   ProductData,
   FormProductData,
-} from "../interface/interface";
+} from "../interface";
 import { transformFormToProductData } from "../utils/transformProductData";
 
 export const onGetProducts = async ({
@@ -26,6 +26,17 @@ export const onGetProducts = async ({
   }
 };
 
+// Single product operations
+export const onGetProduct = async (barcode: string) => {
+  try {
+    const res = await req.get(`/products/${barcode}`);
+    return res.data.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export const onUploadProducts = async ({
   data,
   final,
@@ -41,27 +52,23 @@ export const onUploadProducts = async ({
   }
 };
 
-// Single product operations
-export const onGetProduct = async (barcode: string) => {
-  try {
-    const res = await req.get(`/products/${barcode}`);
-    return res.data.data;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
-
-export const onUpdateProduct = async (
-  barcode: string,
-  data: Partial<ProductData>
-) => {
+export const onUpdateProduct = async ({
+  barcode,
+  data,
+  final,
+}: {
+  barcode: string;
+  data: Partial<ProductData>;
+  final?: () => void;
+}) => {
   try {
     const res = await req.patch(`/products/${barcode}`, data);
     return res.data.data;
   } catch (error) {
     console.log(error);
     throw error;
+  } finally {
+    final?.();
   }
 };
 
