@@ -4,6 +4,7 @@ export interface CardListProps<T extends object> {
   dataSource?: T[];
   columns?: ColumnsType<T>;
   columnsShow?: string[];
+  columnsAdditional?: string[];
   titleColumn: string;
   subtitleColumn?: string;
   rowKey: string;

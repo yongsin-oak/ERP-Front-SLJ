@@ -548,9 +548,10 @@ const ProductStock = () => {
       ) : ( */}
       <MTable<ProductData>
         // ===== ใช้งานง่าย =====
-        tableName="รายการสินค้า"
         columns={tableColumns}
-        columnsShow={["sellPrice"]}
+        titleColumn="name"
+        columnsAdditional={["brand", "category", "remaining"]}
+        columnsShow={["brand", "category", "remaining"]}
         dataSource={filteredAndSortedData}
         rowKey="barcode"
         selectable={true}
@@ -558,7 +559,6 @@ const ProductStock = () => {
           clearSelectedItems();
           selectedRows.forEach((row) => addSelectedItem(row.barcode));
         }}
-        // ===== Advanced =====
         scroll={{ x: 800 }}
       />
       {/* )} */}

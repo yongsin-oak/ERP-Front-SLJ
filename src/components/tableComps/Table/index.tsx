@@ -15,6 +15,7 @@ export interface MTableProps<T> extends TableProps<T> {
   rowKey: string; // default: "id"
   titleColumn: string; // default: "name"
   columnsShow?: string[];
+  columnsAdditional?: string[];
 
   // ===== Features =====
   selectable?: boolean; // เลือกได้หรือไม่
@@ -45,6 +46,7 @@ function MTable<T extends object>({
   pageSize = 10,
   loading,
   columnsShow = [], // คอลัมน์ที่จะแสดงใน CardList
+  columnsAdditional = [], // คอลัมน์เพิ่มเติมใน CardList
   titleColumn,
 
   // ===== Legacy props =====
@@ -107,7 +109,12 @@ function MTable<T extends object>({
       {defaultViewMode === "table" ? (
         <ATable<T>
           title={() => {
-            return <Input.Search placeholder="ค้นหาข้อมูล" />;
+            return (
+              <Input.Search
+                placeholder="ค้นหาข้อมูล"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            );
           }}
           rowSelection={rowSelection}
           dataSource={dataSource}
@@ -134,6 +141,7 @@ function MTable<T extends object>({
           dataSource={dataSource}
           columns={columns}
           columnsShow={columnsShow} // หรือให้ config ผ่าน props
+          columnsAdditional={columnsAdditional}
           titleColumn={titleColumn}
           rowKey={rowKey}
           subtitleColumn="barcode"

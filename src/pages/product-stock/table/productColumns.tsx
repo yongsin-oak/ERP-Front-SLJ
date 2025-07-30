@@ -97,25 +97,29 @@ export const additionalColumns: ColumnsType<ProductData> = [
     title: "ขนาดสินค้า (กว้าง x ยาว x สูง) (ซม.)",
     dataIndex: "productDimensions",
     key: "productDimensions",
-    render: (val) => `${val.width} x ${val.length} x ${val.height}`,
+    render: (val) =>
+      `${val.width || "ไม่ระบุ"} x ${val.length || "ไม่ระบุ"} x ${
+        val.height || "ไม่ระบุ"
+      }`,
   },
   {
     title: "ขนาดลัง (กว้าง x ยาว x สูง) (ซม.)",
     dataIndex: "cartonDimensions",
     key: "cartonDimensions",
-    render: (val) => `${val.width} x ${val.length} x ${val.height}`,
+    render: (val) =>
+      `${val.width || "ไม่ระบุ"} x ${val.length || "ไม่ระบุ"} x ${
+        val.height || "ไม่ระบุ"
+      }`,
   },
   {
     title: "น้ำหนัก (กก.)",
-    dataIndex: "productDimensions",
+    dataIndex: ["productDimensions", "weight"],
     key: "productDimensions.weight",
-    render: (val) => val.weight,
   },
   {
     title: "น้ำหนักลัง (กก.)",
-    dataIndex: "cartonDimensions",
+    dataIndex: ["cartonDimensions", "weight"],
     key: "cartonDimensions.weight",
-    render: (val) => val.weight,
   },
   {
     title: "จำนวนขั้นต่ำ",

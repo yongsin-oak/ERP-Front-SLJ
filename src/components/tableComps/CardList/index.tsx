@@ -4,7 +4,7 @@ import Text from "@components/common/Text";
 import { useTheme } from "@emotion/react";
 import { highlightText } from "@utils/highlightText";
 import { Checkbox, Collapse, Flex, Space, Tooltip } from "antd";
-import { findIndex, get } from "lodash";
+import { findIndex, get, includes, isEmpty } from "lodash";
 import { CardListProps } from "./interface";
 import {
   CardBody,
@@ -18,6 +18,7 @@ const CardList = <T extends object>({
   dataSource = [],
   columns = [],
   columnsShow = [],
+  columnsAdditional = [],
   titleColumn,
   subtitleColumn,
   selectedItems = [],
@@ -30,20 +31,42 @@ const CardList = <T extends object>({
   rowKey,
 }: CardListProps<T>) => {
   const theme = useTheme();
+  const filteredColumns = columns.filter(
+    (col) =>
+      !isEmpty(col.title) &&
+      col.key !== "actions" &&
+      col.key !== "status" &&
+      col.key !== "barcode"
+  );
   const renderCard = (record: T) => {
     const id = get(record, rowKey);
-    const mainFields = columnsShow.map((key) => ({
-      label: columns.find((col) => col.key === key)?.title || key,
-      value: columns.find((col) => col.key === key)?.render
-        ? columns
-            .find((col) => col.key === key)
-            ?.render?.(get(record, key), record, findIndex(dataSource, record))
-        : get(record, key),
-    }));
+    const mainFields = !isEmpty(columnsShow)
+      ? columnsShow.map((key) => ({
+          label: filteredColumns.find((col) => col.key === key)?.title || key,
+          value: filteredColumns.find((col) => col.key === key)?.render
+            ? filteredColumns
+                .find((col) => col.key === key)
+                ?.render?.(
+                  get(record, key),
+                  record,
+                  findIndex(dataSource, record)
+                )
+            : get(record, key),
+        }))
+      : filteredColumns
+          .filter((col) => !includes(columnsAdditional, col.key))
+          .map((col) => ({
+            label: col?.title,
+            value: col?.render
+              ? col?.render(
+                  get(record, col?.dataIndex),
+                  record,
+                  findIndex(dataSource, record)
+                )
+              : get(record, col?.dataIndex),
+          }));
 
-    const allKeys = columns.map((col) => col.key).filter(Boolean);
-    console.log(columns);
-    console.log(allKeys);
+    const allKeys = filteredColumns.map((col) => col.key).filter(Boolean);
     const additionalKeys = allKeys.filter(
       (key) =>
         !columnsShow.includes(key as string) &&
@@ -51,20 +74,32 @@ const CardList = <T extends object>({
         key !== subtitleColumn
     );
 
-    const additionalFields = additionalKeys.map((key) => ({
-      label: columns.find((col) => col.key === key)?.title || key,
-      value: columns.find((col) => col.key === key)?.render
-        ? columns
-            .find((col) => col.key === key)
-            ?.render?.(
-              get(record, key as string),
-              record,
-              findIndex(dataSource, record)
-            )
-        : get(record, key as string),
-    }));
-    console.log(record, additionalKeys);
-    console.log(additionalFields);
+    const additionalFields = !isEmpty(columnsAdditional)
+      ? columnsAdditional.map((key) => ({
+          label: filteredColumns.find((col) => col.key === key)?.title || key,
+          value: filteredColumns.find((col) => col.key === key)?.render
+            ? filteredColumns
+                .find((col) => col.key === key)
+                ?.render?.(
+                  get(record, key),
+                  record,
+                  findIndex(dataSource, record)
+                )
+            : get(record, key),
+        }))
+      : additionalKeys.map((key) => ({
+          label: filteredColumns.find((col) => col.key === key)?.title || key,
+          value: filteredColumns.find((col) => col.key === key)?.render
+            ? filteredColumns
+                .find((col) => col.key === key)
+                ?.render?.(
+                  get(record, key as string),
+                  record,
+                  findIndex(dataSource, record)
+                )
+            : get(record, key as string),
+        }));
+
     return (
       <CardListContainer key={id} theme={theme}>
         <CardListHeader theme={theme}>
@@ -177,7 +212,9 @@ const CardList = <T extends object>({
                           <Text
                             s1
                             bold
-                            className={`value ${!field.value ? "value--empty" : ""}`}
+                            className={`value ${
+                              !field.value ? "value--empty" : ""
+                            }`}
                           >
                             {String(field.value ?? "ไม่ระบุ")}
                           </Text>
