@@ -59,11 +59,11 @@ const CardList = <T extends object>({
             label: col?.title,
             value: col?.render
               ? col?.render(
-                  get(record, col?.dataIndex),
+                  get(record, col?.dataIndex as string),
                   record,
                   findIndex(dataSource, record)
                 )
-              : get(record, col?.dataIndex),
+              : get(record, col?.dataIndex as string),
           }));
 
     const allKeys = filteredColumns.map((col) => col.key).filter(Boolean);

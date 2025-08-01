@@ -1,8 +1,8 @@
-import { ColumnsType } from "antd/es/table";
+import { ColumnType } from "antd/es/table";
 
 export interface CardListProps<T extends object> {
   dataSource?: T[];
-  columns?: ColumnsType<T>;
+  columns?: ColumnType<T>[];
   columnsShow?: string[];
   columnsAdditional?: string[];
   titleColumn: string;

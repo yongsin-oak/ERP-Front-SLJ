@@ -1,9 +1,7 @@
 import {
   DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
   FileExcelOutlined,
-  UploadOutlined
+  UploadOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
 import { useWindowSize } from "@uidotdev/usehooks";
@@ -23,9 +21,6 @@ import * as XLSX from "xlsx";
 
 // Components
 import MButton from "@components/common/MButton";
-import MTable from "@components/tableComps/Table";
-import AdvancedFilter from "./components/AdvancedFilter";
-import SearchAndActions from "./components/SearchAndActions";
 import ProductFormComp from "./form/ProductForm";
 
 // Hooks and Utils
@@ -37,14 +32,11 @@ import { useProductStore } from "./store/productStore";
 
 // Types and Styles
 import { FormProductData, ProductData } from "./interface/index.tsx";
-import {createHighlightedColumns } from "./table/highlightedColumns";
 import { additionalColumns, essentialColumns } from "./table/productColumns";
 
 // Components for rendering
 import { ColumnsType } from "antd/es/table/InternalTable";
-import ProductDetailDrawer from "./components/ProductDetailDrawer.tsx";
-
-type SortField = "barcode" | "name" | "remaining" | "brand" | "category";
+import MTable from "@components/tableComps/MTable";
 
 const ProductStock = () => {
   // Auth store
@@ -76,14 +68,10 @@ const ProductStock = () => {
     filters,
     // Actions
     loadProducts,
-    addSelectedItem,
-    clearSelectedItems,
     setViewMode,
     openUploadModal,
     closeUploadModal,
-    openEditModal,
     closeEditModal,
-    openDetailDrawer,
     updateSingleProduct,
     deleteProducts,
   } = useProductStore();
@@ -253,10 +241,6 @@ const ProductStock = () => {
     );
   }, [data, searchTerm, filters, sortField, sortOrder]);
 
-  const handleViewDetails = (product: ProductData) => {
-    openDetailDrawer(product);
-  };
-
   const handleEditSubmit = async (values: FormProductData) => {
     if (!editingProduct) return;
 
@@ -419,50 +403,8 @@ const ProductStock = () => {
 
   // Enhanced table columns with selection and actions
   const tableColumns: ColumnsType<ProductData> = [
-    ...(searchTerm ? createHighlightedColumns(searchTerm) : essentialColumns),
+    ...essentialColumns,
     ...additionalColumns,
-    {
-      title: "",
-      key: "actions",
-      width: 150,
-      fixed: "right",
-      render: (_: unknown, record: ProductData) => {
-        const productRecord = record;
-        return (
-          <div style={{ display: "flex", gap: 4 }}>
-            <MButton
-              type="text"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(productRecord)}
-              title="แก้ไข"
-            />
-            <MButton
-              type="text"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => handleViewDetails(productRecord)}
-              title="ดูรายละเอียด"
-            />
-            {isSuperAdmin && (
-              <MButton
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                danger
-                onClick={() => {
-                  // Create a temporary selection and delete
-                  clearSelectedItems();
-                  addSelectedItem(productRecord.barcode);
-                  setTimeout(() => handleDeleteSelected(), 0);
-                }}
-                title="ลบสินค้า"
-              />
-            )}
-          </div>
-        );
-      },
-    },
   ];
 
   return (
@@ -482,9 +424,6 @@ const ProductStock = () => {
           <MButton onClick={openUploadModal}>Upload</MButton>
         </Col>
       </Flex>
-
-      {/* Search and Actions */}
-      <SearchAndActions />
 
       {/* Selected Items Actions Bar - Show above table/cards */}
       {selectedItems.length > 0 && (
@@ -521,53 +460,15 @@ const ProductStock = () => {
           )}
         </Flex>
       )}
-
-      {/* Desktop Controls */}
-      {/* {!mobile && <DesktopControls />} */}
-
-      {/* Mobile Controls */}
-      {/* {mobile ||
-        (viewMode === "card" && (
-          <MobileControlsComponent
-            handleSort={handleSort}
-            getSortIcon={getSortIcon}
-          />
-        ))} */}
-
-      {/* Content */}
-      {/* {viewMode === "card" || mobile ? (
-        <ProductCardList
-          onEditProduct={openEditModal}
-          onDeleteProduct={(product) => {
-            // Create a temporary selection and delete
-            clearSelectedItems();
-            addSelectedItem(product.barcode);
-            setTimeout(() => handleDeleteSelected(), 0);
-          }}
-        />
-      ) : ( */}
       <MTable<ProductData>
-        // ===== ใช้งานง่าย =====
         columns={tableColumns}
-        titleColumn="name"
-        columnsAdditional={["brand", "category", "remaining"]}
-        columnsShow={["brand", "category", "remaining"]}
         dataSource={filteredAndSortedData}
+        columnsShow={["barcode", "name", "brand", "category", "remaining"]}
         rowKey="barcode"
-        selectable={true}
-        onSelectionChange={(selectedRows) => {
-          clearSelectedItems();
-          selectedRows.forEach((row) => addSelectedItem(row.barcode));
-        }}
-        scroll={{ x: 800 }}
+        searchable
+        selectable
       />
       {/* )} */}
-
-      {/* Product Detail Drawer */}
-      <ProductDetailDrawer />
-
-      {/* Advanced Filter Modal */}
-      <AdvancedFilter />
 
       {/* Upload Modal */}
       <Modal
