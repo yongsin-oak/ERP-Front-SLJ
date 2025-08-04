@@ -1,16 +1,19 @@
-import { Flex, Form, Input, Popconfirm, Space } from "antd";
+import { Flex, Form, Popconfirm, Space } from "antd";
 
 import { ScanOutlined } from "@ant-design/icons";
-import { useForm } from "antd/es/form/Form";
-import { isEmpty } from "lodash";
-import { useState } from "react";
-import { onInputNoSpecialChars } from "@utils/filteredInput";
 import MButton from "@components/common/MButton";
+import MSelect from "@components/common/MSelect";
 import MFormItem from "@components/Form/MFormItem";
 import Editable, {
   DataType,
   EditableTableProps,
 } from "@components/tableComps/Editable";
+import { useForm } from "antd/es/form/Form";
+import { isEmpty } from "lodash";
+import { useEffect, useState } from "react";
+import { onGetProducts } from "@pages/product-stock/hooks/product.hook";
+import { ProductData } from "@pages/product-stock/interface";
+import { DefaultOptionType } from "antd/es/select";
 
 interface OrderEditableProps extends Omit<EditableTableProps, "handleSave"> {
   onConfirm?: (data: DataType[]) => void;
@@ -29,7 +32,27 @@ const OrderEditable = ({
   onAddItem,
 }: OrderEditableProps) => {
   const [dataSource, setDataSource] = useState<DataType[]>([]);
+  const [productOptions, setProductOptions] = useState<DefaultOptionType[]>([]);
   const [productBarcodeForm] = useForm();
+
+  // โหลด options ของ productBarcode
+  useEffect(() => {
+    const updateProductSelection = (data: ProductData[]) => {
+      setProductOptions(
+        data.map((item) => ({
+          label: `${item.barcode} - ${item.name}`,
+          value: item.barcode,
+          key: item.barcode,
+        }))
+      );
+    };
+    const fetchOptions = async () => {
+      await onGetProducts({
+        setData: updateProductSelection,
+      });
+    };
+    fetchOptions();
+  }, []);
 
   const handleDelete = (order: React.Key) => {
     const newData = dataSource.filter((item) => item.order !== order);
@@ -40,10 +63,7 @@ const OrderEditable = ({
     const newData = [...dataSource];
     const index = newData.findIndex((item) => row.order === item.order);
     const item = newData[index];
-    newData.splice(index, 1, {
-      ...item,
-      ...row,
-    });
+    newData.splice(index, 1, { ...item, ...row });
     setDataSource(newData);
   };
 
@@ -57,8 +77,8 @@ const OrderEditable = ({
   const operationColumn = {
     title: "",
     dataIndex: "operation",
-    render: (_: unknown, record: DataType) => {
-      return dataSource.length >= 1 ? (
+    render: (_: unknown, record: DataType) =>
+      dataSource.length >= 1 ? (
         <Popconfirm
           title="ลบรายการนี้?"
           onConfirm={() => handleDelete(record.order)}
@@ -67,8 +87,7 @@ const OrderEditable = ({
         >
           <a>Delete</a>
         </Popconfirm>
-      ) : null;
-    },
+      ) : null,
     width: 80,
     ellipsis: true,
   };
@@ -86,12 +105,16 @@ const OrderEditable = ({
         <Flex gap={16}>
           <MFormItem name={["productBarcode"]}>
             <Space.Compact style={{ width: "100%" }}>
-              <Input
+              <MSelect
                 placeholder="บาร์โค้ดสินค้า"
-                name="productBarcode"
                 prefix={<ScanOutlined />}
-                onInput={onInputNoSpecialChars}
-                autoComplete="off"
+                options={productOptions}
+                virtual={false}
+                allowClear
+                suffixIcon={null}
+                onPopupScroll={() => {
+                  console.log("Scroll event triggered");
+                }}
               />
               <MButton htmlType="submit">เพิ่มสินค้า</MButton>
             </Space.Compact>

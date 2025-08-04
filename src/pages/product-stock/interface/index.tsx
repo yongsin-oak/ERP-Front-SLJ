@@ -33,7 +33,7 @@ export interface ProductData {
 }
 
 export interface onGetProductsProps {
-  setData?: React.Dispatch<React.SetStateAction<ProductData[] | undefined>>;
+  setData?: React.Dispatch<React.SetStateAction<ProductData[] | undefined>> | ((data: ProductData[]) => void);
   page?: number;
   limit?: number;
 }

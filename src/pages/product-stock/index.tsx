@@ -38,6 +38,8 @@ import { additionalColumns, essentialColumns } from "./table/productColumns";
 import { ColumnsType } from "antd/es/table/InternalTable";
 import MTable from "@components/tableComps/MTable";
 
+const COLUMNS_SHOW = ["barcode", "name", "brand", "category", "remaining"];
+
 const ProductStock = () => {
   // Auth store
   const { user } = useAuth();
@@ -51,6 +53,8 @@ const ProductStock = () => {
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>(
     {}
   );
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Check if user is superadmin
   const isSuperAdmin = user?.role === Role.SuperAdmin;
@@ -58,6 +62,7 @@ const ProductStock = () => {
   // Zustand store
   const {
     data,
+    totalData,
     searchTerm,
     selectedItems,
     sortField,
@@ -87,8 +92,8 @@ const ProductStock = () => {
 
   // Load data on mount
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    loadProducts({ page, limit: pageSize });
+  }, [loadProducts, page, pageSize]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -245,7 +250,10 @@ const ProductStock = () => {
     if (!editingProduct) return;
 
     try {
-      await updateSingleProduct(editingProduct.barcode, values);
+      await updateSingleProduct(editingProduct.barcode, values, {
+        page,
+        limit: 10,
+      });
       message.success("แก้ไขสินค้าเรียบร้อยแล้ว");
     } catch (error) {
       console.error("Update error:", error);
@@ -275,7 +283,7 @@ const ProductStock = () => {
     }
 
     try {
-      await deleteProducts(selectedItems);
+      await deleteProducts(selectedItems, { page, limit: pageSize });
       message.success(`ลบสินค้า ${selectedItems.length} รายการเรียบร้อยแล้ว`);
       setDeleteModalOpen(false);
     } catch (error) {
@@ -463,10 +471,19 @@ const ProductStock = () => {
       <MTable<ProductData>
         columns={tableColumns}
         dataSource={filteredAndSortedData}
-        columnsShow={["barcode", "name", "brand", "category", "remaining"]}
+        columnsShow={COLUMNS_SHOW}
+
         rowKey="barcode"
         searchable
         selectable
+        pagination={{
+          total: totalData,
+          onChange(page, pageSize) {
+            loadProducts({ page, limit: pageSize });
+            setPage(page);
+            setPageSize(pageSize);
+          },
+        }}
       />
       {/* )} */}
 
@@ -481,7 +498,9 @@ const ProductStock = () => {
       >
         <ProductFormComp
           form={form}
-          setData={loadProducts}
+          setData={() => {
+            loadProducts({ page, limit: pageSize });
+          }}
           setOpen={closeUploadModal}
         />
       </Modal>
@@ -497,7 +516,9 @@ const ProductStock = () => {
       >
         <ProductFormComp
           form={editForm}
-          setData={loadProducts}
+          setData={() => {
+            loadProducts({ page, limit: pageSize });
+          }}
           setOpen={closeEditModal}
           onSubmit={handleEditSubmit}
           isEdit={true}

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ProductData, FormProductData } from "../interface";
+import { ProductData, FormProductData, onGetProductsProps } from "../interface";
 import {
   onGetProducts,
   onDeleteProduct,
@@ -21,6 +21,7 @@ type ViewMode = "table" | "card";
 interface ProductStockState {
   // Data
   data: ProductData[] | undefined;
+  totalData: number;
   loading: boolean;
 
   // UI State
@@ -44,7 +45,7 @@ interface ProductStockState {
 
 interface ProductStockActions {
   // Data actions
-  loadProducts: () => Promise<void>;
+  loadProducts: (props: onGetProductsProps) => Promise<void>;
   setData: (data: ProductData[] | undefined) => void;
 
   // UI actions
@@ -75,10 +76,14 @@ interface ProductStockActions {
   closeDetailDrawer: () => void;
 
   // Product actions
-  deleteProducts: (barcodes: string[]) => Promise<void>;
+  deleteProducts: (
+    barcodes: string[],
+    getProductsProps: onGetProductsProps
+  ) => Promise<void>;
   updateSingleProduct: (
     barcode: string,
-    values: FormProductData
+    values: FormProductData,
+    getProductsProps: onGetProductsProps
   ) => Promise<void>;
 }
 
@@ -93,6 +98,7 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
   (set, get) => ({
     // Initial state
     data: undefined,
+    totalData: 0,
     loading: false,
     searchTerm: "",
     selectedItems: [],
@@ -109,11 +115,13 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
     filters: initialFilters,
 
     // Data actions
-    loadProducts: async () => {
+    loadProducts: async (props: onGetProductsProps) => {
       set({ loading: true });
       try {
-        const data = await onGetProducts({});
-        set({ data });
+        const data = await onGetProducts(props);
+        console.log(data);
+        set({ data: data.data });
+        set({ totalData: data.total });
       } catch (error) {
         console.error("Failed to load products:", error);
       } finally {
@@ -203,7 +211,10 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
       }),
 
     // Product actions
-    deleteProducts: async (barcodes) => {
+    deleteProducts: async (
+      barcodes: string[],
+      getProductsProps: onGetProductsProps
+    ) => {
       try {
         if (barcodes.length === 1) {
           await onDeleteProduct(barcodes[0]);
@@ -212,7 +223,7 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
         }
 
         // Refresh data and clear selection
-        await get().loadProducts();
+        await get().loadProducts(getProductsProps);
         set({ selectedItems: [] });
       } catch (error) {
         console.error("Delete error:", error);
@@ -220,12 +231,12 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
       }
     },
 
-    updateSingleProduct: async (barcode, values) => {
+    updateSingleProduct: async (barcode, values, getProductsProps) => {
       try {
         await onUpdateProductFromForm(barcode, values);
 
         // Refresh data and close edit modal
-        await get().loadProducts();
+        await get().loadProducts(getProductsProps);
         set({ editModalOpen: false, editingProduct: null });
       } catch (error) {
         console.error("Update single product error:", error);

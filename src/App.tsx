@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { CookiesProvider } from "react-cookie";
 import { BrowserRouter } from "react-router-dom";
 import "./App.scss";
-import FloatingThemeButton from "./components/common/FloatingThemeButton";
 import Routers from "./routes";
 import { useAuth, useStoreTheme } from "./stores";
 import { themes } from "./theme";
@@ -36,7 +35,7 @@ function App() {
           </CookiesProvider>
 
           {/* Floating Theme Button - Available on all pages */}
-          <FloatingThemeButton />
+          {/* <FloatingThemeButton /> */}
         </ThemeProvider>
       </ConfigProvider>
     </>

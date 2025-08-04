@@ -20,7 +20,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { get } from "lodash";
+import { get, includes, isEmpty } from "lodash";
 import { useWindowSize } from "@uidotdev/usehooks";
 import DetailDrawer from "./DetailDrawer";
 import { ColumnType } from "antd/es/table";
@@ -212,7 +212,7 @@ export interface MTableProps<T> extends TableProps<T> {
 
   // Table props passthrough
   loading?: boolean;
-  pagination?: false | TableProps<T>["pagination"];
+  pagination?: TableProps<T>["pagination"];
   scroll?: TableProps<T>["scroll"];
 
   // Customization
@@ -282,7 +282,7 @@ function MTable<T extends object>({
 
   // Table props
   loading = false,
-  pagination = false,
+  pagination,
   scroll,
 
   // Customization
@@ -396,13 +396,14 @@ function MTable<T extends object>({
       },
     }));
 
+    console.log(columnsShow, columns);
     // Add action column if actions are provided or additional columns exist
     const hasActions =
       actions?.onEdit ||
       actions?.onDelete ||
       actions?.onView ||
+      columnsShow.length < columns.length ||
       columnsAdditional.length > 0;
-
     if (hasActions) {
       processedColumns.push({
         title: "",
@@ -421,7 +422,9 @@ function MTable<T extends object>({
                 />
               </Tooltip>
             )}
-            {(actions?.onView || columnsAdditional.length > 0) && (
+            {(actions?.onView ||
+              columnsShow.length < columns.length ||
+              columnsAdditional.length > 0) && (
               <Tooltip title="ดูรายละเอียด">
                 <Button
                   type="text"
@@ -514,16 +517,21 @@ function MTable<T extends object>({
 
           // Additional fields for expandable section
           const additionalFields =
-            columnsAdditional.length > 0
-              ? columnsAdditional.map((key) => {
+            columnsAdditional.length > 0 || columnsShow.length < columns.length
+              ? (!isEmpty(columnsAdditional)
+                  ? columnsAdditional
+                  : columns
+                      .filter((col) => !includes(columnsShow, col.key))
+                      .map((col) => col.key)
+                ).map((key) => {
                   const col = columns.find(
                     (c) => c.key === key || c.dataIndex === key
                   );
                   return {
                     label: col?.title || key,
                     value: col?.render
-                      ? col.render(get(record, key), record, 0)
-                      : get(record, key),
+                      ? col.render(get(record, key as string), record, 0)
+                      : get(record, key as string),
                   };
                 })
               : [];
@@ -579,22 +587,6 @@ function MTable<T extends object>({
                       />
                     </Tooltip>
                   )}
-                  {(actions?.onView ||
-                    additionalFields.length > 0 ||
-                    columnsAdditional.length > 0) && (
-                    <Tooltip title="ดูรายละเอียด">
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onClick={() =>
-                          actions?.onView
-                            ? actions.onView(record)
-                            : handleDefaultView(record)
-                        }
-                      />
-                    </Tooltip>
-                  )}
                   {actions?.onDelete && (
                     <Tooltip title="ลบ">
                       <Button
@@ -623,7 +615,8 @@ function MTable<T extends object>({
                   </div>
                 ))}
 
-                {additionalFields.length > 0 && (
+                {(columnsShow.length < columns.length ||
+                  columnsAdditional.length > 0) && (
                   <div className="additional-info">
                     <Collapse
                       ghost
@@ -670,20 +663,17 @@ function MTable<T extends object>({
   };
 
   // Default pagination config
-  const defaultPagination =
-    pagination === false
-      ? false
-      : {
-          total: filteredData.length,
-          showQuickJumper: true,
-          showSizeChanger: true,
-          showTotal: (total: number, range: [number, number]) =>
-            `${range[0]}-${range[1]} จาก ${total} รายการ`,
-          pageSizeOptions: ["10", "20", "50", "100"],
-          defaultPageSize: 10,
-          responsive: true,
-          ...(typeof pagination === "object" ? pagination : {}),
-        };
+  const defaultPagination = {
+    total: filteredData.length,
+    showQuickJumper: true,
+    showSizeChanger: true,
+    showTotal: (total: number, range: [number, number]) =>
+      `${range[0]}-${range[1]} จาก ${total} รายการ`,
+    pageSizeOptions: ["10", "20", "50", "100"],
+    defaultPageSize: 10,
+    responsive: true,
+    ...pagination,
+  };
 
   return (
     <TableContainer>
@@ -693,7 +683,7 @@ function MTable<T extends object>({
           <div className="table-info">
             <Typography.Title level={4}>{tableName}</Typography.Title>
             <span className="total-count">
-              ทั้งหมด {filteredData.length} รายการ
+              ทั้งหมด {defaultPagination?.total || dataSource.length} รายการ
             </span>
           </div>
 

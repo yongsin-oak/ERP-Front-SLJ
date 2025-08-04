@@ -6,12 +6,13 @@ import {
   FormProductData,
 } from "../interface";
 import { transformFormToProductData } from "../utils/transformProductData";
+import { PaginationDataResponse } from "src/interface";
 
 export const onGetProducts = async ({
   setData,
   page = 1,
   limit = 10,
-}: onGetProductsProps) => {
+}: onGetProductsProps): Promise<PaginationDataResponse<ProductData>> => {
   try {
     const res = await req.get("/products", {
       params: {
@@ -20,9 +21,10 @@ export const onGetProducts = async ({
       },
     });
     setData?.(res.data.data);
-    return res.data.data;
+    return res.data;
   } catch (error) {
     console.log(error);
+    return { data: [], total: 0, page: 1, limit: 10 };
   }
 };
 
