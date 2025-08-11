@@ -24,7 +24,7 @@
     "@types/node": "^24.0.3",
     "@types/react-helmet": "^6.1.11",
     "@uidotdev/usehooks": "^2.4.1",
-    "@vitejs/plugin-react": "^4.6.0",
+    "@vitejs/plugin-react": "^5.0.0",
     "add": "^2.0.6",
     "antd": "^5.26.0",
     "axios": "^1.7.9",
