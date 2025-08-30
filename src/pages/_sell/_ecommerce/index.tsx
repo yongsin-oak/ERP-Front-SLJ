@@ -5,21 +5,20 @@ import {
   TikTokFilled,
   UserOutlined,
 } from "@ant-design/icons";
-import { Card, Col, Divider, Flex, Form, Input, Row, Space } from "antd";
-import { useForm, useWatch } from "antd/es/form/Form";
-import { DefaultOptionType } from "antd/es/select";
-import { useEffect, useState } from "react";
 import LazadaIcon from "@assets/icon/platform/Lazada";
 import ShopeeIcon from "@assets/icon/platform/Shopee";
 import MButton from "@components/common/MButton";
 import MSelect from "@components/common/MSelect";
 import Text from "@components/common/Text";
+import MFormItem from "@components/Form/MFormItem";
 import { onInputNoSpecialChars } from "@utils/filteredInput";
 import req from "@utils/req";
-import { allShop, platform, tiktokShop } from "./allShop";
-import MFormItem from "@components/Form/MFormItem";
+import { Card, Col, Divider, Flex, Form, Input, Row, Space } from "antd";
+import { useForm, useWatch } from "antd/es/form/Form";
+import { DefaultOptionType } from "antd/es/select";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import OrderEditable from "./components/OrderEditable";
+import { allShop, platform, tiktokShop } from "./allShop";
 
 const ICON_SIZE = 30;
 
@@ -63,49 +62,49 @@ const Ecommerce = () => {
       orderNumberForm.setFieldsValue({ shop: undefined });
     }
   };
-  const columns = [
-    {
-      title: "ลำดับ",
-      dataIndex: "order",
-      width: 50,
-      align: "center",
-    },
-    {
-      title: "ชื่อสินค้า",
-      dataIndex: "productName",
-      ellipsis: true,
-    },
-    {
-      title: "จำนวน",
-      dataIndex: "productAmount",
-      editable: true,
-      number: true,
-      ellipsis: true,
-    },
-    {
-      title: "บาร์โค้ด",
-      dataIndex: "productBarcode",
-      editable: true,
-      ellipsis: true,
-    },
-  ];
-  const onPostOrder = async (data: any) => {
-    try {
-      const res = await req.post("/orders", {
-        employeeId: currentEmployee,
-        platform: currentPlatform,
-        shop: currentShop,
-        id: currentOrderNumber,
-        products: data.map((product: any) => ({
-          productBarcode: product.productBarcode,
-          productAmount: product.productAmount,
-        })),
-      });
-      console.log(res);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // const columns = [
+  //   {
+  //     title: "ลำดับ",
+  //     dataIndex: "order",
+  //     width: 50,
+  //     align: "center",
+  //   },
+  //   {
+  //     title: "ชื่อสินค้า",
+  //     dataIndex: "productName",
+  //     ellipsis: true,
+  //   },
+  //   {
+  //     title: "จำนวน",
+  //     dataIndex: "productAmount",
+  //     editable: true,
+  //     number: true,
+  //     ellipsis: true,
+  //   },
+  //   {
+  //     title: "บาร์โค้ด",
+  //     dataIndex: "productBarcode",
+  //     editable: true,
+  //     ellipsis: true,
+  //   },
+  // ];
+  // const onPostOrder = async (data: any) => {
+  //   try {
+  //     const res = await req.post("/orders", {
+  //       employeeId: currentEmployee,
+  //       platform: currentPlatform,
+  //       shop: currentShop,
+  //       id: currentOrderNumber,
+  //       products: data.map((product: any) => ({
+  //         productBarcode: product.productBarcode,
+  //         productAmount: product.productAmount,
+  //       })),
+  //     });
+  //     console.log(res);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
   const onGetEmployees = async (limit: number) => {
     try {
       const res = await req.get("/employee", {
@@ -237,7 +236,7 @@ const Ecommerce = () => {
                   {currentOrderNumber}
                 </Text>
               </Flex>
-              <OrderEditable
+              {/* <OrderEditable
                 columns={columns}
                 onCancel={() => {
                   setRecording(false);
@@ -255,8 +254,8 @@ const Ecommerce = () => {
                   };
                   setDataSource([...dataSource, newData]);
                 }}
-              />
-            </>
+              /> */}
+            </> 
           )}
         </Flex>
       </Card>
