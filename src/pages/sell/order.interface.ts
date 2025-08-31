@@ -1,4 +1,4 @@
-import { EmployeeType } from "../_employee/employee.interface";
+import { EmployeeType } from "../employee/employee.interface";
 
 export interface OrderType {
   id: string;
