@@ -11,9 +11,9 @@ import Editable, {
 import { useForm } from "antd/es/form/Form";
 import { isEmpty } from "lodash";
 import { useEffect, useState } from "react";
-import { onGetProducts } from "@pages/product-stock/hooks/product.hook";
-import { ProductData } from "@pages/product-stock/interface";
 import { DefaultOptionType } from "antd/es/select";
+import { onGetProducts } from "@hooks/product";
+import { ProductData } from "@interfaces/product";
 
 interface OrderEditableProps extends Omit<EditableTableProps, "handleSave"> {
   onConfirm?: (data: DataType[]) => void;

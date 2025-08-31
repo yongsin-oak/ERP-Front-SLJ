@@ -4,7 +4,7 @@ import { ScanOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { isEmpty } from "lodash";
 import { useState } from "react";
-import { onInputNoSpecialChars } from "../../../utils/filteredInput";
+import { onInputNoSpecialChars } from "../../../utils/common/filteredInput";
 import MButton from "../../common/MButton";
 import MFormItem from "../../Form/MFormItem";
 import Editable, { DataType, EditableTableProps } from "../Editable";

@@ -1,5 +1,5 @@
-import { convertUnit } from "../../../utils/convertUnit";
-import { FormProductData, ProductData } from "../interface";
+import { convertUnit } from "../common/convertUnit";
+import { FormProductData, ProductData } from "@interfaces/product";
 
 /**
  * แปลง FormProductData เป็น ProductData format สำหรับส่งไปยัง API

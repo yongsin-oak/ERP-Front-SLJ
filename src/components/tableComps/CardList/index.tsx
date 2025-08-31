@@ -2,7 +2,7 @@ import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import MButton from "@components/common/MButton";
 import Text from "@components/common/Text";
 import { useTheme } from "@emotion/react";
-import { highlightText } from "@utils/highlightText";
+import { highlightText } from "@utils/common/highlightText";
 import { Checkbox, Collapse, Flex, Space, Tooltip } from "antd";
 import { findIndex, get, includes, isEmpty } from "lodash";
 import { CardListProps } from "./interface";

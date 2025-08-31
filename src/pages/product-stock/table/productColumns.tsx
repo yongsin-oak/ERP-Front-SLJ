@@ -1,7 +1,7 @@
 import { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { get } from "lodash";
-import { ProductData } from "../interface";
+import { ProductData } from "@interfaces/product";
 
 export const essentialColumns: ColumnsType<ProductData> = [
   {

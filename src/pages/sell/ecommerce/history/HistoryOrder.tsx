@@ -3,7 +3,7 @@ import Table, { ColumnType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import Text from "@components/common/Text";
-import req from "@utils/req";
+import req from "@utils/common/req";
 import { OrderType } from "../../order.interface";
 
 const HistoryOrder = () => {

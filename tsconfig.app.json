@@ -29,6 +29,7 @@
       "@components/*": ["src/components/*"],
       "@enums/*": ["src/enums/*"],
       "@hooks/*": ["src/hooks/*"],
+      "@interfaces/*": ["src/interfaces/*"],
       "@layouts/*": ["src/layouts/*"],
       "@pages/*": ["src/pages/*"],
       "@routes/*": ["src/routes/*"],

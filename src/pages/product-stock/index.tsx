@@ -26,12 +26,15 @@ import ProductFormComp from "./form/ProductForm";
 // Hooks and Utils
 import { Role } from "@enums/Role.enum.ts";
 import { useAuth } from "@stores/index.ts";
-import { isMobile } from "@utils/responsive";
-import { onUploadProducts } from "./hooks/product.hook";
-import { useProductStore } from "./store/productStore";
+import { isMobile } from "@utils/common/responsive.ts";
+import { onUploadProducts } from "@hooks/product";
+import { useProductStore } from "@stores/product/productStore.ts";
 
 // Types and Styles
-import { FormProductData, ProductData } from "./interface/index.tsx";
+import {
+  FormProductData,
+  ProductData,
+} from "@interfaces/product";
 import { additionalColumns, essentialColumns } from "./table/productColumns";
 
 // Components for rendering
@@ -472,7 +475,6 @@ const ProductStock = () => {
         columns={tableColumns}
         dataSource={filteredAndSortedData}
         columnsShow={COLUMNS_SHOW}
-
         rowKey="barcode"
         searchable
         selectable

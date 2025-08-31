@@ -1,11 +1,6 @@
+import { onBulkDeleteProducts, onDeleteProduct, onGetProducts, onUpdateProductFromForm } from "@hooks/product";
+import { FormProductData, onGetProductsProps, ProductData } from "@interfaces/product";
 import { create } from "zustand";
-import { ProductData, FormProductData, onGetProductsProps } from "../interface";
-import {
-  onGetProducts,
-  onDeleteProduct,
-  onBulkDeleteProducts,
-  onUpdateProductFromForm,
-} from "../hooks/product.hook";
 
 export interface FilterState {
   priceRange: [number, number];

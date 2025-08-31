@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import req from "../utils/req";
+import req from "../utils/common/req";
 import { Role } from "../enums/Role.enum";
 
 type StateTheme = {

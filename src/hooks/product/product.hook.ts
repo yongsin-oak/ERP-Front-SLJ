@@ -1,12 +1,12 @@
-import req from "@utils/req";
+import req from "@utils/common/req";
 import {
   onGetProductsProps,
   onUploadProductsProps,
   ProductData,
   FormProductData,
-} from "../interface";
-import { transformFormToProductData } from "../utils/transformProductData";
-import { PaginationDataResponse } from "src/interface";
+} from "@interfaces/product";
+import { transformFormToProductData } from "@utils/product/transformProductData";
+import { PaginationDataResponse } from "@interfaces/common";
 
 export const onGetProducts = async ({
   setData,

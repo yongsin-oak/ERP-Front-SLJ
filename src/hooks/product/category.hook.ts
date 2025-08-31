@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { message } from "antd";
-import req from "@utils/req";
+import req from "@utils/common/req";
 
 export interface CategoryData {
   id: string;

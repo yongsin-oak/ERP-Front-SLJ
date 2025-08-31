@@ -9,7 +9,7 @@ import FormInputs from "../../components/Form/FormInputs";
 import MButton from "../../components/common/MButton";
 import MTable from "../../components/tableComps/MTable";
 import Text from "../../components/common/Text";
-import req from "../../utils/req";
+import req from "../../utils/common/req";
 import { EmployeeType } from "./employee.interface";
 import { addEmployeeInputFields } from "./inputField";
 

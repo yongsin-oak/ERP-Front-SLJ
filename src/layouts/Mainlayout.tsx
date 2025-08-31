@@ -15,7 +15,7 @@ import MButton from "../components/common/MButton";
 import Text from "../components/common/Text";
 import LogoutButton from "../components/LogoutButton";
 import { useStoreTheme } from "../stores";
-import { isMobile } from "../utils/responsive";
+import { isMobile } from "../utils/common/responsive";
 import { menuItems } from "./menu";
 import {
   StickyButton,

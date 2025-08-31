@@ -11,8 +11,8 @@ import MButton from "@components/common/MButton";
 import MSelect from "@components/common/MSelect";
 import Text from "@components/common/Text";
 import MFormItem from "@components/Form/MFormItem";
-import { onInputNoSpecialChars } from "@utils/filteredInput";
-import req from "@utils/req";
+import { onInputNoSpecialChars } from "@utils/common/filteredInput";
+import req from "@utils/common/req";
 import { Card, Col, Divider, Flex, Form, Input, Row, Space } from "antd";
 import { useForm, useWatch } from "antd/es/form/Form";
 import { DefaultOptionType } from "antd/es/select";
@@ -255,7 +255,7 @@ const Ecommerce = () => {
                   setDataSource([...dataSource, newData]);
                 }}
               /> */}
-            </> 
+            </>
           )}
         </Flex>
       </Card>

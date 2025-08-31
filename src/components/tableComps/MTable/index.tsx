@@ -24,7 +24,7 @@ import { get, includes, isEmpty } from "lodash";
 import { useWindowSize } from "@uidotdev/usehooks";
 import DetailDrawer from "./DetailDrawer";
 import { ColumnType } from "antd/es/table";
-import { isMobile } from "@utils/responsive";
+import { isMobile } from "@utils/common/responsive";
 
 const { Text } = Typography;
 
