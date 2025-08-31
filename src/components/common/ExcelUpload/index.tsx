@@ -10,8 +10,8 @@ import { DefaultOptionType } from "antd/es/select";
 import { ColumnType } from "antd/es/table";
 import MButton from "../MButton";
 import Text from "../Text";
-import MFormItem from "../../Form/MFormItem";
 import MSelect from "../MSelect";
+import { MFormItem } from "@components/Form";
 
 interface Column extends ColumnType {
   information?: string;

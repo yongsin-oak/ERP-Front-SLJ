@@ -13,9 +13,7 @@ interface Item {
   address: string;
 }
 
-interface EditableRowProps {}
-
-const EditableRow: React.FC<EditableRowProps> = ({ ...props }) => {
+const EditableRow: React.FC = ({ ...props }) => {
   const [form] = Form.useForm();
   return (
     <Form form={form} component={false}>

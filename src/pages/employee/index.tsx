@@ -4,13 +4,13 @@ import { ColumnType } from "antd/es/table";
 import dayjs from "dayjs";
 import { isEmpty } from "lodash";
 import { useEffect, useState } from "react";
-import ExcelUpload from "../../components/common/ExcelUpload";
-import FormInputs from "../../components/Form/FormInputs";
-import MButton from "../../components/common/MButton";
-import MTable from "../../components/tableComps/MTable";
-import Text from "../../components/common/Text";
-import req from "../../utils/common/req";
-import { EmployeeType } from "./employee.interface";
+import ExcelUpload from "@components/common/ExcelUpload";
+import FormInputs from "@components/Form/FormInputs";
+import MButton from "@components/common/MButton";
+import MTable from "@components/tableComps/MTable";
+import Text from "@components/common/Text";
+import req from "@utils/common/req";
+import { EmployeeType } from "@interfaces/exployee";
 import { addEmployeeInputFields } from "./inputField";
 
 const Employee = () => {

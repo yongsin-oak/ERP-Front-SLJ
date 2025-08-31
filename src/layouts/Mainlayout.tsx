@@ -11,11 +11,11 @@ import { Content } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
 import { CSSProperties, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import MButton from "../components/common/MButton";
-import Text from "../components/common/Text";
-import LogoutButton from "../components/LogoutButton";
-import { useStoreTheme } from "../stores";
-import { isMobile } from "../utils/common/responsive";
+import MButton from "@components/common/MButton";
+import Text from "@components/common/Text";
+import LogoutButton from "@components/LogoutButton";
+import { useStoreTheme } from "@stores/theme";
+import { isMobile } from "@utils/common/responsive";
 import { menuItems } from "./menu";
 import {
   StickyButton,

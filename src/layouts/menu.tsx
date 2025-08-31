@@ -9,7 +9,7 @@ import {
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import DeliveryIcon from "../assets/icon/menu/delivery";
+import DeliveryIcon from "@assets/icon/menu/delivery";
 import { NavigateFunction } from "react-router-dom";
 
 export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {

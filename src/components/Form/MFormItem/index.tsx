@@ -1,5 +1,5 @@
+import { Text } from "@components/common";
 import AFormItem, { FormItemProps } from "antd/es/form/FormItem";
-import Text from "../../common/Text";
 
 export interface MFormItemProps extends FormItemProps {
   requiredMessage?: string;

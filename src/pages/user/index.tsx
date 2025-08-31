@@ -1,4 +1,4 @@
-import { useAuth } from "../../stores";
+import { useAuth } from "@stores/auth";
 
 const User = () => {
   const { user } = useAuth();

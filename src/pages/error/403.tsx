@@ -1,6 +1,6 @@
 import { Result } from "antd";
 import React from "react";
-import MButton from "../../components/common/MButton";
+import MButton from "@components/common/MButton";
 
 const ForbiddenPage: React.FC = () => (
   <Result

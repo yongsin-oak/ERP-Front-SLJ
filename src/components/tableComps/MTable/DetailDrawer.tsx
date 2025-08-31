@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Drawer, Descriptions, Typography } from "antd";
 import { get } from "lodash";
@@ -25,7 +26,6 @@ export interface DetailDrawerProps<T> {
     content: React.ReactNode
   ) => React.ReactNode;
 }
-
 
 // Detail Drawer Component
 const DetailDrawer = <T extends object>({

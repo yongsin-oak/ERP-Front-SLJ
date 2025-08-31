@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import Text from "@components/common/Text";
 import req from "@utils/common/req";
-import { OrderType } from "../../order.interface";
+import { OrderType } from "@interfaces/order";
 
 const HistoryOrder = () => {
   const [orderHistory, setOrderHistory] = useState<OrderType[]>([]);

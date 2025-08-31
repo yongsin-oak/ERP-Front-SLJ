@@ -4,10 +4,10 @@ import { ScanOutlined } from "@ant-design/icons";
 import { useForm } from "antd/es/form/Form";
 import { isEmpty } from "lodash";
 import { useState } from "react";
-import { onInputNoSpecialChars } from "../../../utils/common/filteredInput";
-import MButton from "../../common/MButton";
-import MFormItem from "../../Form/MFormItem";
+import { onInputNoSpecialChars } from "@utils/common/filteredInput";
 import Editable, { DataType, EditableTableProps } from "../Editable";
+import { MFormItem } from "@components/Form";
+import { MButton } from "@components/common";
 
 interface OrderEditableProps extends Omit<EditableTableProps, "handleSave"> {
   onConfirm?: (data: DataType[]) => void;

@@ -5,9 +5,9 @@
 ## การใช้งาน
 
 ```tsx
-import { BORDER_RADIUS, SPACING, BOX_SHADOW } from '../../theme/constants';
+import { BORDER_RADIUS, SPACING, BOX_SHADOW } from '@theme/constants';
 // หรือ
-import { BORDER_RADIUS, SPACING, BOX_SHADOW } from '../../theme';
+import { BORDER_RADIUS, SPACING, BOX_SHADOW } from '@theme';
 ```
 
 ## ประเภทของ Constants
@@ -129,7 +129,7 @@ TRUNCATE_TEXT    // ตัดข้อความยาวด้วย ellipsis
 ## ตัวอย่างการใช้งาน
 
 ```tsx
-import { BORDER_RADIUS, SPACING, BOX_SHADOW, FLEX_CENTER } from '../../theme/constants';
+import { BORDER_RADIUS, SPACING, BOX_SHADOW, FLEX_CENTER } from '@theme/constants';
 
 const StyledCard = styled.div`
   ${FLEX_CENTER}

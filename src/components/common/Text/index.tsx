@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import { Typography } from "antd";
 import { TextProps } from "antd/es/typography/Text";
 import React from "react";
-import { FONT_SIZE, FONT_WEIGHT, BREAKPOINTS } from "../../../theme/constants";
+import { FONT_SIZE, FONT_WEIGHT, BREAKPOINTS } from "@theme/constants";
 
 type Text = {
   /**

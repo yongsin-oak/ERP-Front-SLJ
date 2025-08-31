@@ -1,11 +1,11 @@
-import { EmployeeType } from "../employee/employee.interface";
+import { EmployeeType } from "@interfaces/exployee";
 
 export interface OrderType {
   id: string;
   totalCostPrice: number;
   totalCurrentPrice: number;
   totalQuantity: number;
-  employee: EmployeeType;
+  employee: EmployeeType      ;
   shop: ShopType;
   createdAt: string;
   updatedAt: string;

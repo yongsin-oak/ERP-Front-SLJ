@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Theme } from "@emotion/react";
-import { BORDER_RADIUS, SPACING } from "../../theme/constants";
+import { BORDER_RADIUS, SPACING } from "@theme/constants";
 export const ViewControls = styled.div<{ theme: Theme }>`
   display: flex;
   justify-content: space-between;

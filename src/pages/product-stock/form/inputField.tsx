@@ -1,7 +1,7 @@
 import { Select, Space } from "antd";
-import MInputNumber from "../../../components/common/MInputNumber";
-import { InputFields } from "../../../components/Form/FormInputs/interface";
-import MFormItem from "../../../components/Form/MFormItem";
+import MInputNumber from "@components/common/MInputNumber";
+import { InputFields } from "@components/Form/FormInputs/interface";
+import MFormItem from "@components/Form/MFormItem";
 const { Option } = Select;
 
 export const addProductInputFields = ({

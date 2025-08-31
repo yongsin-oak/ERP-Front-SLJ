@@ -1,10 +1,8 @@
 import { Col, DatePicker, Flex, Form, Input, Row } from "antd";
 import { FormInstance, useForm } from "antd/es/form/Form";
-import MInputNumber from "../../common/MInputNumber";
-import MSelect from "../../common/MSelect";
 import MFormItem from "../MFormItem";
 import { InputFields } from "./interface";
-import _ from "lodash";
+import { MInputNumber, MSelect } from "@components/common";
 
 interface Props {
   onFinish?: (values: unknown) => void;

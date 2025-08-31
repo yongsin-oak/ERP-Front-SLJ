@@ -1,14 +1,14 @@
 import { MoonFilled, SunFilled } from "@ant-design/icons";
 import { useTheme, Theme } from "@emotion/react";
 import styled from "@emotion/styled";
-import { useStoreTheme } from "../../../stores";
+import { useStoreTheme } from "@stores/theme";
 import {
   BORDER_RADIUS,
   SPACING,
   Z_INDEX,
   TRANSITION,
   FONT_SIZE,
-} from "../../../theme/constants";
+} from "@theme/constants";
 
 const FloatingButton = styled.div<{ theme: Theme }>`
   position: fixed;

@@ -2,10 +2,10 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { Flex, Form, Input, Typography } from "antd";
 import React from "react";
 import { Navigate } from "react-router-dom";
-import MButton from "../../components/common/MButton";
-import { useAuth } from "../../stores";
+import MButton from "@components/common/MButton";
+import { useAuth } from "@stores/auth";
 import { useTheme } from "@emotion/react";
-import { BORDER_RADIUS, SPACING } from "../../theme/constants";
+import { BORDER_RADIUS, SPACING } from "@theme/constants";
 
 const { Title } = Typography;
 

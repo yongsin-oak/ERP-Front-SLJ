@@ -1,6 +1,6 @@
 import { DefaultOptionType } from "antd/es/select";
-import ShopeeIcon from "../../../assets/icon/platform/Shopee";
-import LazadaIcon from "../../../assets/icon/platform/Lazada";
+import ShopeeIcon from "@assets/icon/platform/Shopee";
+import LazadaIcon from "@assets/icon/platform/Lazada";
 import { TikTokFilled } from "@ant-design/icons";
 
 export interface Options extends DefaultOptionType {
