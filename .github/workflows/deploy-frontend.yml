@@ -101,7 +101,7 @@ jobs:
               # 6. Clean up old, unused Docker images
               # ลบ image เก่าๆ ที่ไม่ได้ใช้งานแล้วออกไปเพื่อประหยัดพื้นที่
               echo "Cleaning up old Docker images..."
-              docker image prune -af
+              docker image prune -af || true
 
               echo "Deployment successful!"
             '''
