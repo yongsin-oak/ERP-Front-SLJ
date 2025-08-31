@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { PaginationDataQuery, Timestamped } from "@interfaces/common";
+
 export interface ProductBrandProps {
   id: string;
   name: string;
@@ -15,7 +18,7 @@ export interface ProductDimensions {
   weight: number;
 }
 
-export interface ProductData {
+export interface ProductData extends Timestamped {
   barcode: string;
   name: string;
   costPrice: ProductPrice | null;
@@ -26,19 +29,21 @@ export interface ProductData {
   cartonDimensions: ProductDimensions | null;
   piecesPerPack: number | null;
   packPerCarton: number | null;
-  createdAt: string;
-  updatedAt: string;
   brand: ProductBrandProps | null;
   category: ProductCategoryProps | null;
+  [key: string]: any;
 }
 
-export interface onGetProductsProps {
-  setData?: React.Dispatch<React.SetStateAction<ProductData[] | undefined>> | ((data: ProductData[]) => void);
-  page?: number;
-  limit?: number;
+export interface onGetProductsProps extends PaginationDataQuery {
+  setData?:
+    | React.Dispatch<React.SetStateAction<ProductData[] | undefined>>
+    | ((data: ProductData[]) => void);
 }
 
-export interface FormProductData extends ProductData {
+export interface FormProductData
+  extends Omit<ProductData, "createdAt" | "updatedAt" | "brand" | "category"> {
+  brandId: string | null;
+  categoryId: string | null;
   unit: {
     cartonWeight: string;
     minStock: string;

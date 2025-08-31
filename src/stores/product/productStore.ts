@@ -1,5 +1,14 @@
-import { onBulkDeleteProducts, onDeleteProduct, onGetProducts, onUpdateProductFromForm } from "@hooks/product";
-import { FormProductData, onGetProductsProps, ProductData } from "@interfaces/product";
+import {
+  onBulkDeleteProducts,
+  onDeleteProduct,
+  onGetProducts,
+  onUpdateProductFromForm,
+} from "@hooks/product";
+import {
+  FormProductData,
+  onGetProductsProps,
+  ProductData,
+} from "@interfaces/product";
 import { create } from "zustand";
 
 export interface FilterState {
@@ -40,7 +49,13 @@ interface ProductStockState {
 
 interface ProductStockActions {
   // Data actions
-  loadProducts: (props: onGetProductsProps) => Promise<void>;
+  loadProducts: (props: onGetProductsProps) => Promise<
+    | {
+        data: ProductData[];
+        total: number;
+      }
+    | undefined
+  >;
   setData: (data: ProductData[] | undefined) => void;
 
   // UI actions
@@ -117,6 +132,10 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
         console.log(data);
         set({ data: data.data });
         set({ totalData: data.total });
+        return {
+          data: data.data,
+          total: data.total,
+        };
       } catch (error) {
         console.error("Failed to load products:", error);
       } finally {

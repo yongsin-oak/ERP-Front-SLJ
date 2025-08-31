@@ -1,17 +1,13 @@
-import React, { Ref, useContext, useEffect, useRef, useState } from "react";
-import type { GetRef, InputRef, TableProps } from "antd";
-import { Form, Input, InputNumber, Table } from "antd";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { MInputNumber } from "@components/common";
+import type { GetRef, TableProps } from "antd";
+import { Form, Input, Table } from "antd";
+import { GetRowKey } from "antd/es/table/interface";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 type FormInstance<T> = GetRef<typeof Form<T>>;
 
 const EditableContext = React.createContext<FormInstance<unknown> | null>(null);
-
-interface Item {
-  key: string;
-  name: string;
-  age: string;
-  address: string;
-}
 
 const EditableRow: React.FC = ({ ...props }) => {
   const [form] = Form.useForm();
@@ -24,27 +20,27 @@ const EditableRow: React.FC = ({ ...props }) => {
   );
 };
 
-interface EditableCellProps {
+interface EditableCellProps<T = Record<string, unknown>> {
   title: React.ReactNode;
   editable: boolean;
-  dataIndex: keyof Item;
-  record: Item;
+  dataIndex: keyof T;
+  record: T;
   number?: boolean;
-  handleSave: (record: Item) => void;
+  onSave: (record: T) => void;
 }
 
-const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
+const EditableCell = <T extends Record<string, unknown>>({
   title,
   editable,
   children,
   dataIndex,
   record,
   number,
-  handleSave,
+  onSave,
   ...restProps
-}) => {
+}: React.PropsWithChildren<EditableCellProps<T>>) => {
   const [editing, setEditing] = useState(false);
-  const inputRef = useRef<InputRef>(null);
+  const inputRef = useRef<any>(null);
   const form = useContext(EditableContext)!;
 
   useEffect(() => {
@@ -60,30 +56,25 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
 
   const save = async () => {
     try {
-      const values = (await form.validateFields()) as Partial<Item>;
+      const values = (await form.validateFields()) as Partial<T>;
 
       toggleEdit();
-      handleSave({ ...record, ...values });
+      onSave({ ...record, ...values });
     } catch (errInfo) {
       console.log("Save failed:", errInfo);
     }
   };
 
   let childNode = children;
-
   if (editable) {
     childNode = editing ? (
       <Form.Item
         style={{ margin: 0 }}
-        name={dataIndex}
+        name={dataIndex as string}
         rules={[{ required: true, message: `${title} is required.` }]}
       >
         {number ? (
-          <InputNumber
-            ref={inputRef as Ref<HTMLInputElement>}
-            onPressEnter={save}
-            onBlur={save}
-          />
+          <MInputNumber ref={inputRef} onPressEnter={save} onBlur={save} />
         ) : (
           <Input ref={inputRef} onPressEnter={save} onBlur={save} />
         )}
@@ -102,31 +93,25 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
   return <td {...restProps}>{childNode}</td>;
 };
 
-export interface DataType {
-  order: number;
-  productName: string;
-  productAmount: number;
-  productBarcode: string;
-  [key: string]: string | number;
-}
+type ColumnTypes<T> = Exclude<TableProps<T>["columns"], undefined>;
 
-type ColumnTypes = Exclude<TableProps<DataType>["columns"], undefined>;
-
-export interface EditableTableProps {
-  columns: (ColumnTypes[number] & {
+export interface EditableTableProps<T = unknown> {
+  columns: (ColumnTypes<T>[number] & {
     editable?: boolean;
     number?: boolean;
-    dataIndex: string;
+    dataIndex: keyof T;
   })[];
-  dataSource: DataType[];
-  handleSave: (row: DataType) => void;
+  dataSource: T[];
+  onSaveCol: (row: T) => void;
+  rowKey?: string | keyof T | GetRowKey<T>;
 }
 
-const Editable: React.FC<EditableTableProps> = ({
+const Editable = <T extends Record<string, unknown>>({
   columns: propColumns,
   dataSource,
-  handleSave,
-}) => {
+  onSaveCol: onSave,
+  rowKey,
+}: EditableTableProps<T>) => {
   const components = {
     body: {
       row: EditableRow,
@@ -140,27 +125,27 @@ const Editable: React.FC<EditableTableProps> = ({
     }
     return {
       ...col,
-      onCell: (record: DataType) => ({
+      onCell: (record: T) => ({
         record,
         editable: col.editable,
         dataIndex: col.dataIndex,
         title: col.title,
         number: col.number,
-        handleSave,
+        onSave,
       }),
     };
   });
 
   return (
-    <Table<DataType>
+    <Table<T>
       components={components}
       size="small"
-      rowKey={(record) => record.order}
+      rowKey={rowKey}
       rowClassName={() => "editable-row"}
       bordered
       pagination={false}
       dataSource={dataSource}
-      columns={columns as ColumnTypes}
+      columns={columns as ColumnTypes<T>}
       scroll={{ y: 400 }}
       sticky
     />

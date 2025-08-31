@@ -5,7 +5,7 @@ import FormInputs from "@components/Form/FormInputs";
 import MButton from "@components/common/MButton";
 import { FormProductData, ProductData } from "@interfaces/product";
 import { addProductInputFields } from "./inputField";
-import { onGetProducts, onUploadProducts } from "@hooks/product/product.hook";
+import { onGetProducts, onUploadProducts } from "@hooks/product";
 // import QuickAddCategory from "./QuickAddCategory";
 
 export interface ProductFormCompProps {

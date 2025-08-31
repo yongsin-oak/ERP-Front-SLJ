@@ -1,7 +1,7 @@
 import { InputNumber, InputNumberProps } from "antd";
 import React from "react";
 
-export type MInputNumberProps = InputNumberProps;
+export type MInputNumberProps = React.PropsWithChildren<InputNumberProps> & React.RefAttributes<HTMLInputElement>;
 const MInputNumber: React.FC<MInputNumberProps> = (props) => {
   return (
     <InputNumber

@@ -1,31 +1,46 @@
+import { Timestamped } from "@interfaces/common";
 import { EmployeeType } from "@interfaces/exployee";
 
-export interface OrderType {
+export interface OrderType extends Timestamped {
   id: string;
   totalCostPrice: number;
   totalCurrentPrice: number;
   totalQuantity: number;
-  employee: EmployeeType      ;
+  employee: EmployeeType;
   shop: ShopType;
-  createdAt: string;
-  updatedAt: string;
   orderDetails: OrderDetailType[];
 }
 
-export interface ShopType {
-  id: number;
+export interface ShopType extends Timestamped {
+  id: string;
   name: string;
   description: string;
   platform: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface OrderDetailType {
+export interface OrderDetailType extends Timestamped {
   id: string;
   productBarcode: string;
   orderId: string;
   quantity: number;
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface onPostOrderType
+  extends Omit<
+    OrderType,
+    | "totalCostPrice"
+    | "totalCurrentPrice"
+    | "totalQuantity"
+    | "createdAt"
+    | "updatedAt"
+    | "employee"
+    | "shop"
+    | "orderDetails"
+  > {
+  employeeId: string;
+  shopId: string;
+  orderDetails: {
+    productBarcode: string;
+    quantity: number;
+  }[];
 }

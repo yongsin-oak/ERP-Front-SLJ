@@ -4,3 +4,12 @@ export interface PaginationDataResponse<T> {
   page: number;
   limit: number;
 }
+export interface PaginationDataQuery {
+  page?: number;
+  limit?: number;
+}
+
+export interface Timestamped { 
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -140,7 +140,7 @@ const ProductStock = () => {
           : remaining;
 
       // Convert ProductData to FormProductData format
-      const formData: FormProductData = {
+      const formData = {
         ...editingProduct,
         // อัปเดต dimensions ด้วยค่าที่แปลงแล้ว
         productDimensions: editingProduct.productDimensions

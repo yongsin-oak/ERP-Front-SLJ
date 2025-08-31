@@ -396,7 +396,6 @@ function MTable<T extends object>({
       },
     }));
 
-    console.log(columnsShow, columns);
     // Add action column if actions are provided or additional columns exist
     const hasActions =
       actions?.onEdit ||
