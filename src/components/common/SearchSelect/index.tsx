@@ -43,6 +43,9 @@ export interface SearchSelectProps<T = unknown>
   // Auto load on mount
   autoLoad?: boolean;
 
+  // Initial options (สำหรับป้องกันการกระพริบ)
+  initialOptions?: SearchSelectOption<T>[];
+
   ref?: Ref<any>;
 }
 
@@ -56,10 +59,12 @@ const SearchSelect = <T extends Record<string, any>>({
   loadingText = <Spin size="small" />,
   emptyText = "ไม่พบข้อมูล",
   autoLoad = true,
+  initialOptions = [],
   ref,
   ...selectProps
 }: SearchSelectProps<T>) => {
-  const [options, setOptions] = useState<SearchSelectOption<T>[]>([]);
+  const [options, setOptions] =
+    useState<SearchSelectOption<T>[]>(initialOptions);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -180,7 +185,7 @@ const SearchSelect = <T extends Record<string, any>>({
       onPopupScroll={enablePagination ? handleScroll : undefined}
       filterOption={filterOption}
       notFoundContent={loading ? loadingText : emptyText}
-      dropdownRender={(menu) => (
+      popupRender={(menu) => (
         <div>
           {menu}
           {loading && hasMore && (

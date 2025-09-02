@@ -19,8 +19,8 @@ export const platform: Options[] = [
     icon: <ShopeeIcon width={14} />,
   },
   {
-    label: "Tiktok",
-    value: "Tiktok",
+    label: "TikTok",
+    value: "TikTok",
     icon: <TikTokFilled />,
   },
 ];
