@@ -4,10 +4,12 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import Text from "@components/common/Text";
 import req from "@utils/common/req";
-import { OrderType } from "@interfaces/order";
+import { OrderDetailType, OrderType } from "@interfaces/order";
+import { MTable } from "@components/tableComps";
 
 const HistoryOrder = () => {
   const [orderHistory, setOrderHistory] = useState<OrderType[]>([]);
+  const [orderDetails, setOrderDetails] = useState<OrderDetailType[]>([]);
 
   const columns: ColumnType<any>[] = [
     {
@@ -28,13 +30,18 @@ const HistoryOrder = () => {
       key: "createdAt",
       render: (val: string) => dayjs(val).format("DD/MM/YYYY"),
       sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
+      filters: Array.from(
+        new Set(orderHistory.map((o) => dayjs(o.createdAt).format("DD/MM/YYYY")))
+      ).map((date) => ({ text: date, value: date })),
+      onFilter: (value, record) =>
+        dayjs(record.createdAt).format("DD/MM/YYYY") === value,
     },
     {
       title: "ชื่อพนักงาน",
       key: "employee",
       render: (record) =>
-        `${record.employee?.firstName ?? ""} ${
-          record.employee?.lastName ?? ""
+        `${record?.employee?.firstName ?? ""} ${
+          record?.employee?.lastName ?? ""
         }`,
       filters: Array.from(
         new Set(
@@ -51,6 +58,10 @@ const HistoryOrder = () => {
       dataIndex: ["shop", "name"],
       key: "shopName",
       sorter: (a, b) => a.shop.name.localeCompare(b.shop.name),
+      filters: Array.from(
+        new Set(orderHistory.map((o) => o.shop.name))
+      ).map((name) => ({ text: name, value: name })),
+      onFilter: (value, record) => record.shop.name === value,
     },
     {
       title: "แพลตฟอร์ม",
@@ -64,25 +75,17 @@ const HistoryOrder = () => {
       })),
       onFilter: (value, record) => record.shop.platform === value,
     },
-    {
-      title: "จำนวน",
-      dataIndex: "totalQuantity",
-      key: "totalQuantity",
-      sorter: (a, b) => a.totalQuantity - b.totalQuantity,
-    },
-    {
-      title: "ต้นทุนรวม",
-      dataIndex: "totalCostPrice",
-      key: "totalCostPrice",
-      render: (val) => `${val} บาท`,
-    },
-    {
-      title: "ราคาขายรวม",
-      dataIndex: "totalCurrentPrice",
-      key: "totalCurrentPrice",
-      render: (val) => `${val} บาท`,
-    },
   ];
+
+  const onGetOrderDetails = async (orderId: string) => {
+    try {
+      const res = await req.get(`/order-detail/${orderId}`);
+      console.log(res.data.data);
+      setOrderDetails(res.data.data.orderDetails);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const onGetOrderHistory = async () => {
     try {
@@ -93,6 +96,7 @@ const HistoryOrder = () => {
         },
       });
       setOrderHistory(res.data.data);
+      console.log(res.data.data);
     } catch (error) {
       console.log(error);
     }
@@ -105,9 +109,9 @@ const HistoryOrder = () => {
   return (
     <Flex vertical gap={8}>
       <Text h3 semiBold>
-        Order
+        ประวัติการบันทึกคำสั่งซื้อ
       </Text>
-      <Table
+      <MTable
         columns={columns}
         dataSource={orderHistory}
         bordered
@@ -115,6 +119,9 @@ const HistoryOrder = () => {
         size="middle"
         pagination={{ pageSize: 10 }}
         expandable={{
+          onExpand(_expanded, record) {
+            onGetOrderDetails(record.id);
+          },
           expandedRowRender: (record) =>
             record.orderDetails?.length ? (
               <Table

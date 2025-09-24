@@ -31,10 +31,7 @@ import { onUploadProducts } from "@hooks/product";
 import { useProductStore } from "@stores/product/productStore.ts";
 
 // Types and Styles
-import {
-  FormProductData,
-  ProductData,
-} from "@interfaces/product";
+import { FormProductData, ProductData } from "@interfaces/product";
 import { additionalColumns, essentialColumns } from "./table/productColumns";
 
 // Components for rendering
@@ -477,7 +474,13 @@ const ProductStock = () => {
         columnsShow={COLUMNS_SHOW}
         rowKey="barcode"
         searchable
-        selectable
+        // selectable
+        haveDrawer
+        onSelectionChange={(selected) => {
+          useProductStore
+            .getState()
+            .setSelectedItems(selected.map((item) => item.barcode));
+        }}
         pagination={{
           total: totalData,
           onChange(page, pageSize) {

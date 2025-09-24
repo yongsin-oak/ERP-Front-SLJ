@@ -56,6 +56,7 @@ export default defineConfig(({ mode }) => {
         "@styles": path.resolve(__dirname, "./src/styles"),
         "@theme": path.resolve(__dirname, "./src/theme"),
         "@utils": path.resolve(__dirname, "./src/utils"),
+        "@features": path.resolve(__dirname, "./src/features"),
       },
     },
   };

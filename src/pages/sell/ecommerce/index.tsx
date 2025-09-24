@@ -10,7 +10,6 @@ import { Text, MButton, SearchSelect } from "@components/common";
 import MFormItem from "@components/Form/MFormItem";
 import { OrderEditable } from "@components/tableComps";
 import { Platform } from "@enums/Platform.enum";
-import { onGetShops } from "@hooks/shop";
 import { EmployeeType } from "@interfaces/exployee";
 import { Shop } from "@interfaces/shop";
 import { useOrderStore } from "@stores/order";
@@ -21,6 +20,7 @@ import { Card, Col, Divider, Flex, Form, Input, Radio, Row, Space } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useShopStore } from "@features/shop";
 
 const ICON_SIZE = 30;
 const ORDER_ID_LABEL = "หมายเลขคำสั่งซื้อ / หมายเลขพัสดุ";
@@ -30,6 +30,7 @@ const Ecommerce = () => {
   const navigation = useNavigate();
   const [isMount, setIsMount] = useState<boolean>(false);
   const hasInitialized = useRef<boolean>(false);
+  const { loadShops } = useShopStore();
   // Zustand store
   const {
     form,
@@ -123,7 +124,7 @@ const Ecommerce = () => {
     async (page: number, limit: number) => {
       if (!currentPlatform) return undefined;
       try {
-        return await onGetShops({
+        return await loadShops({
           page,
           limit,
           platform: currentPlatform,

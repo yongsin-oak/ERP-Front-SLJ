@@ -6,6 +6,7 @@ type StateAuth = {
   user: {
     username: string;
     role: Role;
+    userId?: string;
   } | null;
   isLoadingUser: boolean;
   isAuth: boolean;
@@ -50,8 +51,19 @@ export const useAuth = create<StateAuth & ActionAuth>((set, get) => ({
     try {
       set({ isLoadingUser: true });
       const res = await req.get("/me");
-      const user = res.data;
-      set({ user, isAuth: true });
+      const user = res.data as {
+        username: string;
+        role: Role;
+        sub?: string;
+        id?: string;
+        userId?: string;
+      };
+      const userId =
+        (user as any).sub || (user as any).id || (user as any).userId;
+      set({
+        user: { username: user.username, role: user.role, userId },
+        isAuth: true,
+      });
     } catch (err) {
       set({ user: null, isAuth: false });
       throw err;

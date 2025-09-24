@@ -10,6 +10,7 @@ import {
   Typography,
   Card,
   TableProps,
+  Pagination,
 } from "antd";
 import {
   DeleteOutlined,
@@ -202,6 +203,7 @@ export interface MTableProps<T> extends TableProps<T> {
   showViewToggle?: boolean;
   searchable?: boolean;
   searchKeys?: string[]; // Keys to search in
+  haveDrawer?: boolean; // Enable detail drawer on row click
 
   // View mode
   viewMode?: "table" | "card" | "auto"; // auto = responsive
@@ -272,6 +274,7 @@ function MTable<T extends object>({
   showViewToggle = true,
   searchable = true,
   searchKeys = [],
+  haveDrawer = false,
 
   // View
   viewMode = "auto",
@@ -323,12 +326,26 @@ function MTable<T extends object>({
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<T | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => {
+    if (pagination && typeof pagination === "object") {
+      return pagination.pageSize || pagination.defaultPageSize || 10;
+    }
+    return 10;
+  });
+
   // Update view mode when screen size changes (only for auto mode)
   useEffect(() => {
     if (viewMode === "auto") {
       setCurrentViewMode(mobile ? "card" : "table");
     }
   }, [mobile, viewMode]);
+
+  // Reset pagination when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Filter data based on search
   const filteredData = useMemo(() => {
@@ -401,8 +418,8 @@ function MTable<T extends object>({
       actions?.onEdit ||
       actions?.onDelete ||
       actions?.onView ||
-      columnsShow.length < columns.length ||
-      columnsAdditional.length > 0;
+      (haveDrawer &&
+        (columnsShow.length < columns.length || columnsAdditional.length > 0));
     if (hasActions) {
       processedColumns.push({
         title: "",
@@ -422,8 +439,9 @@ function MTable<T extends object>({
               </Tooltip>
             )}
             {(actions?.onView ||
-              columnsShow.length < columns.length ||
-              columnsAdditional.length > 0) && (
+              (haveDrawer &&
+                (columnsShow.length < columns.length ||
+                  columnsAdditional.length > 0))) && (
               <Tooltip title="ดูรายละเอียด">
                 <Button
                   type="text"
@@ -463,7 +481,63 @@ function MTable<T extends object>({
     searchable,
     searchKeys,
     handleDefaultView,
+    haveDrawer,
   ]);
+
+  // Pagination handlers
+  const handlePaginationChange = (page: number, size?: number) => {
+    const newSize = size || pageSize;
+    setCurrentPage(page);
+    if (size) {
+      setPageSize(size);
+    }
+
+    // Call original pagination onChange if provided
+    if (pagination && typeof pagination === "object" && pagination.onChange) {
+      pagination.onChange(page, newSize);
+    }
+  };
+
+  const handlePageSizeChange = (current: number, size: number) => {
+    setCurrentPage(1); // Reset to first page when changing page size
+    setPageSize(size);
+
+    // Call original pagination onShowSizeChange if provided
+    if (
+      pagination &&
+      typeof pagination === "object" &&
+      pagination.onShowSizeChange
+    ) {
+      pagination.onShowSizeChange(current, size);
+    }
+  };
+
+  // Default pagination config
+  const defaultPagination =
+    pagination === false
+      ? false
+      : {
+          current: currentPage,
+          pageSize: pageSize,
+          total: filteredData.length,
+          showQuickJumper: true,
+          showSizeChanger: true,
+          showTotal: (total: number, range: [number, number]) =>
+            `${range[0]}-${range[1]} จาก ${total} รายการ`,
+          pageSizeOptions: ["10", "20", "50", "100"],
+          responsive: true,
+          onChange: handlePaginationChange,
+          onShowSizeChange: handlePageSizeChange,
+          // Override with user provided pagination config, but keep our handlers
+          ...(pagination && typeof pagination === "object"
+            ? {
+                ...pagination,
+                current: currentPage,
+                onChange: handlePaginationChange,
+                onShowSizeChange: handlePageSizeChange,
+              }
+            : {}),
+        };
 
   // Card view renderer
   const renderCardView = () => {
@@ -475,9 +549,118 @@ function MTable<T extends object>({
       );
     }
 
+    // Pagination for card view (use shared state)
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
+    // Debug logging
+    console.log("Card View Debug:", {
+      dataSourceLength: dataSource.length,
+      filteredDataLength: filteredData.length,
+      searchTerm: searchTerm,
+      currentPage,
+      pageSize,
+      startIndex,
+      endIndex,
+      paginatedDataLength: paginatedData.length,
+    });
+
+    // Select all functionality for card view (based on current page)
+    const currentPageKeys = paginatedData.map(
+      (item) => get(item, rowKey) as React.Key
+    );
+    const selectedOnCurrentPage = selectedRowKeys.filter((key) =>
+      currentPageKeys.includes(key)
+    );
+
+    const isAllSelectedOnPage =
+      selectedOnCurrentPage.length === paginatedData.length &&
+      paginatedData.length > 0;
+    const isIndeterminateOnPage =
+      selectedOnCurrentPage.length > 0 &&
+      selectedOnCurrentPage.length < paginatedData.length;
+
+    const handleSelectAllOnPage = (checked: boolean) => {
+      if (checked) {
+        const newSelectedKeys = [
+          ...new Set([...selectedRowKeys, ...currentPageKeys]),
+        ];
+        setSelectedRowKeys(newSelectedKeys);
+        const selectedRows = filteredData.filter((item) =>
+          newSelectedKeys.includes(get(item, rowKey) as React.Key)
+        );
+        onSelectionChange?.(selectedRows, newSelectedKeys);
+      } else {
+        const newSelectedKeys = selectedRowKeys.filter(
+          (key) => !currentPageKeys.includes(key)
+        );
+        setSelectedRowKeys(newSelectedKeys);
+        const selectedRows = filteredData.filter((item) =>
+          newSelectedKeys.includes(get(item, rowKey) as React.Key)
+        );
+        onSelectionChange?.(selectedRows, newSelectedKeys);
+      }
+    };
+
     return (
       <Space direction="vertical" style={{ width: "100%" }} size={16}>
-        {filteredData.map((record) => {
+        {/* Select All Section for Card View */}
+        {selectable && (
+          <div
+            style={{
+              padding: "12px 16px",
+              background: "#fafafa",
+              borderRadius: "8px",
+              border: "1px solid #f0f0f0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <Checkbox
+                indeterminate={isIndeterminateOnPage}
+                checked={isAllSelectedOnPage}
+                onChange={(e) => handleSelectAllOnPage(e.target.checked)}
+              />
+              <Text>
+                เลือกทั้งหมดในหน้านี้ ({selectedOnCurrentPage.length}/
+                {paginatedData.length})
+              </Text>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {filteredData.length > paginatedData.length && (
+                <Button
+                  size="small"
+                  type="link"
+                  onClick={() => {
+                    const allKeys = filteredData.map(
+                      (item) => get(item, rowKey) as React.Key
+                    );
+                    setSelectedRowKeys(allKeys);
+                    onSelectionChange?.(filteredData, allKeys);
+                  }}
+                >
+                  เลือกทุกหน้า ({filteredData.length})
+                </Button>
+              )}
+              {selectedRowKeys.length > 0 && (
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={() => {
+                    setSelectedRowKeys([]);
+                    onSelectionChange?.([], []);
+                  }}
+                >
+                  ยกเลิกทั้งหมด ({selectedRowKeys.length})
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+        {paginatedData.map((record) => {
           const id = get(record, rowKey);
 
           // Main fields to show in card
@@ -516,11 +699,14 @@ function MTable<T extends object>({
 
           // Additional fields for expandable section
           const additionalFields =
-            columnsAdditional.length > 0 || columnsShow.length < columns.length
+            haveDrawer &&
+            (columnsAdditional.length > 0 ||
+              columnsShow.length < columns.length)
               ? (!isEmpty(columnsAdditional)
                   ? columnsAdditional
                   : columns
                       .filter((col) => !includes(columnsShow, col.key))
+                      .slice(3)
                       .map((col) => col.key)
                 ).map((key) => {
                   const col = columns.find(
@@ -586,6 +772,23 @@ function MTable<T extends object>({
                       />
                     </Tooltip>
                   )}
+                  {(actions?.onView ||
+                    (haveDrawer &&
+                      (columnsShow.length < columns.length ||
+                        columnsAdditional.length > 0))) && (
+                    <Tooltip title="ดูรายละเอียด">
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<EyeOutlined />}
+                        onClick={() =>
+                          actions?.onView
+                            ? actions.onView(record)
+                            : handleDefaultView(record)
+                        }
+                      />
+                    </Tooltip>
+                  )}
                   {actions?.onDelete && (
                     <Tooltip title="ลบ">
                       <Button
@@ -614,80 +817,92 @@ function MTable<T extends object>({
                   </div>
                 ))}
 
-                {(columnsShow.length < columns.length ||
-                  columnsAdditional.length > 0) && (
-                  <div className="additional-info">
-                    <Collapse
-                      ghost
-                      size="small"
-                      items={[
-                        {
-                          key: "1",
-                          label: additionalDetailsLabel,
-                          children: (
-                            <Space
-                              direction="vertical"
-                              style={{ width: "100%" }}
-                              size={8}
-                            >
-                              {additionalFields.map((field, index) => (
-                                <div key={index} className="info-row">
-                                  <div className="label">
-                                    {String(field.label)}:
+                {haveDrawer &&
+                  (columnsShow.length < columns.length ||
+                    columnsAdditional.length > 0) && (
+                    <div className="additional-info">
+                      <Collapse
+                        ghost
+                        size="small"
+                        items={[
+                          {
+                            key: "1",
+                            label: additionalDetailsLabel,
+                            children: (
+                              <Space
+                                direction="vertical"
+                                style={{ width: "100%" }}
+                                size={8}
+                              >
+                                {additionalFields.map((field, index) => (
+                                  <div key={index} className="info-row">
+                                    <div className="label">
+                                      {String(field.label)}:
+                                    </div>
+                                    <div
+                                      className={`value ${
+                                        !field.value ? "empty" : ""
+                                      }`}
+                                    >
+                                      {typeof field.value === "object"
+                                        ? "ไม่ระบุ"
+                                        : String(field.value || "ไม่ระบุ")}
+                                    </div>
                                   </div>
-                                  <div
-                                    className={`value ${
-                                      !field.value ? "empty" : ""
-                                    }`}
-                                  >
-                                    {typeof field.value === "object"
-                                      ? "ไม่ระบุ"
-                                      : String(field.value || "ไม่ระบุ")}
-                                  </div>
-                                </div>
-                              ))}
-                            </Space>
-                          ),
-                        },
-                      ]}
-                    />
-                  </div>
-                )}
+                                ))}
+                              </Space>
+                            ),
+                          },
+                        ]}
+                      />
+                    </div>
+                  )}
               </div>
             </CardContainer>
           );
         })}
+
+        {/* Pagination for Card View */}
+        {filteredData.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "24px",
+              paddingTop: "16px",
+              borderTop: "1px solid #f0f0f0",
+            }}
+          >
+            <Pagination {...pagination} />
+          </div>
+        )}
       </Space>
     );
-  };
-
-  // Default pagination config
-  const defaultPagination = {
-    total: filteredData.length,
-    showQuickJumper: true,
-    showSizeChanger: true,
-    showTotal: (total: number, range: [number, number]) =>
-      `${range[0]}-${range[1]} จาก ${total} รายการ`,
-    pageSizeOptions: ["10", "20", "50", "100"],
-    defaultPageSize: 10,
-    responsive: true,
-    ...pagination,
   };
 
   return (
     <TableContainer>
       {/* Header with view toggle and info */}
-      {showViewToggle && (
-        <ViewToggleContainer>
-          <div className="table-info">
-            <Typography.Title level={4}>{tableName}</Typography.Title>
-            <span className="total-count">
-              ทั้งหมด {defaultPagination?.total || dataSource.length} รายการ
-            </span>
-          </div>
+      <ViewToggleContainer>
+        <div className="table-info">
+          <Typography.Title level={4}>{tableName}</Typography.Title>
+          <span className="total-count">
+            ทั้งหมด{" "}
+            {defaultPagination && typeof defaultPagination === "object"
+              ? defaultPagination.total
+              : dataSource.length}{" "}
+            รายการ
+            {selectable && selectedRowKeys.length > 0 && (
+              <span style={{ color: "#1890ff", marginLeft: "8px" }}>
+                (เลือกแล้ว {selectedRowKeys.length} รายการ)
+              </span>
+            )}
+          </span>
+        </div>
 
+        {showViewToggle && (
           <div className="view-toggle">
-            <Button.Group>
+            <Space.Compact>
               <Button
                 icon={<TableOutlined />}
                 type={currentViewMode === "table" ? "primary" : "default"}
@@ -703,10 +918,10 @@ function MTable<T extends object>({
               >
                 การ์ด
               </Button>
-            </Button.Group>
+            </Space.Compact>
           </div>
-        </ViewToggleContainer>
-      )}
+        )}
+      </ViewToggleContainer>
 
       {/* Search */}
       {searchable && (
@@ -741,7 +956,7 @@ function MTable<T extends object>({
 
       {/* Detail Drawer */}
       <DetailDrawer<T>
-        open={detailDrawerOpen}
+        open={haveDrawer && detailDrawerOpen}
         onClose={() => {
           setDetailDrawerOpen(false);
           setSelectedRecord(null);

@@ -1,15 +1,13 @@
-import { MenuProps } from "antd";
 import {
-  CommentOutlined,
   HomeOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
   TableOutlined,
   TeamOutlined,
-  UserOutlined,
+  UserOutlined
 } from "@ant-design/icons";
-import DeliveryIcon from "@assets/icon/menu/delivery";
+import { MenuProps } from "antd";
 import { NavigateFunction } from "react-router-dom";
 
 export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
@@ -25,24 +23,24 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       icon: <ShoppingCartOutlined />,
       label: "การขาย",
       children: [
-        {
-          key: "/sell/pos",
-          label: "หน้าร้าน",
-          icon: <ShopOutlined />,
-          onClick: () => navigate("/sell/pos"),
-        },
-        {
-          key: "/sell/online",
-          label: "ขายโดยตรง",
-          icon: <CommentOutlined />,
-          onClick: () => navigate("/sell/online"),
-        },
-        {
-          key: "/sell/delivery",
-          label: "เดลิเวอรี่",
-          icon: <DeliveryIcon />,
-          onClick: () => navigate("/sell/delivery"),
-        },
+        // {
+        //   key: "/sell/pos",
+        //   label: "หน้าร้าน",
+        //   icon: <ShopOutlined />,
+        //   onClick: () => navigate("/sell/pos"),
+        // },
+        // {
+        //   key: "/sell/online",
+        //   label: "ขายโดยตรง",
+        //   icon: <CommentOutlined />,
+        //   onClick: () => navigate("/sell/online"),
+        // },
+        // {
+        //   key: "/sell/delivery",
+        //   label: "เดลิเวอรี่",
+        //   icon: <DeliveryIcon />,
+        //   onClick: () => navigate("/sell/delivery"),
+        // },
         {
           key: "/sell/ecommerce",
           label: "อีคอมเมิร์ซ",
@@ -62,6 +60,12 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
       icon: <TeamOutlined />,
       label: "พนักงาน",
       onClick: () => navigate("/employee"),
+    },
+    {
+      key: "/shop",
+      icon: <ShopOutlined />,
+      label: "ร้านค้า",
+      onClick: () => navigate("/shop"),
     },
     {
       key: "/user",

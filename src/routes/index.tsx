@@ -14,6 +14,7 @@ import Login from "@pages/login";
 import NotFoundPage from "@pages/error/404";
 import ErrorPage from "@pages/error/500";
 import HistoryOrder from "@pages/sell/ecommerce/history/HistoryOrder";
+import ShopPage from "@pages/shop";
 
 const Routers = () => {
   const genR = (path: string, element: React.ReactElement) => {
@@ -33,6 +34,7 @@ const Routers = () => {
     genR("/user", <User />),
     genR("/employee", <Employee />),
     genR("/example", <Example />),
+    genR("/shop", <ShopPage />),
   ];
 
   return (

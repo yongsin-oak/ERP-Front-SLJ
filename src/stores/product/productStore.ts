@@ -129,7 +129,6 @@ export const useProductStore = create<ProductStockState & ProductStockActions>(
       set({ loading: true });
       try {
         const data = await onGetProducts(props);
-        console.log(data);
         set({ data: data.data });
         set({ totalData: data.total });
         return {

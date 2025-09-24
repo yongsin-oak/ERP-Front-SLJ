@@ -39,7 +39,7 @@ const DetailDrawer = <T extends object>({
   placement = "right",
   title,
   footer,
-  destroyOnClose = true,
+  destroyOnClose = false,
   maskClosable = true,
   className,
   bodyStyle,
@@ -47,32 +47,39 @@ const DetailDrawer = <T extends object>({
   footerStyle,
   renderDrawer,
 }: DetailDrawerProps<T>) => {
-  if (!record) return null;
+  // If no record, render empty drawer that can still animate close
+  const detailItems = record
+    ? columns
+        .filter((col) => col.key !== "actions" && col.title)
+        .map((col) => {
+          const value = col.render
+            ? col.render(get(record, String(col.dataIndex || "")), record, 0)
+            : get(record, String(col.dataIndex || ""));
 
-  const detailItems = columns
-    .filter((col) => col.key !== "actions" && col.title)
-    .map((col) => {
-      const value = col.render
-        ? col.render(get(record, String(col.dataIndex || "")), record, 0)
-        : get(record, String(col.dataIndex || ""));
-
-      return {
-        key: String(col.key ?? col.dataIndex ?? ""),
-        label: col.title || "",
-        children: value !== undefined && value !== null ? value : "ไม่ระบุ",
-      };
-    });
+          return {
+            key: String(col.key ?? col.dataIndex ?? ""),
+            label: col.title || "",
+            children: value !== undefined && value !== null ? value : "ไม่ระบุ",
+          };
+        })
+    : [];
 
   // Default title if not provided
   const defaultTitle = title || (
     <Typography.Text strong>
-      {String(get(record, String(titleColumn)) || "รายละเอียด")}
+      {record
+        ? String(get(record, String(titleColumn)) || "รายละเอียด")
+        : "รายละเอียด"}
     </Typography.Text>
   );
 
   // Generate content for drawer
-  const content = (
+  const content = record ? (
     <Descriptions column={1} size="small" bordered items={detailItems as any} />
+  ) : (
+    <div style={{ textAlign: "center", padding: "20px", color: "#999" }}>
+      ไม่มีข้อมูลให้แสดง
+    </div>
   );
 
   // Use custom render function if provided, otherwise use default drawer

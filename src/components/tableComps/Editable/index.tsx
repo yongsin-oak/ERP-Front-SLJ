@@ -106,7 +106,7 @@ export interface EditableTableProps<T = unknown> {
   rowKey?: string | keyof T | GetRowKey<T>;
 }
 
-const Editable = <T extends Record<string, unknown>>({
+const Editable = <T extends object>({
   columns: propColumns,
   dataSource,
   onSaveCol: onSave,

@@ -11,6 +11,7 @@ import Routers from "./routes";
 import { useAuth, useStoreTheme } from "./stores";
 import { themes } from "./theme";
 import { ThemeProvider } from "@emotion/react";
+import ToTopButton from "./components/common/TotopButton";
 import "@ant-design/v5-patch-for-react-19";
 
 dayjs.extend(buddhistEra);
@@ -31,6 +32,8 @@ function App() {
           <CookiesProvider>
             <BrowserRouter>
               <Routers></Routers>
+              {/* To Top Button - Available on all pages */}
+              <ToTopButton />
             </BrowserRouter>
           </CookiesProvider>
 
