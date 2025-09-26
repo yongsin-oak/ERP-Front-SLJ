@@ -52,7 +52,7 @@ const Routers = () => {
           <Route
             key={route.path}
             errorElement={<ErrorPage />}
-            element={<PrivateRoute>{route.element}</PrivateRoute>}
+            element={route.element}
             path={route.path}
           />
         ))}

@@ -1,27 +1,23 @@
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Flex, Form, Input, Typography } from "antd";
-import React from "react";
-import { Navigate } from "react-router-dom";
 import MButton from "@components/common/MButton";
-import { useAuth } from "@stores/auth";
 import { useTheme } from "@emotion/react";
+import { useAuth } from "@stores/auth";
 import { BORDER_RADIUS, SPACING } from "@theme/constants";
+import { Flex, Form, Input, Typography } from "antd";
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
 
 const { Title } = Typography;
 
 const Login: React.FC = () => {
-  const { isLoadingUser, isAuth, login } = useAuth();
+  const { isAuth, login } = useAuth();
+  const [loading, setLoading] = useState<boolean>(false);
   const theme = useTheme();
-  const onLogin = async (values: {
-    username: string;
-    password: string;
-    remember: boolean;
-  }) => {
-    login(values.username, values.password);
+  const onLogin = async (values: { username: string; password: string }) => {
+    setLoading(true);
+    await login(values.username, values.password);
+    setLoading(false);
   };
-  if (isLoadingUser) {
-    return <div>Loading...</div>;
-  }
 
   return isAuth ? (
     <Navigate to="/" replace />
@@ -84,6 +80,7 @@ const Login: React.FC = () => {
               style={{
                 margin: "auto",
               }}
+              loading={loading}
             >
               เข้าสู่ระบบ
             </MButton>

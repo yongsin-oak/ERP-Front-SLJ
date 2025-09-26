@@ -12,10 +12,10 @@ const req = axios.create({
 let isRefreshing = false;
 let pendingQueue: Array<{
   resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-function flushQueue(error?: any) {
+function flushQueue(error?: unknown) {
   pendingQueue.forEach(({ reject, resolve }) => {
     if (error) reject(error);
     else resolve(undefined);
@@ -41,8 +41,18 @@ req.interceptors.response.use(
     };
 
     const status = error?.response?.status;
+    const requestUrl = (originalRequest?.url ?? "").toString();
 
-    if (status === 401 && !originalRequest?._retry) {
+    // If unauthorized
+    if (status === 401) {
+      // Do NOT try to refresh when the failing request is the refresh endpoint itself
+      const isRefreshEndpoint = requestUrl.endsWith("/refresh-token");
+
+      // If we've already retried or it's the refresh endpoint, reject immediately
+      if (originalRequest?._retry || isRefreshEndpoint) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       if (isRefreshing) {
@@ -61,6 +71,7 @@ req.interceptors.response.use(
         flushQueue();
         return req(originalRequest);
       } catch (refreshErr) {
+        // If refresh fails (e.g., no refresh-token), fail all queued requests cleanly
         flushQueue(refreshErr);
         return Promise.reject(refreshErr);
       } finally {

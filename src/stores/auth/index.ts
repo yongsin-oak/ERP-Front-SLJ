@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import req from "@utils/common/req";
 import { Role } from "@enums/Role.enum";
+import req from "@utils/common/req";
+import { create } from "zustand";
 
 type StateAuth = {
   user: {
@@ -18,6 +18,14 @@ type ActionAuth = {
   getMe: () => void;
 };
 
+type MeUserResponse = {
+  username: string;
+  role: Role;
+  sub?: string;
+  id?: string;
+  userId?: string;
+};
+
 export const useAuth = create<StateAuth & ActionAuth>((set, get) => ({
   user: null,
   isAuth: false,
@@ -25,19 +33,21 @@ export const useAuth = create<StateAuth & ActionAuth>((set, get) => ({
   login: async (username, password) => {
     try {
       const res = await req.post("/login", { username, password });
-      const { user } = res.data;
+      const { user } = res.data as {
+        user: { username: string; role: Role; userId?: string };
+      };
       set({ user, isAuth: true });
     } catch (error) {
       set({ user: null, isAuth: false });
-      throw error;
+      console.error(error);
     } finally {
       get().getMe(); // เรียก getMe เพื่อโหลดข้อมูลผู้ใช้หลังจากล็อกอิน
       set({ isLoadingUser: false });
     }
   },
   logout: async () => {
-    set({ isLoadingUser: true });
     try {
+      set({ isLoadingUser: true });
       await req.post("/logout");
     } catch (e) {
       console.error("Logout error:", e);
@@ -51,22 +61,15 @@ export const useAuth = create<StateAuth & ActionAuth>((set, get) => ({
     try {
       set({ isLoadingUser: true });
       const res = await req.get("/me");
-      const user = res.data as {
-        username: string;
-        role: Role;
-        sub?: string;
-        id?: string;
-        userId?: string;
-      };
-      const userId =
-        (user as any).sub || (user as any).id || (user as any).userId;
+      const user = res.data as MeUserResponse;
+      const userId = user.sub || user.id || user.userId;
       set({
         user: { username: user.username, role: user.role, userId },
         isAuth: true,
       });
     } catch (err) {
-      set({ user: null, isAuth: false });
-      throw err;
+      // set({ user: null, isAuth: false });
+      console.error(err);
     } finally {
       set({ isLoadingUser: false });
     }
