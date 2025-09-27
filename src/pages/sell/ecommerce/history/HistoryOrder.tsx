@@ -1,15 +1,14 @@
+import Text from "@components/common/Text";
+import { MTable } from "@components/tableComps";
+import { OrderType } from "@interfaces/order";
+import req from "@utils/common/req";
 import { Flex } from "antd";
 import Table, { ColumnType } from "antd/es/table";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import Text from "@components/common/Text";
-import req from "@utils/common/req";
-import { OrderDetailType, OrderType } from "@interfaces/order";
-import { MTable } from "@components/tableComps";
 
 const HistoryOrder = () => {
   const [orderHistory, setOrderHistory] = useState<OrderType[]>([]);
-  const [orderDetails, setOrderDetails] = useState<OrderDetailType[]>([]);
 
   const columns: ColumnType<any>[] = [
     {
@@ -81,7 +80,6 @@ const HistoryOrder = () => {
     try {
       const res = await req.get(`/order-detail/${orderId}`);
       console.log(res.data.data);
-      setOrderDetails(res.data.data.orderDetails);
     } catch (error) {
       console.log(error);
     }
