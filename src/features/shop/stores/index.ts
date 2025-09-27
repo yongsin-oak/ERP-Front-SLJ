@@ -29,6 +29,11 @@ export interface CurrentShopState {
   currentError?: string;
 }
 
+export interface UpdateShopState {
+  loadingUpdate: boolean;
+  errorUpdate?: string;
+}
+
 export interface ShopActions {
   loadShops: (
     params?: PaginationDataQuery & { platform?: Platform }
@@ -43,7 +48,10 @@ export interface ShopActions {
   setCurrent: (shop: Shop | null) => void;
 }
 
-export type ShopStore = ShopListState & CurrentShopState & ShopActions;
+export type ShopStore = ShopListState &
+  CurrentShopState &
+  ShopActions &
+  UpdateShopState;
 
 const initialListState: ShopListState = {
   items: [],
@@ -60,9 +68,15 @@ const initialCurrentState: CurrentShopState = {
   currentError: undefined,
 };
 
+const updateState: UpdateShopState = {
+  loadingUpdate: false,
+  errorUpdate: undefined,
+};
+
 export const useShopStore = create<ShopStore>((set, get) => ({
   ...initialListState,
   ...initialCurrentState,
+  ...updateState,
 
   setPage: (page) => set({ page }),
   setLimit: (limit) => set({ limit }),
@@ -74,7 +88,7 @@ export const useShopStore = create<ShopStore>((set, get) => ({
     set({ loading: true, error: undefined });
     try {
       const res = await getAllShops({ page, limit, ...(params || {}) });
-      console.log(res)
+      console.log(res);
       set({
         items: res.data,
         total: res.total,
@@ -107,17 +121,23 @@ export const useShopStore = create<ShopStore>((set, get) => ({
   },
 
   create: async (data) => {
+    set({ loadingUpdate: true, errorUpdate: undefined });
     try {
       const created = await createShop(data);
       // refresh first page quickly
       await get().loadShops({ page: 1 });
       return created;
-    } catch (e) {
+    } catch (e: any) {
+      const message = e?.message || "Failed to create shop";
+      set({ errorUpdate: message });
       throw e;
+    } finally {
+      set({ loadingUpdate: false });
     }
   },
 
   update: async (id, data) => {
+    set({ loadingUpdate: true, errorUpdate: undefined });
     try {
       const updated = await updateShop(id, data);
       // refresh list while keeping pagination
@@ -128,12 +148,17 @@ export const useShopStore = create<ShopStore>((set, get) => ({
         set({ current: updated });
       }
       return updated;
-    } catch (e) {
+    } catch (e: any) {
+      const message = e?.message || "Failed to update shop";
+      set({ errorUpdate: message });
       throw e;
+    } finally {
+      set({ loadingUpdate: false });
     }
   },
 
   remove: async (id) => {
+    set({ loadingUpdate: true, errorUpdate: undefined });
     try {
       const removed = await deleteShop(id);
       // refresh list while keeping pagination
@@ -144,8 +169,12 @@ export const useShopStore = create<ShopStore>((set, get) => ({
         set({ current: null });
       }
       return removed;
-    } catch (e) {
+    } catch (e: any) {
+      const message = e?.message || "Failed to delete shop";
+      set({ loadingUpdate: false, errorUpdate: message });
       throw e;
+    } finally {
+      set({ loadingUpdate: false });
     }
   },
 }));

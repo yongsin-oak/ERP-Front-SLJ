@@ -1,25 +1,25 @@
+import { MInputNumber, MSelect } from "@components/common";
 import { Col, DatePicker, Flex, Form, Input, Row } from "antd";
 import { FormInstance, useForm } from "antd/es/form/Form";
 import MFormItem from "../MFormItem";
 import { InputFields } from "./interface";
-import { MInputNumber, MSelect } from "@components/common";
 
-interface Props {
+interface Props<T> {
   onFinish?: (values: unknown) => void;
   inputFields: InputFields[];
   layout?: "vertical" | "horizontal" | "inline";
   children?: React.ReactNode;
-  formProps?: FormInstance<any>;
+  formProps?: FormInstance<T>;
   gutter?: [number, number];
 }
-const FormInputs = ({
+function FormInputs<T extends object>({
   onFinish,
   inputFields,
   layout = "vertical",
   children,
   formProps,
   gutter = [16, 8],
-}: Props) => {
+}: Props<T>) {
   const [form] = useForm();
   const content = (
     <Flex vertical gap={16}>
@@ -44,6 +44,7 @@ const FormInputs = ({
                 key={name}
                 label={label}
                 name={name}
+                layout={layout === "horizontal" ? "horizontal" : "vertical"}
                 requiredMessage={
                   required === false
                     ? undefined
@@ -96,6 +97,6 @@ const FormInputs = ({
       {content}
     </Form>
   );
-};
+}
 
 export default FormInputs;

@@ -1,16 +1,45 @@
 import { MButton } from "@components/common";
 import { FormInputs } from "@components/Form";
 import { InputFields } from "@components/Form/FormInputs/interface";
-import { Editable, MTable } from "@components/tableComps";
+import { MTable } from "@components/tableComps";
 import { Platform } from "@enums/Platform.enum";
 import { useShopStore } from "@features/shop";
 import { Shop } from "@interfaces/shop";
 import { Form, Modal } from "antd";
+import { useForm } from "antd/es/form/Form";
+import TextArea from "antd/es/input/TextArea";
+import Paragraph from "antd/es/typography/Paragraph";
 import { useEffect, useState } from "react";
 
+interface ModalState {
+  shopId?: string;
+  open: boolean;
+  state?: "add" | "edit";
+}
+interface FormFields {
+  name: string;
+  description?: string;
+  platform: Platform;
+}
+
 const ShopPage = () => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const { loadShops, items } = useShopStore();
+  const [modalState, setModalState] = useState<ModalState>({
+    shopId: undefined,
+    open: false,
+    state: "add",
+  });
+  const {
+    loadShops,
+    items,
+    loading,
+    loadingUpdate: loadingSave,
+    create,
+    update,
+    total,
+    setPage,
+    remove,
+  } = useShopStore();
+  const [form] = useForm<FormFields>();
   const addShopInputFields: InputFields[] = [
     {
       name: "name",
@@ -31,10 +60,44 @@ const ShopPage = () => {
           { label: "Lazada", value: Platform.Lazada },
           { label: "TikTok", value: Platform.TikTok },
         ],
+        onSelect: (value: { label: string; value: Platform }) => {
+          form.setFieldsValue({ platform: value.value });
+        },
         placeholder: "แพลตฟอร์ม",
       },
     },
+    {
+      name: "description",
+      label: "รายละเอียด",
+      span: 24,
+      required: false,
+      customInput: <TextArea rows={4} placeholder="รายละเอียดร้านค้า" />,
+    },
   ];
+
+  const handleSubmit = (values: FormFields) => {
+    console.log(values);
+    switch (modalState.state) {
+      case "add":
+        create(values).then(() => {
+          setModalState({ open: false, state: undefined });
+          form.resetFields();
+        });
+        break;
+      case "edit":
+        {
+          const currentShopId = modalState.shopId;
+          if (!currentShopId) return;
+          update(currentShopId, values).then(() => {
+            setModalState({ open: false, state: undefined });
+            form.resetFields();
+          });
+        }
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     loadShops({ page: 1, limit: 10, platform: undefined });
@@ -42,32 +105,127 @@ const ShopPage = () => {
 
   return (
     <>
-      <MButton onClick={() => setModalOpen(true)}>เพิ่มร้านค้า</MButton>
+      <MButton
+        onClick={() =>
+          setModalState({
+            open: true,
+            state: "add",
+          })
+        }
+      >
+        เพิ่มร้านค้า
+      </MButton>
 
-      <Form>
-        <Modal open={modalOpen} onCancel={() => setModalOpen(false)}>
-          <FormInputs inputFields={addShopInputFields} />
+      <Form form={form} onFinish={handleSubmit}>
+        <Modal
+          open={modalState.open}
+          onCancel={() => {
+            setModalState({ open: false, state: undefined });
+            form.resetFields();
+          }}
+          title="เพิ่มร้านค้า"
+          onOk={() => form.submit()}
+          okButtonProps={{ loading: loadingSave }}
+        >
+          <FormInputs<FormFields>
+            inputFields={addShopInputFields}
+            formProps={form}
+          />
         </Modal>
       </Form>
 
-      <Editable<Shop>
+      <MTable<Shop>
         columns={[
           {
             title: "ชื่อร้านค้า",
             dataIndex: "name",
             key: "name",
-            editable: true,
+            width: "30%",
+            render: (text: string) =>
+              text ? (
+                <Paragraph
+                  ellipsis={{
+                    rows: 2, // จำนวนบรรทัดที่ให้แสดงก่อนตัด
+                    expandable: true, // ให้กดดูเพิ่มเติม
+                    symbol: "ดูเพิ่มเติม", // ข้อความที่ให้กด
+                  }}
+                >
+                  {text}
+                </Paragraph>
+              ) : (
+                "-"
+              ),
           },
           {
             title: "แพลตฟอร์ม",
             dataIndex: "platform",
             key: "platform",
+            width: "30%",
+            render: (text: string) =>
+              text ? (
+                <Paragraph
+                  ellipsis={{
+                    rows: 2, // จำนวนบรรทัดที่ให้แสดงก่อนตัด
+                    expandable: true, // ให้กดดูเพิ่มเติม
+                    symbol: "ดูเพิ่มเติม", // ข้อความที่ให้กด
+                  }}
+                >
+                  {text}
+                </Paragraph>
+              ) : (
+                "-"
+              ),
+          },
+          {
+            title: "รายละเอียด",
+            dataIndex: "description",
+            key: "description",
+            width: "40%",
+            render: (text: string) =>
+              text ? (
+                <Paragraph
+                  ellipsis={{
+                    rows: 2, // จำนวนบรรทัดที่ให้แสดงก่อนตัด
+                    expandable: true, // ให้กดดูเพิ่มเติม
+                    symbol: "ดูเพิ่มเติม", // ข้อความที่ให้กด
+                  }}
+                >
+                  {text}
+                </Paragraph>
+              ) : (
+                "-"
+              ),
           },
         ]}
+        loading={loading}
+        tableName="ร้านค้า"
         dataSource={items}
-        onSaveCol={() => {}}
+        actions={{
+          onEdit: (record) => {
+            form.setFieldsValue({
+              name: record.name,
+              platform: record.platform,
+            });
+            setModalState({
+              open: true,
+              state: "edit",
+              shopId: record.id,
+            });
+          },
+          onDelete: (record) => {
+            remove(record.id);
+          },
+        }}
+        size="small"
         rowKey="id"
-      ></Editable>
+        pagination={{
+          total: total,
+          onChange(page, pageSize) {
+            loadShops({ page, limit: pageSize });
+            setPage(page);
+          },
+        }}
+      />
     </>
   );
 };

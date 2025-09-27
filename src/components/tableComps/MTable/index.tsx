@@ -1,242 +1,38 @@
-import React, { useState, useMemo, useEffect } from "react";
 import {
-  Table as AntTable,
-  Input,
-  Space,
-  Checkbox,
-  Collapse,
-  Tooltip,
-  Button,
-  Typography,
-  Card,
-  TableProps,
-  Pagination,
-} from "antd";
-import {
+  AppstoreOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
-  TableOutlined,
-  AppstoreOutlined,
   SearchOutlined,
+  TableOutlined,
 } from "@ant-design/icons";
-import styled from "@emotion/styled";
-import { get, includes, isEmpty } from "lodash";
 import { useWindowSize } from "@uidotdev/usehooks";
-import DetailDrawer from "./DetailDrawer";
-import { ColumnType } from "antd/es/table";
 import { isMobile } from "@utils/common/responsive";
+import {
+  Table as AntTable,
+  Button,
+  Checkbox,
+  Collapse,
+  Input,
+  Pagination,
+  Space,
+  Tooltip,
+  Typography,
+  Modal,
+} from "antd";
+import { get, includes, isEmpty } from "lodash";
+import React, { useEffect, useMemo, useState } from "react";
+import DetailDrawer from "./DetailDrawer";
+import { MTableProps } from "./interface";
+import {
+  CardContainer,
+  EmptyStateContainer,
+  SearchContainer,
+  TableContainer,
+  ViewToggleContainer,
+} from "./styled";
 
 const { Text } = Typography;
-
-// Styled Components
-const TableContainer = styled.div`
-  width: 100%;
-  .ant-table-wrapper {
-    .ant-table-thead > tr > th {
-      background: #fafafa;
-      font-weight: 600;
-    }
-  }
-`;
-
-const ViewToggleContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 16px 0;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-
-  .view-toggle {
-    display: flex;
-    gap: 8px;
-  }
-
-  .table-info {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    h4 {
-      margin: 0;
-    }
-
-    .total-count {
-      color: #666;
-      font-size: 14px;
-    }
-  }
-`;
-
-const CardContainer = styled(Card)`
-  margin-bottom: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-  .ant-card-body {
-    padding: 16px;
-  }
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-
-    .card-title {
-      flex: 1;
-      margin-left: 12px;
-
-      .title {
-        font-weight: 600;
-        font-size: 16px;
-        margin-bottom: 4px;
-        color: #262626;
-      }
-
-      .subtitle {
-        color: #8c8c8c;
-        font-size: 14px;
-      }
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 8px;
-    }
-  }
-
-  .card-content {
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid #f0f0f0;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .label {
-        color: #8c8c8c;
-        font-size: 14px;
-        flex: 1;
-      }
-
-      .value {
-        font-weight: 500;
-        text-align: right;
-        color: #262626;
-
-        &.empty {
-          color: #bfbfbf;
-          font-style: italic;
-        }
-      }
-    }
-  }
-
-  .additional-info {
-    margin-top: 8px;
-
-    .ant-collapse-ghost > .ant-collapse-item > .ant-collapse-header {
-      padding: 8px 0;
-      color: #1890ff;
-      font-size: 14px;
-    }
-
-    .ant-collapse-ghost
-      > .ant-collapse-item
-      > .ant-collapse-content
-      > .ant-collapse-content-box {
-      padding: 8px 0 0 0;
-    }
-  }
-`;
-
-const SearchContainer = styled.div`
-  margin-bottom: 16px;
-
-  .ant-input-search {
-    max-width: 400px;
-
-    @media (max-width: 768px) {
-      max-width: 100%;
-    }
-  }
-`;
-
-const EmptyStateContainer = styled.div`
-  text-align: center;
-  padding: 48px 0;
-  color: #8c8c8c;
-`;
-
-export interface MTableAction<T> {
-  onEdit?: (record: T) => void;
-  onDelete?: (record: T) => void;
-  onView?: (record: T) => void;
-}
-
-export interface MTableProps<T> extends TableProps<T> {
-  // Required props
-  columns: ColumnType<T>[];
-  dataSource: T[];
-  rowKey: string;
-
-  // Display configuration
-  tableName?: string;
-  titleColumn?: string;
-  subtitleColumn?: string;
-  columnsShow?: string[]; // Columns to show in card view main area
-  columnsAdditional?: string[]; // Columns to show in expandable section
-
-  // Features
-  selectable?: boolean;
-  showViewToggle?: boolean;
-  searchable?: boolean;
-  searchKeys?: string[]; // Keys to search in
-  haveDrawer?: boolean; // Enable detail drawer on row click
-
-  // View mode
-  viewMode?: "table" | "card" | "auto"; // auto = responsive
-
-  // Actions
-  actions?: MTableAction<T>;
-  onSelectionChange?: (selectedRows: T[], selectedKeys: React.Key[]) => void;
-
-  // Table props passthrough
-  loading?: boolean;
-  pagination?: TableProps<T>["pagination"];
-  scroll?: TableProps<T>["scroll"];
-
-  // Customization
-  emptyText?: string;
-  additionalDetailsLabel?: string;
-
-  // Drawer props
-  drawerWidth?: number | string;
-  drawerPlacement?: "top" | "right" | "bottom" | "left";
-  drawerTitle?: React.ReactNode;
-  drawerFooter?: React.ReactNode;
-  drawerDestroyOnClose?: boolean;
-  drawerMaskClosable?: boolean;
-  drawerClassName?: string;
-  drawerBodyStyle?: React.CSSProperties;
-  drawerHeaderStyle?: React.CSSProperties;
-  drawerFooterStyle?: React.CSSProperties;
-  renderDrawer?: (
-    drawerProps: unknown,
-    content: React.ReactNode
-  ) => React.ReactNode;
-}
 
 // Utility function to highlight search text
 const highlightText = (text: string, searchTerm: string): React.ReactNode => {
@@ -257,6 +53,7 @@ const highlightText = (text: string, searchTerm: string): React.ReactNode => {
 };
 
 function MTable<T extends object>({
+  // Confirm delete state
   // Required
   columns,
   dataSource = [],
@@ -307,6 +104,25 @@ function MTable<T extends object>({
 
   ...restProps
 }: MTableProps<T>) {
+  // Confirm delete state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteRecord, setDeleteRecord] = useState<T | null>(null);
+
+  const handleDeleteClick = React.useCallback((record: T) => {
+    setDeleteRecord(record);
+    setDeleteConfirmOpen(true);
+  }, []);
+  const handleDeleteConfirm = () => {
+    if (deleteRecord && actions?.onDelete) {
+      actions.onDelete(deleteRecord);
+    }
+    setDeleteConfirmOpen(false);
+    setDeleteRecord(null);
+  };
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setDeleteRecord(null);
+  };
   // Responsive detection
   const { width } = useWindowSize();
   const mobile = isMobile(width);
@@ -462,7 +278,7 @@ function MTable<T extends object>({
                   size="small"
                   danger
                   icon={<DeleteOutlined />}
-                  onClick={() => actions.onDelete!(record)}
+                  onClick={() => handleDeleteClick(record)}
                 />
               </Tooltip>
             )}
@@ -482,6 +298,7 @@ function MTable<T extends object>({
     searchKeys,
     handleDefaultView,
     haveDrawer,
+    handleDeleteClick,
   ]);
 
   // Pagination handlers
@@ -554,21 +371,9 @@ function MTable<T extends object>({
     const endIndex = startIndex + pageSize;
     const paginatedData = filteredData.slice(startIndex, endIndex);
 
-    // Debug logging
-    console.log("Card View Debug:", {
-      dataSourceLength: dataSource.length,
-      filteredDataLength: filteredData.length,
-      searchTerm: searchTerm,
-      currentPage,
-      pageSize,
-      startIndex,
-      endIndex,
-      paginatedDataLength: paginatedData.length,
-    });
-
     // Select all functionality for card view (based on current page)
     const currentPageKeys = paginatedData.map(
-      (item) => get(item, rowKey) as React.Key
+      (item) => get(item, rowKey as keyof T) as React.Key
     );
     const selectedOnCurrentPage = selectedRowKeys.filter((key) =>
       currentPageKeys.includes(key)
@@ -588,7 +393,7 @@ function MTable<T extends object>({
         ];
         setSelectedRowKeys(newSelectedKeys);
         const selectedRows = filteredData.filter((item) =>
-          newSelectedKeys.includes(get(item, rowKey) as React.Key)
+          newSelectedKeys.includes(get(item, rowKey as keyof T) as React.Key)
         );
         onSelectionChange?.(selectedRows, newSelectedKeys);
       } else {
@@ -597,7 +402,7 @@ function MTable<T extends object>({
         );
         setSelectedRowKeys(newSelectedKeys);
         const selectedRows = filteredData.filter((item) =>
-          newSelectedKeys.includes(get(item, rowKey) as React.Key)
+          newSelectedKeys.includes(get(item, rowKey as keyof T) as React.Key)
         );
         onSelectionChange?.(selectedRows, newSelectedKeys);
       }
@@ -636,7 +441,7 @@ function MTable<T extends object>({
                   type="link"
                   onClick={() => {
                     const allKeys = filteredData.map(
-                      (item) => get(item, rowKey) as React.Key
+                      (item) => get(item, rowKey as keyof T) as React.Key
                     );
                     setSelectedRowKeys(allKeys);
                     onSelectionChange?.(filteredData, allKeys);
@@ -661,7 +466,7 @@ function MTable<T extends object>({
           </div>
         )}
         {paginatedData.map((record) => {
-          const id = get(record, rowKey);
+          const id = get(record, rowKey as keyof T);
 
           // Main fields to show in card
           const mainFields =
@@ -733,7 +538,9 @@ function MTable<T extends object>({
                         : selectedRowKeys.filter((key) => key !== id);
                       setSelectedRowKeys(newKeys as React.Key[]);
                       const selectedRows = filteredData.filter((item) =>
-                        newKeys.includes(get(item, rowKey) as React.Key)
+                        newKeys.includes(
+                          get(item, rowKey as keyof T) as React.Key
+                        )
                       );
                       onSelectionChange?.(selectedRows, newKeys as React.Key[]);
                     }}
@@ -796,7 +603,7 @@ function MTable<T extends object>({
                         size="small"
                         danger
                         icon={<DeleteOutlined />}
-                        onClick={() => actions.onDelete!(record)}
+                        onClick={() => handleDeleteClick(record)}
                       />
                     </Tooltip>
                   )}
@@ -977,6 +784,19 @@ function MTable<T extends object>({
         footerStyle={drawerFooterStyle}
         renderDrawer={renderDrawer}
       />
+
+      {/* Delete confirm modal */}
+      <Modal
+        open={deleteConfirmOpen}
+        title="ยืนยันการลบ"
+        onOk={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        okText="ลบ"
+        cancelText="ยกเลิก"
+        okButtonProps={{ danger: true }}
+      >
+        <div>คุณต้องการลบข้อมูลนี้ใช่หรือไม่?</div>
+      </Modal>
     </TableContainer>
   );
 }

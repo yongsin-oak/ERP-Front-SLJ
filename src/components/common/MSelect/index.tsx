@@ -8,6 +8,7 @@ const MSelect = ({ optionFilterProp, ...props }: SelectProps) => {
       showSearch
       // fieldNames={{ label: "label", value: "label" }}
       optionFilterProp={optionFilterProp || "label"}
+      labelInValue
       optionRender={(option: Options) => {
         return option.data.icon ? (
           <Space>
