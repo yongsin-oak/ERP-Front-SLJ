@@ -1,5 +1,5 @@
 import { InputFields } from "@components/Form/FormInputs/interface";
-import { Role } from "@enums/Role.enum";
+import { Role } from "@features/employee/enums/Role.enum";
 
 export const addEmployeeInputFields: InputFields[] = [
   {
@@ -33,6 +33,7 @@ export const addEmployeeInputFields: InputFields[] = [
     inputProps: {
       placeholder: "เบอร์โทร",
     },
+    required: false,
   },
   {
     name: "department",
@@ -60,5 +61,6 @@ export const addEmployeeInputFields: InputFields[] = [
     inputProps: {
       placeholder: "วันที่เริ่มงาน",
     },
+    required: false,
   },
 ];

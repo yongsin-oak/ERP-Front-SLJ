@@ -714,7 +714,6 @@ function MTable<T extends object>({
                 icon={<TableOutlined />}
                 type={currentViewMode === "table" ? "primary" : "default"}
                 onClick={() => setCurrentViewMode("table")}
-                disabled={viewMode === "auto" && !!mobile}
               >
                 ตาราง
               </Button>

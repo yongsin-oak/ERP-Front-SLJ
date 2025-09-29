@@ -24,7 +24,7 @@ import MButton from "@components/common/MButton";
 import ProductFormComp from "./form/ProductForm";
 
 // Hooks and Utils
-import { Role } from "@enums/Role.enum.ts";
+import { Role } from "@features/employee/enums/Role.enum";
 import { useAuth } from "@stores/index.ts";
 import { isMobile } from "@utils/common/responsive.ts";
 import { onUploadProducts } from "@hooks/product";

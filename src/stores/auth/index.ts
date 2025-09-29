@@ -1,4 +1,4 @@
-import { Role } from "@enums/Role.enum";
+import { Role } from "@features/employee/enums/Role.enum";
 import req from "@utils/common/req";
 import { create } from "zustand";
 

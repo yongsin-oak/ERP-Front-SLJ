@@ -12,7 +12,7 @@ import {
   updateShop,
   deleteShop,
 } from "../services";
-import { Platform } from "@enums/Platform.enum";
+import { Platform } from "@features/shop/enums/Platform.enum";
 
 export interface ShopListState {
   items: Shop[];

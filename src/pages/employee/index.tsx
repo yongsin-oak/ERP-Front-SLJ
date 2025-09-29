@@ -12,6 +12,7 @@ import Text from "@components/common/Text";
 import req from "@utils/common/req";
 import { EmployeeType } from "@interfaces/exployee";
 import { addEmployeeInputFields } from "./inputField";
+import { EmployeeData } from "@features/ecommerce/stores/sessionState";
 
 const Employee = () => {
   const [employees, setEmployees] = useState<EmployeeType[]>([]);
@@ -76,7 +77,7 @@ const Employee = () => {
       console.log(error);
     }
   };
-  const onPostEmployee = async (values: any) => {
+  const onPostEmployee = async (values: EmployeeData) => {
     try {
       console.log(values);
       const res = await req.post("/employee", values);

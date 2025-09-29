@@ -2,7 +2,7 @@ import { MButton } from "@components/common";
 import { FormInputs } from "@components/Form";
 import { InputFields } from "@components/Form/FormInputs/interface";
 import { MTable } from "@components/tableComps";
-import { Platform } from "@enums/Platform.enum";
+import { Platform } from "@features/shop/enums/Platform.enum";
 import { useShopStore } from "@features/shop";
 import { Shop } from "@interfaces/shop";
 import { Form, Modal } from "antd";

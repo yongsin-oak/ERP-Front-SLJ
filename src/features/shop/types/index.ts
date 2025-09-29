@@ -1,4 +1,4 @@
-import { Platform } from "@enums/Platform.enum";
+import { Platform } from "@features/shop/enums/Platform.enum";
 import { Timestamped } from "@interfaces/common";
 
 export interface ShopCreateDto {

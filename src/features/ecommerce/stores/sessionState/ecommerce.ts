@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Platform } from "@enums/Platform.enum";
+import { Platform } from "@features/shop/enums/Platform.enum";
 
 // Types สำหรับ form data
 export interface EmployeeData {
