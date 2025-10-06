@@ -18,18 +18,14 @@ export interface MTableProps<T> extends TableProps<T> {
   tableName?: string;
   titleColumn?: string;
   subtitleColumn?: string;
-  columnsShow?: string[]; // Columns to show in card view main area
+  columnsShow?: string[]; // Columns to show in drawer
   columnsAdditional?: string[]; // Columns to show in expandable section
 
   // Features
   selectable?: boolean;
-  showViewToggle?: boolean;
   searchable?: boolean;
   searchKeys?: string[]; // Keys to search in
   haveDrawer?: boolean; // Enable detail drawer on row click
-
-  // View mode
-  viewMode?: "table" | "card" | "auto"; // auto = responsive
 
   // Actions
   actions?: MTableAction<T>;
@@ -42,7 +38,6 @@ export interface MTableProps<T> extends TableProps<T> {
 
   // Customization
   emptyText?: string;
-  additionalDetailsLabel?: string;
 
   // Drawer props
   drawerWidth?: number | string;

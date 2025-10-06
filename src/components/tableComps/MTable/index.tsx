@@ -1,38 +1,23 @@
 import {
-  AppstoreOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
   SearchOutlined,
-  TableOutlined,
 } from "@ant-design/icons";
-import { useWindowSize } from "@uidotdev/usehooks";
-import { isMobile } from "@utils/common/responsive";
 import {
   Table as AntTable,
   Button,
-  Checkbox,
-  Collapse,
   Input,
-  Pagination,
   Space,
   Tooltip,
   Typography,
   Modal,
 } from "antd";
-import { get, includes, isEmpty } from "lodash";
+import { get } from "lodash";
 import React, { useEffect, useMemo, useState } from "react";
 import DetailDrawer from "./DetailDrawer";
 import { MTableProps } from "./interface";
-import {
-  CardContainer,
-  EmptyStateContainer,
-  SearchContainer,
-  TableContainer,
-  ViewToggleContainer,
-} from "./styled";
-
-const { Text } = Typography;
+import { SearchContainer, TableContainer, ViewToggleContainer } from "./styled";
 
 // Utility function to highlight search text
 const highlightText = (text: string, searchTerm: string): React.ReactNode => {
@@ -68,13 +53,9 @@ function MTable<T extends object>({
 
   // Features
   selectable = false,
-  showViewToggle = true,
   searchable = true,
   searchKeys = [],
   haveDrawer = false,
-
-  // View
-  viewMode = "auto",
 
   // Actions
   actions,
@@ -87,7 +68,6 @@ function MTable<T extends object>({
 
   // Customization
   emptyText = "ไม่พบข้อมูล",
-  additionalDetailsLabel = "ข้อมูลเพิ่มเติม",
 
   // Drawer props
   drawerWidth,
@@ -123,19 +103,7 @@ function MTable<T extends object>({
     setDeleteConfirmOpen(false);
     setDeleteRecord(null);
   };
-  // Responsive detection
-  const { width } = useWindowSize();
-  const mobile = isMobile(width);
-
   // State management
-  const [currentViewMode, setCurrentViewMode] = useState<"table" | "card">(
-    () => {
-      if (viewMode === "auto") {
-        return mobile ? "card" : "table";
-      }
-      return viewMode;
-    }
-  );
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,13 +118,6 @@ function MTable<T extends object>({
     }
     return 10;
   });
-
-  // Update view mode when screen size changes (only for auto mode)
-  useEffect(() => {
-    if (viewMode === "auto") {
-      setCurrentViewMode(mobile ? "card" : "table");
-    }
-  }, [mobile, viewMode]);
 
   // Reset pagination when search term changes
   useEffect(() => {
@@ -356,340 +317,9 @@ function MTable<T extends object>({
             : {}),
         };
 
-  // Card view renderer
-  const renderCardView = () => {
-    if (filteredData.length === 0) {
-      return (
-        <EmptyStateContainer>
-          <Text type="secondary">{emptyText}</Text>
-        </EmptyStateContainer>
-      );
-    }
-
-    // Pagination for card view (use shared state)
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-
-    // Select all functionality for card view (based on current page)
-    const currentPageKeys = paginatedData.map(
-      (item) => get(item, rowKey as keyof T) as React.Key
-    );
-    const selectedOnCurrentPage = selectedRowKeys.filter((key) =>
-      currentPageKeys.includes(key)
-    );
-
-    const isAllSelectedOnPage =
-      selectedOnCurrentPage.length === paginatedData.length &&
-      paginatedData.length > 0;
-    const isIndeterminateOnPage =
-      selectedOnCurrentPage.length > 0 &&
-      selectedOnCurrentPage.length < paginatedData.length;
-
-    const handleSelectAllOnPage = (checked: boolean) => {
-      if (checked) {
-        const newSelectedKeys = [
-          ...new Set([...selectedRowKeys, ...currentPageKeys]),
-        ];
-        setSelectedRowKeys(newSelectedKeys);
-        const selectedRows = filteredData.filter((item) =>
-          newSelectedKeys.includes(get(item, rowKey as keyof T) as React.Key)
-        );
-        onSelectionChange?.(selectedRows, newSelectedKeys);
-      } else {
-        const newSelectedKeys = selectedRowKeys.filter(
-          (key) => !currentPageKeys.includes(key)
-        );
-        setSelectedRowKeys(newSelectedKeys);
-        const selectedRows = filteredData.filter((item) =>
-          newSelectedKeys.includes(get(item, rowKey as keyof T) as React.Key)
-        );
-        onSelectionChange?.(selectedRows, newSelectedKeys);
-      }
-    };
-
-    return (
-      <Space direction="vertical" style={{ width: "100%" }} size={16}>
-        {/* Select All Section for Card View */}
-        {selectable && (
-          <div
-            style={{
-              padding: "12px 16px",
-              background: "#fafafa",
-              borderRadius: "8px",
-              border: "1px solid #f0f0f0",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Checkbox
-                indeterminate={isIndeterminateOnPage}
-                checked={isAllSelectedOnPage}
-                onChange={(e) => handleSelectAllOnPage(e.target.checked)}
-              />
-              <Text>
-                เลือกทั้งหมดในหน้านี้ ({selectedOnCurrentPage.length}/
-                {paginatedData.length})
-              </Text>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {filteredData.length > paginatedData.length && (
-                <Button
-                  size="small"
-                  type="link"
-                  onClick={() => {
-                    const allKeys = filteredData.map(
-                      (item) => get(item, rowKey as keyof T) as React.Key
-                    );
-                    setSelectedRowKeys(allKeys);
-                    onSelectionChange?.(filteredData, allKeys);
-                  }}
-                >
-                  เลือกทุกหน้า ({filteredData.length})
-                </Button>
-              )}
-              {selectedRowKeys.length > 0 && (
-                <Button
-                  size="small"
-                  type="text"
-                  onClick={() => {
-                    setSelectedRowKeys([]);
-                    onSelectionChange?.([], []);
-                  }}
-                >
-                  ยกเลิกทั้งหมด ({selectedRowKeys.length})
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-        {paginatedData.map((record) => {
-          const id = get(record, rowKey as keyof T);
-
-          // Main fields to show in card
-          const mainFields =
-            columnsShow.length > 0
-              ? columnsShow.map((key) => {
-                  const col = columns.find(
-                    (c) => c.key === key || c.dataIndex === key
-                  );
-                  return {
-                    label: col?.title || key,
-                    value: col?.render
-                      ? col.render(get(record, key), record, 0)
-                      : get(record, key),
-                  };
-                })
-              : columns
-                  .filter(
-                    (col) =>
-                      col.key !== "actions" &&
-                      !columnsAdditional.includes(
-                        String(col.key || col.dataIndex)
-                      )
-                  )
-                  .slice(0, 3) // Show first 3 columns by default
-                  .map((col) => ({
-                    label: col.title,
-                    value: col.render
-                      ? col.render(
-                          get(record, String(col.dataIndex)),
-                          record,
-                          0
-                        )
-                      : get(record, String(col.dataIndex)),
-                  }));
-
-          // Additional fields for expandable section
-          const additionalFields =
-            haveDrawer &&
-            (columnsAdditional.length > 0 ||
-              columnsShow.length < columns.length)
-              ? (!isEmpty(columnsAdditional)
-                  ? columnsAdditional
-                  : columns
-                      .filter((col) => !includes(columnsShow, col.key))
-                      .slice(3)
-                      .map((col) => col.key)
-                ).map((key) => {
-                  const col = columns.find(
-                    (c) => c.key === key || c.dataIndex === key
-                  );
-                  return {
-                    label: col?.title || key,
-                    value: col?.render
-                      ? col.render(get(record, key as string), record, 0)
-                      : get(record, key as string),
-                  };
-                })
-              : [];
-
-          return (
-            <CardContainer key={String(id)}>
-              <div className="card-header">
-                {selectable && (
-                  <Checkbox
-                    checked={selectedRowKeys.includes(id as React.Key)}
-                    onChange={(e) => {
-                      const newKeys = e.target.checked
-                        ? [...selectedRowKeys, id as React.Key]
-                        : selectedRowKeys.filter((key) => key !== id);
-                      setSelectedRowKeys(newKeys as React.Key[]);
-                      const selectedRows = filteredData.filter((item) =>
-                        newKeys.includes(
-                          get(item, rowKey as keyof T) as React.Key
-                        )
-                      );
-                      onSelectionChange?.(selectedRows, newKeys as React.Key[]);
-                    }}
-                  />
-                )}
-
-                <div className="card-title">
-                  <div className="title">
-                    {searchTerm
-                      ? highlightText(
-                          String(get(record, titleColumn) || ""),
-                          searchTerm
-                        )
-                      : String(get(record, titleColumn) || "")}
-                  </div>
-                  {subtitleColumn && (
-                    <div className="subtitle">
-                      {searchTerm
-                        ? highlightText(
-                            String(get(record, subtitleColumn) || ""),
-                            searchTerm
-                          )
-                        : String(get(record, subtitleColumn) || "")}
-                    </div>
-                  )}
-                </div>
-
-                <div className="card-actions">
-                  {actions?.onEdit && (
-                    <Tooltip title="แก้ไข">
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => actions.onEdit!(record)}
-                      />
-                    </Tooltip>
-                  )}
-                  {(actions?.onView ||
-                    (haveDrawer &&
-                      (columnsShow.length < columns.length ||
-                        columnsAdditional.length > 0))) && (
-                    <Tooltip title="ดูรายละเอียด">
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onClick={() =>
-                          actions?.onView
-                            ? actions.onView(record)
-                            : handleDefaultView(record)
-                        }
-                      />
-                    </Tooltip>
-                  )}
-                  {actions?.onDelete && (
-                    <Tooltip title="ลบ">
-                      <Button
-                        type="text"
-                        size="small"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDeleteClick(record)}
-                      />
-                    </Tooltip>
-                  )}
-                </div>
-              </div>
-
-              <div className="card-content">
-                {mainFields.map((field, index) => (
-                  <div key={index} className="info-row">
-                    <div className="label">{String(field.label)}:</div>
-                    <div className={`value ${!field.value ? "empty" : ""}`}>
-                      {searchTerm && typeof field.value === "string"
-                        ? highlightText(field.value || "ไม่ระบุ", searchTerm)
-                        : typeof field.value === "object"
-                        ? "ไม่ระบุ"
-                        : String(field.value || "ไม่ระบุ")}
-                    </div>
-                  </div>
-                ))}
-
-                {haveDrawer &&
-                  (columnsShow.length < columns.length ||
-                    columnsAdditional.length > 0) && (
-                    <div className="additional-info">
-                      <Collapse
-                        ghost
-                        size="small"
-                        items={[
-                          {
-                            key: "1",
-                            label: additionalDetailsLabel,
-                            children: (
-                              <Space
-                                direction="vertical"
-                                style={{ width: "100%" }}
-                                size={8}
-                              >
-                                {additionalFields.map((field, index) => (
-                                  <div key={index} className="info-row">
-                                    <div className="label">
-                                      {String(field.label)}:
-                                    </div>
-                                    <div
-                                      className={`value ${
-                                        !field.value ? "empty" : ""
-                                      }`}
-                                    >
-                                      {typeof field.value === "object"
-                                        ? "ไม่ระบุ"
-                                        : String(field.value || "ไม่ระบุ")}
-                                    </div>
-                                  </div>
-                                ))}
-                              </Space>
-                            ),
-                          },
-                        ]}
-                      />
-                    </div>
-                  )}
-              </div>
-            </CardContainer>
-          );
-        })}
-
-        {/* Pagination for Card View */}
-        {filteredData.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "24px",
-              paddingTop: "16px",
-              borderTop: "1px solid #f0f0f0",
-            }}
-          >
-            <Pagination {...pagination} />
-          </div>
-        )}
-      </Space>
-    );
-  };
-
   return (
     <TableContainer>
-      {/* Header with view toggle and info */}
+      {/* Header with table info */}
       <ViewToggleContainer>
         <div className="table-info">
           <Typography.Title level={4}>{tableName}</Typography.Title>
@@ -706,27 +336,6 @@ function MTable<T extends object>({
             )}
           </span>
         </div>
-
-        {showViewToggle && (
-          <div className="view-toggle">
-            <Space.Compact>
-              <Button
-                icon={<TableOutlined />}
-                type={currentViewMode === "table" ? "primary" : "default"}
-                onClick={() => setCurrentViewMode("table")}
-              >
-                ตาราง
-              </Button>
-              <Button
-                icon={<AppstoreOutlined />}
-                type={currentViewMode === "card" ? "primary" : "default"}
-                onClick={() => setCurrentViewMode("card")}
-              >
-                การ์ด
-              </Button>
-            </Space.Compact>
-          </div>
-        )}
       </ViewToggleContainer>
 
       {/* Search */}
@@ -742,23 +351,19 @@ function MTable<T extends object>({
         </SearchContainer>
       )}
 
-      {/* Content based on view mode */}
-      {currentViewMode === "table" ? (
-        <AntTable
-          rowSelection={rowSelection}
-          dataSource={filteredData}
-          // @ts-expect-error - Type compatibility between our custom columns and AntD columns
-          columns={enhancedColumns}
-          rowKey={rowKey}
-          loading={loading}
-          pagination={defaultPagination}
-          scroll={scroll}
-          locale={{ emptyText }}
-          {...restProps}
-        />
-      ) : (
-        renderCardView()
-      )}
+      {/* Table Content */}
+      <AntTable
+        rowSelection={rowSelection}
+        dataSource={filteredData}
+        // @ts-expect-error - Type compatibility between our custom columns and AntD columns
+        columns={enhancedColumns}
+        rowKey={rowKey}
+        loading={loading}
+        pagination={defaultPagination}
+        scroll={scroll}
+        locale={{ emptyText }}
+        {...restProps}
+      />
 
       {/* Detail Drawer */}
       <DetailDrawer<T>
