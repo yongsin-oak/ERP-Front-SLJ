@@ -1,4 +1,5 @@
 export { default as BackButton } from "./BackButton";
+export { default as ExcelImport } from "./ExcelImport";
 export { default as ExcelUpload } from "./ExcelUpload";
 export { default as FloatingThemeButton } from "./FloatingThemeButton";
 export { default as HighlightText } from "./HighlightText";
