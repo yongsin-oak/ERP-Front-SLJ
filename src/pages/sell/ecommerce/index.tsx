@@ -163,8 +163,11 @@ const Ecommerce = () => {
     }
   };
 
-  const onFinish = () => {
+  const onFinish = async () => {
     const { orderNumber: formOrderNumber } = orderNumberForm.getFieldsValue();
+    const isExitstingOrder = await req.get(`/order/check-exists/${formOrderNumber}`
+    );
+    console.log(isExitstingOrder);
     setCurrentOrderNumber(formOrderNumber);
     setRecording(true);
     resetOrderNumber();
