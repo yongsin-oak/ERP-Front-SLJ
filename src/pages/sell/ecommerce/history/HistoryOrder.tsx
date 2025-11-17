@@ -2,13 +2,15 @@ import Text from "@components/common/Text";
 import { MTable } from "@components/tableComps";
 import { OrderType } from "@interfaces/order";
 import req from "@utils/common/req";
-import { Flex } from "antd";
+import { Card, DatePicker, Flex, Statistic } from "antd";
 import Table, { ColumnType } from "antd/es/table";
-import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import dayjs, { Dayjs } from "dayjs";
+import { useEffect, useMemo, useState } from "react";
 
 const HistoryOrder = () => {
   const [orderHistory, setOrderHistory] = useState<OrderType[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const columns: ColumnType<any>[] = [
     {
@@ -30,7 +32,9 @@ const HistoryOrder = () => {
       render: (val: string) => dayjs(val).format("DD/MM/YYYY"),
       sorter: (a, b) => dayjs(a.createdAt).unix() - dayjs(b.createdAt).unix(),
       filters: Array.from(
-        new Set(orderHistory.map((o) => dayjs(o.createdAt).format("DD/MM/YYYY")))
+        new Set(
+          orderHistory.map((o) => dayjs(o.createdAt).format("DD/MM/YYYY"))
+        )
       ).map((date) => ({ text: date, value: date })),
       onFilter: (value, record) =>
         dayjs(record.createdAt).format("DD/MM/YYYY") === value,
@@ -57,9 +61,9 @@ const HistoryOrder = () => {
       dataIndex: ["shop", "name"],
       key: "shopName",
       sorter: (a, b) => a.shop.name.localeCompare(b.shop.name),
-      filters: Array.from(
-        new Set(orderHistory.map((o) => o.shop.name))
-      ).map((name) => ({ text: name, value: name })),
+      filters: Array.from(new Set(orderHistory.map((o) => o.shop.name))).map(
+        (name) => ({ text: name, value: name })
+      ),
       onFilter: (value, record) => record.shop.name === value,
     },
     {
@@ -86,17 +90,19 @@ const HistoryOrder = () => {
   };
 
   const onGetOrderHistory = async () => {
+    setLoading(true);
     try {
       const res = await req.get("/order", {
         params: {
-          limit: 10,
+          limit: 1000, // ดึงข้อมูลทั้งหมดมาจัดกลุ่มเอง
           page: 1,
         },
       });
       setOrderHistory(res.data.data);
-      console.log(res.data.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,18 +110,96 @@ const HistoryOrder = () => {
     onGetOrderHistory();
   }, []);
 
+  // Group orders by date
+  const groupedByDate = useMemo(() => {
+    const groups = orderHistory.reduce((acc, order) => {
+      const date = dayjs(order.createdAt).format("YYYY-MM-DD");
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(order);
+      return acc;
+    }, {} as Record<string, OrderType[]>);
+
+    // Sort dates descending
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+  }, [orderHistory]);
+
+  // Get available dates for date picker
+  const availableDates = useMemo(
+    () => groupedByDate.map(([date]) => date),
+    [groupedByDate]
+  );
+
+  // Filter orders by selected date
+  const filteredOrders = useMemo(() => {
+    if (!selectedDate) return orderHistory;
+    const dateStr = selectedDate.format("YYYY-MM-DD");
+    return orderHistory.filter(
+      (order) => dayjs(order.createdAt).format("YYYY-MM-DD") === dateStr
+    );
+  }, [orderHistory, selectedDate]);
+
+  // Statistics
+  const stats = useMemo(() => {
+    const data = selectedDate ? filteredOrders : orderHistory;
+    return {
+      total: data.length,
+    };
+  }, [orderHistory, filteredOrders, selectedDate]);
+
   return (
-    <Flex vertical gap={8}>
-      <Text h3 semiBold>
-        ประวัติการบันทึกคำสั่งซื้อ
-      </Text>
+    <Flex vertical gap={16}>
+      {/* Header with Date Filter */}
+      <Flex justify="space-between" align="center" wrap="wrap" gap={16}>
+        <Text h3 semiBold>
+          ประวัติการบันทึกคำสั่งซื้อ
+        </Text>
+        <DatePicker
+          placeholder="กรองวันที่"
+          value={selectedDate}
+          onChange={setSelectedDate}
+          format="DD/MM/YYYY"
+          allowClear
+          disabledDate={(current) => {
+            if (!current) return false;
+            const dateStr = current.format("YYYY-MM-DD");
+            return !availableDates.includes(dateStr);
+          }}
+          style={{ width: 200 }}
+        />
+      </Flex>
+
+      {/* Summary Card */}
+      <Card>
+        <Statistic
+          title={
+            selectedDate
+              ? `คำสั่งซื้อวันที่ ${selectedDate.format("DD/MM/YYYY")}`
+              : "คำสั่งซื้อทั้งหมด"
+          }
+          value={stats.total}
+          suffix="รายการ"
+        />
+      </Card>
+
+      {/* Main Table */}
       <MTable
         columns={columns}
-        dataSource={orderHistory}
+        dataSource={filteredOrders}
         bordered
         rowKey="id"
         size="middle"
         pagination={{ pageSize: 10 }}
+        searchable
+        searchKeys={[
+          "id",
+          "shop.name",
+          "employee.firstName",
+          "employee.lastName",
+          "employee.nickname",
+        ]}
+        loading={loading}
         expandable={{
           onExpand(_expanded, record) {
             onGetOrderDetails(record.id);
@@ -138,8 +222,13 @@ const HistoryOrder = () => {
                     dataIndex: "productName",
                   },
                   {
-                    title: "จำนวน",
-                    dataIndex: "quantity",
+                    title: "จำนวน (Pack)",
+                    dataIndex: "quantityPack",
+                  },
+                  {
+                    title: "จำนวน (Carton)",
+                    dataIndex: "quantityCarton",
+                    render: (val) => val || "-",
                   },
                   {
                     title: "วันที่เพิ่ม",

@@ -12,7 +12,7 @@ import Text from "@components/common/Text";
 import req from "@utils/common/req";
 import { EmployeeType } from "@interfaces/exployee";
 import { addEmployeeInputFields } from "./inputField";
-import { EmployeeData } from "@features/ecommerce/stores/sessionState";
+import { EmployeeData } from "@features/ecommerce/stores";
 
 const Employee = () => {
   const [employees, setEmployees] = useState<EmployeeType[]>([]);

@@ -88,7 +88,6 @@ export const useShopStore = create<ShopStore>((set, get) => ({
     set({ loading: true, error: undefined });
     try {
       const res = await getAllShops({ page, limit, ...(params || {}) });
-      console.log(res);
       set({
         items: res.data,
         total: res.total,

@@ -29,7 +29,7 @@ interface OrderEditableProps
   > {
   onConfirm?: (data: ColumnData[]) => void;
   onCancel?: () => void;
-  onAddItem: (productData: ProductData) => void;
+  onAddItem?: (productData: ProductData) => void;
 }
 
 // Function to find product by barcode
@@ -164,7 +164,7 @@ const OrderEditable = ({
         return;
       }
 
-      onAddItem(product!);
+      onAddItem?.(product!);
       setDataSource((prev) => [
         ...prev,
         {

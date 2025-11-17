@@ -13,89 +13,48 @@ import { Platform } from "@features/shop/enums/Platform.enum";
 import { EmployeeType } from "@interfaces/exployee";
 import { Shop } from "@interfaces/shop";
 import { useOrderStore } from "@stores/order";
-import { useEcommerceStore } from "@features/ecommerce/stores/sessionState";
-import { onInputNoSpecialChars } from "@utils/common/filteredInput";
+import { onInputNoSpecialChars, onInputUppercase } from "@utils/common/filteredInput";
 import req from "@utils/common/req";
-import { Card, Col, Divider, Flex, Form, Input, Radio, Row, Space } from "antd";
-import { useForm } from "antd/es/form/Form";
-import { useCallback, useEffect, useState, useRef } from "react";
+import {
+  Card,
+  Col,
+  Divider,
+  Flex,
+  Form,
+  Input,
+  message,
+  Radio,
+  Row,
+  Space,
+} from "antd";
+import { useForm, useWatch } from "antd/es/form/Form";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useShopStore } from "@features/shop";
 
 const ICON_SIZE = 30;
 const ORDER_ID_LABEL = "หมายเลขคำสั่งซื้อ / หมายเลขพัสดุ";
 
+interface EcommerceForm {
+  employee?: number;
+  platform?: Platform;
+  shop?: string;
+  orderNumber?: string;
+}
+
 const Ecommerce = () => {
-  const [orderNumberForm] = useForm();
+  const [orderNumberForm] = useForm<EcommerceForm>();
   const navigation = useNavigate();
-  const [isMount, setIsMount] = useState<boolean>(false);
-  const hasInitialized = useRef<boolean>(false);
   const { loadShops } = useShopStore();
-  // Zustand store
-  const {
-    form,
-    ui,
-    setEmployee,
-    setPlatform,
-    setShop,
-    setOrderNumber,
-    setRecording,
-    setCurrentOrderNumber,
-    resetOrderNumber,
-  } = useEcommerceStore();
 
-  // ใช้ store values แทน useWatch
-  const currentEmployee = form.employee;
-  const currentPlatform = form.platform;
-  const currentShop = form.shop;
-  const recording = ui.recording;
-  const currentOrderNumber = ui.currentOrderNumber;
+  // State สำหรับจัดการการบันทึก
+  const [recording, setRecording] = useState(false);
+  const [currentOrderNumber, setCurrentOrderNumber] = useState<string>();
 
-  useEffect(() => {
-    setIsMount(true);
-  }, []);
-
-  // Sync store กับ form values (เฉพาะค่าที่มีอยู่จริง และป้องกันการ sync ซ้ำ)
-  useEffect(() => {
-    if (!isMount || hasInitialized.current) return;
-
-    // เพิ่ม delay เล็กน้อยเพื่อให้ options โหลดเสร็จก่อน
-    const timer = setTimeout(() => {
-      const fieldsToUpdate: Record<string, unknown> = {};
-
-      if (form.employee.id) {
-        fieldsToUpdate.employee = form.employee.id;
-      }
-
-      if (form.platform) {
-        fieldsToUpdate.platform = form.platform;
-      }
-
-      if (form.shop.id) {
-        fieldsToUpdate.shop = form.shop.id;
-      }
-
-      if (form.orderNumber) {
-        fieldsToUpdate.orderNumber = form.orderNumber;
-      }
-
-      // อัพเดทเฉพาะ field ที่มีค่า
-      if (Object.keys(fieldsToUpdate).length > 0) {
-        orderNumberForm.setFieldsValue(fieldsToUpdate);
-        hasInitialized.current = true;
-      }
-    }, 100); // delay 100ms
-
-    return () => clearTimeout(timer);
-  }, [
-    orderNumberForm,
-    form.employee.id,
-    form.platform,
-    form.shop.id,
-    form.orderNumber,
-    isMount,
-  ]);
-
+  // Watch form values
+  const currentEmployee = useWatch("employee", orderNumberForm);
+  const currentPlatform = useWatch("platform", orderNumberForm);
+  const currentShop = useWatch("shop", orderNumberForm);
   const loadEmployeesData = useCallback(async (page: number, limit: number) => {
     try {
       const res = await req.get("/employee", {
@@ -134,7 +93,7 @@ const Ecommerce = () => {
         return undefined;
       }
     },
-    [currentPlatform]
+    [currentPlatform, loadShops]
   );
 
   const mapShopsToOptions = useCallback(
@@ -165,22 +124,113 @@ const Ecommerce = () => {
 
   const onFinish = async () => {
     const { orderNumber: formOrderNumber } = orderNumberForm.getFieldsValue();
-    const isExitstingOrder = await req.get(`/order/check-exists/${formOrderNumber}`
-    );
-    console.log(isExitstingOrder);
-    setCurrentOrderNumber(formOrderNumber);
-    setRecording(true);
-    resetOrderNumber();
+
+    if (!formOrderNumber) return;
+
+    try {
+      // ตรวจสอบว่า order number มีอยู่ในระบบหรือไม่
+      await req.get(`/order/check-exists/${formOrderNumber}`);
+
+      // ถ้าผ่านการตรวจสอบ ดำเนินการต่อ
+      setCurrentOrderNumber(formOrderNumber);
+      setRecording(true);
+      orderNumberForm.resetFields(["orderNumber"]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Error checking order:", error);
+
+      // แสดง error message ใต้ field
+      if (error?.response?.data?.message === "Order already exists") {
+        orderNumberForm.setFields([
+          {
+            name: "orderNumber",
+            errors: ["หมายเลขคำสั่งซื้อ/หมายเลขพัสดุนี้ถูกบันทึกแล้ว"],
+          },
+        ]);
+        return;
+      }
+
+      orderNumberForm.setFields([
+        {
+          name: "orderNumber",
+          errors: [
+            "เกิดข้อผิดพลาดในการตรวจสอบหมายเลขคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง",
+          ],
+        },
+      ]);
+    }
+  };
+
+  const handlePlatformChange = (newPlatform: Platform) => {
+    // ล้างค่า shop เมื่อเปลี่ยน platform
+    orderNumberForm.setFieldsValue({
+      platform: newPlatform,
+      shop: undefined,
+    });
+  };
+
+  const resetOrderNumber = () => {
+    setCurrentOrderNumber(undefined);
+    setRecording(false);
     orderNumberForm.resetFields(["orderNumber"]);
   };
 
-  const handleFormChange = (_: unknown, allValues: Record<string, unknown>) => {
-    // Sync form values กับ store (แต่ไม่ต้อง sync shopLabel เพราะจะถูกตั้งค่าผ่าน onSelect)
-    // setEmployee จะถูกเรียกใน onSelect พร้อม label
-    setPlatform(allValues.platform as Platform | undefined);
-    // setShop จะถูกเรียกใน onSelect พร้อม label
-    setOrderNumber(allValues.orderNumber as string | undefined);
-  };
+  // Render Platform Radio Button
+  const renderPlatformButton = (value: string, icon: React.ReactNode) => (
+    <Col xs={24} sm={8}>
+      <Radio.Button
+        value={value}
+        style={{
+          width: "100%",
+          height: "35px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "14px",
+          fontWeight: currentPlatform === value ? "500" : "normal",
+        }}
+      >
+        <Flex align="center" gap={6}>
+          {icon}
+          <span>{value}</span>
+        </Flex>
+      </Radio.Button>
+    </Col>
+  );
+
+  // Render Order Summary Card
+  const renderOrderSummary = () => (
+    <Card size="small" style={{ backgroundColor: "#fafafa", marginBottom: 16 }}>
+      <Row gutter={[16, 8]} align="middle">
+        <Col flex="auto">
+          <Flex align="center" gap={12}>
+            {platformIcon(28)}
+            <div>
+              <Text strong style={{ fontSize: "16px" }}>
+                ร้านค้า ID: {currentShop}
+              </Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: "14px" }}>
+                {currentPlatform}
+              </Text>
+            </div>
+          </Flex>
+        </Col>
+        <Col>
+          <div style={{ textAlign: "right" }}>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              หมายเลขคำสั่งซื้อ
+            </Text>
+            <br />
+            <Text strong style={{ fontSize: "16px", color: "#1890ff" }}>
+              {currentOrderNumber}
+            </Text>
+          </div>
+        </Col>
+      </Row>
+    </Card>
+  );
+
   return (
     <Flex vertical>
       <MButton
@@ -197,146 +247,62 @@ const Ecommerce = () => {
       </MButton>
       <Card>
         <Flex gap={16} vertical>
-          <Form
+          <Form<EcommerceForm>
             form={orderNumberForm}
             onFinish={onFinish}
             layout="vertical"
-            onValuesChange={handleFormChange}
           >
             <Flex vertical gap={16}>
-              {/* ส่วนข้อมูลผู้ใช้ */}
-              <Row gutter={[16, 12]}>
-                <Col span={24}>
-                  <MFormItem
-                    name={["employee"]}
-                    requiredMessage="กรุณาเลือกผู้บันทึก"
-                    label="ผู้บันทึก"
-                  >
-                    <SearchSelect<EmployeeType>
-                      prefix={<UserOutlined />}
-                      placeholder="ค้นหาผู้บันทึก"
-                      onLoadData={loadEmployeesData}
-                      mapDataToOptions={mapEmployeesToOptions}
-                      autoLoad
-                      allowClear
-                      initialOptions={
-                        currentEmployee.id && currentEmployee.label
-                          ? [
-                              {
-                                label: currentEmployee.label,
-                                value: currentEmployee.id,
-                              },
-                            ]
-                          : []
-                      }
-                      onSelect={(_value, option) => {
-                        setEmployee(
-                          option.value as number,
-                          option.label as string
-                        );
-                        orderNumberForm.setFieldsValue({
-                          employee: option.value,
-                        });
-                      }}
-                      style={{ width: "100%" }}
-                      disabled={recording}
-                    />
-                  </MFormItem>
-                </Col>
-              </Row>
+              {/* ผู้บันทึก */}
+              <MFormItem
+                name="employee"
+                requiredMessage="กรุณาเลือกผู้บันทึก"
+                label="ผู้บันทึก"
+              >
+                <SearchSelect<EmployeeType>
+                  prefix={<UserOutlined />}
+                  placeholder="ค้นหาผู้บันทึก"
+                  onLoadData={loadEmployeesData}
+                  mapDataToOptions={mapEmployeesToOptions}
+                  autoLoad
+                  allowClear
+                  disabled={recording}
+                />
+              </MFormItem>
 
-              {/* ส่วนเลือกแพลตฟอร์มและร้านค้า */}
+              {/* แพลตฟอร์มและร้านค้า */}
               <Row gutter={[16, 12]}>
                 <Col lg={12} md={12} sm={24} xs={24}>
                   <MFormItem
-                    name={["platform"]}
+                    name="platform"
                     requiredMessage="กรุณาเลือกแพลตฟอร์ม"
                     label="แพลตฟอร์ม"
                   >
                     <Radio.Group
-                      disabled={recording || !currentEmployee.id}
+                      disabled={recording || !currentEmployee}
+                      onChange={(e) => handlePlatformChange(e.target.value)}
                       style={{ width: "100%" }}
-                      onChange={(e) => {
-                        const newPlatform = e.target.value;
-                        setPlatform(newPlatform);
-                        // ล้างค่า shop เมื่อเปลี่ยน platform
-                        setShop(undefined, undefined);
-                        orderNumberForm.setFieldsValue({
-                          platform: newPlatform,
-                          shop: undefined,
-                        });
-                      }}
                     >
                       <Row gutter={[12, 12]}>
-                        <Col xs={24} sm={8}>
-                          <Radio.Button
-                            value="Shopee"
-                            style={{
-                              width: "100%",
-                              height: "35px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "14px",
-                              fontWeight:
-                                currentPlatform === "Shopee" ? "500" : "normal",
-                            }}
-                          >
-                            <Flex align="center" gap={6}>
-                              <ShopeeIcon width={18} height={18} />
-                              <span>Shopee</span>
-                            </Flex>
-                          </Radio.Button>
-                        </Col>
-                        <Col xs={24} sm={8}>
-                          <Radio.Button
-                            value="Lazada"
-                            style={{
-                              width: "100%",
-                              height: "35px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "14px",
-                              fontWeight:
-                                currentPlatform === "Lazada" ? "500" : "normal",
-                            }}
-                          >
-                            <Flex align="center" gap={6}>
-                              <LazadaIcon width={18} height={18} />
-                              <span>Lazada</span>
-                            </Flex>
-                          </Radio.Button>
-                        </Col>
-                        <Col xs={24} sm={8}>
-                          <Radio.Button
-                            value="TikTok"
-                            style={{
-                              width: "100%",
-                              height: "35px",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "14px",
-                              fontWeight:
-                                currentPlatform === "TikTok" ? "500" : "normal",
-                            }}
-                          >
-                            <Flex align="center" gap={6}>
-                              <TikTokFilled
-                                style={{ fontSize: 18, color: "inherit" }}
-                              />
-                              <span>TikTok</span>
-                            </Flex>
-                          </Radio.Button>
-                        </Col>
+                        {renderPlatformButton(
+                          Platform.Shopee,
+                          <ShopeeIcon width={18} height={18} />
+                        )}
+                        {renderPlatformButton(
+                          Platform.Lazada,
+                          <LazadaIcon width={18} height={18} />
+                        )}
+                        {renderPlatformButton(
+                          Platform.TikTok,
+                          <TikTokFilled style={{ fontSize: 18 }} />
+                        )}
                       </Row>
                     </Radio.Group>
                   </MFormItem>
                 </Col>
                 <Col lg={12} md={12} sm={24} xs={24}>
                   <MFormItem
-                    name={["shop"]}
+                    name="shop"
                     requiredMessage="กรุณาเลือกร้านค้า"
                     label="ร้านค้า"
                   >
@@ -347,66 +313,50 @@ const Ecommerce = () => {
                       mapDataToOptions={mapShopsToOptions}
                       autoLoad={!!currentPlatform}
                       allowClear
-                      initialOptions={
-                        currentShop.id && currentShop.label
-                          ? [
-                              {
-                                label: currentShop.label,
-                                value: currentShop.id,
-                              },
-                            ]
-                          : []
-                      }
-                      onSelect={(_value, option) => {
-                        setShop(option.value as string, option.label as string);
-                        orderNumberForm.setFieldsValue({ shop: option.value });
-                      }}
-                      style={{ width: "100%", height: "35px" }}
                       disabled={
-                        recording || !currentEmployee.id || !currentPlatform
+                        recording || !currentEmployee || !currentPlatform
                       }
                     />
                   </MFormItem>
                 </Col>
               </Row>
 
-              {/* ส่วนหมายเลขคำสั่งซื้อ */}
-              <Row gutter={[16, 12]}>
-                <Col span={24}>
-                  <MFormItem
-                    name={["orderNumber"]}
-                    requiredMessage={`กรุณากรอก${ORDER_ID_LABEL}`}
-                    label={ORDER_ID_LABEL}
+              {/* หมายเลขคำสั่งซื้อ */}
+              <MFormItem
+                name="orderNumber"
+                requiredMessage={`กรุณากรอก${ORDER_ID_LABEL}`}
+                label={ORDER_ID_LABEL}
+              >
+                <Space.Compact style={{ width: "100%" }}>
+                  <Input
+                    prefix={<ScanOutlined />}
+                    placeholder={ORDER_ID_LABEL}
+                    onInput={(e) => {
+                      onInputNoSpecialChars(e);
+                      onInputUppercase(e);
+                    }}
+                    disabled={
+                      recording ||
+                      !currentEmployee ||
+                      !currentPlatform ||
+                      !currentShop
+                    }
+                  />
+                  <MButton
+                    htmlType="submit"
+                    disabled={
+                      !currentEmployee || !currentPlatform || !currentShop || recording
+                    }
                   >
-                    <Space.Compact style={{ width: "100%" }}>
-                      <Input
-                        prefix={<ScanOutlined />}
-                        placeholder={ORDER_ID_LABEL}
-                        onInput={onInputNoSpecialChars}
-                        disabled={
-                          recording ||
-                          !currentEmployee.id ||
-                          !currentPlatform ||
-                          !currentShop.id
-                        }
-                      />
-                      <MButton
-                        htmlType="submit"
-                        disabled={
-                          !currentEmployee.id ||
-                          !currentPlatform ||
-                          !currentShop.id
-                        }
-                      >
-                        บันทึก
-                      </MButton>
-                    </Space.Compact>
-                  </MFormItem>
-                </Col>
-              </Row>
+                    บันทึก
+                  </MButton>
+                </Space.Compact>
+              </MFormItem>
             </Flex>
           </Form>
-          {currentEmployee.id &&
+
+          {/* รายการสินค้า */}
+          {currentEmployee &&
             currentPlatform &&
             currentShop &&
             currentOrderNumber && (
@@ -416,74 +366,23 @@ const Ecommerce = () => {
                     รายการสินค้า
                   </Text>
                 </Divider>
-
-                {/* แสดงข้อมูลคำสั่งซื้อ */}
-                <Card
-                  size="small"
-                  style={{ backgroundColor: "#fafafa", marginBottom: 16 }}
-                >
-                  <Row gutter={[16, 8]} align="middle">
-                    <Col flex="auto">
-                      <Flex align="center" gap={12}>
-                        {platformIcon(28)}
-                        <div>
-                          <Text strong style={{ fontSize: "16px" }}>
-                            {currentShop.label || currentShop.id}
-                          </Text>
-                          <br />
-                          <Text type="secondary" style={{ fontSize: "14px" }}>
-                            {currentPlatform}
-                          </Text>
-                        </div>
-                      </Flex>
-                    </Col>
-                    <Col>
-                      <div style={{ textAlign: "right" }}>
-                        <Text type="secondary" style={{ fontSize: "12px" }}>
-                          หมายเลขคำสั่งซื้อ
-                        </Text>
-                        <br />
-                        <Text
-                          strong
-                          style={{ fontSize: "16px", color: "#1890ff" }}
-                        >
-                          {currentOrderNumber}
-                        </Text>
-                      </div>
-                    </Col>
-                  </Row>
-                </Card>
-
+                {renderOrderSummary()}
                 <OrderEditable
-                  onAddItem={(data) => {
-                    console.log("Added item:", data);
-                  }}
-                  onCancel={() => {
-                    console.log("Cancelled order");
-                    // เคลียร์เฉพาะ order number และ recording state
-                    // แต่เก็บ employee, platform, shop ไว้
-                    setCurrentOrderNumber(undefined);
-                    setRecording(false);
-                    console.log(
-                      "After cancel:",
-                      currentEmployee,
-                      currentOrderNumber,
-                      currentPlatform,
-                      currentShop
-                    );
-                  }}
+                  onCancel={resetOrderNumber}
                   onConfirm={(data) => {
-                    // onPostOrder(data);
                     useOrderStore.getState().onPostOrder({
                       id: currentOrderNumber,
-                      employeeId: String(currentEmployee.id),
-                      shopId: String(currentShop.id),
+                      employeeId: String(currentEmployee),
+                      shopId: String(currentShop),
                       orderDetails: data.map((item) => ({
                         productBarcode: item.productBarcode,
                         quantity: item.productAmount,
                       })),
                     });
-                    console.log("Confirmed order:", data);
+                    message.success(
+                      `บันทึกคำสั่งซื้อ ${currentOrderNumber} เรียบร้อยแล้ว`
+                    );
+                    resetOrderNumber();
                   }}
                 />
               </>
