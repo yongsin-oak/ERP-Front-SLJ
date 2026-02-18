@@ -1,4 +1,4 @@
-import { ProductDimensions } from "@interfaces/product";
+import { ProductDimensions } from "@types";
 
 export const formatDimensions = (
   dimensions: ProductDimensions | null

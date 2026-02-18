@@ -1,6 +1,6 @@
 import { Select as ASelect, SelectProps, Space } from "antd";
 import Text from "../Text";
-import { Options } from "@pages/sell/ecommerce/allShop";
+import { Options } from "@features/sell/pages/ecommerce/allShop";
 const MSelect = ({ optionFilterProp, ...props }: SelectProps) => {
   return (
     <ASelect
@@ -10,23 +10,21 @@ const MSelect = ({ optionFilterProp, ...props }: SelectProps) => {
       optionFilterProp={optionFilterProp || "label"}
       labelInValue
       optionRender={(option: Options) => {
-        return option.data.icon ? (
-          <Space>
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              {option.data.icon}
-            </span>
-            {option.data.label}
-          </Space>
-        ) : (
-          <Text s1 color={option.data.color}>
-            {option.data.label}
-          </Text>
-        );
+        return option.data.icon ?
+            <Space>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {option.data.icon}
+              </span>
+              {option.data.label}
+            </Space>
+          : <Text s1 color={option.data.color}>
+              {option.data.label}
+            </Text>;
       }}
       {...props}
     />

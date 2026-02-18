@@ -1,4 +1,4 @@
-import { FormProductData, ProductData } from "@interfaces/product";
+import { FormProductData, ProductData } from "@types";
 import { convertUnit } from "@utils/common";
 
 /**

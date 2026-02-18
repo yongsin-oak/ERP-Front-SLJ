@@ -1,6 +1,6 @@
 import { Theme } from "@emotion/react";
 import styled from "@emotion/styled";
-import { SPACING, BORDER_RADIUS } from "../theme/constants";
+import { SPACING, BORDER_RADIUS } from "@lib/theme/constants";
 
 interface HeadSiderProps {
   justifyContent?: string;
@@ -67,7 +67,8 @@ export const BrandContainer = styled.div<{ collapsed: boolean }>`
   .brand-text {
     opacity: ${(props) => (props.collapsed ? 0 : 1)};
     transform: translateX(${(props) => (props.collapsed ? -20 : 0)}px);
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)
+    transition:
+      opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1)
         ${(props) => (props.collapsed ? "0s" : "0.15s")},
       transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     ${(props) =>

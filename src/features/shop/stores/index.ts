@@ -2,8 +2,8 @@ import { create } from "zustand";
 import {
   PaginationDataQuery,
   PaginationDataResponse,
-} from "@interfaces/common";
-import { Shop } from "@interfaces/shop";
+} from "@types";
+import { Shop } from "@types";
 import { ShopCreateDto } from "../types";
 import {
   createShop,

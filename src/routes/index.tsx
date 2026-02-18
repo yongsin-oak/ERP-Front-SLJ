@@ -1,20 +1,20 @@
 import { Route, Routes } from "react-router-dom";
 import Mainlayout from "@layouts/Mainlayout";
 import PrivateRoute from "./PrivateRoute";
-import Home from "@pages/home";
-import POS from "@pages/sell/pos";
-import DirectSell from "@pages/sell/directSell";
-import Deliver from "@pages/sell/delivery";
-import ECommerce from "@pages/sell/ecommerce";
-import ProductStock from "@pages/product-stock";
-import User from "@pages/user";
-import Employee from "@pages/employee";
+import Home from "@features/dashboard/pages";
+import POS from "@features/sell/pages/pos";
+import DirectSell from "@features/sell/pages/directSell";
+import Deliver from "@features/sell/pages/delivery";
+import ECommerce from "@features/sell/pages/ecommerce";
+import ProductStock from "@features/product/pages";
+import User from "@features/user/pages";
+import Employee from "@features/employee/pages";
 import Example from "@pages/example";
-import Login from "@pages/login";
+import Login from "@features/auth/pages";
 import NotFoundPage from "@pages/error/404";
 import ErrorPage from "@pages/error/500";
-import HistoryOrder from "@pages/sell/ecommerce/history/HistoryOrder";
-import ShopPage from "@pages/shop";
+import HistoryOrder from "@features/sell/pages/ecommerce/history/HistoryOrder";
+import ShopPage from "@features/shop/pages";
 
 const Routers = () => {
   const genR = (path: string, element: React.ReactElement) => {

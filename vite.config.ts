@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       "import.meta.env.VITE_BACKEND_API_URL": JSON.stringify(
-        env.VITE_BACKEND_API_URL
+        env.VITE_BACKEND_API_URL,
       ),
     },
     // Development server configuration
@@ -48,13 +48,11 @@ export default defineConfig(({ mode }) => {
         "@components": path.resolve(__dirname, "./src/components"),
         "@enums": path.resolve(__dirname, "./src/enums"),
         "@hooks": path.resolve(__dirname, "./src/hooks"),
-        "@interfaces": path.resolve(__dirname, "./src/interfaces"),
+        "@types": path.resolve(__dirname, "./src/types"),
         "@layouts": path.resolve(__dirname, "./src/layouts"),
         "@pages": path.resolve(__dirname, "./src/pages"),
         "@routes": path.resolve(__dirname, "./src/routes"),
-        "@stores": path.resolve(__dirname, "./src/stores"),
-        "@styles": path.resolve(__dirname, "./src/styles"),
-        "@theme": path.resolve(__dirname, "./src/theme"),
+        "@lib": path.resolve(__dirname, "./src/lib"),
         "@utils": path.resolve(__dirname, "./src/utils"),
         "@features": path.resolve(__dirname, "./src/features"),
       },

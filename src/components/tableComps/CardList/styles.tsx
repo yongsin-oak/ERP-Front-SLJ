@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Theme } from "@emotion/react";
-import { BORDER_RADIUS, SPACING } from "@theme/constants";
+import { BORDER_RADIUS, SPACING } from "@lib/theme/constants";
 
 export const CardListContainer = styled.div<{ theme: Theme }>`
   border-radius: ${BORDER_RADIUS.lg};

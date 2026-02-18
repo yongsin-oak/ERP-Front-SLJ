@@ -1,10 +1,10 @@
 import {
   PaginationDataQuery,
   PaginationDataResponse,
-} from "@interfaces/common";
-import { Shop } from "@interfaces/shop";
+} from "@types";
+import { Shop } from "@types";
 import { ShopCreateDto } from "../types";
-import req from "@utils/common/req";
+import req from "@lib/config/req";
 
 // สร้าง shop
 export const createShop = async (data: ShopCreateDto): Promise<Shop> => {

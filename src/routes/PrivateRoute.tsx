@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@stores/auth";
+import { useAuth } from "@features/auth/services";
 import { Spin } from "antd";
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {

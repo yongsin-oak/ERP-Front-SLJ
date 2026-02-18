@@ -1,5 +1,5 @@
 import { Platform } from "@features/shop/enums/Platform.enum";
-import { Timestamped } from "@interfaces/common";
+import type { Timestamped } from "@types";
 
 export interface ShopCreateDto {
   name: string;

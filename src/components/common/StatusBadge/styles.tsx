@@ -1,6 +1,6 @@
 import { Theme } from "@emotion/react";
 import styled from "@emotion/styled";
-import { BORDER_RADIUS, SPACING } from "@theme/constants";
+import { BORDER_RADIUS, SPACING } from "@lib/theme/constants";
 
 export const StatusBadgeContainer = styled.div<{
   status: "success" | "warning" | "error";

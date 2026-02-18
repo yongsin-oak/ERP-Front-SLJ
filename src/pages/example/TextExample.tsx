@@ -1,6 +1,6 @@
 import { Flex } from "antd";
 import Text from "@components/common/Text";
-import { SPACING } from "@theme/constants";
+import { SPACING } from "@lib/theme/constants";
 
 const TextExample = () => {
   return (
