@@ -12,7 +12,6 @@ import { useAuth } from "@features/auth/services";
 import { useStoreTheme, themes } from "@lib/theme";
 import { ThemeProvider } from "@emotion/react";
 import ToTopButton from "./components/common/TotopButton";
-import "@ant-design/v5-patch-for-react-19";
 
 dayjs.extend(buddhistEra);
 dayjs.extend(utc);

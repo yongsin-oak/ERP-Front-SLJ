@@ -21,6 +21,7 @@ function FormInputs<T extends object>({
   gutter = [16, 8],
 }: Props<T>) {
   const [form] = useForm();
+  
   const content = (
     <Flex vertical gap={16}>
       <Row gutter={gutter}>

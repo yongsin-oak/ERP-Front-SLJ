@@ -2,25 +2,35 @@ import { Flex, Form, Modal } from "antd";
 import { useForm } from "antd/es/form/Form";
 import { ColumnType } from "antd/es/table";
 import dayjs from "dayjs";
-import { isEmpty } from "lodash";
 import { useEffect, useState } from "react";
-import ExcelUpload from "@components/common/ExcelUpload";
 import FormInputs from "@components/Form/FormInputs";
 import MButton from "@components/common/MButton";
 import MTable from "@components/tableComps/MTable";
 import Text from "@components/common/Text";
 import req from "@lib/config/req";
-import { EmployeeType, EmployeeData } from "@types";
+import { EmployeeType } from "@types";
 import { addEmployeeInputFields } from "./inputField";
+import { Role } from "../types";
 
 const Employee = () => {
   const [employees, setEmployees] = useState<EmployeeType[]>([]);
   const [visibleAddEmployeeModal, setVisibleAddEmployeeModal] = useState(false);
   const [form] = useForm();
-  const columns: ColumnType[] &
-    {
-      information?: string;
-    }[] = [
+
+  const onEditModalEmployee = (record: EmployeeType) => {
+    console.log(record);
+    form.setFieldsValue({
+      firstName: record.firstName,
+      lastName: record.lastName,
+      nickname: record.nickname,
+      phoneNumber: record.phoneNumber,
+      department: record.department,
+      startDate: dayjs(record.startDate),
+    });
+    setVisibleAddEmployeeModal(true);
+  };
+
+  const columns: ColumnType<EmployeeType>[] & { information?: string }[] = [
     {
       title: "ชื่อ - นามสกุล",
       dataIndex: "name",
@@ -54,9 +64,11 @@ const Employee = () => {
     {
       title: "Action",
       key: "action",
-      render: () => (
+      render: (_, record: EmployeeType) => (
         <Flex gap={8}>
-          <MButton type="link">แก้ไข</MButton>
+          <MButton type="link" onClick={() => onEditModalEmployee(record)}>
+            แก้ไข
+          </MButton>
         </Flex>
       ),
       width: 80,
@@ -76,10 +88,23 @@ const Employee = () => {
       console.log(error);
     }
   };
-  const onPostEmployee = async (values: EmployeeData) => {
+  const onPostEmployee = async (values: {
+    firstName: string;
+    lastName: string;
+    nickname: string;
+    phoneNumber: string;
+    startDate: dayjs.Dayjs;
+    department: {
+      label: string;
+      value: Role;
+    };
+  }) => {
     try {
-      console.log(values);
-      const res = await req.post("/employee", values);
+      const res = await req.post("/employee", {
+        ...values,
+        department: values.department.value,
+        startDate: values.startDate.toISOString(),
+      });
       setVisibleAddEmployeeModal(false);
       onGetEmployee();
       console.log(res);
@@ -87,11 +112,6 @@ const Employee = () => {
       console.log(error);
     }
   };
-  useEffect(() => {
-    if (visibleAddEmployeeModal && !isEmpty(form.getFieldsValue())) {
-      form.resetFields();
-    }
-  }, [visibleAddEmployeeModal, form]);
   useEffect(() => {
     onGetEmployee();
   }, []);
@@ -101,20 +121,6 @@ const Employee = () => {
         รายชื่อพนักงาน
       </Text>
       <Flex justify="space-between" gap={8}>
-        <ExcelUpload
-          onSave={() => {}}
-          columns={[
-            {
-              title: "ชื่อจริง",
-              key: "firstName",
-            },
-            {
-              title: "นามสกุล",
-              key: "lastName",
-            },
-            ...columns.filter((c) => c.key !== "action" && c.key !== "name"),
-          ]}
-        />
         <MButton onClick={() => setVisibleAddEmployeeModal(true)}>
           เพิ่มพนักงาน
         </MButton>
@@ -143,7 +149,7 @@ const Employee = () => {
           </FormInputs>
         </Form>
       </Modal>
-      <MTable
+      <MTable<EmployeeType>
         columns={columns}
         dataSource={employees}
         bordered

@@ -9,7 +9,6 @@ import ECommerce from "@features/sell/pages/ecommerce";
 import ProductStock from "@features/product/pages";
 import User from "@features/user/pages";
 import Employee from "@features/employee/pages";
-import Example from "@pages/example";
 import Login from "@features/auth/pages";
 import NotFoundPage from "@pages/error/404";
 import ErrorPage from "@pages/error/500";
@@ -33,7 +32,6 @@ const Routers = () => {
     genR("/product-stock", <ProductStock />),
     genR("/user", <User />),
     genR("/employee", <Employee />),
-    genR("/example", <Example />),
     genR("/shop", <ShopPage />),
   ];
 
