@@ -1,4 +1,3 @@
-import { Role } from "@features/employee/types/enums";
 import req from "@lib/config/req";
 import { create } from "zustand";
 

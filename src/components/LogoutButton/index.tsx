@@ -1,7 +1,6 @@
 import { LogoutOutlined } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
-import { Flex } from "antd";
-import { MButton } from "@components/common";
+import { Button, Flex } from "antd";
 import { useAuth } from "@features/auth/services";
 
 interface LogoutButtonProps {
@@ -18,7 +17,7 @@ const LogoutButton = ({ collapsed = false }: LogoutButtonProps) => {
 
   return (
     <Flex justify="center" style={{ padding: collapsed ? 8 : 16 }}>
-      <MButton
+      <Button
         type="text"
         icon={<LogoutOutlined />}
         onClick={onLogout}
@@ -59,7 +58,7 @@ const LogoutButton = ({ collapsed = false }: LogoutButtonProps) => {
             ออกจากระบบ
           </span>
         )}
-      </MButton>
+      </Button>
     </Flex>
   );
 };

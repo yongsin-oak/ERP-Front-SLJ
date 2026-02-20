@@ -6,14 +6,12 @@ import {
 } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
 import { useWindowSize } from "@uidotdev/usehooks";
-import { Drawer, Layout, Menu } from "antd";
+import { Button, Drawer, Layout, Menu } from "antd";
 import { Content } from "antd/es/layout/layout";
 import Sider from "antd/es/layout/Sider";
 import { CSSProperties, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import MButton from "@components/common/MButton";
 import Text from "@components/common/Text";
-import LogoutButton from "@components/LogoutButton";
 import { useStoreTheme } from "@lib/theme";
 import { isMobile } from "@utils/common/responsive";
 import { menuItems } from "./menu";
@@ -26,6 +24,7 @@ import {
   BrandContainer,
 } from "./styles";
 import "./sidebar-fixes.css"; // Import CSS fixes
+import LogoutButton from "@components/LogoutButton";
 
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -154,7 +153,7 @@ const MainLayout = () => {
       <Layout>
         {isMobile(windowWidth) && (
           <StickyButton theme={theme}>
-            <MButton
+            <Button
               type="text"
               icon={<MenuOutlined />}
               onClick={() => setShowDrawer(true)}
