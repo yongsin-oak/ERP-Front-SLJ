@@ -1,5 +1,6 @@
 import req from "@lib/config/req";
 import { create } from "zustand";
+import { Role } from "@features/employee/types/enums";
 
 type StateAuth = {
   user: {

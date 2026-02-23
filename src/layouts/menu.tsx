@@ -12,12 +12,12 @@ import { NavigateFunction } from "react-router-dom";
 
 export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
   return [
-    {
-      key: "/home",
-      icon: <HomeOutlined />,
-      label: "หน้าหลัก",
-      onClick: () => navigate("/"),
-    },
+    // {
+    //   key: "/home",
+    //   icon: <HomeOutlined />,
+    //   label: "หน้าหลัก",
+    //   onClick: () => navigate("/"),
+    // },
     {
       key: "/sell",
       icon: <ShoppingCartOutlined />,
@@ -49,29 +49,29 @@ export const menuItems = (navigate: NavigateFunction): MenuProps["items"] => {
         },
       ],
     },
-    {
-      key: "/product-stock",
-      icon: <TableOutlined />, //<ProductOutlined />
-      label: "สต๊อกสินค้า",
-      onClick: () => navigate("/product-stock"),
-    },
-    {
-      key: "/employee",
-      icon: <TeamOutlined />,
-      label: "พนักงาน",
-      onClick: () => navigate("/employee"),
-    },
-    {
-      key: "/shop",
-      icon: <ShopOutlined />,
-      label: "ร้านค้า",
-      onClick: () => navigate("/shop"),
-    },
-    {
-      key: "/user",
-      icon: <UserOutlined />,
-      label: "ผู้ใช้งาน",
-      onClick: () => navigate("/user"),
-    },
+    // {
+    //   key: "/product-stock",
+    //   icon: <TableOutlined />, //<ProductOutlined />
+    //   label: "สต๊อกสินค้า",
+    //   onClick: () => navigate("/product-stock"),
+    // },
+    // {
+    //   key: "/employee",
+    //   icon: <TeamOutlined />,
+    //   label: "พนักงาน",
+    //   onClick: () => navigate("/employee"),
+    // },
+    // {
+    //   key: "/shop",
+    //   icon: <ShopOutlined />,
+    //   label: "ร้านค้า",
+    //   onClick: () => navigate("/shop"),
+    // },
+    // {
+    //   key: "/user",
+    //   icon: <UserOutlined />,
+    //   label: "ผู้ใช้งาน",
+    //   onClick: () => navigate("/user"),
+    // },
   ];
 };

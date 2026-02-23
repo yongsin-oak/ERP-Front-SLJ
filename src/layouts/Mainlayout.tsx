@@ -170,7 +170,7 @@ const MainLayout = () => {
             transition: "margin-inline-start 0.3s cubic-bezier(0.4, 0, 0.2, 1)", // เพิ่ม smooth transition สำหรับ content
           }}
         >
-          <Outlet />{" "}
+          <Outlet />
         </Content>
       </Layout>
     </Layout>

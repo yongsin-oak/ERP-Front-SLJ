@@ -2,7 +2,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { useTheme } from "@emotion/react";
 import { useAuth } from "@features/auth/services";
 import { BORDER_RADIUS, SPACING } from "@lib/theme/constants";
-import { Flex, Form, Input, Typography } from "antd";
+import { Button, Flex, Form, Input, Typography } from "antd";
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
 
@@ -18,76 +18,78 @@ const Login: React.FC = () => {
     setLoading(false);
   };
 
-  return isAuth ? (
-    <Navigate to="/" replace />
-  ) : (
-    <Flex
-      style={{
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-        width: "100%",
-        backgroundColor: theme.background_,
-      }}
-      justify="center"
-      align="center"
-    >
-      <div
+  return isAuth ?
+      <Navigate to="/" replace />
+    : <Flex
         style={{
-          width: 300,
-          padding: SPACING["2xl"],
-          backgroundColor: theme.backgroundBox_ || theme.backgroundElevated_,
-          borderRadius: BORDER_RADIUS.lg,
-          border: `1px solid ${theme.border_}`,
-          boxShadow: theme.boxShadow_,
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          width: "100%",
+          backgroundColor: theme.background_,
         }}
+        justify="center"
+        align="center"
       >
-        <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
-          เข้าสู่ระบบ
-        </Title>
-        <Form
-          name="login_form"
-          onFinish={onLogin}
-          initialValues={{ remember: true }}
-          layout="vertical"
+        <div
+          style={{
+            width: 300,
+            padding: SPACING["2xl"],
+            backgroundColor: theme.backgroundBox_ || theme.backgroundElevated_,
+            borderRadius: BORDER_RADIUS.lg,
+            border: `1px solid ${theme.border_}`,
+            boxShadow: theme.boxShadow_,
+          }}
         >
-          <Form.Item
-            name="username"
-            rules={[{ required: true, message: "Please enter your username!" }]}
+          <Title level={3} style={{ textAlign: "center", marginBottom: 24 }}>
+            เข้าสู่ระบบ
+          </Title>
+          <Form
+            name="login_form"
+            onFinish={onLogin}
+            initialValues={{ remember: true }}
+            layout="vertical"
           >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder="Username"
-              size="large"
-            />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: "Please enter your password!" }]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Password"
-              size="large"
-            />
-          </Form.Item>
-          <Form.Item>
-            <MButton
-              htmlType="submit"
-              block
-              size="large"
-              style={{
-                margin: "auto",
-              }}
-              loading={loading}
+            <Form.Item
+              name="username"
+              rules={[
+                { required: true, message: "Please enter your username!" },
+              ]}
             >
-              เข้าสู่ระบบ
-            </MButton>
-          </Form.Item>
-        </Form>
-      </div>
-    </Flex>
-  );
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Username"
+                size="large"
+              />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: "Please enter your password!" },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Password"
+                size="large"
+              />
+            </Form.Item>
+            <Form.Item>
+              <Button
+                htmlType="submit"
+                block
+                size="large"
+                style={{
+                  margin: "auto",
+                }}
+                loading={loading}
+              >
+                เข้าสู่ระบบ
+              </Button>
+            </Form.Item>
+          </Form>
+        </div>
+      </Flex>;
 };
 
 export default Login;

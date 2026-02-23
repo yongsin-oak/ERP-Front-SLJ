@@ -4,6 +4,9 @@ import PrivateRoute from "./PrivateRoute";
 import Login from "@features/auth/pages";
 import NotFoundPage from "@pages/error/404";
 import ErrorPage from "@pages/error/500";
+import EcommercePage from "@features/sell/pages";
+import HomePage from "@features/home/pages";
+import EmployeePage from "@features/employee/pages";
 
 const Routers = () => {
   const genR = (path: string, element: React.ReactElement) => {
@@ -13,22 +16,21 @@ const Routers = () => {
     };
   };
   const routes = [
-    // genR("/", <Home />),
+    genR("/", <HomePage />),
     // genR("/sell/pos", <POS />),
     // genR("/sell/online", <DirectSell />),
     // genR("/sell/delivery", <Deliver />),
-    // genR("/sell/ecommerce", <ECommerce />),
+    genR("/sell/ecommerce", <EcommercePage />),
     // genR("/sell/ecommerce/history", <HistoryOrder />),
     // genR("/product-stock", <ProductStock />),
     // genR("/user", <User />),
-    // genR("/employee", <Employee />),
+    genR("/employee", <EmployeePage />),
     // genR("/shop", <ShopPage />),
   ];
 
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="*" element={<NotFoundPage />} />
       <Route
         element={
           <PrivateRoute>
@@ -45,6 +47,7 @@ const Routers = () => {
           />
         ))}
       </Route>
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

@@ -9,10 +9,8 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   if (isLoadingUser) {
     return <Spin size="large" fullscreen />;
   }
-  return isAuth ? (
-    children
-  ) : (
-    <Navigate to="/login" state={{ from: location }} replace />
-  );
+  return isAuth ? children : (
+      <Navigate to="/login" state={{ from: location }} replace />
+    );
 };
 export default PrivateRoute;
