@@ -51,7 +51,7 @@
     "sass-embedded": "^1.83.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.18.2",
-    "vite": "^7.0.0"
+    "vite": "^8.0.4"
   },
   "trustedDependencies": [
     "@swc/core"
