@@ -1,16 +1,13 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@features/auth/services";
-import { Spin } from "antd";
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@features/auth/hooks';
+import { Spinner } from '@design-system';
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isLoadingUser, isAuth } = useAuth();
+export function PrivateRoute({ children }: { children: React.ReactNode }) {
+  const { isAuth, isLoadingUser } = useAuth();
   const location = useLocation();
 
-  if (isLoadingUser) {
-    return <Spin size="large" fullscreen />;
-  }
-  return isAuth ? children : (
-      <Navigate to="/login" state={{ from: location }} replace />
-    );
-};
-export default PrivateRoute;
+  if (isLoadingUser) return <Spinner fullPage />;
+  if (!isAuth) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+
+  return <>{children}</>;
+}

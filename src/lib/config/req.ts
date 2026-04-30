@@ -46,7 +46,7 @@ req.interceptors.response.use(
     // If unauthorized
     if (status === 401) {
       // Do NOT try to refresh when the failing request is the refresh endpoint itself
-      const isRefreshEndpoint = requestUrl.endsWith("/refresh-token");
+      const isRefreshEndpoint = requestUrl.endsWith("/auth/refresh-token");
 
       // If we've already retried or it's the refresh endpoint, reject immediately
       if (originalRequest?._retry || isRefreshEndpoint) {
@@ -67,7 +67,7 @@ req.interceptors.response.use(
 
       try {
         // เรียก refresh-token โดยพึ่งพา cookie (withCredentials:true)
-        await req.post("/refresh-token");
+        await req.post("/auth/refresh-token");
         flushQueue();
         return req(originalRequest);
       } catch (refreshErr) {

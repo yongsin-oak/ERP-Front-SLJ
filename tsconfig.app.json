@@ -26,17 +26,16 @@
     "baseUrl": ".",
     "paths": {
       "@assets/*": ["src/assets/*"],
-      "@components/*": ["src/components/*"],
-      "@enums/*": ["src/enums/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@types": ["src/types"],
-      "@types/*": ["src/types/*"],
+      "@design-system": ["src/design-system/index.ts"],
+      "@design-system/*": ["src/design-system/*"],
+      "@layouts": ["src/layouts/index.ts"],
       "@layouts/*": ["src/layouts/*"],
-      "@pages/*": ["src/pages/*"],
-      "@routes/*": ["src/routes/*"],
+      "@lib": ["src/lib/index.ts"],
       "@lib/*": ["src/lib/*"],
-      "@utils/*": ["src/utils/*"],
-      "@features/*": ["src/features/*"]
+      "@features/*": ["src/features/*"],
+      "@routes/*": ["src/routes/*"],
+      "@dev": ["src/dev/index.ts"],
+      "@dev/*": ["src/dev/*"]
     }
   },
   "include": ["src"]

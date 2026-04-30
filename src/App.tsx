@@ -1,44 +1,32 @@
-import { ConfigProvider } from "antd";
-import dayjs from "dayjs";
-import buddhistEra from "dayjs/plugin/buddhistEra";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
-import { useEffect } from "react";
-import { CookiesProvider } from "react-cookie";
-import { BrowserRouter } from "react-router-dom";
-import "./App.scss";
-import Routers from "./routes";
-import { useAuth } from "@features/auth/services";
-import { useStoreTheme, themes } from "@lib/theme";
-import { ThemeProvider } from "@emotion/react";
+import { useEffect } from 'react';
+import { RouterProvider } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import thTH from 'antd/locale/th_TH';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { router } from '@routes/index';
+import { useAuth } from '@features/auth/hooks';
+import { lightAntdTheme } from '@lib/theme/antdTheme/light';
+import { queryClient } from '@lib/queryClient';
+import { DevTools } from '@dev';
 
-dayjs.extend(buddhistEra);
-dayjs.extend(utc);
-dayjs.extend(timezone);
+const IS_DEV = import.meta.env.VITE_ENV_MODE === 'development';
 
-function App() {
-  const { themeMode } = useStoreTheme();
-  const theme = themes[themeMode];
+function AppInit() {
   const { getMe } = useAuth();
   useEffect(() => {
     getMe();
   }, [getMe]);
-  return (
-    <>
-      <ConfigProvider theme={theme.antd}>
-        <ThemeProvider theme={theme.emotion}>
-          <CookiesProvider>
-            <BrowserRouter>
-              <Routers></Routers>
-            </BrowserRouter>
-          </CookiesProvider>
-
-          {/* Floating Theme Button - Available on all pages */}
-          {/* <FloatingThemeButton /> */}
-        </ThemeProvider>
-      </ConfigProvider>
-    </>
-  );
+  return null;
 }
 
-export default App;
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ConfigProvider theme={lightAntdTheme} locale={thTH}>
+        <AppInit />
+        <RouterProvider router={router} />
+        {IS_DEV && <DevTools />}
+      </ConfigProvider>
+    </QueryClientProvider>
+  );
+}

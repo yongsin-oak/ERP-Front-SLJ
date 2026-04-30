@@ -1,55 +1,49 @@
-import { Route, Routes } from "react-router-dom";
-import Mainlayout from "@layouts/Mainlayout";
-import PrivateRoute from "./PrivateRoute";
-import Login from "@features/auth/pages";
-import NotFoundPage from "@pages/error/404";
-import ErrorPage from "@pages/error/500";
-import EcommercePage from "@features/sell/pages";
-import HomePage from "@features/home/pages";
-import EmployeePage from "@features/employee/pages";
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { AppLayout } from '@layouts';
+import { Spinner } from '@design-system';
+import { PrivateRoute } from './PrivateRoute';
+import { LoginPage } from '@features/auth';
 
-const Routers = () => {
-  const genR = (path: string, element: React.ReactElement) => {
-    return {
-      path,
-      element,
-    };
-  };
-  const routes = [
-    genR("/", <HomePage />),
-    // genR("/sell/pos", <POS />),
-    // genR("/sell/online", <DirectSell />),
-    // genR("/sell/delivery", <Deliver />),
-    genR("/sell/ecommerce", <EcommercePage />),
-    // genR("/sell/ecommerce/history", <HistoryOrder />),
-    // genR("/product-stock", <ProductStock />),
-    // genR("/user", <User />),
-    genR("/employee", <EmployeePage />),
-    // genR("/shop", <ShopPage />),
-  ];
+function Page({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<Spinner fullPage />}>{children}</Suspense>;
+}
 
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        element={
-          <PrivateRoute>
-            <Mainlayout />
-          </PrivateRoute>
-        }
-      >
-        {routes.map((route) => (
-          <Route
-            key={route.path}
-            errorElement={<ErrorPage />}
-            element={route.element}
-            path={route.path}
-          />
-        ))}
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
-};
+const DashboardPage = lazy(() =>
+  import('@features/dashboard').then((m) => ({ default: m.DashboardPage })),
+);
+const InventoryPage = lazy(() =>
+  import('@features/inventory').then((m) => ({ default: m.InventoryPage })),
+);
+const EmployeePage = lazy(() =>
+  import('@features/employee').then((m) => ({ default: m.EmployeePage })),
+);
+const OrderPage = lazy(() =>
+  import('@features/order').then((m) => ({ default: m.OrderPage })),
+);
 
-export default Routers;
+export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
+    path: '/',
+    element: (
+      <PrivateRoute>
+        <AppLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { path: 'dashboard', element: <Page><DashboardPage /></Page> },
+      { path: 'inventory', element: <Page><InventoryPage /></Page> },
+      { path: 'employee', element: <Page><EmployeePage /></Page> },
+      { path: 'order', element: <Page><OrderPage /></Page> },
+    ],
+  },
+  {
+    path: '*',
+    element: <Navigate to="/" replace />,
+  },
+]);

@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.VITE_BACKEND_API_URL": JSON.stringify(
         env.VITE_BACKEND_API_URL,
       ),
+      "import.meta.env.VITE_ENV_MODE": JSON.stringify(env.VITE_ENV_MODE),
     },
     // Development server configuration
     server: {
@@ -45,16 +46,12 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@assets": path.resolve(__dirname, "./src/assets"),
-        "@components": path.resolve(__dirname, "./src/components"),
-        "@enums": path.resolve(__dirname, "./src/enums"),
-        "@hooks": path.resolve(__dirname, "./src/hooks"),
-        "@types": path.resolve(__dirname, "./src/types"),
+        "@design-system": path.resolve(__dirname, "./src/design-system"),
         "@layouts": path.resolve(__dirname, "./src/layouts"),
-        "@pages": path.resolve(__dirname, "./src/pages"),
-        "@routes": path.resolve(__dirname, "./src/routes"),
         "@lib": path.resolve(__dirname, "./src/lib"),
-        "@utils": path.resolve(__dirname, "./src/utils"),
         "@features": path.resolve(__dirname, "./src/features"),
+        "@routes": path.resolve(__dirname, "./src/routes"),
+        "@dev": path.resolve(__dirname, "./src/dev"),
       },
     },
   };

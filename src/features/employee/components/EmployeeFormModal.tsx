@@ -1,95 +1,75 @@
-import { Form, Modal, Input, Select, DatePicker, Row, Col } from "antd";
-import { useEffect } from "react";
-import { employeeFormFields } from "./EmployeeForm.config";
-import type { Employee, CreateEmployeeDto } from "../types";
-import dayjs from "dayjs";
+import { useEffect } from 'react';
+import { DatePicker } from 'antd';
+import dayjs from 'dayjs';
+import { Modal, Form, Input, Select, Button } from '@design-system';
+import { DepartmentOptions } from '../types';
+import type { Employee, CreateEmployeeDto } from '../types';
 
 interface EmployeeFormModalProps {
   open: boolean;
-  onCancel: () => void;
+  employee?: Employee | null;
+  onClose: () => void;
   onSubmit: (values: CreateEmployeeDto) => Promise<void>;
-  editingEmployee?: Employee | null;
-  loading?: boolean;
 }
 
-export const EmployeeFormModal = ({
-  open,
-  onCancel,
-  onSubmit,
-  editingEmployee,
-  loading,
-}: EmployeeFormModalProps) => {
-  const [form] = Form.useForm();
+export function EmployeeFormModal({ open, employee, onClose, onSubmit }: EmployeeFormModalProps) {
+  const [form] = Form.useForm<CreateEmployeeDto & { startDateObj: dayjs.Dayjs }>();
+  const isEdit = !!employee;
 
   useEffect(() => {
-    if (open && editingEmployee) {
-      form.setFieldsValue({
-        ...editingEmployee,
-        startDate:
-          editingEmployee.startDate ? dayjs(editingEmployee.startDate) : null,
-      });
-    } else if (open) {
-      form.resetFields();
+    if (open) {
+      if (employee) {
+        form.setFieldsValue({
+          ...employee,
+          startDateObj: dayjs(employee.startDate),
+        });
+      } else {
+        form.resetFields();
+      }
     }
-  }, [open, editingEmployee, form]);
+  }, [open, employee, form]);
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const submitData = {
-        ...values,
-        startDate:
-          values.startDate ? dayjs(values.startDate).format("YYYY-MM-DD") : "",
-      };
-      await onSubmit(submitData);
-      form.resetFields();
-    } catch (error) {
-      console.error("Validation failed:", error);
-    }
+  const handleOk = async () => {
+    const values = await form.validateFields();
+    const { startDateObj, ...rest } = values;
+    await onSubmit({ ...rest, startDate: startDateObj.format('YYYY-MM-DD') });
+    onClose();
   };
 
   return (
     <Modal
-      title={editingEmployee ? "แก้ไขข้อมูลพนักงาน" : "เพิ่มพนักงาน"}
       open={open}
-      onCancel={onCancel}
-      onOk={handleSubmit}
-      confirmLoading={loading}
-      width={800}
-      okText={editingEmployee ? "บันทึก" : "เพิ่ม"}
-      cancelText="ยกเลิก"
+      title={isEdit ? 'แก้ไขพนักงาน' : 'เพิ่มพนักงาน'}
+      onCancel={onClose}
+      footer={[
+        <Button key="cancel" onClick={onClose}>
+          ยกเลิก
+        </Button>,
+        <Button key="submit" variant="primary" onClick={handleOk}>
+          {isEdit ? 'บันทึก' : 'เพิ่มพนักงาน'}
+        </Button>,
+      ]}
     >
-      <Form form={form} layout="vertical" style={{ marginTop: 24 }}>
-        <Row gutter={16}>
-          {employeeFormFields.map((field) => (
-            <Col span={field.span} key={field.name}>
-              <Form.Item
-                name={field.name}
-                label={field.label}
-                rules={[
-                  {
-                    required: field.required,
-                    message: `กรุณากรอก${field.label}`,
-                  },
-                ]}
-              >
-                {field.inputComponent === "select" ?
-                  <Select
-                    placeholder={field.inputProps?.placeholder}
-                    options={field.inputProps?.options}
-                  />
-                : field.inputComponent === "datePicker" ?
-                  <DatePicker
-                    style={{ width: "100%" }}
-                    placeholder={field.inputProps?.placeholder}
-                    format={field.inputProps?.format}
-                  />
-                : <Input placeholder={field.inputProps?.placeholder} />}
-              </Form.Item>
-            </Col>
-          ))}
-        </Row>
+      <Form form={form} style={{ marginTop: 16 }}>
+        <Form.Item name="firstName" label="ชื่อ" rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}>
+          <Input placeholder="ชื่อ" />
+        </Form.Item>
+        <Form.Item name="lastName" label="นามสกุล" rules={[{ required: true, message: 'กรุณากรอกนามสกุล' }]}>
+          <Input placeholder="นามสกุล" />
+        </Form.Item>
+        <Form.Item name="nickname" label="ชื่อเล่น" rules={[{ required: true, message: 'กรุณากรอกชื่อเล่น' }]}>
+          <Input placeholder="ชื่อเล่น" />
+        </Form.Item>
+        <Form.Item name="phoneNumber" label="เบอร์โทร" rules={[{ required: true, message: 'กรุณากรอกเบอร์โทร' }]}>
+          <Input placeholder="เบอร์โทร" />
+        </Form.Item>
+        <Form.Item name="department" label="แผนก" rules={[{ required: true, message: 'กรุณาเลือกแผนก' }]}>
+          <Select options={DepartmentOptions} placeholder="เลือกแผนก" style={{ width: '100%' }} />
+        </Form.Item>
+        <Form.Item name="startDateObj" label="วันที่เริ่มงาน" rules={[{ required: true, message: 'กรุณาเลือกวันที่' }]}>
+          <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="วัน/เดือน/ปี" />
+        </Form.Item>
       </Form>
     </Modal>
   );
-};
+}
