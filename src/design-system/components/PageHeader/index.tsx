@@ -4,7 +4,7 @@ import { Title } from '../Typography';
 
 interface PageHeaderProps {
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   actions?: ReactNode;
 }
 

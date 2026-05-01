@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { Modal, Table, Tag, Button } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { OrderStatusLabel, OrderStatusColor } from '../types';
-import type { Order, OrderItem } from '../types';
+import type { Order, OrderDetail, OrderStatus } from '../types';
 
 interface OrderDetailModalProps {
   open: boolean;
@@ -14,27 +14,41 @@ interface OrderDetailModalProps {
 export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps) {
   if (!order) return null;
 
-  const columns: ColumnType<OrderItem>[] = [
+  const details = order.orderDetails ?? [];
+  const totalQty = details.reduce((s, d) => s + d.quantityPack + d.quantityCarton, 0);
+  const totalPrice = details.reduce((s, d) => {
+    const pack = d.product.sellPrice?.pack ?? 0;
+    const carton = d.product.sellPrice?.carton ?? 0;
+    return s + d.quantityPack * pack + d.quantityCarton * carton;
+  }, 0);
+
+  const columns: ColumnType<OrderDetail>[] = [
     {
       title: 'สินค้า',
       key: 'product',
-      render: (_: unknown, record: OrderItem) => (
+      render: (_: unknown, r: OrderDetail) => (
         <div>
-          <div>{record.name}</div>
-          <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{record.barcode}</code>
+          <div>{r.product.name}</div>
+          <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{r.product.barcode}</code>
         </div>
       ),
     },
     {
-      title: 'ราคา/ชิ้น',
-      dataIndex: 'sellingPrice',
+      title: 'ราคา/แพ็ค',
+      key: 'sellPrice',
       width: 110,
       align: 'right',
-      render: (v: number) => `฿${v?.toLocaleString()}`,
+      render: (_: unknown, r: OrderDetail) => `฿${(r.product.sellPrice?.pack ?? 0).toLocaleString()}`,
     },
     {
-      title: 'จำนวน',
-      dataIndex: 'quantity',
+      title: 'แพ็ค',
+      dataIndex: 'quantityPack',
+      width: 80,
+      align: 'center',
+    },
+    {
+      title: 'ลัง',
+      dataIndex: 'quantityCarton',
       width: 80,
       align: 'center',
     },
@@ -43,41 +57,52 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
       key: 'total',
       width: 110,
       align: 'right',
-      render: (_: unknown, record: OrderItem) => (
-        <strong>฿{(record.sellingPrice * record.quantity).toLocaleString()}</strong>
-      ),
+      render: (_: unknown, r: OrderDetail) => {
+        const pack = r.product.sellPrice?.pack ?? 0;
+        const carton = r.product.sellPrice?.carton ?? 0;
+        return <strong>฿{(r.quantityPack * pack + r.quantityCarton * carton).toLocaleString()}</strong>;
+      },
     },
   ];
+
+  const status = order.status as OrderStatus | undefined;
 
   return (
     <Modal
       open={open}
       title={`Order ${order.orderNumber ?? order.id}`}
       onCancel={onClose}
-      width={680}
+      width={720}
       footer={<Button onClick={onClose}>ปิด</Button>}
     >
       <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
-        <Descriptions.Item label="สถานะ">
-          <Tag color={OrderStatusColor[order.status]}>{OrderStatusLabel[order.status]}</Tag>
-        </Descriptions.Item>
+        {status && (
+          <Descriptions.Item label="สถานะ">
+            <Tag color={OrderStatusColor[status]}>{OrderStatusLabel[status]}</Tag>
+          </Descriptions.Item>
+        )}
         <Descriptions.Item label="วันที่สร้าง">
           {order.createdAt ? dayjs(order.createdAt).format('DD/MM/YYYY HH:mm') : '-'}
         </Descriptions.Item>
+        {order.shop && (
+          <Descriptions.Item label="ร้านค้า">
+            {order.shop.name} ({order.shop.platform})
+          </Descriptions.Item>
+        )}
         {order.employee && (
           <Descriptions.Item label="พนักงาน">
             {order.employee.firstName} {order.employee.lastName} ({order.employee.nickname})
           </Descriptions.Item>
         )}
-        {order.note && <Descriptions.Item label="หมายเหตุ">{order.note}</Descriptions.Item>}
+        {order.note && <Descriptions.Item label="หมายเหตุ" span={2}>{order.note}</Descriptions.Item>}
       </Descriptions>
 
       <Divider style={{ margin: '8px 0' }} />
 
-      <Table<OrderItem>
-        rowKey="barcode"
+      <Table<OrderDetail>
+        rowKey="id"
         columns={columns}
-        dataSource={order.items}
+        dataSource={details}
         pagination={false}
         size="small"
       />
@@ -93,8 +118,8 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
           gap: 24,
         }}
       >
-        <span>จำนวนรวม: <strong>{order.totalQuantity} ชิ้น</strong></span>
-        <span>ยอดรวม: <strong style={{ fontSize: 15 }}>฿{order.totalSellingPrice?.toLocaleString()}</strong></span>
+        <span>จำนวนรวม: <strong>{totalQty.toLocaleString()} หน่วย</strong></span>
+        <span>ยอดรวม: <strong style={{ fontSize: 15 }}>฿{totalPrice.toLocaleString()}</strong></span>
       </div>
     </Modal>
   );

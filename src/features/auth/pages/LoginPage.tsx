@@ -1,29 +1,47 @@
-import { message } from 'antd';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { useAuth } from '../hooks';
 import { Button, Form, Input, InputPassword, Card, Title } from '@design-system';
 import { colors } from '@design-system';
+import { showError } from '@lib';
+
+const SAFE_PATH = /^\/[A-Za-z0-9/_\-?=&%.]*$/;
+
+function resolveFrom(value: string | undefined | null): string {
+  if (!value) return '/dashboard';
+  // ป้องกัน open redirect — รับเฉพาะ path ภายในแอป
+  if (!SAFE_PATH.test(value)) return '/dashboard';
+  if (value.startsWith('/login')) return '/dashboard';
+  return value;
+}
 
 export function LoginPage() {
   const { login, isAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [params] = useSearchParams();
   const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
 
-  const from = (location.state as { from?: string })?.from ?? '/inventory';
+  // รองรับ from จาก state (PrivateRoute redirect) + ?from= (axios refresh fail redirect)
+  const stateFrom = (location.state as { from?: string } | null)?.from;
+  const queryFrom = params.get('from');
+  const from = resolveFrom(stateFrom ?? queryFrom);
 
   useEffect(() => {
     if (isAuth) navigate(from, { replace: true });
   }, [isAuth, navigate, from]);
 
   const handleSubmit = async (values: { username: string; password: string }) => {
+    setSubmitting(true);
     try {
       await login(values.username, values.password);
       navigate(from, { replace: true });
-    } catch {
-      message.error('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+    } catch (err) {
+      showError(err, 'เข้าสู่ระบบ');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -76,6 +94,7 @@ export function LoginPage() {
               htmlType="submit"
               size="large"
               block
+              loading={submitting}
             >
               เข้าสู่ระบบ
             </Button>

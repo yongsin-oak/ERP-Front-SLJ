@@ -1,3 +1,11 @@
+import type { Platform } from '@features/shop';
+
+/**
+ * NOTE: API ปัจจุบันยังไม่รองรับ status / orderNumber / note ใน /order
+ * fields เหล่านี้เก็บไว้ฝั่ง FE เพื่อ UX และส่งไปใน body
+ * ถ้า backend ใส่ whitelist validator → field พิเศษจะถูก ignore (หรือ 400)
+ * ดู .claude/API.md → ควรเพิ่ม fields เหล่านี้ที่ backend
+ */
 export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'completed' | 'cancelled';
 
 export const OrderStatusLabel: Record<OrderStatus, string> = {
@@ -16,38 +24,52 @@ export const OrderStatusColor: Record<OrderStatus, string> = {
   cancelled: 'red',
 };
 
+/** Row ใน OrderItemsEditor — UI representation */
 export interface OrderItem {
-  productId?: string;
   barcode: string;
   name: string;
   costPrice: number;
   sellingPrice: number;
-  quantity: number;
+  quantity: number; // เก็บเป็น quantityPack ตอน submit
 }
 
-export interface Order {
+/** API order detail (response) */
+export interface OrderDetail {
   id: string;
-  orderNumber?: string;
-  status: OrderStatus;
-  note?: string;
-  employeeId?: string;
-  employee?: { firstName: string; lastName: string; nickname: string };
-  shopId?: string;
-  shop?: { id: string; name: string; platform: string };
-  items: OrderItem[];
-  totalQuantity: number;
-  totalCostPrice: number;
-  totalSellingPrice: number;
+  orderId: string;
+  product: {
+    barcode: string;
+    name: string;
+    sellPrice?: { pack?: number; carton?: number };
+    costPrice?: { pack?: number; carton?: number };
+  };
+  quantityPack: number;
+  quantityCarton: number;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface CreateOrderDto {
+/** API order (response) */
+export interface Order {
+  id: string;
+  orderNumber?: string;
   status?: OrderStatus;
   note?: string;
-  employeeId?: string;
-  shopId?: string;
-  items: { barcode: string; quantity: number }[];
+  employee?: { id: string; firstName: string; lastName: string; nickname: string };
+  shop?: { id: string; name: string; platform: Platform };
+  orderDetails?: OrderDetail[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** API POST body (ตาม .claude/API.md) */
+export interface CreateOrderDto {
+  createdBy: string;
+  shopId: string;
+  details: { productBarcode: string; quantityPack: number; quantityCarton: number }[];
+  /** UI extension — ขึ้นอยู่กับ backend ว่ารับหรือไม่ */
+  orderNumber?: string;
+  note?: string;
 }
 
 export type UpdateOrderDto = Partial<CreateOrderDto>;

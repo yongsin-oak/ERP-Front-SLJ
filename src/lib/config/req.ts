@@ -6,7 +6,7 @@ const req = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true, // ใช้สำหรับการส่งคุกกี้
-  timeout: 10000, // กำหนดเวลา timeout เป็น 10 วินาที
+  timeout: 30000, // 30s — รองรับ bulk operation / network ช้า
 });
 
 let isRefreshing = false;
@@ -71,8 +71,12 @@ req.interceptors.response.use(
         flushQueue();
         return req(originalRequest);
       } catch (refreshErr) {
-        // If refresh fails (e.g., no refresh-token), fail all queued requests cleanly
         flushQueue(refreshErr);
+        // Refresh ไม่สำเร็จ — เปลี่ยน path ไปหน้า login (กันลูป)
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          const back = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.replace(`/login?from=${back}`);
+        }
         return Promise.reject(refreshErr);
       } finally {
         isRefreshing = false;

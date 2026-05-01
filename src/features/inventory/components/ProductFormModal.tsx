@@ -16,8 +16,22 @@ export function ProductFormModal({ open, product, onClose, onSubmit }: ProductFo
 
   useEffect(() => {
     if (open) {
-      if (product) form.setFieldsValue(product);
-      else form.resetFields();
+      if (product) {
+        form.setFieldsValue({
+          barcode: product.barcode,
+          name: product.name,
+          brandId: product.brand?.id,
+          categoryId: product.category?.id,
+          costPrice: product.costPrice,
+          sellPrice: product.sellPrice,
+          remaining: product.remaining,
+          minStock: product.minStock,
+          piecesPerPack: product.piecesPerPack,
+          packPerCarton: product.packPerCarton,
+        });
+      } else {
+        form.resetFields();
+      }
     }
   }, [open, product, form]);
 

@@ -1,0 +1,325 @@
+import { useMemo, useState } from 'react';
+import { Popconfirm, Space, Typography, DatePicker, Card } from 'antd';
+import {
+  DeleteOutlined,
+  EyeOutlined,
+  ReloadOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  ClearOutlined,
+} from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import dayjs, { type Dayjs } from 'dayjs';
+import { Table, Button, Tag, PageHeader, Input, Select } from '@design-system';
+import type { ColumnType } from '@design-system';
+import { useShops } from '@features/shop';
+import { useEmployees } from '@features/employee';
+import {
+  useOrders, useDeleteOrder, useBulkDeleteOrder,
+} from '../hooks';
+import { OrderDetailModal } from '../components';
+import { OrderStatusLabel, OrderStatusColor } from '../types';
+import type { Order, OrderStatus } from '../types';
+
+const { RangePicker } = DatePicker;
+
+interface Filters {
+  search: string;
+  status: string;
+  shopId: string;
+  employeeId: string;
+  dateRange: [Dayjs, Dayjs] | null;
+}
+
+const EMPTY_FILTERS: Filters = {
+  search: '',
+  status: '',
+  shopId: '',
+  employeeId: '',
+  dateRange: null,
+};
+
+export function OrderHistoryPage() {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [selected, setSelected] = useState<Order | null>(null);
+
+  const { data: shops = [] } = useShops();
+  const { data: employees = [] } = useEmployees();
+
+  const queryParams = useMemo(
+    () => ({
+      page,
+      limit: pageSize,
+      status: filters.status || undefined,
+      shopId: filters.shopId || undefined,
+      employeeId: filters.employeeId || undefined,
+      search: filters.search.trim() || undefined,
+      dateFrom: filters.dateRange?.[0].startOf('day').toISOString(),
+      dateTo: filters.dateRange?.[1].endOf('day').toISOString(),
+    }),
+    [page, pageSize, filters],
+  );
+
+  const { data, isLoading, refetch, isFetching } = useOrders(queryParams);
+  const orders = data?.data ?? [];
+  const total = data?.pagination?.total ?? 0;
+
+  const deleteOrder = useDeleteOrder();
+  const bulkDelete = useBulkDeleteOrder();
+
+  const filtersActive =
+    filters.search || filters.status || filters.shopId || filters.employeeId || filters.dateRange;
+
+  function patchFilter(patch: Partial<Filters>) {
+    setFilters((f) => ({ ...f, ...patch }));
+    setPage(1);
+  }
+
+  function clearFilters() {
+    setFilters(EMPTY_FILTERS);
+    setPage(1);
+  }
+
+  async function handleBulkDelete() {
+    await bulkDelete.mutateAsync(selectedKeys.map(String));
+    setSelectedKeys([]);
+  }
+
+  const shopOptions = shops.map((s) => ({
+    label: `[${s.platform}] ${s.name}`,
+    value: s.id,
+  }));
+
+  const employeeOptions = employees.map((e) => ({
+    label: `${e.firstName} (${e.nickname})`,
+    value: e.id,
+  }));
+
+  const statusOptions = (Object.keys(OrderStatusLabel) as OrderStatus[]).map((s) => ({
+    label: OrderStatusLabel[s],
+    value: s,
+  }));
+
+  const columns: ColumnType<Order>[] = [
+    {
+      title: 'Order',
+      key: 'orderNumber',
+      render: (_: unknown, r: Order) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>{r.orderNumber ?? `#${r.id.slice(0, 8)}`}</div>
+          <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+            {r.createdAt ? dayjs(r.createdAt).format('DD/MM/YYYY HH:mm') : '-'}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'สถานะ',
+      dataIndex: 'status',
+      width: 130,
+      render: (v: OrderStatus) => <Tag color={OrderStatusColor[v]}>{OrderStatusLabel[v]}</Tag>,
+    },
+    {
+      title: 'จำนวน',
+      dataIndex: 'totalQuantity',
+      width: 100,
+      align: 'right',
+      render: (v: number) => `${v?.toLocaleString() ?? 0} ชิ้น`,
+    },
+    {
+      title: 'ยอดรวม',
+      dataIndex: 'totalSellingPrice',
+      width: 120,
+      align: 'right',
+      render: (v: number) => <strong>฿{v?.toLocaleString() ?? 0}</strong>,
+    },
+    {
+      title: 'ร้านค้า',
+      key: 'shop',
+      width: 180,
+      render: (_: unknown, r: Order) =>
+        r.shop ? (
+          <div>
+            <div style={{ fontWeight: 500, fontSize: 13 }}>{r.shop.name}</div>
+            <Tag color="blue" style={{ fontSize: 11 }}>{r.shop.platform}</Tag>
+          </div>
+        ) : '-',
+    },
+    {
+      title: 'พนักงาน',
+      key: 'employee',
+      width: 150,
+      render: (_: unknown, r: Order) =>
+        r.employee ? `${r.employee.firstName} (${r.employee.nickname})` : '-',
+    },
+    {
+      title: 'หมายเหตุ',
+      dataIndex: 'note',
+      ellipsis: true,
+      render: (v?: string) => v ?? '-',
+    },
+    {
+      title: '',
+      key: 'action',
+      width: 80,
+      fixed: 'right',
+      render: (_: unknown, r: Order) => (
+        <Space>
+          <Button
+            variant="ghost" size="small" icon={<EyeOutlined />}
+            onClick={() => { setSelected(r); setDetailOpen(true); }}
+          />
+          <Popconfirm
+            title="ลบ order นี้?"
+            onConfirm={() => deleteOrder.mutate(r.id)}
+            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
+          >
+            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div>
+      <PageHeader
+        title="ประวัติออเดอร์"
+        subtitle={`ทั้งหมด ${total.toLocaleString()} รายการ`}
+        actions={
+          <>
+            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+              รีเฟรช
+            </Button>
+            <Button variant="primary" icon={<PlusOutlined />} onClick={() => navigate('/order')}>
+              สร้าง Order
+            </Button>
+          </>
+        }
+      />
+
+      <Card
+        size="small"
+        title={<Space><FilterOutlined /> ตัวกรอง</Space>}
+        extra={
+          filtersActive ? (
+            <Button size="small" icon={<ClearOutlined />} onClick={clearFilters}>
+              ล้างตัวกรอง
+            </Button>
+          ) : null
+        }
+        style={{ marginBottom: 16 }}
+      >
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 12,
+          }}
+        >
+          <Input
+            prefix={<SearchOutlined />}
+            placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
+            allowClear
+            value={filters.search}
+            onChange={(e) => patchFilter({ search: e.target.value })}
+          />
+          <RangePicker
+            value={filters.dateRange}
+            onChange={(v) => patchFilter({ dateRange: v as [Dayjs, Dayjs] | null })}
+            format="DD/MM/YYYY"
+            style={{ width: '100%' }}
+            placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
+          />
+          <Select
+            allowClear
+            placeholder="สถานะ"
+            value={filters.status || undefined}
+            onChange={(v) => patchFilter({ status: v ?? '' })}
+            options={statusOptions}
+            style={{ width: '100%' }}
+          />
+          <Select
+            allowClear
+            placeholder="ร้านค้า"
+            value={filters.shopId || undefined}
+            onChange={(v) => patchFilter({ shopId: v ?? '' })}
+            options={shopOptions}
+            style={{ width: '100%' }}
+            showSearch
+            optionFilterProp="label"
+          />
+          <Select
+            allowClear
+            placeholder="พนักงาน"
+            value={filters.employeeId || undefined}
+            onChange={(v) => patchFilter({ employeeId: v ?? '' })}
+            options={employeeOptions}
+            style={{ width: '100%' }}
+            showSearch
+            optionFilterProp="label"
+          />
+        </div>
+      </Card>
+
+      {selectedKeys.length > 0 && (
+        <div
+          style={{
+            marginBottom: 12,
+            padding: '8px 12px',
+            background: '#fafafa',
+            borderRadius: 6,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
+          <Space>
+            <Popconfirm
+              title={`ลบ ${selectedKeys.length} รายการที่เลือก?`}
+              onConfirm={handleBulkDelete}
+              okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading: bulkDelete.isPending }}
+            >
+              <Button variant="danger" icon={<DeleteOutlined />} loading={bulkDelete.isPending}>
+                ลบที่เลือก
+              </Button>
+            </Popconfirm>
+            <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
+          </Space>
+        </div>
+      )}
+
+      <Table<Order>
+        rowKey="id"
+        columns={columns}
+        dataSource={orders}
+        loading={isLoading}
+        scroll={{ x: 1100 }}
+        rowSelection={{
+          selectedRowKeys: selectedKeys,
+          onChange: setSelectedKeys,
+          preserveSelectedRowKeys: true,
+        }}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+        }}
+      />
+
+      <OrderDetailModal
+        open={detailOpen}
+        order={selected}
+        onClose={() => setDetailOpen(false)}
+      />
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { InputNumber, Space, Divider, message, AutoComplete } from 'antd';
+import { useState, useRef, useEffect } from 'react';
+import { InputNumber, Space, AutoComplete, message } from 'antd';
 import type { InputRef } from 'antd';
 import {
   BarcodeOutlined,
@@ -10,37 +10,48 @@ import {
 import { Button, Input, Table, Tag } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { inventoryService } from '@features/inventory/services';
+import { getErrorMessage } from '@lib';
 import type { OrderItem } from '../types';
 import type { Product } from '@features/inventory/types';
 
 interface OrderItemsEditorProps {
   items: OrderItem[];
   onChange: (items: OrderItem[]) => void;
+  /** trigger when items get reset externally — to refocus barcode field */
+  resetSignal?: number;
 }
 
-export function OrderItemsEditor({ items, onChange }: OrderItemsEditorProps) {
+function getPrice(p: Product, key: 'sellPrice' | 'costPrice'): number {
+  return p[key]?.pack ?? p[key]?.carton ?? 0;
+}
+
+export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEditorProps) {
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [searchValue, setSearchValue] = useState('');
   const [searchOptions, setSearchOptions] = useState<{ value: string; label: string; product: Product }[]>([]);
   const [searching, setSearching] = useState(false);
   const barcodeRef = useRef<InputRef>(null);
+
+  useEffect(() => {
+    if (resetSignal !== undefined) barcodeRef.current?.focus();
+  }, [resetSignal]);
 
   const addItem = (product: Product, qty = 1) => {
     const existing = items.find((i) => i.barcode === product.barcode);
     if (existing) {
       onChange(
         items.map((i) =>
-          i.barcode === product.barcode ? { ...i, quantity: i.quantity + qty } : i
-        )
+          i.barcode === product.barcode ? { ...i, quantity: i.quantity + qty } : i,
+        ),
       );
     } else {
       onChange([
         ...items,
         {
-          productId: product.id,
           barcode: product.barcode,
           name: product.name,
-          costPrice: product.costPrice,
-          sellingPrice: product.sellingPrice,
+          costPrice: getPrice(product, 'costPrice'),
+          sellingPrice: getPrice(product, 'sellPrice'),
           quantity: qty,
         },
       ]);
@@ -52,31 +63,39 @@ export function OrderItemsEditor({ items, onChange }: OrderItemsEditorProps) {
     if (!barcode) return;
     try {
       const res = await inventoryService.getByBarcode(barcode);
-      addItem(res.data);
+      addItem(res.data.data);
       setBarcodeInput('');
       barcodeRef.current?.focus();
-    } catch {
-      message.error(`ไม่พบสินค้า barcode: ${barcode}`);
+    } catch (err) {
+      message.error(getErrorMessage(err, `ไม่พบสินค้า barcode: ${barcode}`));
+      barcodeRef.current?.focus();
     }
   };
 
   const handleSearch = async (value: string) => {
+    setSearchValue(value);
     if (value.length < 2) {
       setSearchOptions([]);
       return;
     }
     setSearching(true);
     try {
-      const res = await inventoryService.getAll({ search: value, limit: 10 });
+      // ใช้ /product/dropdown-search — light-weight, สูงสุด 50 รายการ
+      const res = await inventoryService.dropdownSearch(value);
       setSearchOptions(
         res.data.data.map((p) => ({
           value: p.barcode,
           label: `${p.name} (${p.barcode})`,
-          product: p,
-        }))
+          product: {
+            barcode: p.barcode,
+            name: p.name,
+            remaining: p.remaining,
+            sellPrice: p.sellPrice,
+          } as Product,
+        })),
       );
     } catch {
-      //
+      // silent — UX ของ autocomplete
     } finally {
       setSearching(false);
     }
@@ -158,55 +177,55 @@ export function OrderItemsEditor({ items, onChange }: OrderItemsEditorProps) {
 
   return (
     <div>
-      {/* Barcode scanner input */}
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
-          เพิ่มสินค้าด้วย Barcode
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+        <div style={{ flex: '1 1 320px' }}>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+            เพิ่มสินค้าด้วย Barcode
+          </div>
+          <Space.Compact style={{ width: '100%' }}>
+            <Input
+              ref={barcodeRef}
+              prefix={<BarcodeOutlined />}
+              placeholder="สแกน หรือพิมพ์ barcode แล้วกด Enter"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              onPressEnter={handleBarcodeSubmit}
+            />
+            <Button variant="primary" icon={<PlusOutlined />} onClick={handleBarcodeSubmit}>
+              เพิ่ม
+            </Button>
+          </Space.Compact>
         </div>
-        <Space.Compact style={{ width: '100%' }}>
-          <Input
-            ref={barcodeRef}
-            prefix={<BarcodeOutlined />}
-            placeholder="สแกน หรือพิมพ์ barcode แล้วกด Enter"
-            value={barcodeInput}
-            onChange={(e) => setBarcodeInput(e.target.value)}
-            onPressEnter={handleBarcodeSubmit}
-            style={{ maxWidth: 360 }}
-          />
-          <Button variant="primary" icon={<PlusOutlined />} onClick={handleBarcodeSubmit}>
-            เพิ่ม
-          </Button>
-        </Space.Compact>
+
+        <div style={{ flex: '1 1 280px' }}>
+          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+            ค้นหาด้วยชื่อสินค้า
+          </div>
+          <AutoComplete
+            value={searchValue}
+            options={searchOptions}
+            onSearch={handleSearch}
+            onSelect={(_: string, option: { value: string; label: string; product: Product }) => {
+              addItem(option.product);
+              setSearchValue('');
+              setSearchOptions([]);
+              barcodeRef.current?.focus();
+            }}
+            style={{ width: '100%' }}
+            notFoundContent={searching ? 'กำลังค้นหา...' : 'ไม่พบสินค้า'}
+          >
+            <Input prefix={<SearchOutlined />} placeholder="พิมพ์ชื่อสินค้าเพื่อค้นหา" />
+          </AutoComplete>
+        </div>
       </div>
 
-      {/* Search by name */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
-          ค้นหาด้วยชื่อสินค้า
-        </div>
-        <AutoComplete
-          options={searchOptions}
-          onSearch={handleSearch}
-          onSelect={(_: string, option: { value: string; label: string; product: Product }) => {
-            addItem(option.product);
-          }}
-          style={{ width: 360 }}
-          notFoundContent={searching ? 'กำลังค้นหา...' : 'ไม่พบสินค้า'}
-        >
-          <Input prefix={<SearchOutlined />} placeholder="พิมพ์ชื่อสินค้าเพื่อค้นหา" />
-        </AutoComplete>
-      </div>
-
-      <Divider style={{ margin: '8px 0' }} />
-
-      {/* Items table */}
       <Table<OrderItem>
         rowKey="barcode"
         columns={columns}
         dataSource={items}
         pagination={false}
         size="small"
-        locale={{ emptyText: 'ยังไม่มีสินค้า — เพิ่มด้วย barcode หรือค้นหาด้านบน' }}
+        locale={{ emptyText: 'ยังไม่มีสินค้า — สแกน/พิมพ์ barcode หรือค้นหาด้านบน' }}
       />
 
       {items.length > 0 && (

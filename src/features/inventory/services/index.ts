@@ -34,6 +34,26 @@ export const inventoryService = {
 
   delete: (barcode: string) =>
     req.delete<ApiData<Product>>(`${BASE}/${barcode}`),
+
+  bulkDelete: (barcodes: string[]) =>
+    req.delete<ApiData<{ deleted: Product[]; errors: unknown[] }>>(
+      `${BASE}/bulk`,
+      { data: { barcodes } },
+    ),
+
+  /** Lightweight search for autocomplete/dropdown — สูงสุด 50 รายการ */
+  dropdownSearch: (search?: string) =>
+    req.get<ApiData<{
+      barcode: string;
+      name: string;
+      remaining: number;
+      sellPrice?: { pack?: number; carton?: number };
+    }[]>>(`${BASE}/dropdown-search`, { params: { search } }),
+
+  checkExist: (barcodes: string[]) =>
+    req.post<ApiData<{ existing: string[]; missing: string[] }>>(
+      `${BASE}/check-exist`, { barcodes },
+    ),
 };
 
 export const stockEntryService = {

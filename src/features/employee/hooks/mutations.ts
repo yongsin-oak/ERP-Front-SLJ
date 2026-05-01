@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+import { handleError } from '@lib';
 import { employeeService } from '../services';
 import { employeeKeys } from './queryKeys';
 import type { CreateEmployeeDto, UpdateEmployeeDto } from '../types';
@@ -14,7 +15,7 @@ export function useCreateEmployee() {
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
       message.success('เพิ่มพนักงานสำเร็จ');
     },
-    onError: () => message.error('เพิ่มพนักงานไม่สำเร็จ'),
+    onError: handleError('เพิ่มพนักงาน'),
   });
 }
 
@@ -29,7 +30,7 @@ export function useUpdateEmployee() {
       qc.setQueryData(employeeKeys.detail(updated.id), updated);
       message.success('แก้ไขข้อมูลสำเร็จ');
     },
-    onError: () => message.error('แก้ไขข้อมูลไม่สำเร็จ'),
+    onError: handleError('แก้ไขข้อมูลพนักงาน'),
   });
 }
 
@@ -42,6 +43,19 @@ export function useDeleteEmployee() {
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
       message.success('ลบพนักงานสำเร็จ');
     },
-    onError: () => message.error('ลบพนักงานไม่สำเร็จ'),
+    onError: handleError('ลบพนักงาน'),
+  });
+}
+
+export function useBulkDeleteEmployee() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => employeeService.delete(id))),
+    onSuccess: (_, ids) => {
+      qc.invalidateQueries({ queryKey: employeeKeys.lists() });
+      qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
+      message.success(`ลบ ${ids.length} รายการสำเร็จ`);
+    },
+    onError: handleError('ลบพนักงาน'),
   });
 }

@@ -7,7 +7,6 @@ export function useOrders(params: OrderParams = {}) {
   return useQuery({
     queryKey: orderKeys.list(params),
     queryFn: () => orderService.getAll(params).then((r) => r.data),
-    // ไม่ flicker เมื่อเปลี่ยนหน้า — ยังแสดงข้อมูลเดิมระหว่าง fetch ใหม่
     placeholderData: (prev) => prev,
   });
 }
@@ -15,7 +14,7 @@ export function useOrders(params: OrderParams = {}) {
 export function useOrderDetail(id: string | null) {
   return useQuery({
     queryKey: orderKeys.detail(id ?? ''),
-    queryFn: () => orderService.getById(id!).then((r) => r.data),
-    enabled: !!id, // ไม่ fetch ถ้าไม่มี id
+    queryFn: () => orderService.getById(id!).then((r) => r.data.data),
+    enabled: !!id,
   });
 }

@@ -2,6 +2,11 @@ export interface OrderParams {
   page?: number;
   limit?: number;
   status?: string;
+  shopId?: string;
+  employeeId?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 /**

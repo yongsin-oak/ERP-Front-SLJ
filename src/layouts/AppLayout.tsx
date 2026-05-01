@@ -5,13 +5,19 @@ import {
   InboxOutlined,
   TeamOutlined,
   ShoppingCartOutlined,
+  HistoryOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
   MenuOutlined,
   DashboardOutlined,
   UserOutlined,
+  ShopOutlined,
+  TagsOutlined,
+  AppstoreOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
+import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth/hooks';
 import { colors } from '@design-system';
 
@@ -23,17 +29,36 @@ const SIDEBAR_COLLAPSED_WIDTH = 64;
 const SIDEBAR_BG = '#ffffff';
 const SIDEBAR_BORDER = colors.border.default;
 
-const navItems = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: 'แดชบอร์ด' },
-  { key: '/order', icon: <ShoppingCartOutlined />, label: 'บันทึก Order' },
-  { key: '/inventory', icon: <InboxOutlined />, label: 'สินค้าคงคลัง' },
-  { key: '/employee', icon: <TeamOutlined />, label: 'พนักงาน' },
+interface NavItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string;
+  roles?: Role[]; // ถ้ามี → แสดงเฉพาะ role เหล่านี้
+}
+
+const navItems: NavItem[] = [
+  { key: '/dashboard',     icon: <DashboardOutlined />,    label: 'แดชบอร์ด' },
+  { key: '/order',         icon: <ShoppingCartOutlined />, label: 'บันทึก Order' },
+  { key: '/order/history', icon: <HistoryOutlined />,      label: 'ประวัติ Order' },
+  { key: '/inventory',     icon: <InboxOutlined />,        label: 'สินค้าคงคลัง' },
+  { key: '/brand',         icon: <TagsOutlined />,         label: 'แบรนด์',         roles: ['SuperAdmin'] },
+  { key: '/category',      icon: <AppstoreOutlined />,     label: 'หมวดหมู่',       roles: ['SuperAdmin'] },
+  { key: '/shop',          icon: <ShopOutlined />,         label: 'ร้านค้า',         roles: ['SuperAdmin'] },
+  { key: '/employee',      icon: <TeamOutlined />,         label: 'พนักงาน',         roles: ['SuperAdmin'] },
+  { key: '/user',          icon: <UserOutlined />,         label: 'ผู้ใช้งาน',        roles: ['SuperAdmin'] },
+  { key: '/role',          icon: <SafetyCertificateOutlined />, label: 'บทบาท',     roles: ['SuperAdmin'] },
 ];
 
 function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const selectedKey = navItems.find((item) => location.pathname.startsWith(item.key))?.key ?? '';
+  const userRole = useAuth((s) => s.user?.role);
+
+  const visibleItems = navItems.filter((item) => !item.roles || (userRole && item.roles.includes(userRole)));
+
+  const selectedKey = [...visibleItems]
+    .sort((a, b) => b.key.length - a.key.length)
+    .find((item) => location.pathname === item.key || location.pathname.startsWith(`${item.key}/`))?.key ?? '';
 
   return (
     <Menu
@@ -41,7 +66,7 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
       selectedKeys={[selectedKey]}
       inlineCollapsed={collapsed}
       style={{ border: 'none', flex: 1, background: 'transparent' }}
-      items={navItems}
+      items={visibleItems.map(({ key, icon, label }) => ({ key, icon, label }))}
       onClick={({ key }) => {
         navigate(key);
         onNavigate?.();

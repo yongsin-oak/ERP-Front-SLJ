@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Popconfirm, Space, Input } from 'antd';
+import { Popconfirm, Space, Input, Typography } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, Tag, PageHeader } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee } from '../hooks';
+import {
+  useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useBulkDeleteEmployee,
+} from '../hooks';
 import { EmployeeFormModal } from '../components/EmployeeFormModal';
 import { DepartmentLabel, DepartmentColor } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
@@ -17,6 +19,7 @@ export function EmployeePage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
 
   const params = { page, limit: pageSize, search: search || undefined };
   const { data, isLoading, refetch } = useEmployeeList(params);
@@ -26,6 +29,12 @@ export function EmployeePage() {
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
   const deleteEmployee = useDeleteEmployee();
+  const bulkDelete = useBulkDeleteEmployee();
+
+  async function handleBulkDelete() {
+    await bulkDelete.mutateAsync(selectedKeys.map(String));
+    setSelectedKeys([]);
+  }
 
   async function handleSubmit(values: CreateEmployeeDto) {
     if (selected) {
@@ -82,7 +91,7 @@ export function EmployeePage() {
             onConfirm={() => deleteEmployee.mutate(r.id)}
             okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
           >
-            <Button variant="danger" size="small" icon={<DeleteOutlined />} />
+            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
@@ -104,7 +113,7 @@ export function EmployeePage() {
         }
       />
 
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <Search
           prefix={<SearchOutlined />}
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
@@ -112,6 +121,21 @@ export function EmployeePage() {
           style={{ width: 280 }}
           onSearch={(val) => { setSearch(val); setPage(1); }}
         />
+        {selectedKeys.length > 0 && (
+          <Space>
+            <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
+            <Popconfirm
+              title={`ลบ ${selectedKeys.length} รายการที่เลือก?`}
+              onConfirm={handleBulkDelete}
+              okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading: bulkDelete.isPending }}
+            >
+              <Button variant="danger" icon={<DeleteOutlined />} loading={bulkDelete.isPending}>
+                ลบที่เลือก
+              </Button>
+            </Popconfirm>
+            <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
+          </Space>
+        )}
       </div>
 
       <Table<Employee>
@@ -119,6 +143,11 @@ export function EmployeePage() {
         columns={columns}
         dataSource={employees}
         loading={isLoading}
+        rowSelection={{
+          selectedRowKeys: selectedKeys,
+          onChange: setSelectedKeys,
+          preserveSelectedRowKeys: true,
+        }}
         pagination={{
           current: page,
           pageSize,
