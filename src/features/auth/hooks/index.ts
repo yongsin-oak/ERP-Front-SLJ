@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import { authService } from '../services';
 import type { AuthState, AuthUser } from '../types';
 
-const IS_DEV = import.meta.env.VITE_ENV_MODE === 'development';
+export { useActorModal } from './useActorModal';
+
+const IS_BYPASS = import.meta.env.VITE_ENV_MODE === 'development' && import.meta.env.VITE_BYPASS_AUTH === true;
 
 export const DEV_USER: AuthUser = {
   sub: 'dev-bypass',
@@ -12,6 +14,7 @@ export const DEV_USER: AuthUser = {
 
 interface AuthStore extends AuthState {
   login: (username: string, password: string) => Promise<void>;
+  loginTerminal: (terminalCode: string) => Promise<void>;
   logout: () => Promise<void>;
   getMe: () => Promise<void>;
   setUser: (user: AuthUser | null) => void;
@@ -25,7 +28,7 @@ export const useAuth = create<AuthStore>((set) => ({
   setUser: (user) => set({ user, isAuth: !!user }),
 
   login: async (username, password) => {
-    if (IS_DEV) {
+    if (IS_BYPASS) {
       set({ user: DEV_USER, isAuth: true });
       return;
     }
@@ -33,8 +36,17 @@ export const useAuth = create<AuthStore>((set) => ({
     set({ user: res.data.user, isAuth: true });
   },
 
+  loginTerminal: async (terminalCode) => {
+    if (IS_BYPASS) {
+      set({ user: { ...DEV_USER, terminalCode, isTerminal: true }, isAuth: true });
+      return;
+    }
+    const res = await authService.loginTerminal(terminalCode);
+    set({ user: res.data.user, isAuth: true });
+  },
+
   logout: async () => {
-    if (IS_DEV) {
+    if (IS_BYPASS) {
       set({ user: null, isAuth: false });
       return;
     }
@@ -43,7 +55,7 @@ export const useAuth = create<AuthStore>((set) => ({
   },
 
   getMe: async () => {
-    if (IS_DEV) {
+    if (IS_BYPASS) {
       set({ user: DEV_USER, isAuth: true, isLoadingUser: false });
       return;
     }

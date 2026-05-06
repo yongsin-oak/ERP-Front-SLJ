@@ -42,6 +42,9 @@ const RolePage = lazy(() =>
 const UserPage = lazy(() =>
   import('@features/user').then((m) => ({ default: m.UserPage })),
 );
+const TerminalPage = lazy(() =>
+  import('@features/terminal').then((m) => ({ default: m.TerminalPage })),
+);
 
 function Guarded({ children, roles }: { children: React.ReactNode; roles: Role[] }) {
   return <RoleGuard roles={roles}>{children}</RoleGuard>;
@@ -90,6 +93,10 @@ export const router = createBrowserRouter([
       {
         path: 'user',
         element: <Page><Guarded roles={['SuperAdmin']}><UserPage /></Guarded></Page>,
+      },
+      {
+        path: 'terminal',
+        element: <Page><Guarded roles={['SuperAdmin']}><TerminalPage /></Guarded></Page>,
       },
     ],
   },

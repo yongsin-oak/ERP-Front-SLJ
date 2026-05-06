@@ -1,8 +1,10 @@
+import type { Department } from '../types';
+
 export interface EmployeeListParams {
   page: number;
   limit: number;
   search?: string;
-  department?: string;
+  department?: Department;
 }
 
 export const employeeKeys = {

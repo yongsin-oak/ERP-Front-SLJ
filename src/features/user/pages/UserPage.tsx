@@ -1,144 +1,102 @@
 import { useState } from 'react';
-import { Popconfirm, Space, Tag, Modal as AntModal } from 'antd';
-import {
-  PlusOutlined, DeleteOutlined, ReloadOutlined, CrownOutlined,
-} from '@ant-design/icons';
-import { Table, Button, PageHeader, Select } from '@design-system';
+import { Tag, Popconfirm, Space, Tooltip, Form } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import { Table, Button, PageHeader, Select, Modal } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useAuth } from '@features/auth/hooks';
-import { UserFormModal } from '../components/UserFormModal';
-import {
-  useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser,
-} from '../hooks';
-import type { User, CreateUserDto } from '../types';
 import type { Role } from '@features/auth/types';
+import { useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../hooks';
+import { UserFormModal } from '../components/UserFormModal';
+import type { User } from '../types';
 
-const ROLE_COLORS: Record<Role, string> = {
-  SuperAdmin: 'red',
-  Admin: 'volcano',
-  Operator: 'blue',
-  Warehouse: 'cyan',
-  Accountant: 'gold',
-  HR: 'magenta',
-  Marketing: 'purple',
-  Sales: 'green',
+const ROLE_COLOR: Record<Role, string> = {
+  SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
+  Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
 };
 
 export function UserPage() {
-  const me = useAuth((s) => s.user);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<User | null>(null);
+  const [editForm] = Form.useForm<{ role: Role }>();
 
-  const { data: users = [], isLoading, refetch, isFetching } = useUsers();
+  const { data: users = [], isLoading } = useUsers();
   const { data: roles = [] } = useRoles();
   const createUser = useCreateUser();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
 
-  async function handleSubmit(values: CreateUserDto) {
-    await createUser.mutateAsync(values);
+  function openEdit(u: User) {
+    setEditTarget(u);
+    editForm.setFieldsValue({ role: u.role });
   }
 
-  function handleRoleChange(user: User, newRole: Role) {
-    if (user.role === newRole) return;
-    AntModal.confirm({
-      title: `เปลี่ยนบทบาทของ ${user.username}?`,
-      content: `จาก ${user.role} → ${newRole}`,
-      okText: 'ยืนยัน', cancelText: 'ยกเลิก',
-      onOk: () => updateRole.mutateAsync({ id: user.id, role: newRole }),
-    });
+  async function handleEditRole() {
+    if (!editTarget) return;
+    const { role } = await editForm.validateFields();
+    await updateRole.mutateAsync({ id: editTarget.id, role });
+    setEditTarget(null);
   }
-
-  const roleOptions = roles.map((r) => ({
-    label: <Tag color={ROLE_COLORS[r]} style={{ margin: 0 }}>{r}</Tag>,
-    value: r,
-  }));
-
-  const roleFilters = roles.map((r) => ({ text: r, value: r }));
 
   const columns: ColumnType<User>[] = [
     {
-      title: 'รหัสผู้ใช้',
-      dataIndex: 'id',
-      width: 180,
-      searchable: true,
-      render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code>,
-    },
-    {
       title: 'Username',
       dataIndex: 'username',
-      sorter: (a, b) => a.username.localeCompare(b.username),
-      searchable: true,
-      defaultSortOrder: 'ascend',
-      render: (v: string, r: User) => (
-        <Space size={6}>
-          {r.role === 'SuperAdmin' && <CrownOutlined style={{ color: '#fa541c' }} />}
-          <strong>{v}</strong>
-          {me?.username === v && <Tag color="blue" style={{ fontSize: 10 }}>คุณ</Tag>}
+      render: (v: string) => (
+        <Space>
+          <UserOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+          <span style={{ fontWeight: 500 }}>{v}</span>
         </Space>
       ),
     },
     {
       title: 'บทบาท',
       dataIndex: 'role',
-      width: 200,
-      filters: roleFilters,
-      onFilter: (value, r) => r.role === value,
-      sorter: (a, b) => a.role.localeCompare(b.role),
-      render: (v: Role, r: User) => {
-        // ห้ามแก้ role ของตัวเอง
-        const isMe = me?.username === r.username;
-        if (isMe) return <Tag color={ROLE_COLORS[v]}>{v}</Tag>;
-        return (
-          <Select
-            value={v}
-            options={roleOptions}
-            style={{ width: 160 }}
-            size="small"
-            onChange={(val) => handleRoleChange(r, val as Role)}
-          />
-        );
-      },
+      width: 140,
+      render: (v: Role) => <Tag color={ROLE_COLOR[v]}>{v}</Tag>,
+    },
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      width: 160,
+      render: (v: string) => (
+        <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{v}</code>
+      ),
     },
     {
       title: '',
-      key: 'action',
-      width: 80,
-      fixed: 'right',
-      render: (_: unknown, r: User) => {
-        const isMe = me?.username === r.username;
-        return (
+      key: 'actions',
+      width: 90,
+      align: 'right' as const,
+      render: (_: unknown, r: User) => (
+        <Space size={4}>
+          <Tooltip title="เปลี่ยนบทบาท">
+            <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
+          </Tooltip>
           <Popconfirm
             title="ลบผู้ใช้งานนี้?"
-            description="ผู้ใช้จะไม่สามารถเข้าระบบได้อีก"
-            disabled={isMe}
+            description={`"${r.username}" จะถูกลบออกจากระบบถาวร`}
+            okText="ลบ"
+            okButtonProps={{ danger: true }}
+            cancelText="ยกเลิก"
             onConfirm={() => deleteUser.mutate(r.id)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
           >
-            <Button
-              variant="danger-ghost" size="small" icon={<DeleteOutlined />}
-              disabled={isMe}
-              title={isMe ? 'ลบบัญชีของตัวเองไม่ได้' : 'ลบ'}
-            />
+            <Tooltip title="ลบ">
+              <Button size="small" danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
-        );
-      },
+        </Space>
+      ),
     },
   ];
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <PageHeader
-        title="ผู้ใช้งาน & บทบาท"
-        subtitle={`ทั้งหมด ${users.length} คน`}
+        title="ผู้ใช้งาน"
+        subtitle={`${users.length} บัญชีในระบบ`}
         actions={
-          <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
-              รีเฟรช
-            </Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-              เพิ่มผู้ใช้งาน
-            </Button>
-          </>
+          <Button variant="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+            เพิ่มผู้ใช้งาน
+          </Button>
         }
       />
 
@@ -147,14 +105,54 @@ export function UserPage() {
         columns={columns}
         dataSource={users}
         loading={isLoading}
+        pagination={false}
+        size="middle"
       />
 
+      {/* create modal */}
       <UserFormModal
-        open={modalOpen}
+        open={createOpen}
         roles={roles}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleSubmit}
+        onClose={() => setCreateOpen(false)}
+        onSubmit={async (values) => { await createUser.mutateAsync(values); }}
       />
+
+      {/* edit role modal */}
+      <Modal
+        open={!!editTarget}
+        title={
+          <Space>
+            <EditOutlined />
+            เปลี่ยนบทบาท — {editTarget?.username}
+          </Space>
+        }
+        onCancel={() => setEditTarget(null)}
+        width={360}
+        destroyOnHidden
+        footer={[
+          <Button key="cancel" onClick={() => setEditTarget(null)}>ยกเลิก</Button>,
+          <Button
+            key="save"
+            variant="primary"
+            loading={updateRole.isPending}
+            onClick={handleEditRole}
+          >
+            บันทึก
+          </Button>,
+        ]}
+      >
+        <Form form={editForm} layout="vertical" style={{ marginTop: 8 }}>
+          <Form.Item name="role" label="บทบาทใหม่" rules={[{ required: true }]}>
+            <Select
+              options={roles.map((r) => ({
+                label: <Tag color={ROLE_COLOR[r]} style={{ margin: 0 }}>{r}</Tag>,
+                value: r,
+              }))}
+              placeholder="เลือกบทบาท"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

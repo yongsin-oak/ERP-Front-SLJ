@@ -42,7 +42,7 @@ export function StockEntryModal({ open, onClose }: Props) {
     setLookingUp(true);
     try {
       const res = await inventoryService.getByBarcode(barcode);
-      setProduct(res.data);
+      setProduct(res.data.data);
     } catch {
       message.error(`ไม่พบสินค้า barcode: ${barcode}`);
       setProduct(null);
@@ -117,7 +117,7 @@ export function StockEntryModal({ open, onClose }: Props) {
               <Space size={4} style={{ marginTop: 4 }}>
                 <Tag>{product.barcode}</Tag>
                 <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
-                  สต้อคปัจจุบัน: <strong>{product.stock} ชิ้น</strong>
+                  สต้อคปัจจุบัน: <strong>{product.remaining} ชิ้น</strong>
                 </span>
               </Space>
             </div>

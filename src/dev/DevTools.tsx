@@ -91,7 +91,7 @@ export function DevTools() {
                     <Text strong>{user.username}</Text>
                     <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
                   </Space>
-                  <Text type="secondary" style={{ fontSize: 12 }}>ID: {user.userId}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>ID: {user.sub}</Text>
                 </Space>
               ) : (
                 <Text type="secondary">— ไม่ได้ login —</Text>

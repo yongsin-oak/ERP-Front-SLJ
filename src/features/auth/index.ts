@@ -1,3 +1,4 @@
 export { LoginPage } from './pages/LoginPage';
-export { useAuth } from './hooks';
-export type { AuthUser, AuthState, Role } from './types';
+export { useAuth, useActorModal, DEV_USER } from './hooks';
+export { ActorModal } from './components/ActorModal';
+export type { AuthUser, AuthState, Role, ActorToken } from './types';

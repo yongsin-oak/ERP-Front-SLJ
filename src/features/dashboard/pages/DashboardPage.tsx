@@ -23,8 +23,6 @@ import dayjs from 'dayjs';
 import { Button, PageHeader } from '@design-system';
 import { colors } from '@design-system';
 import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock } from '../hooks';
-import { OrderStatusColor, OrderStatusLabel } from '@features/order/types';
-import type { OrderStatus } from '@features/order/types';
 import type { ColumnType } from '@design-system';
 import type { RecentOrder, LowStockProduct } from '../types';
 
@@ -91,7 +89,7 @@ export function DashboardPage() {
       key: 'order',
       render: (_: unknown, r: RecentOrder) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{r.orderNumber ?? `#${r.id.slice(0, 8)}`}</div>
+          <div style={{ fontWeight: 500 }}>{`#${r.id.slice(0, 8)}`}</div>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {dayjs(r.createdAt).format('DD/MM HH:mm')}
           </Text>
@@ -109,23 +107,10 @@ export function DashboardPage() {
       ) : '-',
     },
     {
-      title: 'พนักงาน',
-      dataIndex: 'employeeName',
-      render: (v: string) => v ?? '-',
-    },
-    {
       title: 'ยอด',
-      dataIndex: 'totalSellingPrice',
+      dataIndex: 'totalPrice',
       align: 'right' as const,
       render: (v: number) => <strong>฿{v?.toLocaleString()}</strong>,
-    },
-    {
-      title: 'สถานะ',
-      dataIndex: 'status',
-      width: 110,
-      render: (v: OrderStatus) => (
-        <Tag color={OrderStatusColor[v]}>{OrderStatusLabel[v]}</Tag>
-      ),
     },
   ];
 
@@ -142,7 +127,7 @@ export function DashboardPage() {
     },
     {
       title: 'คงเหลือ',
-      dataIndex: 'stock',
+      dataIndex: 'remaining',
       align: 'right' as const,
       width: 80,
       render: (v: number) => (
@@ -153,7 +138,8 @@ export function DashboardPage() {
     },
   ];
 
-  const todayProfit = (stats?.todayRevenue ?? 0) - (stats?.todayCost ?? 0);
+  const todayDaily = daily.find((d) => d.date === dayjs().format('YYYY-MM-DD'));
+  const todayProfit = (stats?.todayRevenue ?? 0) - (todayDaily?.cost ?? 0);
   const profitMargin = stats?.todayRevenue
     ? Math.round((todayProfit / stats.todayRevenue) * 100)
     : 0;
@@ -207,7 +193,7 @@ export function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="สินค้าใกล้หมด"
-            value={stats?.lowStockCount}
+            value={lowStock.length}
             suffix="รายการ"
             icon={<WarningOutlined />}
             color={lowStock.length > 0 ? colors.semantic.warning : colors.text.tertiary}
@@ -240,9 +226,9 @@ export function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="สินค้าวันนี้ (ชิ้น)"
-            value={stats?.todayItems}
-            suffix="ชิ้น"
+            title="ยอดขายรวม"
+            value={stats?.totalRevenue?.toLocaleString()}
+            prefix="฿"
             icon={<ShoppingCartOutlined />}
             color={colors.brand.primary}
             loading={statsLoading}
@@ -251,8 +237,8 @@ export function DashboardPage() {
         <Col xs={24} sm={12} lg={6}>
           <Card style={{ height: '100%' }}>
             <Statistic
-              title="ต้นทุนวันนี้"
-              value={stats?.todayCost?.toLocaleString() ?? '-'}
+              title="ต้นทุนรวม"
+              value={stats?.totalCost?.toLocaleString() ?? '-'}
               prefix="฿"
               loading={statsLoading}
               valueStyle={{ color: colors.text.secondary, fontSize: 28 }}
@@ -331,7 +317,7 @@ export function DashboardPage() {
               <Alert type="success" message="สินค้าทุกรายการมีเพียงพอ" showIcon />
             ) : (
               <Table<LowStockProduct>
-                rowKey="id"
+                rowKey="barcode"
                 columns={lowStockColumns}
                 dataSource={lowStock}
                 pagination={false}

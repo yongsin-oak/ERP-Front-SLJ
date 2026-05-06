@@ -16,9 +16,11 @@ import {
   TagsOutlined,
   AppstoreOutlined,
   SafetyCertificateOutlined,
+  DesktopOutlined,
 } from '@ant-design/icons';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth/hooks';
+import { ActorModal } from '@features/auth';
 import { colors } from '@design-system';
 
 const { Sider, Content, Header } = Layout;
@@ -45,7 +47,8 @@ const navItems: NavItem[] = [
   { key: '/category',      icon: <AppstoreOutlined />,     label: 'หมวดหมู่',       roles: ['SuperAdmin'] },
   { key: '/shop',          icon: <ShopOutlined />,         label: 'ร้านค้า',         roles: ['SuperAdmin'] },
   { key: '/employee',      icon: <TeamOutlined />,         label: 'พนักงาน',         roles: ['SuperAdmin'] },
-  { key: '/user',          icon: <UserOutlined />,         label: 'ผู้ใช้งาน',        roles: ['SuperAdmin'] },
+  { key: '/user',          icon: <UserOutlined />,              label: 'ผู้ใช้งาน',  roles: ['SuperAdmin'] },
+  { key: '/terminal',      icon: <DesktopOutlined />,           label: 'Terminal',   roles: ['SuperAdmin'] },
   { key: '/role',          icon: <SafetyCertificateOutlined />, label: 'บทบาท',     roles: ['SuperAdmin'] },
 ];
 
@@ -254,6 +257,8 @@ export function AppLayout() {
           <Outlet />
         </Content>
       </Layout>
+
+      <ActorModal />
     </Layout>
   );
 }
