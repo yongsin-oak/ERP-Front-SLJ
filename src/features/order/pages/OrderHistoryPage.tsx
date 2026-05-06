@@ -109,12 +109,16 @@ export function OrderHistoryPage() {
   const columns: ColumnType<Order>[] = [
     {
       title: 'Order',
-      key: 'orderNumber',
+      key: 'id',
       render: (_: unknown, r: Order) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{r.orderNumber ?? `#${r.id.slice(0, 8)}`}</div>
+          <div style={{ fontWeight: 500, fontFamily: 'monospace', fontSize: 12 }}>{r.id}</div>
           <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
-            {r.createdAt ? dayjs(r.createdAt).format('DD/MM/YYYY HH:mm') : '-'}
+            {r.startRecordAt
+              ? dayjs(r.startRecordAt).format('DD/MM/YYYY HH:mm')
+              : r.createdAt
+                ? dayjs(r.createdAt).format('DD/MM/YYYY HH:mm')
+                : '-'}
           </div>
         </div>
       ),
@@ -123,21 +127,29 @@ export function OrderHistoryPage() {
       title: 'สถานะ',
       dataIndex: 'status',
       width: 130,
-      render: (v: OrderStatus) => <Tag color={OrderStatusColor[v]}>{OrderStatusLabel[v]}</Tag>,
+      render: (v: OrderStatus) =>
+        v ? <Tag color={OrderStatusColor[v]}>{OrderStatusLabel[v]}</Tag> : '-',
     },
     {
-      title: 'จำนวน',
-      dataIndex: 'totalQuantity',
-      width: 100,
+      title: 'รายการ',
+      key: 'items',
+      width: 80,
       align: 'right',
-      render: (v: number) => `${v?.toLocaleString() ?? 0} ชิ้น`,
+      render: (_: unknown, r: Order) => `${r.orderDetails?.length ?? 0} รายการ`,
     },
     {
       title: 'ยอดรวม',
-      dataIndex: 'totalSellingPrice',
+      key: 'totalPrice',
       width: 120,
       align: 'right',
-      render: (v: number) => <strong>฿{v?.toLocaleString() ?? 0}</strong>,
+      render: (_: unknown, r: Order) => {
+        const total = (r.orderDetails ?? []).reduce((s, d) => {
+          const pack = d.product.sellPrice?.pack ?? 0;
+          const carton = d.product.sellPrice?.carton ?? 0;
+          return s + d.quantityPack * pack + d.quantityCarton * carton;
+        }, 0);
+        return <strong>฿{total.toLocaleString()}</strong>;
+      },
     },
     {
       title: 'ร้านค้า',
@@ -152,17 +164,17 @@ export function OrderHistoryPage() {
         ) : '-',
     },
     {
-      title: 'พนักงาน',
-      key: 'employee',
+      title: 'ผู้บันทึก',
+      key: 'recordBy',
       width: 150,
       render: (_: unknown, r: Order) =>
-        r.employee ? `${r.employee.firstName} (${r.employee.nickname})` : '-',
+        r.recordBy ? `${r.recordBy.firstName} (${r.recordBy.nickname})` : '-',
     },
     {
       title: 'หมายเหตุ',
       dataIndex: 'note',
       ellipsis: true,
-      render: (v?: string) => v ?? '-',
+      render: (v?: string | null) => v ?? '-',
     },
     {
       title: '',

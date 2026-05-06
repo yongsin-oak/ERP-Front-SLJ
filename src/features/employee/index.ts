@@ -1,5 +1,9 @@
 export { EmployeePage } from './pages/EmployeePage';
-export { useEmployeeList, useEmployees, useEmployeeDetail, useCreateEmployee, useUpdateEmployee, useDeleteEmployee } from './hooks';
+export {
+  useEmployeeList, useEmployees, useEmployeeDetail,
+  useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useBulkDeleteEmployee,
+  useSetEmployeePin,
+} from './hooks';
 export { employeeKeys } from './hooks';
 export type { EmployeeListParams } from './hooks';
 export { employeeService } from './services';

@@ -106,16 +106,16 @@ export function OrderEntryPage() {
   async function handleSave() {
     if (!canSave) return;
     const values = await form.validateFields();
+    const noteParts = [values.orderNumber?.trim(), values.note?.trim()].filter(Boolean);
     await createOrder.mutateAsync({
-      createdBy: values.employeeId!,
+      recordBy: values.employeeId!,
       shopId: values.shopId!,
       details: items.map((i) => ({
         productBarcode: i.barcode,
         quantityPack: i.quantity,
         quantityCarton: 0,
       })),
-      orderNumber: values.orderNumber?.trim(),
-      note: values.note?.trim() || undefined,
+      note: noteParts.length ? noteParts.join(' | ') : undefined,
     });
     form.setFieldsValue({ orderNumber: '', note: '' });
     setItems([]);

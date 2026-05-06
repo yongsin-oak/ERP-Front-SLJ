@@ -14,7 +14,7 @@ export const DEV_USER: AuthUser = {
 
 interface AuthStore extends AuthState {
   login: (username: string, password: string) => Promise<void>;
-  loginTerminal: (terminalCode: string) => Promise<void>;
+  loginTerminal: (terminalCode: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   getMe: () => Promise<void>;
   setUser: (user: AuthUser | null) => void;
@@ -36,13 +36,17 @@ export const useAuth = create<AuthStore>((set) => ({
     set({ user: res.data.user, isAuth: true });
   },
 
-  loginTerminal: async (terminalCode) => {
+  loginTerminal: async (terminalCode, password) => {
     if (IS_BYPASS) {
-      set({ user: { ...DEV_USER, terminalCode, isTerminal: true }, isAuth: true });
+      set({ user: { ...DEV_USER, terminalCode, type: 'terminal', isTerminal: true }, isAuth: true });
       return;
     }
-    const res = await authService.loginTerminal(terminalCode);
-    set({ user: res.data.user, isAuth: true });
+    const res = await authService.loginTerminal(terminalCode, password);
+    const t = res.data.terminal;
+    set({
+      user: { terminalCode: t.terminalCode, name: t.name, role: t.role, type: 'terminal', isTerminal: true },
+      isAuth: true,
+    });
   },
 
   logout: async () => {

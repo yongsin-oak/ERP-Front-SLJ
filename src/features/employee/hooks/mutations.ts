@@ -47,6 +47,17 @@ export function useDeleteEmployee() {
   });
 }
 
+export function useSetEmployeePin() {
+  return useMutation({
+    mutationFn: ({ id, pin }: { id: string; pin: string }) =>
+      employeeService.setPin(id, pin),
+    onSuccess: () => {
+      message.success('ตั้ง PIN สำเร็จ');
+    },
+    onError: handleError('ตั้ง PIN'),
+  });
+}
+
 export function useBulkDeleteEmployee() {
   const qc = useQueryClient();
   return useMutation({

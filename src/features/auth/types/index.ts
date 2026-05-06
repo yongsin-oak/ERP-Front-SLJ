@@ -4,7 +4,9 @@ export interface AuthUser {
   sub?: string;
   username?: string;
   terminalCode?: string;
+  name?: string;
   role: Role;
+  type?: 'user' | 'terminal';
   isTerminal?: boolean;
 }
 
@@ -16,10 +18,10 @@ export interface AuthState {
 
 export interface ActorToken {
   actorToken: string;
+  expiresIn: number;
   employee: {
     id: string;
-    firstName: string;
-    lastName: string;
-    nickname: string;
+    name: string;
+    role: Role;
   };
 }

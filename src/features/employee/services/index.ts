@@ -26,4 +26,7 @@ export const employeeService = {
 
   delete: (id: string) =>
     req.delete<ApiData<Employee>>(`${BASE}/${id}`),
+
+  setPin: (id: string, pin: string) =>
+    req.patch<ApiData<null>>(`${BASE}/${id}/pin`, { pin }),
 };

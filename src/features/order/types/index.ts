@@ -1,25 +1,15 @@
 import type { Platform } from '@features/shop';
 
-/**
- * NOTE: API ปัจจุบันยังไม่รองรับ status / orderNumber / note ใน /order
- * fields เหล่านี้เก็บไว้ฝั่ง FE เพื่อ UX และส่งไปใน body
- * ถ้า backend ใส่ whitelist validator → field พิเศษจะถูก ignore (หรือ 400)
- * ดู .claude/API.md → ควรเพิ่ม fields เหล่านี้ที่ backend
- */
-export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'completed' | 'cancelled';
+export type OrderStatus = 'pending' | 'completed' | 'cancelled';
 
 export const OrderStatusLabel: Record<OrderStatus, string> = {
   pending: 'รอดำเนินการ',
-  confirmed: 'ยืนยันแล้ว',
-  shipped: 'จัดส่งแล้ว',
   completed: 'สำเร็จ',
   cancelled: 'ยกเลิก',
 };
 
 export const OrderStatusColor: Record<OrderStatus, string> = {
   pending: 'orange',
-  confirmed: 'blue',
-  shipped: 'cyan',
   completed: 'green',
   cancelled: 'red',
 };
@@ -30,7 +20,7 @@ export interface OrderItem {
   name: string;
   costPrice: number;
   sellingPrice: number;
-  quantity: number; // เก็บเป็น quantityPack ตอน submit
+  quantity: number;
 }
 
 /** API order detail (response) */
@@ -52,24 +42,35 @@ export interface OrderDetail {
 /** API order (response) */
 export interface Order {
   id: string;
-  orderNumber?: string;
-  status?: OrderStatus;
-  note?: string;
-  employee?: { id: string; firstName: string; lastName: string; nickname: string };
+  recordBy: { id: string; firstName: string; lastName: string; nickname: string };
+  terminal?: {
+    id: string;
+    terminalCode: string;
+    name: string;
+    role: string;
+    location?: string;
+    isActive: boolean;
+  } | null;
   shop?: { id: string; name: string; platform: Platform };
+  status: OrderStatus;
+  startRecordAt?: string | null;
+  completedRecordAt?: string | null;
+  note?: string | null;
   orderDetails?: OrderDetail[];
   createdAt?: string;
   updatedAt?: string;
 }
 
-/** API POST body (ตาม .claude/API.md) */
+/** API POST body */
 export interface CreateOrderDto {
-  createdBy: string;
+  recordBy: string;
   shopId: string;
-  details: { productBarcode: string; quantityPack: number; quantityCarton: number }[];
-  /** UI extension — ขึ้นอยู่กับ backend ว่ารับหรือไม่ */
-  orderNumber?: string;
+  terminalId?: string;
+  status?: OrderStatus;
+  startRecordAt?: string;
+  completedRecordAt?: string;
   note?: string;
+  details: { productBarcode: string; quantityPack: number; quantityCarton: number }[];
 }
 
-export type UpdateOrderDto = Partial<CreateOrderDto>;
+export type UpdateOrderDto = Partial<Omit<CreateOrderDto, 'recordBy'>>;

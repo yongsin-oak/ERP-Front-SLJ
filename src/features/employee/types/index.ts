@@ -42,9 +42,10 @@ export interface Employee {
   firstName: string;
   lastName: string;
   nickname: string;
-  phoneNumber: string;
+  phoneNumber: string | null;
   department: Department;
-  startDate: string;
+  startDate: string | null;
+  isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -53,9 +54,10 @@ export interface CreateEmployeeDto {
   firstName: string;
   lastName: string;
   nickname: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   department: Department;
-  startDate: string;
+  startDate?: string;
+  isActive?: boolean;
 }
 
 export type UpdateEmployeeDto = Partial<CreateEmployeeDto>;

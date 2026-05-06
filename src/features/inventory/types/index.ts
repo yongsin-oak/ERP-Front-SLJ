@@ -13,6 +13,7 @@ export interface Dimensions {
 export interface Product {
   barcode: string;
   name: string;
+  sku?: string | null;
   brandId?: string;
   brand?: { id: string; name: string };
   categoryId?: string;
@@ -21,6 +22,9 @@ export interface Product {
   sellPrice?: PriceSet;
   remaining: number;
   minStock?: number;
+  maxStock?: number | null;
+  isActive: boolean;
+  imageUrl?: string | null;
   productDimensions?: Dimensions;
   cartonDimensions?: Dimensions;
   piecesPerPack?: number;
@@ -32,12 +36,16 @@ export interface Product {
 export interface CreateProductDto {
   barcode: string;
   name: string;
+  sku?: string;
   brandId?: string;
   categoryId?: string;
   costPrice?: PriceSet;
   sellPrice?: PriceSet;
   remaining?: number;
   minStock?: number;
+  maxStock?: number;
+  isActive?: boolean;
+  imageUrl?: string;
   productDimensions?: Dimensions;
   cartonDimensions?: Dimensions;
   piecesPerPack?: number;

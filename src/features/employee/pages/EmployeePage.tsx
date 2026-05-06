@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Popconfirm, Space, Input, Typography } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Popconfirm, Space, Input, Typography, Badge, Modal, InputNumber } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, Tag, PageHeader } from '@design-system';
 import type { ColumnType } from '@design-system';
 import {
-  useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useBulkDeleteEmployee,
+  useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee,
+  useBulkDeleteEmployee, useSetEmployeePin,
 } from '../hooks';
 import { EmployeeFormModal } from '../components/EmployeeFormModal';
 import { DepartmentLabel, DepartmentColor } from '../types';
@@ -20,6 +21,8 @@ export function EmployeePage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [pinEmployee, setPinEmployee] = useState<Employee | null>(null);
+  const [pinValue, setPinValue] = useState('');
 
   const params = { page, limit: pageSize, search: search || undefined };
   const { data, isLoading, refetch } = useEmployeeList(params);
@@ -30,6 +33,7 @@ export function EmployeePage() {
   const updateEmployee = useUpdateEmployee();
   const deleteEmployee = useDeleteEmployee();
   const bulkDelete = useBulkDeleteEmployee();
+  const setPin = useSetEmployeePin();
 
   async function handleBulkDelete() {
     await bulkDelete.mutateAsync(selectedKeys.map(String));
@@ -43,6 +47,13 @@ export function EmployeePage() {
       await createEmployee.mutateAsync(values);
     }
     setModalOpen(false);
+  }
+
+  async function handleSetPin() {
+    if (!pinEmployee) return;
+    await setPin.mutateAsync({ id: pinEmployee.id, pin: pinValue });
+    setPinEmployee(null);
+    setPinValue('');
   }
 
   const columns: ColumnType<Employee>[] = [
@@ -60,7 +71,7 @@ export function EmployeePage() {
       title: 'เบอร์โทร',
       dataIndex: 'phoneNumber',
       width: 130,
-      render: (v: string) => v ?? '-',
+      render: (v: string | null) => v ?? '-',
     },
     {
       title: 'แผนก',
@@ -74,14 +85,27 @@ export function EmployeePage() {
       title: 'วันที่เริ่มงาน',
       dataIndex: 'startDate',
       width: 130,
-      render: (v: string) => v ? dayjs(v).format('DD/MM/YYYY') : '-',
+      render: (v: string | null) => v ? dayjs(v).format('DD/MM/YYYY') : '-',
+    },
+    {
+      title: 'สถานะ',
+      dataIndex: 'isActive',
+      width: 100,
+      render: (v: boolean) => (
+        <Badge status={v ? 'success' : 'default'} text={v ? 'ใช้งาน' : 'ระงับ'} />
+      ),
     },
     {
       title: '',
       key: 'action',
-      width: 100,
+      width: 130,
       render: (_: unknown, r: Employee) => (
         <Space>
+          <Button
+            variant="ghost" size="small" icon={<KeyOutlined />}
+            title="ตั้ง PIN"
+            onClick={() => { setPinEmployee(r); setPinValue(''); }}
+          />
           <Button
             variant="ghost" size="small" icon={<EditOutlined />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
@@ -162,6 +186,38 @@ export function EmployeePage() {
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
       />
+
+      <Modal
+        open={!!pinEmployee}
+        title={`ตั้ง PIN — ${pinEmployee?.firstName} (${pinEmployee?.nickname})`}
+        onCancel={() => setPinEmployee(null)}
+        onOk={handleSetPin}
+        okText="บันทึก PIN"
+        confirmLoading={setPin.isPending}
+        okButtonProps={{ disabled: pinValue.length < 4 }}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+            PIN ต้องเป็นตัวเลข 4–6 หลัก
+          </Typography.Text>
+          <InputNumber
+            value={pinValue ? Number(pinValue) : undefined}
+            onChange={(v) => setPinValue(v != null ? String(v).padStart(0, '0') : '')}
+            placeholder="กรอก PIN 4-6 หลัก"
+            style={{ width: '100%' }}
+            min={1000}
+            max={999999}
+            controls={false}
+            stringMode={false}
+          />
+          <Typography.Text
+            type={pinValue.length >= 4 && pinValue.length <= 6 ? 'success' : 'secondary'}
+            style={{ fontSize: 12, marginTop: 4, display: 'block' }}
+          >
+            {pinValue.length} หลัก {pinValue.length >= 4 && pinValue.length <= 6 ? '✓' : '(ต้องการ 4-6 หลัก)'}
+          </Typography.Text>
+        </div>
+      </Modal>
     </div>
   );
 }

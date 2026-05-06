@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import { Modal, Table, Tag, Button } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { OrderStatusLabel, OrderStatusColor } from '../types';
-import type { Order, OrderDetail, OrderStatus } from '../types';
+import type { Order, OrderDetail } from '../types';
 
 interface OrderDetailModalProps {
   open: boolean;
@@ -65,33 +65,33 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
     },
   ];
 
-  const status = order.status as OrderStatus | undefined;
-
   return (
     <Modal
       open={open}
-      title={`Order ${order.orderNumber ?? order.id}`}
+      title={`Order ${order.id}`}
       onCancel={onClose}
       width={720}
       footer={<Button onClick={onClose}>ปิด</Button>}
     >
       <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
-        {status && (
-          <Descriptions.Item label="สถานะ">
-            <Tag color={OrderStatusColor[status]}>{OrderStatusLabel[status]}</Tag>
-          </Descriptions.Item>
-        )}
-        <Descriptions.Item label="วันที่สร้าง">
-          {order.createdAt ? dayjs(order.createdAt).format('DD/MM/YYYY HH:mm') : '-'}
+        <Descriptions.Item label="สถานะ">
+          <Tag color={OrderStatusColor[order.status]}>{OrderStatusLabel[order.status]}</Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="วันที่บันทึก">
+          {order.startRecordAt
+            ? dayjs(order.startRecordAt).format('DD/MM/YYYY HH:mm')
+            : order.createdAt
+              ? dayjs(order.createdAt).format('DD/MM/YYYY HH:mm')
+              : '-'}
         </Descriptions.Item>
         {order.shop && (
           <Descriptions.Item label="ร้านค้า">
             {order.shop.name} ({order.shop.platform})
           </Descriptions.Item>
         )}
-        {order.employee && (
-          <Descriptions.Item label="พนักงาน">
-            {order.employee.firstName} {order.employee.lastName} ({order.employee.nickname})
+        {order.recordBy && (
+          <Descriptions.Item label="ผู้บันทึก">
+            {order.recordBy.firstName} {order.recordBy.lastName} ({order.recordBy.nickname})
           </Descriptions.Item>
         )}
         {order.note && <Descriptions.Item label="หมายเหตุ" span={2}>{order.note}</Descriptions.Item>}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { DatePicker } from 'antd';
+import { DatePicker, Switch, Form as AntForm } from 'antd';
 import dayjs from 'dayjs';
 import { Modal, Form, Input, Select, Button } from '@design-system';
 import { DepartmentOptions } from '../types';
@@ -13,18 +13,24 @@ interface EmployeeFormModalProps {
 }
 
 export function EmployeeFormModal({ open, employee, onClose, onSubmit }: EmployeeFormModalProps) {
-  const [form] = Form.useForm<CreateEmployeeDto & { startDateObj: dayjs.Dayjs }>();
+  const [form] = Form.useForm<CreateEmployeeDto & { startDateObj?: dayjs.Dayjs }>();
   const isEdit = !!employee;
 
   useEffect(() => {
     if (open) {
       if (employee) {
         form.setFieldsValue({
-          ...employee,
-          startDateObj: dayjs(employee.startDate),
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          nickname: employee.nickname,
+          phoneNumber: employee.phoneNumber ?? undefined,
+          department: employee.department,
+          isActive: employee.isActive,
+          startDateObj: employee.startDate ? dayjs(employee.startDate) : undefined,
         });
       } else {
         form.resetFields();
+        form.setFieldsValue({ isActive: true });
       }
     }
   }, [open, employee, form]);
@@ -32,7 +38,10 @@ export function EmployeeFormModal({ open, employee, onClose, onSubmit }: Employe
   const handleOk = async () => {
     const values = await form.validateFields();
     const { startDateObj, ...rest } = values;
-    await onSubmit({ ...rest, startDate: startDateObj.format('YYYY-MM-DD') });
+    await onSubmit({
+      ...rest,
+      startDate: startDateObj ? startDateObj.format('YYYY-MM-DD') : undefined,
+    });
     onClose();
   };
 
@@ -60,15 +69,18 @@ export function EmployeeFormModal({ open, employee, onClose, onSubmit }: Employe
         <Form.Item name="nickname" label="ชื่อเล่น" rules={[{ required: true, message: 'กรุณากรอกชื่อเล่น' }]}>
           <Input placeholder="ชื่อเล่น" />
         </Form.Item>
-        <Form.Item name="phoneNumber" label="เบอร์โทร" rules={[{ required: true, message: 'กรุณากรอกเบอร์โทร' }]}>
+        <Form.Item name="phoneNumber" label="เบอร์โทร">
           <Input placeholder="เบอร์โทร" />
         </Form.Item>
         <Form.Item name="department" label="แผนก" rules={[{ required: true, message: 'กรุณาเลือกแผนก' }]}>
           <Select options={DepartmentOptions} placeholder="เลือกแผนก" style={{ width: '100%' }} />
         </Form.Item>
-        <Form.Item name="startDateObj" label="วันที่เริ่มงาน" rules={[{ required: true, message: 'กรุณาเลือกวันที่' }]}>
+        <Form.Item name="startDateObj" label="วันที่เริ่มงาน">
           <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="วัน/เดือน/ปี" />
         </Form.Item>
+        <AntForm.Item name="isActive" label="สถานะ" valuePropName="checked">
+          <Switch checkedChildren="ใช้งาน" unCheckedChildren="ระงับ" />
+        </AntForm.Item>
       </Form>
     </Modal>
   );
