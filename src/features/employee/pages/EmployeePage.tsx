@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Popconfirm, Space, Input, Typography, Badge, Modal, InputNumber } from 'antd';
+import { Popconfirm, Space, Input, Typography, Badge, Modal } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, Tag, PageHeader } from '@design-system';
@@ -200,15 +200,12 @@ export function EmployeePage() {
           <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
             PIN ต้องเป็นตัวเลข 4–6 หลัก
           </Typography.Text>
-          <InputNumber
-            value={pinValue ? Number(pinValue) : undefined}
-            onChange={(v) => setPinValue(v != null ? String(v).padStart(0, '0') : '')}
+          <Input.Password
+            value={pinValue}
+            onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="กรอก PIN 4-6 หลัก"
-            style={{ width: '100%' }}
-            min={1000}
-            max={999999}
-            controls={false}
-            stringMode={false}
+            maxLength={6}
+            style={{ width: '100%', letterSpacing: 6, fontSize: 20, textAlign: 'center' }}
           />
           <Typography.Text
             type={pinValue.length >= 4 && pinValue.length <= 6 ? 'success' : 'secondary'}

@@ -1,19 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Space, Tabs, Tree, Empty, Card, Modal as AntModal, Checkbox, Typography, Skeleton } from 'antd';
-import type { DataNode } from 'antd/es/tree';
-import {
-  PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
-  AppstoreOutlined, UnorderedListOutlined, ApartmentOutlined,
-} from '@ant-design/icons';
+import { Space, Modal as AntModal, Checkbox, Typography } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader, Tag } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
-import {
-  useCategories, useCategoryTree,
-  useCreateCategory, useUpdateCategory, useDeleteCategory,
-} from '../hooks';
-import type { Category, CategoryTreeNode, CreateCategoryDto } from '../types';
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../hooks';
+import type { Category, CreateCategoryDto } from '../types';
 
 const { Text } = Typography;
 
@@ -22,7 +15,6 @@ export function CategoryPage() {
   const [selected, setSelected] = useState<Category | null>(null);
 
   const { data, isLoading, refetch, isFetching } = useCategories({ page: 1, limit: 500 });
-  const tree = useCategoryTree();
   const categories = useMemo(() => data?.data ?? [], [data]);
   const total = data?.pagination?.total ?? categories.length;
 
@@ -30,7 +22,6 @@ export function CategoryPage() {
   const updateCat = useUpdateCategory();
   const deleteCat = useDeleteCategory();
 
-  // descendants of `id` — สำหรับตัดออกจาก parent options ตอน edit
   const descendantsMap = useMemo(() => {
     const map = new Map<string, Set<string>>();
     const parentToChildren = new Map<string, string[]>();
@@ -41,12 +32,8 @@ export function CategoryPage() {
       }
     });
     function collect(id: string, out: Set<string>) {
-      const children = parentToChildren.get(id) ?? [];
-      children.forEach((c) => {
-        if (!out.has(c)) {
-          out.add(c);
-          collect(c, out);
-        }
+      (parentToChildren.get(id) ?? []).forEach((c) => {
+        if (!out.has(c)) { out.add(c); collect(c, out); }
       });
     }
     categories.forEach((c) => {
@@ -67,7 +54,6 @@ export function CategoryPage() {
       .filter((c) => !excluded.has(c.id))
       .map((c) => ({ label: c.name, value: c.id }));
   }, [categories, selected, descendantsMap]);
-
 
   async function handleSubmit(values: CreateCategoryDto) {
     if (selected) {
@@ -104,7 +90,6 @@ export function CategoryPage() {
     });
   }
 
-  // จัด categories เป็น nested ตาม parentId — Table render แบบ tree row อัตโนมัติ
   type CatNode = Category & { children?: CatNode[] };
   const nestedCategories = useMemo<CatNode[]>(() => {
     const byId = new Map<string, CatNode>();
@@ -121,23 +106,21 @@ export function CategoryPage() {
     return roots;
   }, [categories]);
 
-  const [tableExpandedKeys, setTableExpandedKeys] = useState<React.Key[]>([]);
-  const tableSeenKeysRef = useRef<Set<string>>(new Set());
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
+  const seenKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const allParentIds: string[] = [];
     categories.forEach((c) => {
       if ((c.childrenId?.length ?? 0) > 0) allParentIds.push(c.id);
     });
-    const seen = tableSeenKeysRef.current;
+    const seen = seenKeysRef.current;
     if (seen.size === 0) {
-      setTableExpandedKeys(allParentIds);
+      setExpandedKeys(allParentIds);
     } else {
       const newOnes = allParentIds.filter((k) => !seen.has(k));
       if (newOnes.length > 0) {
-        setTableExpandedKeys((prev) =>
-          Array.from(new Set([...prev.map(String), ...newOnes])),
-        );
+        setExpandedKeys((prev) => Array.from(new Set([...prev.map(String), ...newOnes])));
       }
     }
     categories.forEach((c) => seen.add(c.id));
@@ -148,8 +131,6 @@ export function CategoryPage() {
       title: 'ชื่อหมวดหมู่',
       dataIndex: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
-      searchable: true,
-      defaultSortOrder: 'ascend',
       render: (v: string, r: CatNode) => (
         <Space size={6}>
           <Text strong>{v}</Text>
@@ -165,14 +146,13 @@ export function CategoryPage() {
       title: 'รหัส',
       dataIndex: 'id',
       width: 180,
-      searchable: true,
       render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code>,
     },
     {
       title: 'รายละเอียด',
       dataIndex: 'description',
       ellipsis: true,
-      render: (v?: string) => v || '-',
+      render: (v?: string | null) => v || '-',
     },
     {
       title: 'อัปเดตล่าสุด',
@@ -201,40 +181,6 @@ export function CategoryPage() {
     },
   ];
 
-  const treeData = useMemo(
-    () => mapTreeNodes(tree.data ?? []),
-    [tree.data],
-  );
-
-  // controlled expanded keys — แก้ปัญหา defaultExpandAll ไม่ทำงานเพราะ data มา async
-  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
-  const seenKeysRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!tree.data) return;
-    const allKeys: string[] = [];
-    const walk = (nodes: CategoryTreeNode[]) => {
-      nodes.forEach((n) => {
-        allKeys.push(n.id);
-        if (Array.isArray(n.children) && n.children.length > 0) walk(n.children);
-      });
-    };
-    walk(tree.data);
-
-    // ครั้งแรกที่ data มา → expand ทั้งหมด
-    // refetch ครั้งถัดไป → keep ของ user ที่เคย collapse + auto-expand node ใหม่ที่ยังไม่เคยเห็น
-    const seen = seenKeysRef.current;
-    if (seen.size === 0) {
-      setExpandedKeys(allKeys);
-    } else {
-      const newKeys = allKeys.filter((k) => !seen.has(k));
-      if (newKeys.length > 0) {
-        setExpandedKeys((prev) => Array.from(new Set([...prev.map(String), ...newKeys])));
-      }
-    }
-    allKeys.forEach((k) => seen.add(k));
-  }, [tree.data]);
-
   return (
     <div>
       <PageHeader
@@ -242,7 +188,7 @@ export function CategoryPage() {
         subtitle={`ทั้งหมด ${total} หมวดหมู่`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => { refetch(); tree.refetch(); }} loading={isFetching}>
+            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
             <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
@@ -252,49 +198,17 @@ export function CategoryPage() {
         }
       />
 
-      <Tabs
-        defaultActiveKey="list"
-        items={[
-          {
-            key: 'list',
-            label: <Space size={6}><UnorderedListOutlined /> รายการ</Space>,
-            children: (
-              <Table<CatNode>
-                rowKey="id"
-                columns={columns}
-                dataSource={nestedCategories}
-                loading={isLoading}
-                expandable={{
-                  expandedRowKeys: tableExpandedKeys,
-                  onExpandedRowsChange: (keys) => setTableExpandedKeys([...keys]),
-                  rowExpandable: (r) => (r.children?.length ?? 0) > 0,
-                }}
-                pagination={false}
-              />
-            ),
-          },
-          {
-            key: 'tree',
-            label: <Space size={6}><ApartmentOutlined /> โครงสร้างต้นไม้</Space>,
-            children: (
-              <Card>
-                {tree.isLoading ? (
-                  <Skeleton active paragraph={{ rows: 6 }} />
-                ) : treeData.length === 0 ? (
-                  <Empty description="ยังไม่มีหมวดหมู่" image={<AppstoreOutlined style={{ fontSize: 32 }} />} />
-                ) : (
-                  <Tree
-                    treeData={treeData}
-                    expandedKeys={expandedKeys}
-                    onExpand={(keys) => setExpandedKeys(keys)}
-                    showLine
-                    blockNode
-                  />
-                )}
-              </Card>
-            ),
-          },
-        ]}
+      <Table<CatNode>
+        rowKey="id"
+        columns={columns}
+        dataSource={nestedCategories}
+        loading={isLoading}
+        expandable={{
+          expandedRowKeys: expandedKeys,
+          onExpandedRowsChange: (keys) => setExpandedKeys([...keys]),
+          rowExpandable: (r) => (r.children?.length ?? 0) > 0,
+        }}
+        pagination={false}
       />
 
       <CategoryFormModal
@@ -306,21 +220,4 @@ export function CategoryPage() {
       />
     </div>
   );
-}
-
-function mapTreeNodes(nodes: CategoryTreeNode[] | undefined | null): DataNode[] {
-  if (!Array.isArray(nodes)) return [];
-  return nodes.map((n) => {
-    const kids = Array.isArray(n.children) ? n.children : [];
-    return {
-      key: n.id,
-      title: (
-        <Space size={6}>
-          <Text strong>{n.name}</Text>
-          {n.description && <Text type="secondary" style={{ fontSize: 12 }}>— {n.description}</Text>}
-        </Space>
-      ),
-      children: kids.length > 0 ? mapTreeNodes(kids) : undefined,
-    };
-  });
 }

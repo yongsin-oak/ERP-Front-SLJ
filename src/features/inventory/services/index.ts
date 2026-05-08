@@ -8,12 +8,17 @@ export interface ProductParams {
   search?: string;
   brandId?: string;
   categoryId?: string;
+  isActive?: boolean;
 }
 
 export interface StockEntryParams {
   page: number;
   limit: number;
   productBarcode?: string;
+  type?: 'in' | 'return' | 'adjust';
+  employeeId?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 const BASE = '/product';
@@ -56,10 +61,33 @@ export const inventoryService = {
     ),
 };
 
+export interface BulkStockEntryDto {
+  employeeId?: string;
+  note?: string;
+  entries: { productBarcode: string; type: 'in' | 'return' | 'adjust'; quantity: number }[];
+}
+
+export interface BulkStockAdjustDto {
+  employeeId?: string;
+  note?: string;
+  adjustments: { productBarcode: string; actualQuantity: number }[];
+}
+
+export interface BulkStockResult {
+  created: { id: string; productBarcode: string; newRemaining: number }[];
+  errors: unknown[];
+}
+
 export const stockEntryService = {
   getAll: (params: StockEntryParams) =>
     req.get<Paginated<StockEntry>>(STOCK_BASE, { params }),
 
   create: (data: CreateStockEntryDto) =>
     req.post<ApiData<StockEntry>>(STOCK_BASE, data),
+
+  bulkCreate: (data: BulkStockEntryDto) =>
+    req.post<ApiData<BulkStockResult>>(`${STOCK_BASE}/bulk`, data),
+
+  bulkAdjust: (data: BulkStockAdjustDto) =>
+    req.post<ApiData<BulkStockResult>>(`${STOCK_BASE}/bulk-adjust`, data),
 };

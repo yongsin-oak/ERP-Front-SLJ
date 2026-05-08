@@ -1,15 +1,13 @@
 import type { Platform } from '@features/shop';
 
-export type OrderStatus = 'pending' | 'completed' | 'cancelled';
+export type OrderStatus = 'completed' | 'cancelled';
 
 export const OrderStatusLabel: Record<OrderStatus, string> = {
-  pending: 'รอดำเนินการ',
   completed: 'สำเร็จ',
   cancelled: 'ยกเลิก',
 };
 
 export const OrderStatusColor: Record<OrderStatus, string> = {
-  pending: 'orange',
   completed: 'green',
   cancelled: 'red',
 };

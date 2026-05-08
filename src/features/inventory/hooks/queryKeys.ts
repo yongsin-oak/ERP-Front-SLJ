@@ -4,6 +4,7 @@ export interface ProductParams {
   search?: string;
   brandId?: string;
   categoryId?: string;
+  isActive?: boolean;
 }
 
 export const productKeys = {
