@@ -143,3 +143,4 @@ Detailed patterns and examples live in `.claude/skills/`:
 | `component-patterns` | Component anatomy, page/table/modal patterns, naming, anti-patterns |
 | `performance` | Lazy loading, table virtualization, memoization, bundle rules |
 | `query-constants` | STALE_TIME/GC_TIME/REFETCH_INTERVAL constants, hook file structure (queryKeys/queries/mutations) |
+| `type-sharing` | Where to declare types, sharing within/across features, Paginated/ApiData, anti-patterns |
