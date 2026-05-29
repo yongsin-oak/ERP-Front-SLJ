@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { STALE_TIME } from '@lib';
 import { employeeService } from '../services';
 import { employeeKeys } from './queryKeys';
 import type { EmployeeListParams } from './queryKeys';
@@ -15,7 +16,7 @@ export function useEmployees() {
   return useQuery({
     queryKey: [...employeeKeys.all, 'all'],
     queryFn: () => employeeService.getAll({ page: 1, limit: 100 }).then((r) => r.data.data),
-    staleTime: 1000 * 60 * 5,
+    staleTime: STALE_TIME.LONG,
   });
 }
 
