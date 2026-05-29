@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Popconfirm, Space, Input, Typography, Badge, Modal } from 'antd';
+import { Flex, Popconfirm, Space, Input, Typography, Badge, Modal } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, Tag, PageHeader } from '@design-system';
@@ -137,7 +137,7 @@ export function EmployeePage() {
         }
       />
 
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+      <Flex gap={12} align="center" justify="space-between" style={{ marginBottom: 16 }}>
         <Search
           prefix={<SearchOutlined />}
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
@@ -160,7 +160,7 @@ export function EmployeePage() {
             <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
           </Space>
         )}
-      </div>
+      </Flex>
 
       <Table<Employee>
         rowKey="id"

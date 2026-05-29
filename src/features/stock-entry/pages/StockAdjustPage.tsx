@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Form, Input, Select, InputNumber, Table as AntTable, Typography, Alert } from 'antd';
+import { Flex, Select, InputNumber, Table as AntTable, Typography, Alert } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, PageHeader } from '@design-system';
+import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkAdjustStock } from '../hooks';
 import { useEmployeeList } from '@features/employee/hooks';
 import { useProducts } from '@features/inventory/hooks';
@@ -27,6 +28,10 @@ export function StockAdjustPage() {
 
   const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
   const employees = empData?.data ?? [];
+  const employeeOptions = useMemo(
+    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
+    [employees],
+  );
 
   const { data: prodData } = useProducts({ page: 1, limit: 500 });
   const products = prodData?.data ?? [];
@@ -74,10 +79,9 @@ export function StockAdjustPage() {
       dataIndex: 'productBarcode',
       render: (_: string, r: AdjustRow) => (
         <Select
-          showSearch
+          showSearch={{ optionFilterProp: 'label' }}
           placeholder="เลือกสินค้า"
           style={{ width: '100%', minWidth: 260 }}
-          optionFilterProp="label"
           options={productOptions}
           value={r.productBarcode || undefined}
           onChange={(v) => updateRow(r.key, { productBarcode: v })}
@@ -156,27 +160,14 @@ export function StockAdjustPage() {
       />
 
       <div style={{ maxWidth: 900 }}>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-          <Form.Item label="พนักงาน" style={{ marginBottom: 0 }}>
-            <Select
-              allowClear
-              showSearch
-              placeholder="เลือกพนักงาน (ถ้ามี)"
-              style={{ width: 200 }}
-              optionFilterProp="label"
-              options={employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id }))}
-              value={employeeId}
-              onChange={setEmployeeId}
-            />
-          </Form.Item>
-          <Form.Item label="หมายเหตุ" style={{ marginBottom: 0, flex: 1 }}>
-            <Input
-              placeholder="เช่น นับสต็อกประจำเดือน พ.ค. 2026"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </Form.Item>
-        </div>
+        <EntryMetaBar
+          employeeOptions={employeeOptions}
+          employeeId={employeeId}
+          note={note}
+          notePlaceholder="เช่น นับสต็อกประจำเดือน พ.ค. 2026"
+          onEmployeeChange={setEmployeeId}
+          onNoteChange={setNote}
+        />
 
         <AntTable
           rowKey="key"
@@ -186,7 +177,7 @@ export function StockAdjustPage() {
           size="middle"
         />
 
-        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+        <Flex gap={8} style={{ marginTop: 12 }}>
           <Button icon={<PlusOutlined />} onClick={() => setRows((p) => [...p, newRow()])}>
             เพิ่มรายการ
           </Button>
@@ -198,7 +189,7 @@ export function StockAdjustPage() {
           >
             บันทึกการปรับสต็อก
           </Button>
-        </div>
+        </Flex>
       </div>
     </div>
   );

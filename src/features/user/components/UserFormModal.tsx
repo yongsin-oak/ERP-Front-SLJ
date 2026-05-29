@@ -64,8 +64,7 @@ export function UserFormModal({ open, roles, onClose, onSubmit }: Props) {
           <Select
             placeholder="เลือกบทบาท"
             options={roles.map((r) => ({ label: r, value: r }))}
-            showSearch
-            optionFilterProp="label"
+            showSearch={{ optionFilterProp: 'label' }}
           />
         </Form.Item>
       </Form>

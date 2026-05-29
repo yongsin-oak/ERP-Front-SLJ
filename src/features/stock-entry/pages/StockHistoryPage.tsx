@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Space, DatePicker, Select, Input } from 'antd';
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Flex, DatePicker, Select } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader, Tag } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -116,13 +116,12 @@ export function StockHistoryPage() {
         }
       />
 
-      <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <Flex gap={8} wrap style={{ marginBottom: 16 }}>
         <Select
           allowClear
           placeholder="บาร์โค้ดสินค้า"
-          showSearch
+          showSearch={{ optionFilterProp: 'label' }}
           style={{ width: 220 }}
-          optionFilterProp="label"
           options={products.map((p) => ({ label: `${p.name} (${p.barcode})`, value: p.barcode }))}
           onChange={(v) => { setSearch(v); setPage(1); }}
         />
@@ -140,9 +139,8 @@ export function StockHistoryPage() {
         <Select
           allowClear
           placeholder="พนักงาน"
-          showSearch
+          showSearch={{ optionFilterProp: 'label' }}
           style={{ width: 180 }}
-          optionFilterProp="label"
           options={employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id }))}
           onChange={(v) => { setEmployeeId(v); setPage(1); }}
         />
@@ -157,7 +155,7 @@ export function StockHistoryPage() {
             setPage(1);
           }}
         />
-      </div>
+      </Flex>
 
       <Table<StockEntry>
         rowKey="id"

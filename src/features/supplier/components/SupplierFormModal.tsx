@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Form, Input, Switch } from 'antd';
+import { Form, Input, Switch, Row, Col } from 'antd';
 import { Modal, Button } from '@design-system';
 import type { Supplier, CreateSupplierDto } from '../types';
 
@@ -59,20 +59,28 @@ export function SupplierFormModal({ open, supplier, onClose, onSubmit, loading }
         <Form.Item name="name" label="ชื่อบริษัท / ซัพพลายเออร์" rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}>
           <Input placeholder="บริษัท โค้กไทย จำกัด" />
         </Form.Item>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-          <Form.Item name="contactName" label="ชื่อผู้ติดต่อ">
-            <Input placeholder="คุณสมศักดิ์" />
-          </Form.Item>
-          <Form.Item name="phone" label="เบอร์โทรศัพท์">
-            <Input placeholder="02-111-1111" />
-          </Form.Item>
-          <Form.Item name="email" label="อีเมล">
-            <Input placeholder="order@company.co.th" type="email" />
-          </Form.Item>
-          <Form.Item name="taxId" label="เลขประจำตัวผู้เสียภาษี">
-            <Input placeholder="0105537000001" maxLength={13} />
-          </Form.Item>
-        </div>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="contactName" label="ชื่อผู้ติดต่อ">
+              <Input placeholder="คุณสมศักดิ์" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="phone" label="เบอร์โทรศัพท์">
+              <Input placeholder="02-111-1111" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="email" label="อีเมล">
+              <Input placeholder="order@company.co.th" type="email" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="taxId" label="เลขประจำตัวผู้เสียภาษี">
+              <Input placeholder="0105537000001" maxLength={13} />
+            </Form.Item>
+          </Col>
+        </Row>
         <Form.Item name="address" label="ที่อยู่">
           <Input.TextArea rows={2} placeholder="ที่อยู่" />
         </Form.Item>

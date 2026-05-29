@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Popconfirm, Space, Typography } from 'antd';
+import { Flex, Popconfirm, Space, Typography } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
 } from '@ant-design/icons';
@@ -138,11 +138,10 @@ export function ShopPage() {
       />
 
       {selectedKeys.length > 0 && (
-        <div
-          style={{
-            marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}
+        <Flex
+          align="center"
+          justify="space-between"
+          style={{ marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6 }}
         >
           <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
           <Space>
@@ -155,7 +154,7 @@ export function ShopPage() {
             </Popconfirm>
             <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
           </Space>
-        </div>
+        </Flex>
       )}
 
       <Table<Shop>

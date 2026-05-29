@@ -25,7 +25,8 @@ export type { TagProps, StatusType } from './components/Tag';
 export { Form } from './components/Form';
 export type { FormItemProps } from './components/Form';
 
-export { Text, Title, PageTitle } from './components/Typography';
+export { Text, Title, PageTitle, TEXT_SIZE } from './components/Typography';
+export type { TextSize } from './components/Typography';
 
 export { Spinner } from './components/Spinner';
 export type { SpinnerProps } from './components/Spinner';
@@ -36,5 +37,3 @@ export { PageHeader } from './components/PageHeader';
 
 export * from './tokens';
 
-export { ExportButton } from './components/ExportButton';
-export { ImportModal } from './components/ImportModal';

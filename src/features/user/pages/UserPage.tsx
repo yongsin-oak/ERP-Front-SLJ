@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Tag, Popconfirm, Space, Tooltip, Form } from 'antd';
+import { Flex, Tag, Popconfirm, Space, Tooltip, Form } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import { Table, Button, PageHeader, Select, Modal } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -80,7 +80,7 @@ export function UserPage() {
             onConfirm={() => deleteUser.mutate(r.id)}
           >
             <Tooltip title="ลบ">
-              <Button size="small" danger icon={<DeleteOutlined />} />
+              <Button size="small" variant="danger-ghost" icon={<DeleteOutlined />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -89,7 +89,7 @@ export function UserPage() {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Flex vertical gap={16}>
       <PageHeader
         title="ผู้ใช้งาน"
         subtitle={`${users.length} บัญชีในระบบ`}
@@ -153,6 +153,6 @@ export function UserPage() {
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </Flex>
   );
 }

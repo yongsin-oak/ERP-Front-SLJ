@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Popconfirm, Input, Space, Typography, Badge } from 'antd';
+import { Flex, Popconfirm, Input, Space, Typography, Badge } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, InboxOutlined } from '@ant-design/icons';
 import { Table, Button, Tag, PageHeader, Select } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -151,8 +151,8 @@ export function InventoryPage() {
         }
       />
 
-      <div style={{ marginBottom: 16, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Flex gap={8} wrap align="center" justify="space-between" style={{ marginBottom: 16 }}>
+        <Flex gap={8} wrap>
           <Search
             prefix={<SearchOutlined />}
             placeholder="ค้นหาชื่อ, barcode..."
@@ -167,8 +167,7 @@ export function InventoryPage() {
             onChange={(v) => { setBrandId(v); setPage(1); }}
             options={brands.map((b) => ({ label: b.name, value: b.id }))}
             style={{ width: 160 }}
-            showSearch
-            optionFilterProp="label"
+            showSearch={{ optionFilterProp: 'label' }}
           />
           <Select
             allowClear
@@ -177,10 +176,9 @@ export function InventoryPage() {
             onChange={(v) => { setCategoryId(v); setPage(1); }}
             options={categories.map((c) => ({ label: c.name, value: c.id }))}
             style={{ width: 160 }}
-            showSearch
-            optionFilterProp="label"
+            showSearch={{ optionFilterProp: 'label' }}
           />
-        </div>
+        </Flex>
         {selectedKeys.length > 0 && (
           <Space>
             <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
@@ -196,7 +194,7 @@ export function InventoryPage() {
             <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
           </Space>
         )}
-      </div>
+      </Flex>
 
       <Table<Product>
         rowKey="barcode"

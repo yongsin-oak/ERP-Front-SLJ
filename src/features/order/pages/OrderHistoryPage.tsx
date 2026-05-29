@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Popconfirm, Space, Typography, DatePicker, Card } from 'antd';
+import { Flex, Popconfirm, Row, Col, Space, Typography, DatePicker, Card } from 'antd';
 import {
   DeleteOutlined,
   EyeOutlined,
@@ -228,69 +228,65 @@ export function OrderHistoryPage() {
         }
         style={{ marginBottom: 16 }}
       >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 12,
-          }}
-        >
-          <Input
-            prefix={<SearchOutlined />}
-            placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
-            allowClear
-            value={filters.search}
-            onChange={(e) => patchFilter({ search: e.target.value })}
-          />
-          <RangePicker
-            value={filters.dateRange}
-            onChange={(v) => patchFilter({ dateRange: v as [Dayjs, Dayjs] | null })}
-            format="DD/MM/YYYY"
-            style={{ width: '100%' }}
-            placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
-          />
-          <Select
-            allowClear
-            placeholder="สถานะ"
-            value={filters.status || undefined}
-            onChange={(v) => patchFilter({ status: v ?? '' })}
-            options={statusOptions}
-            style={{ width: '100%' }}
-          />
-          <Select
-            allowClear
-            placeholder="ร้านค้า"
-            value={filters.shopId || undefined}
-            onChange={(v) => patchFilter({ shopId: v ?? '' })}
-            options={shopOptions}
-            style={{ width: '100%' }}
-            showSearch
-            optionFilterProp="label"
-          />
-          <Select
-            allowClear
-            placeholder="พนักงาน"
-            value={filters.employeeId || undefined}
-            onChange={(v) => patchFilter({ employeeId: v ?? '' })}
-            options={employeeOptions}
-            style={{ width: '100%' }}
-            showSearch
-            optionFilterProp="label"
-          />
-        </div>
+        <Row gutter={[12, 12]}>
+          <Col xs={24} sm={12} lg={8}>
+            <Input
+              prefix={<SearchOutlined />}
+              placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
+              allowClear
+              value={filters.search}
+              onChange={(e) => patchFilter({ search: e.target.value })}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <RangePicker
+              value={filters.dateRange}
+              onChange={(v) => patchFilter({ dateRange: v as [Dayjs, Dayjs] | null })}
+              format="DD/MM/YYYY"
+              style={{ width: '100%' }}
+              placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Select
+              allowClear
+              placeholder="สถานะ"
+              value={filters.status || undefined}
+              onChange={(v) => patchFilter({ status: v ?? '' })}
+              options={statusOptions}
+              style={{ width: '100%' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Select
+              allowClear
+              placeholder="ร้านค้า"
+              value={filters.shopId || undefined}
+              onChange={(v) => patchFilter({ shopId: v ?? '' })}
+              options={shopOptions}
+              style={{ width: '100%' }}
+              showSearch={{ optionFilterProp: 'label' }}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Select
+              allowClear
+              placeholder="พนักงาน"
+              value={filters.employeeId || undefined}
+              onChange={(v) => patchFilter({ employeeId: v ?? '' })}
+              options={employeeOptions}
+              style={{ width: '100%' }}
+              showSearch={{ optionFilterProp: 'label' }}
+            />
+          </Col>
+        </Row>
       </Card>
 
       {selectedKeys.length > 0 && (
-        <div
-          style={{
-            marginBottom: 12,
-            padding: '8px 12px',
-            background: '#fafafa',
-            borderRadius: 6,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
+        <Flex
+          align="center"
+          justify="space-between"
+          style={{ marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6 }}
         >
           <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
           <Space>
@@ -305,7 +301,7 @@ export function OrderHistoryPage() {
             </Popconfirm>
             <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
           </Space>
-        </div>
+        </Flex>
       )}
 
       <Table<Order>

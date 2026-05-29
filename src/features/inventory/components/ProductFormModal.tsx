@@ -98,8 +98,7 @@ export function ProductFormModal({ open, product, onClose, onSubmit }: ProductFo
                 options={brandOptions}
                 placeholder="เลือกแบรนด์"
                 allowClear
-                showSearch
-                optionFilterProp="label"
+                showSearch={{ optionFilterProp: 'label' }}
                 style={{ width: '100%' }}
               />
             </Form.Item>
@@ -110,8 +109,7 @@ export function ProductFormModal({ open, product, onClose, onSubmit }: ProductFo
                 options={categoryOptions}
                 placeholder="เลือกหมวดหมู่"
                 allowClear
-                showSearch
-                optionFilterProp="label"
+                showSearch={{ optionFilterProp: 'label' }}
                 style={{ width: '100%' }}
               />
             </Form.Item>

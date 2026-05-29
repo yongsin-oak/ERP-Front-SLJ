@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Form, Switch, Space } from 'antd';
+import { Form, Switch, Space, Row, Col } from 'antd';
 import { DesktopOutlined } from '@ant-design/icons';
 import { Modal, Input, InputPassword, Select, Button } from '@design-system';
 import type { Role } from '@features/auth/types';
@@ -78,26 +78,29 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
       ]}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-          <Form.Item
-            name="terminalCode"
-            label="Terminal Code"
-            rules={[
-              { required: true, message: 'กรุณากรอก Terminal Code' },
-              { pattern: /^[A-Za-z0-9_-]+$/, message: 'อนุญาต A-Z, 0-9, -, _ เท่านั้น' },
-            ]}
-          >
-            <Input placeholder="เช่น POS-01" autoComplete="off" />
-          </Form.Item>
-
-          <Form.Item
-            name="name"
-            label="ชื่อ Terminal"
-            rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}
-          >
-            <Input placeholder="เช่น POS หน้าร้าน 1" />
-          </Form.Item>
-        </div>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="terminalCode"
+              label="Terminal Code"
+              rules={[
+                { required: true, message: 'กรุณากรอก Terminal Code' },
+                { pattern: /^[A-Za-z0-9_-]+$/, message: 'อนุญาต A-Z, 0-9, -, _ เท่านั้น' },
+              ]}
+            >
+              <Input placeholder="เช่น POS-01" autoComplete="off" />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="name"
+              label="ชื่อ Terminal"
+              rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}
+            >
+              <Input placeholder="เช่น POS หน้าร้าน 1" />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           name="role"
@@ -107,8 +110,7 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
           <Select
             placeholder="เลือกบทบาท"
             options={ALL_ROLES.map((r) => ({ label: r, value: r }))}
-            showSearch
-            optionFilterProp="label"
+            showSearch={{ optionFilterProp: 'label' }}
           />
         </Form.Item>
 

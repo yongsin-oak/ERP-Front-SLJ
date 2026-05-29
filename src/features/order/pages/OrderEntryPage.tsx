@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, Form, Tag, Space, Typography, Alert, Divider } from 'antd';
+import { Flex, Row, Col, Card, Form, Tag, Space, Typography, Alert, Divider } from 'antd';
 import type { InputRef } from 'antd';
 import {
   SaveOutlined,
@@ -130,7 +130,7 @@ export function OrderEntryPage() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 80 }}>
+    <Flex vertical gap={12} style={{ paddingBottom: 80 }}>
       <PageHeader
         title="บันทึก Order"
         subtitle="เลือกพนักงาน → ร้านค้า → กรอกเลขคำสั่งซื้อ → สแกนสินค้า"
@@ -148,57 +148,53 @@ export function OrderEntryPage() {
 
       <Form form={form} layout="vertical" requiredMark="optional">
         <Card size="small">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '0 16px',
-            }}
-          >
-            <Form.Item
-              name="employeeId"
-              label={<Space size={6}><UserOutlined /> พนักงานผู้บันทึก</Space>}
-              rules={[{ required: true, message: 'กรุณาเลือกพนักงาน' }]}
-            >
-              <Select
-                options={employeeOptions}
-                placeholder="เลือกพนักงาน"
-                style={{ width: '100%' }}
-                loading={employeesLoading}
-                showSearch
-                optionFilterProp="searchText"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="shopId"
-              label={<Space size={6}><ShopOutlined /> ร้านค้า / แพลตฟอร์ม</Space>}
-              rules={[{ required: true, message: 'กรุณาเลือกร้านค้า' }]}
-            >
-              <Select
-                options={shopOptions}
-                placeholder="เลือกร้านค้า"
-                style={{ width: '100%' }}
-                loading={shopsLoading}
-                showSearch
-                optionFilterProp="searchText"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="orderNumber"
-              label="เลขคำสั่งซื้อ"
-              rules={[{ required: true, message: 'กรุณากรอกเลขคำสั่งซื้อ' }]}
-            >
-              <Input
-                ref={orderNumberRef}
-                placeholder="ยิง / กรอกเลขคำสั่งซื้อจากแพลตฟอร์ม"
-                disabled={!employeeReady || !shopReady}
-                autoComplete="off"
-                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-              />
-            </Form.Item>
-          </div>
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="employeeId"
+                label={<Space size={6}><UserOutlined /> พนักงานผู้บันทึก</Space>}
+                rules={[{ required: true, message: 'กรุณาเลือกพนักงาน' }]}
+              >
+                <Select
+                  options={employeeOptions}
+                  placeholder="เลือกพนักงาน"
+                  style={{ width: '100%' }}
+                  loading={employeesLoading}
+                  showSearch={{ optionFilterProp: 'searchText' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="shopId"
+                label={<Space size={6}><ShopOutlined /> ร้านค้า / แพลตฟอร์ม</Space>}
+                rules={[{ required: true, message: 'กรุณาเลือกร้านค้า' }]}
+              >
+                <Select
+                  options={shopOptions}
+                  placeholder="เลือกร้านค้า"
+                  style={{ width: '100%' }}
+                  loading={shopsLoading}
+                  showSearch={{ optionFilterProp: 'searchText' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                name="orderNumber"
+                label="เลขคำสั่งซื้อ"
+                rules={[{ required: true, message: 'กรุณากรอกเลขคำสั่งซื้อ' }]}
+              >
+                <Input
+                  ref={orderNumberRef}
+                  placeholder="ยิง / กรอกเลขคำสั่งซื้อจากแพลตฟอร์ม"
+                  disabled={!employeeReady || !shopReady}
+                  autoComplete="off"
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
         </Card>
 
         {!headerReady ? (
@@ -232,7 +228,7 @@ export function OrderEntryPage() {
         price={totals.price}
         onSave={handleSave}
       />
-    </div>
+    </Flex>
   );
 }
 
@@ -270,15 +266,7 @@ function PaperOrderCard({
       <div style={{ height: 4, background: accent }} />
 
       <div style={{ padding: '14px 20px 12px', borderBottom: `1px dashed ${colors.border.default}` }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 16,
-            flexWrap: 'wrap',
-          }}
-        >
+        <Flex justify="space-between" align="center" gap={16} wrap>
           <div style={{ minWidth: 0 }}>
             <Text type="secondary" style={{ fontSize: 11, letterSpacing: 0.6 }}>
               ORDER NUMBER
@@ -306,34 +294,34 @@ function PaperOrderCard({
               </div>
             </Space>
           )}
-        </div>
+        </Flex>
 
         <Divider style={{ margin: '12px 0 10px' }} />
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '6px 20px',
-          }}
-        >
-          <InfoLine
-            label="พนักงาน"
-            value={employee ? `${employee.firstName} (${employee.nickname})` : '-'}
-          />
-          <InfoLine label="วันที่บันทึก" value={dayjs().format('DD/MM/YYYY HH:mm')} />
-          <div>{noteField}</div>
-        </div>
+        <Row gutter={[20, 6]}>
+          <Col xs={24} sm={8}>
+            <InfoLine
+              label="พนักงาน"
+              value={employee ? `${employee.firstName} (${employee.nickname})` : '-'}
+            />
+          </Col>
+          <Col xs={24} sm={8}>
+            <InfoLine label="วันที่บันทึก" value={dayjs().format('DD/MM/YYYY HH:mm')} />
+          </Col>
+          <Col xs={24} sm={8}>
+            <div>{noteField}</div>
+          </Col>
+        </Row>
       </div>
 
       <div style={{ padding: '14px 20px 18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <Flex align="center" gap={8} style={{ marginBottom: 10 }}>
           <ShoppingCartOutlined style={{ color: accent }} />
           <Text strong>รายการสินค้า</Text>
           {items.length > 0 && (
             <Tag color="blue" style={{ marginLeft: 4 }}>{items.length} รายการ</Tag>
           )}
-        </div>
+        </Flex>
         <OrderItemsEditor items={items} onChange={onItemsChange} resetSignal={resetSignal} />
       </div>
     </div>
@@ -365,7 +353,10 @@ function SaveBar({
   onSave: () => void;
 }) {
   return (
-    <div
+    <Flex
+      justify="flex-end"
+      align="center"
+      gap={20}
       style={{
         position: 'fixed',
         left: 0,
@@ -374,10 +365,6 @@ function SaveBar({
         background: '#fff',
         borderTop: `1px solid ${colors.border.default}`,
         padding: '10px 20px',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        gap: 20,
         boxShadow: '0 -1px 4px rgba(0,0,0,0.04)',
         zIndex: 50,
       }}
@@ -402,6 +389,6 @@ function SaveBar({
       >
         บันทึกคำสั่งซื้อ
       </Button>
-    </div>
+    </Flex>
   );
 }

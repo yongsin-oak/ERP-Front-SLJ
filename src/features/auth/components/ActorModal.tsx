@@ -133,8 +133,7 @@ export function ActorModal() {
           style={{ width: '100%', marginTop: 6 }}
           options={employeeOptions}
           placeholder="เลือกพนักงาน"
-          showSearch
-          optionFilterProp="label"
+          showSearch={{ optionFilterProp: 'label' }}
           value={employeeId || undefined}
           onChange={(v) => { setEmployeeId(v as string); setError(''); }}
         />

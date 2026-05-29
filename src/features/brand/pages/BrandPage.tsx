@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Popconfirm, Space, Typography } from 'antd';
+import { Flex, Popconfirm, Space, Typography } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
 } from '@ant-design/icons';
@@ -144,11 +144,10 @@ function BulkBar({
   count, loading, onDelete, onClear,
 }: { count: number; loading: boolean; onDelete: () => void; onClear: () => void }) {
   return (
-    <div
-      style={{
-        marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}
+    <Flex
+      align="center"
+      justify="space-between"
+      style={{ marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6 }}
     >
       <Typography.Text type="secondary">เลือก {count} รายการ</Typography.Text>
       <Space>
@@ -161,6 +160,6 @@ function BulkBar({
         </Popconfirm>
         <Button onClick={onClear}>ยกเลิก</Button>
       </Space>
-    </div>
+    </Flex>
   );
 }

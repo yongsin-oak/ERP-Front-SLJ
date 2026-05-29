@@ -62,8 +62,7 @@ export function CategoryFormModal({ open, category, parentOptions, onClose, onSu
             allowClear
             placeholder="ไม่มี (เป็นหมวดหมู่ระดับบนสุด)"
             options={parentOptions}
-            showSearch
-            optionFilterProp="label"
+            showSearch={{ optionFilterProp: 'label' }}
           />
         </Form.Item>
         <Form.Item name="description" label="รายละเอียด">

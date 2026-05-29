@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Modal, Form, InputNumber, Space, Alert, Tag, Divider } from 'antd';
+import { Modal, Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from 'antd';
 import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
 import { message } from 'antd';
@@ -128,20 +128,24 @@ export function StockEntryModal({ open, onClose }: Props) {
       <Divider style={{ margin: '8px 0 16px' }} />
 
       <Form form={form} layout="vertical" initialValues={{ type: 'in', quantity: 1 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-          <Form.Item name="type" label="ประเภท" rules={[{ required: true }]}>
-            <Select
-              style={{ width: '100%' }}
-              options={TYPE_OPTIONS.map((t) => ({
-                label: <Tag color={StockEntryTypeColor[t.value]} style={{ margin: 0 }}>{t.label}</Tag>,
-                value: t.value,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="quantity" label="จำนวน (ชิ้น)" rules={[{ required: true }]}>
-            <InputNumber min={1} style={{ width: '100%' }} />
-          </Form.Item>
-        </div>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item name="type" label="ประเภท" rules={[{ required: true }]}>
+              <Select
+                style={{ width: '100%' }}
+                options={TYPE_OPTIONS.map((t) => ({
+                  label: <Tag color={StockEntryTypeColor[t.value]} style={{ margin: 0 }}>{t.label}</Tag>,
+                  value: t.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item name="quantity" label="จำนวน (ชิ้น)" rules={[{ required: true }]}>
+              <InputNumber min={1} style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           name="employeeId"
@@ -152,8 +156,7 @@ export function StockEntryModal({ open, onClose }: Props) {
             options={employeeOptions}
             placeholder="เลือกพนักงาน"
             style={{ width: '100%' }}
-            showSearch
-            optionFilterProp="label"
+            showSearch={{ optionFilterProp: 'label' }}
           />
         </Form.Item>
 

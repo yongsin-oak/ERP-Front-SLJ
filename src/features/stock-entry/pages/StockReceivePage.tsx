@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Form, Input, Select, InputNumber, Table as AntTable, Space, Typography } from 'antd';
+import { Flex, Select, InputNumber, Table as AntTable, Typography } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, PageHeader } from '@design-system';
+import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkCreateStockEntry } from '../hooks';
 import { useEmployeeList } from '@features/employee/hooks';
 import { useProducts } from '@features/inventory/hooks';
@@ -27,6 +28,10 @@ export function StockReceivePage() {
 
   const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
   const employees = empData?.data ?? [];
+  const employeeOptions = useMemo(
+    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
+    [employees],
+  );
 
   const { data: prodData } = useProducts({ page: 1, limit: 500 });
   const products = prodData?.data ?? [];
@@ -60,10 +65,9 @@ export function StockReceivePage() {
       dataIndex: 'productBarcode',
       render: (_: string, r: ReceiveRow) => (
         <Select
-          showSearch
+          showSearch={{ optionFilterProp: 'label' }}
           placeholder="เลือกสินค้า"
           style={{ width: '100%', minWidth: 220 }}
-          optionFilterProp="label"
           options={productOptions}
           value={r.productBarcode || undefined}
           onChange={(v) => updateRow(r.key, { productBarcode: v })}
@@ -123,27 +127,13 @@ export function StockReceivePage() {
       />
 
       <div style={{ maxWidth: 900 }}>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-          <Form.Item label="พนักงาน" style={{ marginBottom: 0 }}>
-            <Select
-              allowClear
-              showSearch
-              placeholder="เลือกพนักงาน (ถ้ามี)"
-              style={{ width: 200 }}
-              optionFilterProp="label"
-              options={employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id }))}
-              value={employeeId}
-              onChange={setEmployeeId}
-            />
-          </Form.Item>
-          <Form.Item label="หมายเหตุ" style={{ marginBottom: 0, flex: 1 }}>
-            <Input
-              placeholder="หมายเหตุ (ถ้ามี)"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </Form.Item>
-        </div>
+        <EntryMetaBar
+          employeeOptions={employeeOptions}
+          employeeId={employeeId}
+          note={note}
+          onEmployeeChange={setEmployeeId}
+          onNoteChange={setNote}
+        />
 
         <AntTable
           rowKey="key"
@@ -153,7 +143,7 @@ export function StockReceivePage() {
           size="middle"
         />
 
-        <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+        <Flex gap={8} style={{ marginTop: 12 }}>
           <Button icon={<PlusOutlined />} onClick={() => setRows((p) => [...p, newRow()])}>
             เพิ่มรายการ
           </Button>
@@ -165,7 +155,7 @@ export function StockReceivePage() {
           >
             บันทึกการรับสินค้า
           </Button>
-        </div>
+        </Flex>
 
         {rows.some((r) => r.productBarcode) && (
           <div style={{ marginTop: 16, padding: '10px 16px', background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>

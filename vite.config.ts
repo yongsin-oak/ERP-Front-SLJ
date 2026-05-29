@@ -34,10 +34,10 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ["react", "react-dom"],
-            antd: ["antd"],
-            utils: ["lodash", "dayjs"],
+          manualChunks: (id) => {
+            if (id.includes("node_modules/antd") || id.includes("node_modules/@ant-design") || id.includes("node_modules/rc-")) return "antd";
+            if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) return "vendor";
+            if (id.includes("node_modules/lodash") || id.includes("node_modules/dayjs")) return "utils";
           },
         },
       },

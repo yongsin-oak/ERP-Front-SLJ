@@ -12,6 +12,7 @@ export const lightAntdTheme: ThemeConfig = {
     colorError: red.error,
     colorLink: red.hover,
 
+    fontFamily: "'IBM Plex Sans Thai', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif",
     colorTextBase: "rgba(0, 0, 0, 0.88)",
     colorBgBase: "#ffffff",
     colorBorder: "rgba(0, 0, 0, 0.12)",
