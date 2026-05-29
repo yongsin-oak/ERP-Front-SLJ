@@ -19,9 +19,7 @@ export const orderService = {
   delete: (id: string) => req.delete<ApiData<Order>>(`${BASE}/${id}`),
 
   bulkDelete: (ids: string[]) =>
-    req.delete<ApiData<{ deleted: Order[]; errors: unknown[] }>>(`${BASE}/bulk`, {
-      data: { ids },
-    }),
+    req.delete<ApiData<string[]>>(`${BASE}/bulk`, { data: { ids } }),
 
   checkExist: (ids: string[]) =>
     req.post<ApiData<{ existing: string[]; missing: string[] }>>(`${BASE}/check-exist`, { ids }),

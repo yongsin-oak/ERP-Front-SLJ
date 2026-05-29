@@ -1,6 +1,6 @@
 import { req } from '@lib';
 import type { Paginated, ApiData } from '@lib/apiTypes';
-import type { Product, CreateProductDto, UpdateProductDto, StockEntry, CreateStockEntryDto } from '../types';
+import type { Product, ProductDropdown, CreateProductDto, UpdateProductDto, StockEntry, CreateStockEntryDto } from '../types';
 
 export interface ProductParams {
   page: number;
@@ -46,14 +46,9 @@ export const inventoryService = {
       { data: { barcodes } },
     ),
 
-  /** Lightweight search for autocomplete/dropdown — สูงสุด 50 รายการ */
-  dropdownSearch: (search?: string) =>
-    req.get<ApiData<{
-      barcode: string;
-      name: string;
-      remaining: number;
-      sellPrice?: { pack?: number; carton?: number };
-    }[]>>(`${BASE}/dropdown-search`, { params: { search } }),
+  /** Paginated lightweight search for dropdown — page/limit optional (default 1/20, max limit 50) */
+  dropdownSearch: (params: { search?: string; page?: number; limit?: number } = {}) =>
+    req.get<Paginated<ProductDropdown>>(`${BASE}/dropdown-search`, { params }),
 
   checkExist: (barcodes: string[]) =>
     req.post<ApiData<{ existing: string[]; missing: string[] }>>(

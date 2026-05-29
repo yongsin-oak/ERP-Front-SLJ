@@ -4,6 +4,7 @@ export interface OrderParams {
   status?: string;
   shopId?: string;
   employeeId?: string;
+  terminalId?: string;
   search?: string;
   dateFrom?: string;
   dateTo?: string;

@@ -33,6 +33,14 @@ export interface Product {
   updatedAt?: string;
 }
 
+/** Lite shape returned by GET /product/dropdown-search */
+export interface ProductDropdown {
+  barcode: string;
+  name: string;
+  remaining: number;
+  sellPrice?: PriceSet;
+}
+
 export interface CreateProductDto {
   barcode: string;
   name: string;

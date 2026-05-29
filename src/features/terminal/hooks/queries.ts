@@ -6,7 +6,7 @@ import { terminalKeys } from './queryKeys';
 export function useTerminals() {
   return useQuery({
     queryKey: terminalKeys.lists(),
-    queryFn: () => terminalService.getAll().then((r) => r.data.data),
+    queryFn: () => terminalService.getAll({ page: 1, limit: 200 }).then((r) => r.data.data),
     staleTime: STALE_TIME.STATIC,
   });
 }

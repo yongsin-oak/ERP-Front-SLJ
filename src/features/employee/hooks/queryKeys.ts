@@ -5,6 +5,7 @@ export interface EmployeeListParams {
   limit: number;
   search?: string;
   department?: Department;
+  isActive?: boolean;
 }
 
 export const employeeKeys = {

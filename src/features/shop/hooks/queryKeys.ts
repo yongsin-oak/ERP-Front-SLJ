@@ -1,7 +1,9 @@
+import type { Platform } from '../types';
+
 export interface ShopListParams {
   page: number;
   limit: number;
-  search?: string;
+  platform?: Platform;
 }
 
 export const shopKeys = {

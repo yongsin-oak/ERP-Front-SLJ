@@ -1,11 +1,12 @@
 import { req } from '@lib';
 import type { Paginated, ApiData } from '@lib/apiTypes';
 import type { Shop, CreateShopDto, UpdateShopDto } from '../types';
+import type { ShopListParams } from '../hooks/queryKeys';
 
 const BASE = '/shop';
 
 export const shopService = {
-  getAll: (params?: { page?: number; limit?: number }) =>
+  getAll: (params: ShopListParams) =>
     req.get<Paginated<Shop>>(BASE, { params }),
 
   getById: (id: string) =>

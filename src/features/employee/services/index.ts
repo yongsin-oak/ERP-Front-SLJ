@@ -7,6 +7,7 @@ export interface EmployeeParams {
   limit: number;
   search?: string;
   department?: Department;
+  isActive?: boolean;
 }
 
 const BASE = '/employee';
@@ -26,6 +27,9 @@ export const employeeService = {
 
   delete: (id: string) =>
     req.delete<ApiData<Employee>>(`${BASE}/${id}`),
+
+  bulkDelete: (ids: string[]) =>
+    req.delete<ApiData<Employee[]>>(`${BASE}/bulk`, { data: { ids } }),
 
   setPin: (id: string, pin: string) =>
     req.patch<ApiData<null>>(`${BASE}/${id}/pin`, { pin }),

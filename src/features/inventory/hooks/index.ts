@@ -1,4 +1,4 @@
-export { useProducts, useProductByBarcode } from './queries';
+export { useProducts, useProductByBarcode, useProductDropdown } from './queries';
 export {
   useCreateProduct,
   useUpdateProduct,
@@ -6,5 +6,5 @@ export {
   useBulkDeleteProduct,
   useCreateStockEntry,
 } from './mutations';
-export { productKeys, stockEntryKeys } from './queryKeys';
-export type { ProductParams } from './queryKeys';
+export { productKeys, stockEntryKeys, PRODUCT_DROPDOWN_LIMIT } from './queryKeys';
+export type { ProductParams, ProductDropdownSearchParams } from './queryKeys';

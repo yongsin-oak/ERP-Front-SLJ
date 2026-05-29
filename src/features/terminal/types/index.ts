@@ -6,6 +6,8 @@ export interface Terminal {
   name: string;
   role: Role;
   isActive: boolean;
+  location: string | null;
+  lastSeenAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
