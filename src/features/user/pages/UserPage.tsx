@@ -4,7 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-d
 import { Table, Button, PageHeader, Select, Modal } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
-import { useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../hooks';
+import { useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../react-query';
 import { UserFormModal } from '../components/UserFormModal';
 import type { User } from '../types';
 

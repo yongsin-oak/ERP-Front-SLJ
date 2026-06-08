@@ -4,9 +4,9 @@ import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
 import { message } from 'antd';
 import { Input, Select, Button } from '@design-system';
-import { useEmployees } from '@features/employee/hooks';
+import { useEmployees } from '@features/employee';
 import { inventoryService } from '../services';
-import { useCreateStockEntry } from '../hooks';
+import { useCreateStockEntry } from '../react-query';
 import { StockEntryTypeLabel, StockEntryTypeColor } from '../types';
 import type { CreateStockEntryDto, StockEntryType, Product } from '../types';
 

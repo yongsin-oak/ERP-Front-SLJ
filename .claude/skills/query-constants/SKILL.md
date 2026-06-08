@@ -30,11 +30,43 @@ Never write raw millisecond math in hooks. Use the named constants below.
 | Constant | Value | When to use |
 | --- | --- | --- |
 | `STALE_TIME.REALTIME` | 0ms | Dashboard panels — always refetch on mount |
-| `STALE_TIME.SHORT` | 30s | Near-live data |
-| `STALE_TIME.MEDIUM` | 2min | **Default** — most paginated lists |
-| `STALE_TIME.LONG` | 5min | Employees, orders — changes infrequently |
-| `STALE_TIME.MASTER` | 10min | Brands, categories, shops — master data |
-| `STALE_TIME.STATIC` | 30min | Roles, terminals — near-static reference data |
+| `STALE_TIME.SHORT` | 30s | **Operational data** — changes during every work shift |
+| `STALE_TIME.MEDIUM` | 2min | Support data — changes occasionally during the day |
+| `STALE_TIME.LONG` | 5min | Rarely-changed config data |
+| `STALE_TIME.MASTER` | 10min | True reference/master data — edited a few times per month |
+| `STALE_TIME.STATIC` | 30min | Near-immutable setup data — roles, terminals |
+
+### Per-Feature Cache Classification
+
+> This ERP processes orders and stock in real time. Most operational data must stay fresh. **Default to SHORT; only escalate with a reason.**
+
+| Feature | Data | Correct STALE_TIME | Reason |
+| --- | --- | --- | --- |
+| `dashboard` | all panels | `REALTIME` + `refetchInterval` | Live ops summary |
+| `order` | order list / detail | `SHORT` | Operators shoot orders constantly across terminals |
+| `inventory` | stock levels | `SHORT` | Changes with every order pick and stock-in |
+| `stock-entry` | entries list | `SHORT` | Purchasing adds entries throughout the day |
+| `employee` | employee list | `MEDIUM` | HR changes are infrequent but possible mid-shift |
+| `user` | user list | `MEDIUM` | User management done by admin |
+| `supplier` | supplier list | `MEDIUM` | Updated occasionally by purchasing |
+| `shop` | shop list | `MASTER` | Set up once; rarely edited |
+| `brand` | brand list | `MASTER` | Reference data; changes rarely |
+| `category` | category list | `MASTER` | Reference data; changes rarely |
+| `role` | role list | `STATIC` | Permission setup; near-immutable |
+| `terminal` | terminal list | `STATIC` | Hardware setup; near-immutable |
+
+### What NOT to do
+
+```ts
+// ❌ LONG for orders — stale reads cause double-processing
+useQuery({ ..., staleTime: STALE_TIME.LONG })  // in useOrders()
+
+// ❌ MASTER for inventory — operator sees ghost stock already reserved
+useQuery({ ..., staleTime: STALE_TIME.MASTER })  // in useInventory()
+
+// ✅ SHORT for anything touched during a work shift
+useQuery({ ..., staleTime: STALE_TIME.SHORT, placeholderData: (prev) => prev })
+```
 
 ```ts
 // ✅
@@ -187,9 +219,9 @@ export function useCreateBrand() {
     mutationFn: (data: CreateBrandDto) => brandService.create(data).then((r) => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: brandKeys.all });
-      message.success('เพิ่มแบรนด์สำเร็จ');
+      message.success('Brand created');
     },
-    onError: handleError('เพิ่มแบรนด์'),
+    onError: handleError('Create brand'),
   });
 }
 ```

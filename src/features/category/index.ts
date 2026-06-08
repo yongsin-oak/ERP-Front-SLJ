@@ -3,6 +3,6 @@ export {
   useCategories, useCategoryTree,
   useCreateCategory, useUpdateCategory, useDeleteCategory,
   categoryKeys,
-} from './hooks';
-export { categoryService } from './services';
+} from './react-query';
+export { categoryService } from './react-query';
 export type { Category, CategoryTreeNode, CreateCategoryDto, UpdateCategoryDto } from './types';

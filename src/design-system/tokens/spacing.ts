@@ -21,8 +21,9 @@ export const radius = {
 } as const;
 
 export const shadow = {
-  sm: '0 1px 2px rgba(0,0,0,0.05)',
-  md: '0 2px 8px rgba(0,0,0,0.12)',
-  lg: '0 4px 16px rgba(0,0,0,0.12)',
-  xl: '0 8px 32px rgba(0,0,0,0.12)',
+  // Stripe-style: border-reliant surfaces with subtle depth
+  sm: '0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.08)',       // card, input
+  md: '0 4px 12px rgba(50,50,93,0.08), 0 2px 4px rgba(0,0,0,0.06)',   // dropdown, popover
+  lg: '0 8px 24px rgba(50,50,93,0.1), 0 4px 8px rgba(0,0,0,0.08)',    // modal
+  xl: '0 20px 60px rgba(50,50,93,0.12), 0 8px 24px rgba(0,0,0,0.1)',  // large modal, deep panel
 } as const;

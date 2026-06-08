@@ -3,9 +3,9 @@ import { Flex, Select, InputNumber, Table as AntTable, Typography, Alert } from 
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, PageHeader } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
-import { useBulkAdjustStock } from '../hooks';
-import { useEmployeeList } from '@features/employee/hooks';
-import { useProducts } from '@features/inventory/hooks';
+import { useBulkAdjustStock } from '../react-query';
+import { useEmployeeList } from '@features/employee';
+import { useProducts } from '@features/inventory';
 
 interface AdjustRow {
   key: string;

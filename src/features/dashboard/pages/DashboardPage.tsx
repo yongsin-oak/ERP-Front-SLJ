@@ -22,7 +22,7 @@ import {
 import dayjs from 'dayjs';
 import { Button, PageHeader } from '@design-system';
 import { colors } from '@design-system';
-import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock } from '../hooks';
+import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock } from '../react-query';
 import type { ColumnType } from '@design-system';
 import type { RecentOrder, LowStockProduct } from '../types';
 

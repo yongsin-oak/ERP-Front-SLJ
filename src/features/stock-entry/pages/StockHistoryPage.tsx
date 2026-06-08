@@ -4,11 +4,11 @@ import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader, Tag } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useStockEntries } from '../hooks';
+import { useStockEntries } from '../react-query';
 import { StockEntryTypeLabel, StockEntryTypeColor } from '../types';
 import type { StockEntry, StockEntryType } from '../types';
-import { useEmployeeList } from '@features/employee/hooks';
-import { useProducts } from '@features/inventory/hooks';
+import { useEmployeeList } from '@features/employee';
+import { useProducts } from '@features/inventory';
 
 const { RangePicker } = DatePicker;
 

@@ -8,7 +8,7 @@ import { Table, Button, Tag, PageHeader } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { ShopFormModal } from '../components/ShopFormModal';
 import { PlatformBadge } from '../components/PlatformBadge';
-import { useShops, useCreateShop, useUpdateShop, useDeleteShop, useBulkDeleteShop } from '../hooks';
+import { useShops, useCreateShop, useUpdateShop, useDeleteShop, useBulkDeleteShop } from '../react-query';
 import { PlatformColor, PLATFORM_ORDER } from '../types';
 import type { Shop, CreateShopDto, Platform } from '../types';
 

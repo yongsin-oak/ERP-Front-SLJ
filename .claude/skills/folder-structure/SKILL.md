@@ -1,160 +1,225 @@
-# Skill: Feature Folder Structure
+# Skill: Folder Structure
 
-> Authoritative reference for how every feature module must be organized in this codebase.
+> Authoritative reference for how the codebase is organized — top-level src/ and feature internals.
 
 ---
 
 ## Trigger
 
 Use this skill when:
-- Creating a new feature
-- Adding a page, hook, service, or type to an existing feature
+- Creating a new feature or adding files to an existing one
 - Unsure where a file belongs
+- Adding a shared utility, hook, or config value
 
 ---
 
-## Canonical Feature Layout
+## Top-Level `src/` Layout
+
+```
+src/
+├── app/                   # Bootstrap — wires everything together
+│   ├── App.tsx            # Root component (default export)
+│   ├── providers/         # QueryProvider, ThemeProvider
+│   └── router/            # createBrowserRouter, PrivateRoute, RoleGuard
+│
+├── config/                # Runtime configuration (env, feature flags, api settings)
+│   ├── env.ts             # ENV vars + IS_DEV flag
+│   ├── app.config.ts      # APP_CONFIG (name, version)
+│   ├── api.config.ts      # API_CONFIG (baseURL, timeout)
+│   ├── auth.config.ts     # AUTH_CONFIG (bypass, session config)
+│   ├── featureFlags.config.ts
+│   └── index.ts           # barrel
+│
+├── design-system/         # UI foundation
+│   ├── antd/
+│   │   ├── tokens.ts      # Ant Design global token overrides
+│   │   ├── components.ts  # Ant Design per-component overrides
+│   │   └── theme.ts       # lightAntdTheme = { token, components }
+│   ├── tokens/            # Our design tokens (colors, spacing, shadow, radius)
+│   ├── components/        # Generic UI components (Button, Table, FormModal…)
+│   └── index.ts           # public barrel
+│
+├── shared/                # Reusable code used by ≥2 features
+│   ├── api/
+│   │   ├── axiosInstance.ts   # req — axios instance + refresh interceptor
+│   │   ├── queryClient.ts     # React Query client + global error handling
+│   │   ├── error.ts           # getErrorMessage, handleError, showError
+│   │   └── index.ts
+│   ├── hooks/             # Shared React hooks (useDebounce, useLocalStorage, useDraftState…)
+│   ├── utils/
+│   │   └── sheet/         # useSheet — xlsx export/import utility
+│   ├── constants/         # STALE_TIME, GC_TIME, REFETCH_INTERVAL, PAGINATION, UPLOAD
+│   ├── types/             # Shared API types: Paginated, ApiData, PageParams, UpdateDto
+│   └── index.ts           # barrel — everything importable via @shared
+│
+├── features/              # Business domain modules
+├── layouts/               # AppLayout (nav shell, route outlet)
+├── dev/                   # DevTools panel (dev-only, tree-shaken in prod)
+├── main.tsx               # entry point
+└── index.css              # global reset
+```
+
+### Layer responsibilities (one-sentence rule each)
+
+| Layer | Rule |
+|---|---|
+| `app/` | Boots React, wires providers + router — no business logic |
+| `config/` | Reads env vars and exposes typed constants — never imports from features |
+| `design-system/` | Generic UI components + tokens — no feature awareness |
+| `shared/` | Reusable utilities — no feature awareness, no Zustand |
+| `features/` | All business logic — the only layer that can import from every other layer |
+| `layouts/` | App shell (nav, sidebar) — imports from design-system + features/auth |
+
+---
+
+## Path Aliases
+
+```ts
+@app           → src/app
+@config        → src/config          (and @config/* → src/config/*)
+@design-system → src/design-system   (and @design-system/* → src/design-system/*)
+@shared        → src/shared          (and @shared/* → src/shared/*)
+@features      → src/features        (and @features/* → src/features/*)
+@layouts       → src/layouts
+@assets        → src/assets
+@dev           → src/dev             (dev-only)
+```
+
+**Cross-feature imports always use the top-level barrel:**
+```ts
+// ✅
+import { useEmployees } from '@features/employee';
+import { req } from '@shared';
+import { IS_DEV } from '@config/env';
+
+// ❌ deep subfolder imports across features or shared
+import { useEmployees } from '@features/employee/react-query';
+import { req } from '@shared/api/axiosInstance';
+```
+
+---
+
+## Feature Anatomy
 
 ```
 src/features/<feature>/
-├── index.ts              # public barrel — ONLY export what other features need
-├── pages/
-│   └── FeaturePage.tsx   # route-level component (lazy-loaded in router)
-├── components/
-│   └── FeatureFormModal.tsx
-├── hooks/
-│   ├── queryKeys.ts      # key factory — never hardcode in useQuery
-│   ├── queries.ts        # useQuery hooks (reads only)
-│   ├── mutations.ts      # useMutation hooks (writes only)
-│   └── index.ts          # barrel for hooks
-├── services/
-│   └── index.ts          # axios calls only — no state, no hooks
-└── types/
-    └── index.ts          # interfaces, type aliases, constants, label maps
+├── index.ts              # public barrel — export ONLY what other features need
+├── pages/                # route-level components (lazy-loaded in router)
+├── components/           # feature-local UI
+├── react-query/          # ALL data-fetching logic + HTTP layer
+│   ├── queryKeys.ts      # key factory
+│   ├── queries.ts        # useQuery hooks
+│   ├── mutations.ts      # useMutation hooks (omit if feature is read-only)
+│   ├── services.ts       # axios calls via req from @shared
+│   └── index.ts          # barrel — exports hooks, keys, service
+├── stores/               # Zustand stores (omit if feature has no UI state)
+│   └── index.ts
+├── types/                # interfaces, type aliases, status constants
+│   └── index.ts
+└── hooks/                # custom non-data-fetching hooks (omit if none needed)
+    └── index.ts
 ```
 
-### When a feature grows large — split services/hooks into files
+### Folder rules
 
-```
-hooks/
-├── queryKeys.ts
-├── useFeatureList.ts     # one hook per concern
-├── useFeatureDetail.ts
-├── useCreateFeature.ts
-├── useUpdateFeature.ts
-└── index.ts
-
-services/
-├── featureService.ts     # CRUD
-├── featureReportService.ts
-└── index.ts
-```
-
----
-
-## File Naming Rules
-
-| Artifact | Convention | Example |
+| Folder | What goes here | Tech |
 |---|---|---|
-| Page component | `PascalCase.tsx` | `OrderPage.tsx` |
-| Feature component | `PascalCase.tsx` | `OrderFormModal.tsx` |
-| Hook file | `camelCase.ts` or `index.ts` | `useOrders.ts` |
-| Service file | `camelCase.ts` or `index.ts` | `orderService.ts` |
-| Type / constant file | `index.ts` | `types/index.ts` |
-| Barrel | always `index.ts` | `features/order/index.ts` |
-| Styled component | same `.tsx` file as component | — |
+| `react-query/` | Server state — queries, mutations, HTTP calls | React Query + axios |
+| `stores/` | Client UI state — modal open, selection, wizard step | Zustand |
+| `hooks/` | Custom hooks not related to data fetching | `useState`, `useRef`, etc. |
+| `types/` | Domain types, status enums, label/color maps | TypeScript |
+
+**Never mix concerns:**
+```ts
+// ✅ react-query/queries.ts — data fetching via service
+export function useBrands(params: BrandListParams) {
+  return useQuery({ queryKey: brandKeys.list(params), queryFn: () => brandService.getAll(params) });
+}
+
+// ✅ react-query/services.ts — HTTP only
+export const brandService = {
+  getAll: (params) => req.get<Paginated<Brand>>('/brand', { params }),
+};
+
+// ✅ stores/useBrandStore.ts — UI state only
+export const useBrandStore = create<BrandStore>((set) => ({
+  selectedIds: [],
+  toggleSelect: (id) => set(s => ({ ... })),
+}));
+
+// ❌ Zustand in react-query/ or services in stores/
+```
+
+### react-query/services.ts — import rules
+
+```ts
+// ✅ correct imports inside services.ts
+import { req } from '@shared';                          // HTTP client
+import type { Paginated, ApiData } from '@shared/types'; // shared response types
+import type { Brand, CreateBrandDto } from '../types';   // feature-local types
+import type { BrandListParams } from './queryKeys';      // params from queryKeys (same folder)
+
+// ❌ never import from node_modules/axios directly
+// ❌ never import from feature barrel (circular)
+```
+
+### Feature barrel (`index.ts`) pattern
+
+Export ONLY what consumers outside the feature need:
+```ts
+// features/brand/index.ts
+export { BrandPage } from './pages/BrandPage';
+export { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand, useBulkDeleteBrand, brandKeys } from './react-query';
+export { brandService } from './react-query';
+export type { Brand, CreateBrandDto, UpdateBrandDto } from './types';
+```
 
 ---
 
-## Barrel Rules
-
-### Feature barrel (`features/<feature>/index.ts`)
-Export ONLY what external features/routes need. Do NOT export internal implementation.
+## Shared (`src/shared/`) Usage
 
 ```ts
-// features/order/index.ts
-export { OrderPage } from './pages/OrderPage';
-export { useOrders, useCreateOrder, useUpdateOrder, useDeleteOrder } from './hooks';
-export { orderKeys } from './hooks';
-export type { OrderParams } from './hooks';
-export { orderService } from './services';
-export type { Order, OrderStatus, OrderStatusLabel } from './types';
+// Most common — barrel import
+import { req, handleError, STALE_TIME } from '@shared';
+import type { Paginated, ApiData, PageParams } from '@shared/types';
+
+// Subpath — only when you need something not in the barrel
+import { lightAntdTheme } from '@design-system/antd/theme';
+import { IS_DEV } from '@config/env';
 ```
 
-### Hooks barrel (`features/<feature>/hooks/index.ts`)
-```ts
-export { useOrders, useOrderDetail } from './queries';
-export { useCreateOrder, useUpdateOrder, useDeleteOrder } from './mutations';
-export { orderKeys } from './queryKeys';
-export type { OrderParams } from './queryKeys';
-```
-
----
-
-## Path Aliases — Always Use These
-
-```ts
-// ✅ cross-feature import
-import { useAuth } from '@features/auth';
-import { Button, Table } from '@design-system';
-import { req } from '@lib';
-
-// ❌ relative paths across features
-import { useAuth } from '../../auth/hooks';
-```
-
-| Alias | Maps to |
+| What | Import from |
 |---|---|
-| `@features` | `src/features` |
-| `@design-system` | `src/design-system` |
-| `@lib` | `src/lib` |
-| `@layouts` | `src/layouts` |
-| `@routes` | `src/routes` |
-| `@assets` | `src/assets` |
-| `@dev` | `src/dev` (dev-only, tree-shaken) |
-
----
-
-## Shared vs Feature-Local
-
-| Put it in `src/` when... | Put it in `features/<x>/` when... |
-|---|---|
-| Used by ≥2 features | Used by only this feature |
-| Pure utility (date, string, number) | Domain-specific logic |
-| Generic UI component (Button, Table) | Domain-specific UI (OrderStatusTag) |
-
-Shared location:
-```
-src/
-├── design-system/components/   # generic UI primitives
-├── lib/                        # axios, theme, sheet utilities
-└── layouts/                    # app shell
-```
+| `req` (axios) | `@shared` |
+| `queryClient` | `@shared` |
+| `handleError`, `showError` | `@shared` |
+| `STALE_TIME`, `GC_TIME` | `@shared` |
+| `Paginated`, `ApiData`, `PageParams` | `@shared/types` |
+| `useDebounce`, `useDraftState`, etc. | `@shared` |
+| `useSheet` | `@shared` |
 
 ---
 
 ## Route Registration
 
-Every page must be lazy-loaded in `src/routes/index.tsx`:
-
+Every page must be lazy-loaded in `src/app/router/index.tsx`:
 ```tsx
-const OrderPage = lazy(() =>
-  import('@features/order/pages/OrderPage').then(m => ({ default: m.OrderPage }))
+const BrandPage = lazy(() =>
+  import('@features/brand').then((m) => ({ default: m.BrandPage }))
 );
 
-{ path: 'order', element: <Suspense fallback={<Spinner fullPage />}><OrderPage /></Suspense> }
+{ path: 'brand', element: <Page><Guarded roles={['SuperAdmin']}><BrandPage /></Guarded></Page> }
 ```
-
-Never import page components directly (non-lazy) in the router.
 
 ---
 
 ## Checklist: New Feature
 
-- [ ] Create `features/<name>/` with all 5 sub-folders
-- [ ] `index.ts` barrel exports public API only
-- [ ] `hooks/index.ts` barrel exports hooks + keys
-- [ ] `types/index.ts` has all interfaces + constants
-- [ ] `services/index.ts` uses `req` from `@lib` — no raw `axios`
-- [ ] Page registered as lazy route in `routes/index.tsx`
-- [ ] Cross-feature imports use `@features/` alias
+- [ ] `features/<name>/index.ts` — barrel exports public API only
+- [ ] `react-query/` — queryKeys + queries + mutations + services + index
+- [ ] `react-query/services.ts` imports `req` from `@shared`, types from `../types`
+- [ ] `types/index.ts` — all domain types and status constants
+- [ ] `stores/` — only if feature needs Zustand UI state
+- [ ] `hooks/` — only if feature needs custom non-data-fetching hooks
+- [ ] Page registered as lazy route in `src/app/router/index.tsx`
+- [ ] Cross-feature imports use `@features/<name>` top-level barrel only

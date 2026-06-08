@@ -17,7 +17,7 @@ import { useShops, PlatformBadge, PLATFORM_ORDER, PlatformHex } from '@features/
 import type { Shop, Platform } from '@features/shop';
 import { useEmployees } from '@features/employee';
 import { OrderItemsEditor } from '../components';
-import { useCreateOrder } from '../hooks';
+import { useCreateOrder } from '../react-query';
 import type { OrderItem } from '../types';
 
 const { Text } = Typography;

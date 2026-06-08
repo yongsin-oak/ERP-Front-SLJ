@@ -10,7 +10,7 @@ import { Button, Input, Table, Tag } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { inventoryService } from '@features/inventory/services';
 import { ProductDropdownSelect } from '@features/inventory/components';
-import { getErrorMessage } from '@lib';
+import { getErrorMessage } from '@shared';
 import type { OrderItem } from '../types';
 import type { ProductDropdown } from '@features/inventory/types';
 

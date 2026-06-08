@@ -3,9 +3,9 @@ import { Flex, Select, InputNumber, Table as AntTable, Typography } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, PageHeader } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
-import { useBulkCreateStockEntry } from '../hooks';
-import { useEmployeeList } from '@features/employee/hooks';
-import { useProducts } from '@features/inventory/hooks';
+import { useBulkCreateStockEntry } from '../react-query';
+import { useEmployeeList } from '@features/employee';
+import { useProducts } from '@features/inventory';
 
 interface ReceiveRow {
   key: string;

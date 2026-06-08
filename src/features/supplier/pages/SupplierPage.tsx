@@ -4,7 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutli
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '../hooks';
+import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '../react-query';
 import { SupplierFormModal } from '../components/SupplierFormModal';
 import type { Supplier, CreateSupplierDto } from '../types';
 

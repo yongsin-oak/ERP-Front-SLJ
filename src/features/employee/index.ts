@@ -3,9 +3,9 @@ export {
   useEmployeeList, useEmployees, useEmployeeDetail,
   useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useBulkDeleteEmployee,
   useSetEmployeePin,
-} from './hooks';
-export { employeeKeys } from './hooks';
-export type { EmployeeListParams } from './hooks';
-export { employeeService } from './services';
+} from './react-query';
+export { employeeKeys } from './react-query';
+export type { EmployeeListParams } from './react-query';
+export { employeeService } from './react-query';
 export type { Employee, CreateEmployeeDto, UpdateEmployeeDto, Department } from './types';
 export { DepartmentLabel, DepartmentColor, DepartmentOptions } from './types';

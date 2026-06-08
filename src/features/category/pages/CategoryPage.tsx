@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { Table, Button, PageHeader, Tag } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
-import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../hooks';
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
 import type { Category, CreateCategoryDto } from '../types';
 
 const { Text } = Typography;

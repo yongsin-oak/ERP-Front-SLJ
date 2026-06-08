@@ -4,9 +4,9 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
 import { Select, Button } from '@design-system';
 import { colors } from '@design-system';
-import { showError } from '@lib';
-import { useEmployees } from '@features/employee/hooks';
-import { authService } from '../services';
+import { showError } from '@shared';
+import { useEmployees } from '@features/employee';
+import { authService } from '../react-query/services';
 import { useActorModal } from '../hooks/useActorModal';
 
 const { Text } = Typography;

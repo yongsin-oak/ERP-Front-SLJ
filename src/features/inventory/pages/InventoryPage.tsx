@@ -7,7 +7,7 @@ import { useBrands } from '@features/brand';
 import { useCategories } from '@features/category';
 import {
   useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useBulkDeleteProduct,
-} from '../hooks';
+} from '../react-query';
 import { ProductFormModal } from '../components/ProductFormModal';
 import { StockEntryModal } from '../components/StockEntryModal';
 import type { Product, CreateProductDto, UpdateProductDto } from '../types';

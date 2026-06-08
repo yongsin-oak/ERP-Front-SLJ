@@ -7,7 +7,7 @@ import type { ColumnType } from '@design-system';
 import {
   useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee,
   useBulkDeleteEmployee, useSetEmployeePin,
-} from '../hooks';
+} from '../react-query';
 import { EmployeeFormModal } from '../components/EmployeeFormModal';
 import { DepartmentLabel, DepartmentColor } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';

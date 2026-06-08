@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { Select, Spin } from 'antd';
 import type { SelectProps } from 'antd';
 import { debounce } from 'lodash';
-import { useProductDropdown } from '../hooks';
+import { useProductDropdown } from '../react-query';
 import type { ProductDropdown } from '../types';
 
 const SCROLL_THRESHOLD_PX = 60;

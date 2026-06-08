@@ -4,8 +4,8 @@ export {
   useOrders, useOrderDetail,
   useCreateOrder, useUpdateOrder, useDeleteOrder, useBulkDeleteOrder,
   orderKeys,
-} from './hooks';
-export type { OrderParams } from './hooks';
-export { orderService } from './services';
+} from './react-query';
+export type { OrderParams } from './react-query';
+export { orderService } from './react-query';
 export type { Order, CreateOrderDto, UpdateOrderDto, OrderStatus, OrderItem } from './types';
 export { OrderStatusLabel, OrderStatusColor } from './types';

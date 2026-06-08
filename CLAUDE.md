@@ -10,6 +10,7 @@
 
 ### Before Starting Any Task
 
+0. **Load project context.** Read `.claude/skills/project-context/SKILL.md` before any task. It defines the business, roles, UX bar, and backend error contract.
 1. **Read first, ask second.** Grep the codebase, read relevant files, and check `.claude/API.md` before asking any question. Only ask if the answer is genuinely not in the code.
 2. **Never guess.** If a type, endpoint shape, prop, or file location is unclear — read the source. Do not invent shapes or assume behavior.
 3. **Plan before touching files.** For changes affecting ≥3 files or with non-obvious side effects, state the plan first:
@@ -127,6 +128,13 @@ Always end with a summary:
 - **No magic timing numbers** — use `STALE_TIME`, `GC_TIME`, `REFETCH_INTERVAL` from `@lib`
 - **All pages lazy-loaded** — wrap in `lazy()` + `<Suspense>` in `routes/index.tsx`
 - **Server state → React Query · Shared UI state → Zustand · Local UI state → useState**
+- **Every mutation must have** `onError: handleError('Action name')` from `@lib`
+- **Every page must handle** loading / empty (with CTA) / error states — use `PageShell` from `@design-system`
+- **Every delete must confirm** — use `DeleteConfirmButton` from `@design-system`
+- **Bulk selection** — use `BulkSelectionBar` from `@design-system`
+- **Table edit+delete actions** — use `ActionCell` from `@design-system`
+- **Create/edit modals** — use `FormModal` from `@design-system` (handles reset, footer, validateFields)
+- **Table cell formatters** — use `DateCell`, `MoneyCell`, `CodeCell`, `QuantityCell` from `@design-system`
 
 ---
 
@@ -144,3 +152,5 @@ Detailed patterns and examples live in `.claude/skills/`:
 | `performance` | Lazy loading, table virtualization, memoization, bundle rules |
 | `query-constants` | STALE_TIME/GC_TIME/REFETCH_INTERVAL constants, hook file structure (queryKeys/queries/mutations) |
 | `type-sharing` | Where to declare types, sharing within/across features, Paginated/ApiData, anti-patterns |
+| `animation` | Easing functions (ease-in/out/in-out/linear), duration rules, UX laws (lawsofux.com), design for all users |
+| `project-context` | **Load every session** — SLJ Supply Center business model, roles, UX bar, backend error contract |

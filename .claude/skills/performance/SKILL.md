@@ -1,7 +1,34 @@
 # Skill: Performance Optimization
 
-> Performance rules for this codebase. Priority order: correctness → fast paint → minimal bundle → smooth interaction.
-> This is a CSR SPA — no SSR/SEO concerns.
+> Performance rules for this codebase. Priority order: **Performance + UX feedback → Responsive → everything else**.
+> This is a CSR SPA — no SSR/SEO concerns. Internal tool — no public search indexing needed.
+
+---
+
+## Project Philosophy
+
+**This is an internal ERP tool, not a public-facing website.**
+
+| Priority | Requirement |
+|---|---|
+| 1 — Performance | Every interaction must feel instant. Target: Doherty Threshold <400ms. |
+| 2 — UX Feedback | Users must always know what the app is doing (loading/success/error). Never leave users guessing. |
+| 3 — Responsive | Operators and warehouse staff use tablets and small monitors. Layout must adapt. |
+| — (not a concern) | SEO, SSR, meta tags, crawlability — irrelevant for an authenticated internal tool. |
+
+### Cache Philosophy
+
+> **Do NOT over-cache. Most ERP data changes constantly.**
+
+The typical ERP workflow: stock-in → order shoot → pick/pack → P&L update.
+Nearly every user action mutates data that another user reads immediately.
+
+- **Over-caching causes stale reads** — an operator sees stock that's already been reserved by another terminal.
+- **Under-caching wastes requests** — reference data like brands and roles change rarely; fetching them every mount is pointless.
+
+**Rule:** Use `STALE_TIME.SHORT` (30s) for operational data. Use `STALE_TIME.MASTER` only for true reference data. Never use `STALE_TIME.LONG` or higher for anything that changes during a work shift.
+
+See `query-constants` skill for the per-feature cache classification table.
 
 ---
 

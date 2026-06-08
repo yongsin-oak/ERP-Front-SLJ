@@ -31,10 +31,13 @@
       "@design-system/*": ["src/design-system/*"],
       "@layouts": ["src/layouts/index.ts"],
       "@layouts/*": ["src/layouts/*"],
-      "@lib": ["src/lib/index.ts"],
-      "@lib/*": ["src/lib/*"],
+      "@shared": ["src/shared/index.ts"],
+      "@shared/*": ["src/shared/*"],
+      "@app": ["src/app/App.tsx"],
+      "@app/*": ["src/app/*"],
+      "@config": ["src/config/index.ts"],
+      "@config/*": ["src/config/*"],
       "@features/*": ["src/features/*"],
-      "@routes/*": ["src/routes/*"],
       "@dev": ["src/dev/index.ts"],
       "@dev/*": ["src/dev/*"]
     }

@@ -17,7 +17,7 @@ import { useShops } from '@features/shop';
 import { useEmployees } from '@features/employee';
 import {
   useOrders, useDeleteOrder, useBulkDeleteOrder,
-} from '../hooks';
+} from '../react-query';
 import { OrderDetailModal } from '../components';
 import { OrderStatusLabel, OrderStatusColor } from '../types';
 import type { Order, OrderStatus } from '../types';

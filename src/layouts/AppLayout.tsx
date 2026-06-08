@@ -23,7 +23,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import type { Role } from '@features/auth/types';
-import { useAuth } from '@features/auth/hooks';
+import { useAuth } from '@features/auth';
 import { ActorModal } from '@features/auth';
 import { colors } from '@design-system';
 

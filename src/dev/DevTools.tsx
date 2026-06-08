@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Button, Select, Space, Tag, Tooltip, Drawer, Divider, Typography, Switch } from 'antd';
 import { BugOutlined, UserOutlined, ReloadOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useAuth, DEV_USER } from '@features/auth/hooks';
+import { useAuth, DEV_USER } from '@features/auth';
 import type { Role } from '@features/auth/types';
+import { ENV } from '@config/env';
 
 const { Text } = Typography;
 
@@ -154,11 +155,11 @@ export function DevTools() {
             <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 12 }}>
               <div>
                 <Text type="secondary">VITE_ENV_MODE: </Text>
-                <Tag color="purple">development</Tag>
+                <Tag color="purple">{ENV.MODE}</Tag>
               </div>
               <div style={{ marginTop: 4 }}>
                 <Text type="secondary">API: </Text>
-                <Text copyable style={{ fontSize: 11 }}>{import.meta.env.VITE_BACKEND_API_URL}</Text>
+                <Text copyable style={{ fontSize: 11 }}>{ENV.API_URL}</Text>
               </div>
             </div>
           </div>

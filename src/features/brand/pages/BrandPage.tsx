@@ -9,7 +9,7 @@ import type { ColumnType } from '@design-system';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
   useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand, useBulkDeleteBrand,
-} from '../hooks';
+} from '../react-query';
 import type { Brand, CreateBrandDto } from '../types';
 
 export function BrandPage() {

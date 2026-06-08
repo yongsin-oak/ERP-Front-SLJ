@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { Segmented, Typography, Space } from 'antd';
 import { LockOutlined, UserOutlined, DesktopOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
-import { useAuth } from '../hooks';
+import { useAuth } from '../stores';
 import { Button, Form, Input, InputPassword, Card } from '@design-system';
 import { colors } from '@design-system';
-import { showError } from '@lib';
+import { showError } from '@shared';
 
 const { Text } = Typography;
 
