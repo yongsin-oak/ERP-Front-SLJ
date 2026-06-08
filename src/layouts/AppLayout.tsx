@@ -21,6 +21,12 @@ import {
   SettingOutlined,
   BarcodeOutlined,
   PlusOutlined,
+  ContainerOutlined,
+  DownloadOutlined,
+  FireOutlined,
+  SlidersOutlined,
+  UnorderedListOutlined,
+  TruckOutlined,
 } from '@ant-design/icons';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
@@ -79,12 +85,24 @@ const NAV: NavSection[] = [
     ],
   },
   {
+    groupKey: 'stock',
+    icon: <ContainerOutlined />,
+    label: 'สต็อก',
+    children: [
+      { key: '/stock/receive', icon: <DownloadOutlined />,      label: 'รับสินค้าเข้า' },
+      { key: '/stock/damage',  icon: <FireOutlined />,          label: 'บันทึกของเสีย' },
+      { key: '/stock/adjust',  icon: <SlidersOutlined />,       label: 'ปรับสต็อก',     roles: ['SuperAdmin'] },
+      { key: '/stock/history', icon: <UnorderedListOutlined />, label: 'ประวัติสต็อก' },
+    ],
+  },
+  {
     groupKey: 'management',
     icon: <TeamOutlined />,
     label: 'จัดการ',
     children: [
-      { key: '/shop',     icon: <ShopOutlined />, label: 'ร้านค้า',  roles: ['SuperAdmin'] },
-      { key: '/employee', icon: <TeamOutlined />, label: 'พนักงาน', roles: ['SuperAdmin'] },
+      { key: '/shop',     icon: <ShopOutlined />,  label: 'ร้านค้า',       roles: ['SuperAdmin'] },
+      { key: '/employee', icon: <TeamOutlined />,  label: 'พนักงาน',      roles: ['SuperAdmin'] },
+      { key: '/supplier', icon: <TruckOutlined />, label: 'ซัพพลายเออร์' },
     ],
   },
   {

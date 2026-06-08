@@ -1,4 +1,4 @@
-import type { StockEntryParams } from '../services';
+import type { StockEntryParams } from './services';
 
 export const stockEntryKeys = {
   all: ['stock-entries'] as const,

@@ -12,6 +12,20 @@ import { useProducts } from '@features/inventory';
 
 const { RangePicker } = DatePicker;
 
+const DECREASE_TYPES: StockEntryType[] = ['damage'];
+
+function quantityDisplay(r: StockEntry) {
+  if (r.type === 'adjust') return String(r.quantity);
+  if (DECREASE_TYPES.includes(r.type)) return `-${r.quantity}`;
+  return `+${r.quantity}`;
+}
+
+function quantityColor(type: StockEntryType) {
+  if (type === 'damage') return '#cf1322';
+  if (type === 'adjust') return 'inherit';
+  return '#389e0d';
+}
+
 export function StockHistoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -69,9 +83,9 @@ export function StockHistoryPage() {
       dataIndex: 'quantity',
       width: 90,
       align: 'right',
-      render: (v: number, r: StockEntry) => (
-        <span style={{ color: r.type === 'adjust' ? 'inherit' : '#389e0d', fontWeight: 500 }}>
-          {r.type === 'adjust' ? v : `+${v}`}
+      render: (_: number, r: StockEntry) => (
+        <span style={{ color: quantityColor(r.type), fontWeight: 500 }}>
+          {quantityDisplay(r)}
         </span>
       ),
     },
@@ -88,6 +102,25 @@ export function StockHistoryPage() {
       width: 100,
       align: 'right',
       render: (v?: number) => v != null ? <strong>{v}</strong> : '-',
+    },
+    {
+      title: 'ราคาทุน/หน่วย',
+      dataIndex: 'costPricePerUnit',
+      width: 120,
+      align: 'right',
+      render: (v?: number | null) =>
+        v != null ? `฿${Number(v).toLocaleString()}` : '-',
+    },
+    {
+      title: 'มูลค่า',
+      key: 'totalCost',
+      width: 110,
+      align: 'right',
+      render: (_: unknown, r: StockEntry) => {
+        if (r.costPricePerUnit == null) return '-';
+        const val = r.quantity * Number(r.costPricePerUnit);
+        return `฿${val.toLocaleString()}`;
+      },
     },
     {
       title: 'พนักงาน',
@@ -128,11 +161,12 @@ export function StockHistoryPage() {
         <Select
           allowClear
           placeholder="ประเภท"
-          style={{ width: 140 }}
+          style={{ width: 150 }}
           options={[
             { label: 'รับสินค้าเข้า', value: 'in' },
             { label: 'รับคืน', value: 'return' },
             { label: 'ปรับสต็อก', value: 'adjust' },
+            { label: 'ของเสีย', value: 'damage' },
           ]}
           onChange={(v) => { setType(v); setPage(1); }}
         />

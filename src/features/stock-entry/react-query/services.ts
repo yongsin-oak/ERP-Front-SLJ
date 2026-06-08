@@ -6,7 +6,7 @@ export interface StockEntryParams {
   page: number;
   limit: number;
   productBarcode?: string;
-  type?: 'in' | 'return' | 'adjust';
+  type?: 'in' | 'return' | 'adjust' | 'damage';
   employeeId?: string;
   dateFrom?: string;
   dateTo?: string;

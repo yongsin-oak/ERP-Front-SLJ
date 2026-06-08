@@ -39,6 +39,26 @@ export function useBulkCreateStockEntry() {
   });
 }
 
+export function useBulkDamage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BulkStockEntryDto) =>
+      stockEntryService.bulkCreate(data).then((r) => r.data.data),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: stockEntryKeys.lists() });
+      qc.invalidateQueries({ queryKey: ['products'] });
+      const created = result.created?.length ?? 0;
+      const failed = result.errors?.length ?? 0;
+      if (failed > 0) {
+        message.warning(`บันทึกของเสียสำเร็จ ${created} รายการ, ล้มเหลว ${failed} รายการ`);
+      } else {
+        message.success(`บันทึกของเสียสำเร็จ ${created} รายการ`);
+      }
+    },
+    onError: handleError('บันทึกของเสีย'),
+  });
+}
+
 export function useBulkAdjustStock() {
   const qc = useQueryClient();
   return useMutation({

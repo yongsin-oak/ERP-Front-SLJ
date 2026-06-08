@@ -45,6 +45,21 @@ const UserPage = lazy(() =>
 const TerminalPage = lazy(() =>
   import("@features/terminal").then((m) => ({ default: m.TerminalPage })),
 );
+const SupplierPage = lazy(() =>
+  import("@features/supplier").then((m) => ({ default: m.SupplierPage })),
+);
+const StockReceivePage = lazy(() =>
+  import("@features/stock-entry").then((m) => ({ default: m.StockReceivePage })),
+);
+const StockDamagePage = lazy(() =>
+  import("@features/stock-entry").then((m) => ({ default: m.StockDamagePage })),
+);
+const StockAdjustPage = lazy(() =>
+  import("@features/stock-entry").then((m) => ({ default: m.StockAdjustPage })),
+);
+const StockHistoryPage = lazy(() =>
+  import("@features/stock-entry").then((m) => ({ default: m.StockHistoryPage })),
+);
 
 function Guarded({
   children,
@@ -171,6 +186,48 @@ export const router = createBrowserRouter([
             <Guarded roles={["SuperAdmin"]}>
               <TerminalPage />
             </Guarded>
+          </Page>
+        ),
+      },
+      {
+        path: "supplier",
+        element: (
+          <Page>
+            <SupplierPage />
+          </Page>
+        ),
+      },
+      {
+        path: "stock/receive",
+        element: (
+          <Page>
+            <StockReceivePage />
+          </Page>
+        ),
+      },
+      {
+        path: "stock/damage",
+        element: (
+          <Page>
+            <StockDamagePage />
+          </Page>
+        ),
+      },
+      {
+        path: "stock/adjust",
+        element: (
+          <Page>
+            <Guarded roles={["SuperAdmin"]}>
+              <StockAdjustPage />
+            </Guarded>
+          </Page>
+        ),
+      },
+      {
+        path: "stock/history",
+        element: (
+          <Page>
+            <StockHistoryPage />
           </Page>
         ),
       },

@@ -1,15 +1,17 @@
-export type StockEntryType = 'in' | 'return' | 'adjust';
+export type StockEntryType = 'in' | 'return' | 'adjust' | 'damage';
 
 export const StockEntryTypeLabel: Record<StockEntryType, string> = {
   in: 'รับสินค้าเข้า',
   return: 'รับคืน',
   adjust: 'ปรับสต็อก',
+  damage: 'ของเสีย',
 };
 
 export const StockEntryTypeColor: Record<StockEntryType, string> = {
   in: 'green',
   return: 'blue',
   adjust: 'orange',
+  damage: 'red',
 };
 
 export interface StockEntry {
@@ -25,6 +27,7 @@ export interface StockEntry {
   quantity: number;
   previousRemaining?: number;
   newRemaining?: number;
+  costPricePerUnit?: number | null;
   employeeId?: string;
   employee?: { id: string; firstName: string; lastName: string; nickname: string };
   note?: string | null;
@@ -36,6 +39,7 @@ export interface CreateStockEntryDto {
   productBarcode: string;
   type: StockEntryType;
   quantity: number;
+  costPricePerUnit?: number;
   employeeId?: string;
   note?: string;
 }
@@ -44,6 +48,7 @@ export interface BulkStockEntryItem {
   productBarcode: string;
   type: StockEntryType;
   quantity: number;
+  costPricePerUnit?: number;
 }
 
 export interface BulkStockEntryDto {

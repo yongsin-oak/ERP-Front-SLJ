@@ -1,31 +1,32 @@
 import { useState, useMemo } from 'react';
-import { Flex, Select, InputNumber, Table as AntTable, Typography } from 'antd';
+import { Flex, InputNumber, Table as AntTable, Typography, Alert } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, PageHeader } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
-import { useBulkCreateStockEntry } from '../react-query';
+import { useBulkDamage } from '../react-query';
 import { useEmployeeList } from '@features/employee';
 import { useProducts } from '@features/inventory';
+import { Select } from '@design-system';
 
-interface ReceiveRow {
+interface DamageRow {
   key: string;
   productBarcode: string;
-  type: 'in' | 'return';
   quantity: number;
-  costPricePerUnit?: number;
+  costPricePerUnit: number;
+  currentRemaining?: number;
 }
 
 let rowId = 0;
-function newRow(): ReceiveRow {
-  return { key: String(rowId++), productBarcode: '', type: 'in', quantity: 1 };
+function newRow(): DamageRow {
+  return { key: String(rowId++), productBarcode: '', quantity: 1, costPricePerUnit: 0 };
 }
 
-export function StockReceivePage() {
-  const [rows, setRows] = useState<ReceiveRow[]>([newRow()]);
+export function StockDamagePage() {
+  const [rows, setRows] = useState<DamageRow[]>([newRow()]);
   const [employeeId, setEmployeeId] = useState<string | undefined>();
   const [note, setNote] = useState('');
 
-  const bulkCreate = useBulkCreateStockEntry();
+  const bulkDamage = useBulkDamage();
 
   const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
   const employees = empData?.data ?? [];
@@ -38,17 +39,22 @@ export function StockReceivePage() {
   const products = prodData?.data ?? [];
   const productMap = useMemo(() => new Map(products.map((p) => [p.barcode, p])), [products]);
   const productOptions = useMemo(
-    () => products.map((p) => ({ label: `${p.name} (${p.barcode})`, value: p.barcode })),
+    () =>
+      products.map((p) => ({
+        label: `${p.name} (${p.barcode}) — สต็อก: ${p.remaining}`,
+        value: p.barcode,
+      })),
     [products],
   );
 
-  function updateRow(key: string, patch: Partial<ReceiveRow>) {
+  function updateRow(key: string, patch: Partial<DamageRow>) {
     setRows((prev) => prev.map((r) => {
       if (r.key !== key) return r;
       const updated = { ...r, ...patch };
       if (patch.productBarcode !== undefined) {
         const prod = productMap.get(patch.productBarcode);
-        updated.costPricePerUnit = prod?.costPrice?.pack ?? undefined;
+        updated.currentRemaining = prod?.remaining;
+        updated.costPricePerUnit = prod?.costPrice?.pack ?? 0;
       }
       return updated;
     }));
@@ -63,12 +69,12 @@ export function StockReceivePage() {
       .filter((r) => r.productBarcode && r.quantity > 0)
       .map((r) => ({
         productBarcode: r.productBarcode,
-        type: r.type,
+        type: 'damage' as const,
         quantity: r.quantity,
-        costPricePerUnit: r.type === 'in' ? r.costPricePerUnit : undefined,
+        costPricePerUnit: r.costPricePerUnit || undefined,
       }));
     if (!entries.length) return;
-    await bulkCreate.mutateAsync({ employeeId, note: note || undefined, entries });
+    await bulkDamage.mutateAsync({ employeeId, note: note || undefined, entries });
     setRows([newRow()]);
     setNote('');
     setEmployeeId(undefined);
@@ -77,19 +83,17 @@ export function StockReceivePage() {
   const canSave = rows.some((r) => r.productBarcode && r.quantity > 0);
   const validRows = rows.filter((r) => r.productBarcode && r.quantity > 0);
   const totalQty = validRows.reduce((s, r) => s + r.quantity, 0);
-  const totalCost = validRows
-    .filter((r) => r.type === 'in' && r.costPricePerUnit)
-    .reduce((s, r) => s + r.quantity * (r.costPricePerUnit ?? 0), 0);
+  const totalLoss = validRows.reduce((s, r) => s + r.quantity * (r.costPricePerUnit ?? 0), 0);
 
   const columns = [
     {
       title: 'สินค้า',
       dataIndex: 'productBarcode',
-      render: (_: string, r: ReceiveRow) => (
+      render: (_: string, r: DamageRow) => (
         <Select
           showSearch={{ optionFilterProp: 'label' }}
           placeholder="เลือกสินค้า"
-          style={{ width: '100%', minWidth: 220 }}
+          style={{ width: '100%', minWidth: 240 }}
           options={productOptions}
           value={r.productBarcode || undefined}
           onChange={(v) => updateRow(r.key, { productBarcode: v })}
@@ -97,30 +101,24 @@ export function StockReceivePage() {
       ),
     },
     {
-      title: 'ประเภท',
-      dataIndex: 'type',
-      width: 130,
-      render: (_: string, r: ReceiveRow) => (
-        <Select
-          style={{ width: '100%' }}
-          value={r.type}
-          options={[
-            { label: 'รับสินค้าเข้า', value: 'in' },
-            { label: 'รับคืน', value: 'return' },
-          ]}
-          onChange={(v) => updateRow(r.key, { type: v })}
-        />
-      ),
+      title: 'สต็อกปัจจุบัน',
+      dataIndex: 'currentRemaining',
+      width: 120,
+      align: 'right' as const,
+      render: (v?: number) =>
+        v != null ? <Typography.Text type="secondary">{v}</Typography.Text> : '-',
     },
     {
-      title: 'จำนวน (แพ็ค)',
+      title: 'จำนวนที่เสีย',
       dataIndex: 'quantity',
       width: 130,
-      render: (_: number, r: ReceiveRow) => (
+      render: (_: number, r: DamageRow) => (
         <InputNumber
           min={1}
+          max={r.currentRemaining}
           style={{ width: '100%' }}
           value={r.quantity}
+          status={r.currentRemaining != null && r.quantity > r.currentRemaining ? 'error' : undefined}
           onChange={(v) => updateRow(r.key, { quantity: v ?? 1 })}
         />
       ),
@@ -129,29 +127,27 @@ export function StockReceivePage() {
       title: 'ราคาทุน/แพ็ค (฿)',
       dataIndex: 'costPricePerUnit',
       width: 150,
-      render: (_: number, r: ReceiveRow) =>
-        r.type === 'in' ? (
-          <InputNumber
-            min={0}
-            precision={2}
-            placeholder="0.00"
-            style={{ width: '100%' }}
-            value={r.costPricePerUnit}
-            onChange={(v) => updateRow(r.key, { costPricePerUnit: v ?? undefined })}
-          />
-        ) : (
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>—</Typography.Text>
-        ),
+      render: (_: number, r: DamageRow) => (
+        <InputNumber
+          min={0}
+          precision={2}
+          placeholder="0.00"
+          style={{ width: '100%' }}
+          value={r.costPricePerUnit || undefined}
+          onChange={(v) => updateRow(r.key, { costPricePerUnit: v ?? 0 })}
+        />
+      ),
     },
     {
-      title: 'มูลค่า',
-      key: 'value',
-      width: 110,
+      title: 'มูลค่าที่เสีย',
+      key: 'loss',
+      width: 120,
       align: 'right' as const,
-      render: (_: unknown, r: ReceiveRow) => {
-        if (r.type !== 'in' || !r.costPricePerUnit) return '-';
+      render: (_: unknown, r: DamageRow) => {
+        if (!r.costPricePerUnit) return '-';
+        const loss = r.quantity * r.costPricePerUnit;
         return (
-          <Typography.Text>฿{(r.quantity * r.costPricePerUnit).toLocaleString()}</Typography.Text>
+          <Typography.Text type="danger">฿{loss.toLocaleString()}</Typography.Text>
         );
       },
     },
@@ -159,7 +155,7 @@ export function StockReceivePage() {
       title: '',
       key: 'action',
       width: 50,
-      render: (_: unknown, r: ReceiveRow) => (
+      render: (_: unknown, r: DamageRow) => (
         <Button
           variant="danger-ghost"
           size="small"
@@ -174,8 +170,15 @@ export function StockReceivePage() {
   return (
     <div>
       <PageHeader
-        title="รับสินค้าเข้าคลัง"
-        subtitle="บันทึกการรับสินค้าหลายรายการพร้อมกัน"
+        title="บันทึกของเสีย"
+        subtitle="บันทึกสินค้าที่เสียหายหรือถูกทำลาย — สต็อกจะลดลงตามจำนวนที่กรอก"
+      />
+
+      <Alert
+        type="warning"
+        showIcon
+        message="สต็อกจะลดลงทันที — กรุณาตรวจสอบจำนวนก่อนบันทึก"
+        style={{ marginBottom: 16, maxWidth: 1000 }}
       />
 
       <div style={{ maxWidth: 1000 }}>
@@ -183,6 +186,7 @@ export function StockReceivePage() {
           employeeOptions={employeeOptions}
           employeeId={employeeId}
           note={note}
+          notePlaceholder="สาเหตุของเสีย เช่น สินค้าหมดอายุ, บรรจุภัณฑ์แตก"
           onEmployeeChange={setEmployeeId}
           onNoteChange={setNote}
         />
@@ -200,20 +204,30 @@ export function StockReceivePage() {
             เพิ่มรายการ
           </Button>
           <Button
-            variant="primary"
-            loading={bulkCreate.isPending}
+            variant="danger"
+            loading={bulkDamage.isPending}
             disabled={!canSave}
             onClick={handleSave}
           >
-            บันทึกการรับสินค้า
+            บันทึกของเสีย
           </Button>
         </Flex>
 
         {validRows.length > 0 && (
-          <div style={{ marginTop: 16, padding: '10px 16px', background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
-            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-              สรุป: {validRows.length} รายการ · รวม {totalQty.toLocaleString()} แพ็ค
-              {totalCost > 0 && ` · มูลค่ารับเข้า ฿${totalCost.toLocaleString()}`}
+          <div
+            style={{
+              marginTop: 16,
+              padding: '10px 16px',
+              background: '#fff2f0',
+              borderRadius: 6,
+              border: '1px solid #ffccc7',
+            }}
+          >
+            <Typography.Text style={{ fontSize: 13 }}>
+              สรุป: {validRows.length} รายการ · {totalQty.toLocaleString()} แพ็ค
+              {totalLoss > 0 && (
+                <Typography.Text type="danger"> · มูลค่าที่เสีย ฿{totalLoss.toLocaleString()}</Typography.Text>
+              )}
             </Typography.Text>
           </div>
         )}
