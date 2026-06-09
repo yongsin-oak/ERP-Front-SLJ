@@ -1,4 +1,5 @@
 export { EmployeePage } from './pages/EmployeePage';
+export { EmployeeImportModal } from './components/EmployeeImportModal';
 export {
   useEmployeeList, useEmployees, useEmployeeDetail,
   useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useBulkDeleteEmployee,

@@ -7,7 +7,7 @@ import { colors } from '@design-system';
 import { showError } from '@shared';
 import { useEmployees } from '@features/employee';
 import { authService } from '../react-query/services';
-import { useActorModal } from '../hooks/useActorModal';
+import { useActorModal } from '../stores';
 
 const { Text } = Typography;
 

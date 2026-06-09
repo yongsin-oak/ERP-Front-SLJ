@@ -125,4 +125,10 @@ export type {
   ColumnMapping,
 } from './components/SheetColumnMapper';
 
+export { SheetImportModal } from './components/SheetImportModal';
+export type { SheetImportModalProps } from './components/SheetImportModal';
+
+export { AppIcons } from './icons';
+export type { AppIconKey } from './icons';
+
 export * from './tokens';

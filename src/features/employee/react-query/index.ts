@@ -4,6 +4,7 @@ export {
   useUpdateEmployee,
   useDeleteEmployee,
   useBulkDeleteEmployee,
+  useBulkCreateEmployees,
   useSetEmployeePin,
 } from './mutations';
 export { employeeKeys } from './queryKeys';

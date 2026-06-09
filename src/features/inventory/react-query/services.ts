@@ -54,6 +54,9 @@ export const inventoryService = {
     req.post<ApiData<{ existing: string[]; missing: string[] }>>(
       `${BASE}/check-exist`, { barcodes },
     ),
+
+  bulkCreate: (dtos: CreateProductDto[]) =>
+    req.post<ApiData<Product[]>>(`${BASE}/bulk`, dtos),
 };
 
 export interface BulkStockEntryDto {

@@ -5,6 +5,19 @@ import { inventoryService, stockEntryService } from './services';
 import { productKeys, stockEntryKeys } from './queryKeys';
 import type { CreateProductDto, UpdateProductDto, CreateStockEntryDto } from '../types';
 
+export function useBulkCreateProducts() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dtos: CreateProductDto[]) =>
+      inventoryService.bulkCreate(dtos).then((r) => r.data.data),
+    onSuccess: (products) => {
+      qc.invalidateQueries({ queryKey: productKeys.lists() });
+      message.success(`นำเข้าสินค้า ${products.length} รายการสำเร็จ`);
+    },
+    onError: handleError('นำเข้าสินค้า'),
+  });
+}
+
 export function useCreateProduct() {
   const qc = useQueryClient();
   return useMutation({

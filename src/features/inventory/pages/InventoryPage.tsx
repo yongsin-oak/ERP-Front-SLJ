@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Flex, Popconfirm, Input, Space, Typography, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, InboxOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, InboxOutlined, UploadOutlined } from '@ant-design/icons';
 import { Table, Button, Tag, PageHeader, Select } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useBrands } from '@features/brand';
@@ -9,6 +9,7 @@ import {
   useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useBulkDeleteProduct,
 } from '../react-query';
 import { ProductFormModal } from '../components/ProductFormModal';
+import { ProductImportModal } from '../components/ProductImportModal';
 import { StockEntryModal } from '../components/StockEntryModal';
 import type { Product, CreateProductDto, UpdateProductDto } from '../types';
 
@@ -16,6 +17,7 @@ const { Search } = Input;
 
 export function InventoryPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [stockEntryOpen, setStockEntryOpen] = useState(false);
   const [selected, setSelected] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
@@ -143,6 +145,7 @@ export function InventoryPage() {
         actions={
           <>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
+            <Button icon={<UploadOutlined />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
             <Button icon={<InboxOutlined />} onClick={() => setStockEntryOpen(true)}>รับสินค้าเข้า</Button>
             <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มสินค้า
@@ -224,6 +227,11 @@ export function InventoryPage() {
       <StockEntryModal
         open={stockEntryOpen}
         onClose={() => setStockEntryOpen(false)}
+      />
+
+      <ProductImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
       />
     </div>
   );

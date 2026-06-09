@@ -33,4 +33,7 @@ export const employeeService = {
 
   setPin: (id: string, pin: string) =>
     req.patch<ApiData<null>>(`${BASE}/${id}/pin`, { pin }),
+
+  bulkCreate: (dtos: CreateEmployeeDto[]) =>
+    req.post<ApiData<Employee[]>>(`${BASE}/bulk`, { employees: dtos }),
 };

@@ -5,7 +5,7 @@ import type { InputRef } from 'antd';
 import { message } from 'antd';
 import { Input, Select, Button } from '@design-system';
 import { useEmployees } from '@features/employee';
-import { inventoryService } from '../services';
+import { inventoryService } from '../react-query';
 import { useCreateStockEntry } from '../react-query';
 import { StockEntryTypeLabel, StockEntryTypeColor } from '../types';
 import type { CreateStockEntryDto, StockEntryType, Product } from '../types';

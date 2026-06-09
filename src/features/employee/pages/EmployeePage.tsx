@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Flex, Popconfirm, Space, Input, Typography, Badge, Modal } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined, UploadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, Tag, PageHeader } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -9,6 +9,7 @@ import {
   useBulkDeleteEmployee, useSetEmployeePin,
 } from '../react-query';
 import { EmployeeFormModal } from '../components/EmployeeFormModal';
+import { EmployeeImportModal } from '../components/EmployeeImportModal';
 import { DepartmentLabel, DepartmentColor } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
 
@@ -16,6 +17,7 @@ const { Search } = Input;
 
 export function EmployeePage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Employee | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -130,6 +132,7 @@ export function EmployeePage() {
         actions={
           <>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
+            <Button icon={<UploadOutlined />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
             <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มพนักงาน
             </Button>
@@ -185,6 +188,11 @@ export function EmployeePage() {
         employee={selected}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
+      />
+
+      <EmployeeImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
       />
 
       <Modal

@@ -84,8 +84,11 @@ Always end with a summary:
 | --- | --- | --- |
 | UI Framework | React | 19 |
 | Build | Vite | 7 |
+| Package Manager | **bun** (primary) / npm | — |
 | Language | TypeScript | 5.9 (strict) |
 | UI Components | Ant Design | 6 |
+| Icons (UI chrome) | @ant-design/icons | bundled with antd |
+| Icons (domain) | **@tabler/icons-react** | 3 |
 | Styling | Emotion (`@emotion/styled`) | 11 |
 | State | Zustand | 5 |
 | Data Fetching | @tanstack/react-query | 5 |
@@ -124,6 +127,7 @@ Always end with a summary:
 - **No `new Date()` or `moment`** — use `dayjs`
 - **No raw `axios`** — use `req` from `@lib`
 - **No inline `#hex` or `px` literals** — use design tokens from `@design-system/tokens`
+- **Domain icons via `AppIcons`** — `import { AppIcons } from '@design-system'`; `<AppIcons.product />`. Antd icons for generic UI chrome only. See `.claude/skills/design-system/SKILL.md` § Icons.
 - **No hardcoded query keys** — use key factories from `hooks/queryKeys.ts`
 - **No magic timing numbers** — use `STALE_TIME`, `GC_TIME`, `REFETCH_INTERVAL` from `@lib`
 - **All pages lazy-loaded** — wrap in `lazy()` + `<Suspense>` in `routes/index.tsx`
@@ -140,17 +144,22 @@ Always end with a summary:
 
 ## Skills Reference
 
-Detailed patterns and examples live in `.claude/skills/`:
+Detailed patterns and examples live in `.claude/skills/`.
+
+> **Skill file limit**: Each `SKILL.md` must not exceed **400 lines**. If a skill grows beyond that, split it into a sub-folder: create `<skill>/<sub-topic>/SKILL.md` and make the root `SKILL.md` a brief index pointing to sub-skills. Update this table whenever you add or split a skill.
 
 | Skill | Covers |
 | --- | --- |
 | `folder-structure` | Feature anatomy, barrel exports, file naming, import rules |
-| `design-system` | Tokens (colors/spacing/radius/shadow), component catalog, Emotion rules |
+| `design-system` | Tokens (colors/spacing/radius/shadow), Emotion rules, responsive layout |
+| `design-system/components` | Component catalog, ERP composite components (Table, Modal, FormModal, ActionCell…) |
+| `design-system/icons` | AppIcons map, two-library split, adding new icons |
 | `react-query` | queryKeys factory, useQuery, useMutation, invalidate vs setQueryData |
 | `constants` | Where to define constants, naming conventions, status/label/color pattern |
 | `component-patterns` | Component anatomy, page/table/modal patterns, naming, anti-patterns |
 | `performance` | Lazy loading, table virtualization, memoization, bundle rules |
 | `query-constants` | STALE_TIME/GC_TIME/REFETCH_INTERVAL constants, hook file structure (queryKeys/queries/mutations) |
 | `type-sharing` | Where to declare types, sharing within/across features, Paginated/ApiData, anti-patterns |
-| `animation` | Easing functions (ease-in/out/in-out/linear), duration rules, UX laws (lawsofux.com), design for all users |
+| `style/animation` | Easing functions, duration rules, GPU-safe properties, keyframes, reduced motion |
+| `style/ux-laws` | UX laws applied to this project (lawsofux.com), designing for all users, warning triggers |
 | `project-context` | **Load every session** — SLJ Supply Center business model, roles, UX bar, backend error contract |

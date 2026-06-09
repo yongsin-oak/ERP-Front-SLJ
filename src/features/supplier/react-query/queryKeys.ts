@@ -1,4 +1,4 @@
-import type { SupplierParams } from '../services';
+import type { SupplierParams } from './services';
 
 export const supplierKeys = {
   all: ['suppliers'] as const,

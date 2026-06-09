@@ -4,6 +4,7 @@ export {
   useUpdateProduct,
   useDeleteProduct,
   useBulkDeleteProduct,
+  useBulkCreateProducts,
   useCreateStockEntry,
 } from './mutations';
 export { productKeys, stockEntryKeys, PRODUCT_DROPDOWN_LIMIT } from './queryKeys';

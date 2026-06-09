@@ -5,6 +5,20 @@ import { employeeService } from './services';
 import { employeeKeys } from './queryKeys';
 import type { CreateEmployeeDto, UpdateEmployeeDto } from '../types';
 
+export function useBulkCreateEmployees() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dtos: CreateEmployeeDto[]) =>
+      employeeService.bulkCreate(dtos).then((r) => r.data.data),
+    onSuccess: (employees) => {
+      qc.invalidateQueries({ queryKey: employeeKeys.lists() });
+      qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
+      message.success(`นำเข้าพนักงาน ${employees.length} คนสำเร็จ`);
+    },
+    onError: handleError('นำเข้าพนักงาน'),
+  });
+}
+
 export function useCreateEmployee() {
   const qc = useQueryClient();
   return useMutation({
