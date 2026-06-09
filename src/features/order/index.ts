@@ -8,4 +8,4 @@ export {
 export type { OrderParams } from './react-query';
 export { orderService } from './react-query';
 export type { Order, CreateOrderDto, UpdateOrderDto, OrderStatus, OrderItem } from './types';
-export { OrderStatusLabel, OrderStatusColor } from './types';
+export { OrderStatuses } from './types';

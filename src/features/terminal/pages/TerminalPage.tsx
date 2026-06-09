@@ -6,7 +6,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { Table, Button, PageHeader } from "@design-system";
+import { Table, Button, PageHeader, colors } from "@design-system";
 import type { ColumnType } from "@design-system";
 import type { Role } from "@features/auth/types";
 import {
@@ -14,7 +14,7 @@ import {
   useCreateTerminal,
   useUpdateTerminal,
   useDeleteTerminal,
-} from "../hooks";
+} from "../react-query";
 import { TerminalFormModal } from "../components/TerminalFormModal";
 import type { Terminal, CreateTerminalDto, UpdateTerminalDto } from "../types";
 
@@ -79,7 +79,7 @@ export function TerminalPage() {
       render: (v: string, r: Terminal) => (
         <div>
           <div style={{ fontWeight: 500 }}>{v}</div>
-          <div style={{ fontSize: 11, color: "rgba(0,0,0,0.45)" }}>{r.id}</div>
+          <div style={{ fontSize: 11, color: colors.text.tertiary }}>{r.id}</div>
         </div>
       ),
     },

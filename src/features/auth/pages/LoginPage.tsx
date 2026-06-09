@@ -5,7 +5,7 @@ import { LockOutlined, UserOutlined, DesktopOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
 import { useAuth } from '../stores';
 import { Button, Form, Input, InputPassword, Card } from '@design-system';
-import { colors } from '@design-system';
+import { colors, shadow } from '@design-system';
 import { showError } from '@shared';
 
 const { Text } = Typography;
@@ -51,7 +51,7 @@ function Logo() {
         marginBottom: 12,
         boxShadow: `0 4px 16px ${colors.brand.primary}44`,
       }}>
-        <LockOutlined style={{ color: '#fff', fontSize: 24 }} />
+        <LockOutlined style={{ color: colors.text.inverse, fontSize: 24 }} />
       </div>
       <Typography.Title level={4} style={{ margin: 0, fontSize: 20 }}>SLJ ERP</Typography.Title>
     </div>
@@ -117,7 +117,7 @@ export function LoginPage() {
       justifyContent: 'center',
       background: `linear-gradient(135deg, ${colors.brand.primary}10 0%, ${colors.bg.layout} 60%)`,
     }}>
-      <Card style={{ width: 400, boxShadow: '0 8px 32px rgba(0,0,0,0.10)', borderRadius: 16 }}>
+      <Card style={{ width: 400, boxShadow: shadow.lg, borderRadius: 16 }}>
         <Logo />
 
         {/* mode toggle */}

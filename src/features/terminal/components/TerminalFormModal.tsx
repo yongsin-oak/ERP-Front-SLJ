@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Form, Switch, Space, Row, Col } from 'antd';
 import { DesktopOutlined } from '@ant-design/icons';
-import { Modal, Input, InputPassword, Select, Button } from '@design-system';
+import { Modal, Input, InputPassword, Select, Button, colors } from '@design-system';
 import type { Role } from '@features/auth/types';
 import type { Terminal, CreateTerminalDto, UpdateTerminalDto } from '../types';
 
@@ -63,7 +63,7 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
       open={open}
       title={
         <Space>
-          <DesktopOutlined style={{ color: '#1677ff' }} />
+          <DesktopOutlined style={{ color: colors.semantic.info }} />
           {isEdit ? 'แก้ไข Terminal' : 'เพิ่ม Terminal'}
         </Space>
       }

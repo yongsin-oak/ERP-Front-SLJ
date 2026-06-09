@@ -2,6 +2,7 @@ import { useState, useMemo, useRef } from 'react';
 import { Select, Spin } from 'antd';
 import type { SelectProps } from 'antd';
 import { debounce } from 'lodash';
+import { colors } from '@design-system';
 import { useProductDropdown } from '../react-query';
 import type { ProductDropdown } from '../types';
 
@@ -37,7 +38,7 @@ export function ProductDropdownSelect({
           label: (
             <span>
               {product.name}
-              <span style={{ color: 'rgba(0,0,0,0.45)', marginLeft: 6, fontSize: 12 }}>
+              <span style={{ color: colors.text.tertiary, marginLeft: 6, fontSize: 12 }}>
                 {product.barcode}
               </span>
             </span>
@@ -99,7 +100,7 @@ export function ProductDropdownSelect({
         <>
           {menu}
           {isFetchingNextPage && (
-            <div style={{ textAlign: 'center', padding: '8px 0', borderTop: '1px solid #f0f0f0' }}>
+            <div style={{ textAlign: 'center', padding: '8px 0', borderTop: `1px solid ${colors.neutral[200]}` }}>
               <Spin size="small" />
             </div>
           )}

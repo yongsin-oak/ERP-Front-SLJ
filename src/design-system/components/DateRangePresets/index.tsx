@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { DatePicker } from 'antd';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import dayjs from 'dayjs';
@@ -6,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 
 export type DateRangeValue = [Dayjs | null, Dayjs | null] | null;
 
-const PRESETS: RangePickerProps['presets'] = [
+const PRESETS: NonNullable<RangePickerProps['presets']> = [
   { label: 'วันนี้',      value: [dayjs().startOf('day'), dayjs().endOf('day')] },
   { label: 'สัปดาห์นี้', value: [dayjs().startOf('week'), dayjs().endOf('week')] },
   { label: 'เดือนนี้',   value: [dayjs().startOf('month'), dayjs().endOf('month')] },
@@ -16,10 +15,9 @@ const PRESETS: RangePickerProps['presets'] = [
 
 export interface DateRangePresetsProps
   extends Omit<RangePickerProps, 'presets'> {
-  extraPresets?: RangePickerProps['presets'];
+  extraPresets?: NonNullable<RangePickerProps['presets']>;
   /** Replaces the default preset list entirely */
-  customPresets?: RangePickerProps['presets'];
-  placeholder?: [ReactNode, ReactNode];
+  customPresets?: NonNullable<RangePickerProps['presets']>;
 }
 
 export function DateRangePresets({

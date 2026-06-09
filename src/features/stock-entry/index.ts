@@ -6,4 +6,4 @@ export { useStockEntries, useCreateStockEntry, useBulkCreateStockEntry, useBulkA
 export type { StockEntryParams } from './react-query';
 export { stockEntryService } from './react-query';
 export type { StockEntry, StockEntryType, CreateStockEntryDto, BulkStockEntryDto, BulkStockAdjustDto } from './types';
-export { StockEntryTypeLabel, StockEntryTypeColor } from './types';
+export { StockEntryTypes } from './types';

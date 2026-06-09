@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Popconfirm, Space, Input, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader } from '@design-system';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, PageHeader, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '../react-query';
+import { downloadFile } from '@shared';
+import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, supplierService } from '../react-query';
 import { SupplierFormModal } from '../components/SupplierFormModal';
 import type { Supplier, CreateSupplierDto } from '../types';
 
@@ -21,6 +22,18 @@ export function SupplierPage() {
   const { data, isLoading, refetch, isFetching } = useSuppliers(params);
   const suppliers = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
+
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await supplierService.exportXlsx(search || undefined);
+      downloadFile(res.data as unknown as Blob, 'ซัพพลายเออร์.xlsx');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
@@ -114,6 +127,9 @@ export function SupplierPage() {
           <>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
+            </Button>
+            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>
+              Export Excel
             </Button>
             <Button
               variant="primary"

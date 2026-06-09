@@ -35,7 +35,7 @@ export function useProductDropdown(params: ProductDropdownSearchParams = {}) {
         .then((r) => r.data),
     getNextPageParam: (lastPage) =>
       lastPage.pagination.hasNextPage ? lastPage.pagination.page + 1 : undefined,
-    initialPageParam: PAGINATION.DEFAULT_PAGE,
+    initialPageParam: PAGINATION.DEFAULT_PAGE as number,
     staleTime: STALE_TIME.SHORT,
   });
 }

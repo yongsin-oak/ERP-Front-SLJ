@@ -1,5 +1,7 @@
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Statistic, Table, Tag, Typography, Space, Skeleton, Alert } from 'antd';
+import { useQueryClient } from '@tanstack/react-query';
+import { Card, Row, Col, Statistic, Table, Tag, Typography, Space, Skeleton, Alert, Segmented, Select } from 'antd';
 import {
   ShoppingCartOutlined,
   InboxOutlined,
@@ -22,11 +24,49 @@ import {
 import dayjs from 'dayjs';
 import { Button, PageHeader } from '@design-system';
 import { colors } from '@design-system';
-import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock } from '../react-query';
+import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock, dashboardKeys } from '../react-query';
+import { useShops } from '@features/shop';
 import type { ColumnType } from '@design-system';
 import type { RecentOrder, LowStockProduct } from '../types';
 
 const { Text } = Typography;
+
+type Period = 'today' | '7d' | '14d' | '30d' | 'month';
+
+const PERIOD_OPTIONS: { label: string; value: Period }[] = [
+  { label: 'วันนี้', value: 'today' },
+  { label: '7 วัน', value: '7d' },
+  { label: '14 วัน', value: '14d' },
+  { label: '30 วัน', value: '30d' },
+  { label: 'เดือนนี้', value: 'month' },
+];
+
+const PERIOD_LABEL: Record<Period, string> = {
+  today: 'วันนี้',
+  '7d': '7 วันล่าสุด',
+  '14d': '14 วันล่าสุด',
+  '30d': '30 วันล่าสุด',
+  month: 'เดือนนี้',
+};
+
+function resolvePeriod(period: Period): { dateFrom: string; dateTo: string; days: number } {
+  const now = dayjs();
+  const today = now.format('YYYY-MM-DD');
+  switch (period) {
+    case 'today':
+      return { dateFrom: today, dateTo: today, days: 1 };
+    case '7d':
+      return { dateFrom: now.subtract(6, 'day').format('YYYY-MM-DD'), dateTo: today, days: 7 };
+    case '14d':
+      return { dateFrom: now.subtract(13, 'day').format('YYYY-MM-DD'), dateTo: today, days: 14 };
+    case '30d':
+      return { dateFrom: now.subtract(29, 'day').format('YYYY-MM-DD'), dateTo: today, days: 30 };
+    case 'month': {
+      const start = now.startOf('month');
+      return { dateFrom: start.format('YYYY-MM-DD'), dateTo: today, days: now.diff(start, 'day') + 1 };
+    }
+  }
+}
 
 function StatCard({
   title,
@@ -78,10 +118,22 @@ function StatCard({
 
 export function DashboardPage() {
   const navigate = useNavigate();
-  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useDashboardStats();
-  const { data: daily = [], isLoading: dailyLoading } = useDailyRevenue(7);
-  const { data: recentOrders = [], isLoading: recentLoading } = useRecentOrders(8);
+  const queryClient = useQueryClient();
+  const [period, setPeriod] = useState<Period>('7d');
+  const [shopId, setShopId] = useState<string | undefined>();
+
+  const { dateFrom, dateTo, days } = resolvePeriod(period);
+  const periodLabel = PERIOD_LABEL[period];
+
+  const { data: shops, isLoading: shopsLoading } = useShops();
+  const { data: stats, isLoading: statsLoading } = useDashboardStats({ shopId, dateFrom, dateTo });
+  const { data: daily = [], isLoading: dailyLoading } = useDailyRevenue({ days, shopId });
+  const { data: recentOrders = [], isLoading: recentLoading } = useRecentOrders({ limit: 8, shopId });
   const { data: lowStock = [], isLoading: lowStockLoading } = useLowStock(5);
+
+  const handleRefetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+  }, [queryClient]);
 
   const recentOrderColumns: ColumnType<RecentOrder>[] = [
     {
@@ -138,10 +190,9 @@ export function DashboardPage() {
     },
   ];
 
-  const todayDaily = daily.find((d) => d.date === dayjs().format('YYYY-MM-DD'));
-  const todayProfit = (stats?.todayRevenue ?? 0) - (todayDaily?.cost ?? 0);
+  const periodProfit = (stats?.todayRevenue ?? 0) - (stats?.todayCost ?? 0);
   const profitMargin = stats?.todayRevenue
-    ? Math.round((todayProfit / stats.todayRevenue) * 100)
+    ? Math.round((periodProfit / stats.todayRevenue) * 100)
     : 0;
 
   return (
@@ -150,17 +201,39 @@ export function DashboardPage() {
         title="แดชบอร์ด"
         subtitle={`อัพเดตล่าสุด: ${dayjs().format('DD/MM/YYYY HH:mm')}`}
         actions={
-          <Button icon={<ReloadOutlined />} onClick={() => refetchStats()}>
+          <Button icon={<ReloadOutlined />} onClick={handleRefetch}>
             รีเฟรช
           </Button>
         }
       />
 
+      {/* Filter bar */}
+      <Card size="small">
+        <Space wrap>
+          <Text type="secondary" style={{ fontSize: 13 }}>ช่วงเวลา:</Text>
+          <Segmented
+            options={PERIOD_OPTIONS}
+            value={period}
+            onChange={(v) => setPeriod(v as Period)}
+          />
+          <Text type="secondary" style={{ fontSize: 13, marginLeft: 8 }}>ร้านค้า:</Text>
+          <Select
+            placeholder="ทุกร้าน"
+            allowClear
+            style={{ minWidth: 180 }}
+            value={shopId}
+            onChange={(v: string | undefined) => setShopId(v)}
+            loading={shopsLoading}
+            options={shops?.map((s) => ({ label: s.name, value: s.id }))}
+          />
+        </Space>
+      </Card>
+
       {/* Stat Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Order วันนี้"
+            title={`Order ${periodLabel}`}
             value={stats?.todayOrders}
             suffix="รายการ"
             icon={<ShoppingCartOutlined />}
@@ -171,7 +244,7 @@ export function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="ยอดขายวันนี้"
+            title={`ยอดขาย${periodLabel}`}
             value={stats?.todayRevenue?.toLocaleString()}
             prefix="฿"
             icon={<RiseOutlined />}
@@ -181,12 +254,12 @@ export function DashboardPage() {
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="กำไรวันนี้"
-            value={todayProfit.toLocaleString()}
+            title={`กำไร${periodLabel}`}
+            value={periodProfit.toLocaleString()}
             prefix="฿"
             suffix={profitMargin > 0 ? `(${profitMargin}%)` : undefined}
             icon={<FallOutlined />}
-            color={todayProfit >= 0 ? colors.semantic.success : colors.semantic.error}
+            color={periodProfit >= 0 ? colors.semantic.success : colors.semantic.error}
             loading={statsLoading}
           />
         </Col>
@@ -197,7 +270,7 @@ export function DashboardPage() {
             suffix="รายการ"
             icon={<WarningOutlined />}
             color={lowStock.length > 0 ? colors.semantic.warning : colors.text.tertiary}
-            loading={statsLoading}
+            loading={lowStockLoading}
             onClick={() => navigate('/inventory')}
           />
         </Col>
@@ -250,7 +323,7 @@ export function DashboardPage() {
       {/* Chart + Low stock */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
-          <Card title="รายได้ 7 วันล่าสุด">
+          <Card title={`รายได้ ${periodLabel}`}>
             {dailyLoading ? (
               <Skeleton active paragraph={{ rows: 6 }} />
             ) : daily.length === 0 ? (

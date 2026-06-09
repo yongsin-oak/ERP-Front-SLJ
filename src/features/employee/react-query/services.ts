@@ -36,4 +36,7 @@ export const employeeService = {
 
   bulkCreate: (dtos: CreateEmployeeDto[]) =>
     req.post<ApiData<Employee[]>>(`${BASE}/bulk`, { employees: dtos }),
+
+  exportXlsx: (params: Omit<EmployeeParams, 'page' | 'limit'>) =>
+    req.get<Blob>(`${BASE}/export`, { params, responseType: 'blob' }),
 };

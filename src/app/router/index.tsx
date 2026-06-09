@@ -60,6 +60,18 @@ const StockAdjustPage = lazy(() =>
 const StockHistoryPage = lazy(() =>
   import("@features/stock-entry").then((m) => ({ default: m.StockHistoryPage })),
 );
+const ReportPage = lazy(() =>
+  import("@features/report").then((m) => ({ default: m.ReportPage })),
+);
+const StockCountListPage = lazy(() =>
+  import("@features/stock-count").then((m) => ({ default: m.StockCountListPage })),
+);
+const StockCountDetailPage = lazy(() =>
+  import("@features/stock-count").then((m) => ({ default: m.StockCountDetailPage })),
+);
+const ProfilePage = lazy(() =>
+  import("@features/auth/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })),
+);
 
 function Guarded({
   children,
@@ -228,6 +240,38 @@ export const router = createBrowserRouter([
         element: (
           <Page>
             <StockHistoryPage />
+          </Page>
+        ),
+      },
+      {
+        path: "stock/count",
+        element: (
+          <Page>
+            <StockCountListPage />
+          </Page>
+        ),
+      },
+      {
+        path: "stock/count/:id",
+        element: (
+          <Page>
+            <StockCountDetailPage />
+          </Page>
+        ),
+      },
+      {
+        path: "report",
+        element: (
+          <Page>
+            <ReportPage />
+          </Page>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Page>
+            <ProfilePage />
           </Page>
         ),
       },

@@ -1,8 +1,8 @@
 import { Descriptions, Divider } from 'antd';
 import dayjs from 'dayjs';
-import { Modal, Table, Tag, Button } from '@design-system';
+import { Modal, Table, Tag, Button, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { OrderStatusLabel, OrderStatusColor } from '../types';
+import { OrderStatuses } from '../types';
 import type { Order, OrderDetail } from '../types';
 
 interface OrderDetailModalProps {
@@ -29,7 +29,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
       render: (_: unknown, r: OrderDetail) => (
         <div>
           <div>{r.product.name}</div>
-          <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{r.product.barcode}</code>
+          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.product.barcode}</code>
         </div>
       ),
     },
@@ -75,7 +75,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
     >
       <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
         <Descriptions.Item label="สถานะ">
-          <Tag color={OrderStatusColor[order.status]}>{OrderStatusLabel[order.status]}</Tag>
+          <Tag color={OrderStatuses[order.status].color}>{OrderStatuses[order.status].label}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label="วันที่บันทึก">
           {order.startRecordAt
@@ -111,7 +111,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
         style={{
           marginTop: 12,
           padding: '10px 16px',
-          background: '#fafafa',
+          background: colors.neutral[50],
           borderRadius: 6,
           display: 'flex',
           justifyContent: 'flex-end',

@@ -67,7 +67,9 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 
 ### After Completing Any Task
 
-Always end with a summary:
+1. **Update related SKILL.md files.** After any feature change, check if the pattern, convention, or API used by that feature is documented in `.claude/skills/`. If the change introduces a new pattern or modifies an existing one (e.g. new export approach, new component usage, new hook), update the relevant SKILL.md immediately — do not wait for the user to ask. Flag which SKILL.md you updated and what changed.
+
+2. Always end with a summary:
 
 | Section | Content |
 | --- | --- |

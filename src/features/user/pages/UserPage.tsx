@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Flex, Tag, Popconfirm, Space, Tooltip, Form } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
-import { Table, Button, PageHeader, Select, Modal } from '@design-system';
+import { Table, Button, PageHeader, Select, Modal, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
 import { useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../react-query';
@@ -42,7 +42,7 @@ export function UserPage() {
       dataIndex: 'username',
       render: (v: string) => (
         <Space>
-          <UserOutlined style={{ color: 'rgba(0,0,0,0.45)' }} />
+          <UserOutlined style={{ color: colors.text.tertiary }} />
           <span style={{ fontWeight: 500 }}>{v}</span>
         </Space>
       ),
@@ -58,7 +58,7 @@ export function UserPage() {
       dataIndex: 'id',
       width: 160,
       render: (v: string) => (
-        <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{v}</code>
+        <code style={{ fontSize: 11, color: colors.text.tertiary }}>{v}</code>
       ),
     },
     {

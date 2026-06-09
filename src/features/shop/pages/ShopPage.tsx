@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Flex, Popconfirm, Space, Typography } from 'antd';
+import { Popconfirm, Space } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, Tag, PageHeader } from '@design-system';
+import { Table, Button, Tag, PageHeader, BulkSelectionBar } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { ShopFormModal } from '../components/ShopFormModal';
 import { PlatformBadge } from '../components/PlatformBadge';
@@ -138,23 +138,12 @@ export function ShopPage() {
       />
 
       {selectedKeys.length > 0 && (
-        <Flex
-          align="center"
-          justify="space-between"
-          style={{ marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6 }}
-        >
-          <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
-          <Space>
-            <Popconfirm
-              title={`ลบ ${selectedKeys.length} รายการ?`}
-              onConfirm={handleBulkDelete}
-              okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading: bulkDelete.isPending }}
-            >
-              <Button variant="danger" icon={<DeleteOutlined />} loading={bulkDelete.isPending}>ลบที่เลือก</Button>
-            </Popconfirm>
-            <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
-          </Space>
-        </Flex>
+        <BulkSelectionBar
+          count={selectedKeys.length}
+          isDeleting={bulkDelete.isPending}
+          onDelete={handleBulkDelete}
+          onClear={() => setSelectedKeys([])}
+        />
       )}
 
       <Table<Shop>

@@ -17,7 +17,7 @@ export interface UseSheetOptions<T> {
   fileName?: string;
 }
 
-export function useSheet<T extends Record<string, unknown>>(options: UseSheetOptions<T>) {
+export function useSheet<T extends object>(options: UseSheetOptions<T>) {
   const { columns, sheetName = 'Sheet1', fileName = 'export' } = options;
 
   /** Export array of T → .xlsx file */
@@ -25,7 +25,7 @@ export function useSheet<T extends Record<string, unknown>>(options: UseSheetOpt
     const rows = data.map((row) =>
       Object.fromEntries(
         columns.map((col) => {
-          const raw = row[col.key as string];
+          const raw = (row as Record<string, unknown>)[col.key as string];
           const value = col.format ? col.format(raw as T[keyof T], row) : raw;
           return [col.label, value ?? ''];
         }),
@@ -43,7 +43,7 @@ export function useSheet<T extends Record<string, unknown>>(options: UseSheetOpt
     const rows = data.map((row) =>
       Object.fromEntries(
         columns.map((col) => {
-          const raw = row[col.key as string];
+          const raw = (row as Record<string, unknown>)[col.key as string];
           const value = col.format ? col.format(raw as T[keyof T], row) : raw;
           return [col.label, value ?? ''];
         }),

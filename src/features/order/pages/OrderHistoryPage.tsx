@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Flex, Popconfirm, Row, Col, Space, Typography, DatePicker, Card } from 'antd';
+import { Popconfirm, Row, Col, Space, DatePicker, Card } from 'antd';
 import {
   DeleteOutlined,
   EyeOutlined,
@@ -11,15 +11,16 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
-import { Table, Button, Tag, PageHeader, Input, Select } from '@design-system';
+import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { downloadFile } from '@shared';
 import { useShops } from '@features/shop';
-import { useEmployees } from '@features/employee';
+import { useEmployees } from '@features/employee/react-query';
 import {
-  useOrders, useDeleteOrder, useBulkDeleteOrder,
+  useOrders, useDeleteOrder, useBulkDeleteOrder, orderService,
 } from '../react-query';
 import { OrderDetailModal } from '../components';
-import { OrderStatusLabel, OrderStatusColor } from '../types';
+import { OrderStatuses } from '../types';
 import type { Order, OrderStatus } from '../types';
 
 const { RangePicker } = DatePicker;
@@ -48,6 +49,8 @@ export function OrderHistoryPage() {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<Order | null>(null);
+  const [exporting, setExporting] = useState(false);
+
 
   const { data: shops = [] } = useShops();
   const { data: employees = [] } = useEmployees();
@@ -91,6 +94,16 @@ export function OrderHistoryPage() {
     setSelectedKeys([]);
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await orderService.exportXlsx(queryParams);
+      downloadFile(res.data as unknown as Blob, 'ออเดอร์.xlsx');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const shopOptions = shops.map((s) => ({
     label: `[${s.platform}] ${s.name}`,
     value: s.id,
@@ -101,8 +114,8 @@ export function OrderHistoryPage() {
     value: e.id,
   }));
 
-  const statusOptions = (Object.keys(OrderStatusLabel) as OrderStatus[]).map((s) => ({
-    label: OrderStatusLabel[s],
+  const statusOptions = (Object.keys(OrderStatuses) as OrderStatus[]).map((s) => ({
+    label: OrderStatuses[s].label,
     value: s,
   }));
 
@@ -113,7 +126,7 @@ export function OrderHistoryPage() {
       render: (_: unknown, r: Order) => (
         <div>
           <div style={{ fontWeight: 500, fontFamily: 'monospace', fontSize: 12 }}>{r.id}</div>
-          <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+          <div style={{ fontSize: 12, color: colors.text.tertiary }}>
             {r.startRecordAt
               ? dayjs(r.startRecordAt).format('DD/MM/YYYY HH:mm')
               : r.createdAt
@@ -128,7 +141,7 @@ export function OrderHistoryPage() {
       dataIndex: 'status',
       width: 130,
       render: (v: OrderStatus) =>
-        v ? <Tag color={OrderStatusColor[v]}>{OrderStatusLabel[v]}</Tag> : '-',
+        v ? <Tag color={OrderStatuses[v].color}>{OrderStatuses[v].label}</Tag> : '-',
     },
     {
       title: 'รายการ',
@@ -209,6 +222,9 @@ export function OrderHistoryPage() {
             <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
+            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>
+              Export Excel
+            </Button>
             <Button variant="primary" icon={<PlusOutlined />} onClick={() => navigate('/order')}>
               สร้าง Order
             </Button>
@@ -283,25 +299,12 @@ export function OrderHistoryPage() {
       </Card>
 
       {selectedKeys.length > 0 && (
-        <Flex
-          align="center"
-          justify="space-between"
-          style={{ marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6 }}
-        >
-          <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
-          <Space>
-            <Popconfirm
-              title={`ลบ ${selectedKeys.length} รายการที่เลือก?`}
-              onConfirm={handleBulkDelete}
-              okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading: bulkDelete.isPending }}
-            >
-              <Button variant="danger" icon={<DeleteOutlined />} loading={bulkDelete.isPending}>
-                ลบที่เลือก
-              </Button>
-            </Popconfirm>
-            <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
-          </Space>
-        </Flex>
+        <BulkSelectionBar
+          count={selectedKeys.length}
+          isDeleting={bulkDelete.isPending}
+          onDelete={handleBulkDelete}
+          onClear={() => setSelectedKeys([])}
+        />
       )}
 
       <Table<Order>

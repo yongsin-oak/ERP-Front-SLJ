@@ -89,3 +89,11 @@ export const stockEntryService = {
   bulkAdjust: (data: BulkStockAdjustDto) =>
     req.post<ApiData<BulkStockResult>>(`${STOCK_BASE}/bulk-adjust`, data),
 };
+
+export const inventoryExportService = {
+  exportProducts: (params: Omit<ProductParams, 'page' | 'limit'>) =>
+    req.get<Blob>(`${BASE}/export`, { params, responseType: 'blob' }),
+
+  exportStockHistory: (params: Omit<StockEntryParams, 'page' | 'limit'>) =>
+    req.get<Blob>(`${STOCK_BASE}/export`, { params, responseType: 'blob' }),
+};

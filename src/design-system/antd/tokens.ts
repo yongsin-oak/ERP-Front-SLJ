@@ -1,4 +1,3 @@
-import { theme as antdAlgorithm } from 'antd';
 import type { ThemeConfig } from 'antd/es/config-provider/context';
 import { colors, shadow } from '@design-system/tokens';
 
@@ -6,8 +5,6 @@ const FONT_FAMILY =
   "'IBM Plex Sans Thai', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
 export const globalTokens: ThemeConfig['token'] = {
-  algorithm: antdAlgorithm.defaultAlgorithm as never,
-
   colorPrimary: colors.brand.primary,
   colorInfo: colors.semantic.info,
   colorSuccess: colors.semantic.success,

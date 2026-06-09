@@ -2,7 +2,7 @@ import { SheetImportModal } from '@design-system';
 import type { DbFieldDef } from '@design-system';
 import { useBulkCreateEmployees } from '../react-query';
 import { DepartmentOptions } from '../types';
-import type { CreateEmployeeDto } from '../types';
+import type { Department, CreateEmployeeDto } from '../types';
 
 const DB_FIELDS: DbFieldDef[] = [
   { key: 'firstName',   label: 'ชื่อจริง',        required: true, type: 'text' },
@@ -13,7 +13,7 @@ const DB_FIELDS: DbFieldDef[] = [
   { key: 'startDate',   label: 'วันที่เริ่มงาน',   type: 'date' },
 ];
 
-const DEPT_LOOKUP = new Map(DepartmentOptions.map((o) => [o.value, o.value]));
+const DEPT_LOOKUP = new Map<string, Department>(DepartmentOptions.map((o) => [o.value, o.value]));
 const VALID_DEPT_LIST = DepartmentOptions.map((o) => o.value).join(', ');
 
 function validateRow(row: Record<string, unknown>): string[] {
@@ -60,7 +60,7 @@ export function EmployeeImportModal({ open, onClose }: EmployeeImportModalProps)
       dbFields={DB_FIELDS}
       validateRow={validateRow}
       transformRow={transformRow}
-      onImport={(rows) => bulkCreate.mutateAsync(rows)}
+      onImport={async (rows) => { await bulkCreate.mutateAsync(rows); }}
       loading={bulkCreate.isPending}
     />
   );

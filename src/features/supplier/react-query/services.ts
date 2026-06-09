@@ -25,4 +25,7 @@ export const supplierService = {
 
   delete: (id: string) =>
     req.delete<ApiData<Supplier>>(`${BASE}/${id}`),
+
+  exportXlsx: (search?: string) =>
+    req.get<Blob>(`${BASE}/export`, { params: { search }, responseType: 'blob' }),
 };

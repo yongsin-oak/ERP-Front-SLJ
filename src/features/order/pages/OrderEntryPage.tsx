@@ -12,10 +12,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { Select, Input, Button, PageHeader } from '@design-system';
-import { colors } from '@design-system';
+import { colors, shadow } from '@design-system';
 import { useShops, PlatformBadge, PLATFORM_ORDER, PlatformHex } from '@features/shop';
 import type { Shop, Platform } from '@features/shop';
-import { useEmployees } from '@features/employee';
+import { useEmployees } from '@features/employee/react-query';
 import { OrderItemsEditor } from '../components';
 import { useCreateOrder } from '../react-query';
 import type { OrderItem } from '../types';
@@ -256,9 +256,9 @@ function PaperOrderCard({
   return (
     <div
       style={{
-        background: '#fff',
+        background: colors.bg.base,
         borderRadius: 8,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+        boxShadow: shadow.sm,
         border: `1px solid ${colors.border.default}`,
         overflow: 'hidden',
       }}
@@ -362,10 +362,10 @@ function SaveBar({
         left: 0,
         right: 0,
         bottom: 0,
-        background: '#fff',
+        background: colors.bg.base,
         borderTop: `1px solid ${colors.border.default}`,
         padding: '10px 20px',
-        boxShadow: '0 -1px 4px rgba(0,0,0,0.04)',
+        boxShadow: shadow.sm,
         zIndex: 50,
       }}
     >

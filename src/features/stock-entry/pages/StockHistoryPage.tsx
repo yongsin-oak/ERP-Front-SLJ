@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Flex, DatePicker, Select } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag } from '@design-system';
+import { Table, Button, PageHeader, Tag, colors, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useStockEntries } from '../react-query';
-import { StockEntryTypeLabel, StockEntryTypeColor } from '../types';
+import { downloadFile } from '@shared';
+import { useStockEntries, stockEntryService } from '../react-query';
+import { StockEntryTypes } from '../types';
 import type { StockEntry, StockEntryType } from '../types';
-import { useEmployeeList } from '@features/employee';
+import { useEmployeeList } from '@features/employee/react-query';
 import { useProducts } from '@features/inventory';
 
 const { RangePicker } = DatePicker;
@@ -21,9 +22,9 @@ function quantityDisplay(r: StockEntry) {
 }
 
 function quantityColor(type: StockEntryType) {
-  if (type === 'damage') return '#cf1322';
+  if (type === 'damage') return colors.semantic.errorText;
   if (type === 'adjust') return 'inherit';
-  return '#389e0d';
+  return colors.semantic.successText;
 }
 
 export function StockHistoryPage() {
@@ -47,6 +48,18 @@ export function StockHistoryPage() {
   const entries = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await stockEntryService.exportXlsx(params);
+      downloadFile(res.data as unknown as Blob, 'ประวัติสต็อก.xlsx');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
   const employees = empData?.data ?? [];
 
@@ -66,7 +79,7 @@ export function StockHistoryPage() {
       render: (_: unknown, r: StockEntry) => (
         <div>
           <div>{r.product?.name ?? r.productBarcode}</div>
-          <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{r.productBarcode}</code>
+          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.productBarcode}</code>
         </div>
       ),
     },
@@ -75,7 +88,7 @@ export function StockHistoryPage() {
       dataIndex: 'type',
       width: 120,
       render: (v: StockEntryType) => (
-        <Tag color={StockEntryTypeColor[v]}>{StockEntryTypeLabel[v]}</Tag>
+        <Tag color={StockEntryTypes[v].color}>{StockEntryTypes[v].label}</Tag>
       ),
     },
     {
@@ -143,9 +156,14 @@ export function StockHistoryPage() {
         title="ประวัติการเคลื่อนไหวสต็อก"
         subtitle={`ทั้งหมด ${total} รายการ`}
         actions={
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
-            รีเฟรช
-          </Button>
+          <>
+            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+              รีเฟรช
+            </Button>
+            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>
+              Export Excel
+            </Button>
+          </>
         }
       />
 

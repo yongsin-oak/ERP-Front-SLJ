@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Flex, InputNumber, Table as AntTable, Typography, Alert } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, PageHeader } from '@design-system';
+import { Button, PageHeader, colors } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
-import { useEmployeeList } from '@features/employee';
+import { useEmployeeList } from '@features/employee/react-query';
 import { useProducts } from '@features/inventory';
 import { Select } from '@design-system';
 
@@ -218,9 +218,9 @@ export function StockDamagePage() {
             style={{
               marginTop: 16,
               padding: '10px 16px',
-              background: '#fff2f0',
+              background: colors.semantic.errorBg,
               borderRadius: 6,
-              border: '1px solid #ffccc7',
+              border: `1px solid ${colors.semantic.errorBorder}`,
             }}
           >
             <Typography.Text style={{ fontSize: 13 }}>

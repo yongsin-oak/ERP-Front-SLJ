@@ -27,6 +27,7 @@ import {
   IconUsers,
   IconLayoutDashboard,
   IconShieldCheck,
+  IconChartBar,
 
   // Business entities
   IconPackages,
@@ -45,6 +46,7 @@ import {
   IconTableImport,
   IconTableExport,
   IconBarcode,
+  IconClipboardCheck,
 
   // Security
   IconLockPassword,
@@ -105,6 +107,12 @@ export const AppIcons = {
   exportFile:   IconTableExport,
   /** Barcode — scan input, product code display */
   barcode:      IconBarcode,
+  /** Stock count / physical audit — clipboard with checkmark */
+  stockCount:   IconClipboardCheck,
+
+  // ── Reports / analytics ───────────────────────────────
+  /** Reports & analytics page */
+  report:       IconChartBar,
 
   // ── Security ──────────────────────────────────────────
   /** Numeric PIN entry (terminal / employee login) */

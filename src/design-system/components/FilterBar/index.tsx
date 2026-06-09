@@ -1,7 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { Flex } from 'antd';
 import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { Input } from '../Input';
 import { Select } from '../Select';

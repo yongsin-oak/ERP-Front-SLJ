@@ -8,6 +8,8 @@ export interface DeleteConfirmButtonProps {
   loading?: boolean;
   title?: string;
   description?: string;
+  okText?: string;
+  cancelText?: string;
   disabled?: boolean;
   size?: 'small' | 'middle' | 'large';
   children?: ReactNode;
@@ -16,8 +18,10 @@ export interface DeleteConfirmButtonProps {
 export function DeleteConfirmButton({
   onConfirm,
   loading = false,
-  title = 'Confirm delete',
-  description = 'This action cannot be undone.',
+  title = 'ยืนยันการลบ',
+  description = 'ไม่สามารถยกเลิกการดำเนินการนี้ได้',
+  okText = 'ลบ',
+  cancelText = 'ยกเลิก',
   disabled = false,
   size = 'small',
   children,
@@ -27,8 +31,8 @@ export function DeleteConfirmButton({
       title={title}
       description={description}
       onConfirm={onConfirm}
-      okText="Delete"
-      cancelText="Cancel"
+      okText={okText}
+      cancelText={cancelText}
       okButtonProps={{ danger: true, loading }}
       disabled={disabled}
     >

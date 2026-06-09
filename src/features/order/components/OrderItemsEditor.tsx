@@ -6,9 +6,9 @@ import {
   PlusOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Table, Tag } from '@design-system';
+import { Button, Input, Table, Tag, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { inventoryService } from '@features/inventory/services';
+import { inventoryService } from '@features/inventory/react-query/services';
 import { ProductDropdownSelect } from '@features/inventory/components';
 import { getErrorMessage } from '@shared';
 import type { OrderItem } from '../types';
@@ -89,7 +89,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       render: (_: unknown, record: OrderItem) => (
         <div>
           <div style={{ fontWeight: 500 }}>{record.name}</div>
-          <code style={{ fontSize: 11, color: 'rgba(0,0,0,0.45)' }}>{record.barcode}</code>
+          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{record.barcode}</code>
         </div>
       ),
     },
@@ -190,7 +190,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
           style={{
             marginTop: 12,
             padding: '10px 16px',
-            background: '#fafafa',
+            background: colors.neutral[50],
             borderRadius: 6,
             display: 'flex',
             justifyContent: 'flex-end',

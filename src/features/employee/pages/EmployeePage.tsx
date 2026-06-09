@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Flex, Popconfirm, Space, Input, Typography, Badge, Modal } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined, UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, Tag, PageHeader } from '@design-system';
+import { Table, Button, Tag, PageHeader, BulkSelectionBar, colors, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { downloadFile } from '@shared';
 import {
   useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee,
-  useBulkDeleteEmployee, useSetEmployeePin,
+  useBulkDeleteEmployee, useSetEmployeePin, employeeService,
 } from '../react-query';
 import { EmployeeFormModal } from '../components/EmployeeFormModal';
 import { EmployeeImportModal } from '../components/EmployeeImportModal';
-import { DepartmentLabel, DepartmentColor } from '../types';
+import { Departments, type Department } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
 
 const { Search } = Input;
@@ -30,6 +31,18 @@ export function EmployeePage() {
   const { data, isLoading, refetch } = useEmployeeList(params);
   const employees = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
+
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await employeeService.exportXlsx({ search: search || undefined });
+      downloadFile(res.data as unknown as Blob, 'พนักงาน.xlsx');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
@@ -65,7 +78,7 @@ export function EmployeePage() {
       render: (_: unknown, r: Employee) => (
         <div>
           <div style={{ fontWeight: 500 }}>{r.firstName} {r.lastName}</div>
-          <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>({r.nickname})</div>
+          <div style={{ fontSize: 12, color: colors.text.tertiary }}>({r.nickname})</div>
         </div>
       ),
     },
@@ -79,8 +92,8 @@ export function EmployeePage() {
       title: 'แผนก',
       dataIndex: 'department',
       width: 130,
-      render: (v: keyof typeof DepartmentLabel) => (
-        <Tag color={DepartmentColor[v]}>{DepartmentLabel[v]}</Tag>
+      render: (v: Department) => (
+        <Tag color={Departments[v].color}>{Departments[v].label}</Tag>
       ),
     },
     {
@@ -132,7 +145,8 @@ export function EmployeePage() {
         actions={
           <>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
-            <Button icon={<UploadOutlined />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
+            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
+            <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
             <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มพนักงาน
             </Button>
@@ -140,7 +154,7 @@ export function EmployeePage() {
         }
       />
 
-      <Flex gap={12} align="center" justify="space-between" style={{ marginBottom: 16 }}>
+      <Flex gap={12} align="center" style={{ marginBottom: 12 }}>
         <Search
           prefix={<SearchOutlined />}
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
@@ -148,22 +162,16 @@ export function EmployeePage() {
           style={{ width: 280 }}
           onSearch={(val) => { setSearch(val); setPage(1); }}
         />
-        {selectedKeys.length > 0 && (
-          <Space>
-            <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
-            <Popconfirm
-              title={`ลบ ${selectedKeys.length} รายการที่เลือก?`}
-              onConfirm={handleBulkDelete}
-              okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading: bulkDelete.isPending }}
-            >
-              <Button variant="danger" icon={<DeleteOutlined />} loading={bulkDelete.isPending}>
-                ลบที่เลือก
-              </Button>
-            </Popconfirm>
-            <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
-          </Space>
-        )}
       </Flex>
+
+      {selectedKeys.length > 0 && (
+        <BulkSelectionBar
+          count={selectedKeys.length}
+          isDeleting={bulkDelete.isPending}
+          onDelete={handleBulkDelete}
+          onClear={() => setSelectedKeys([])}
+        />
+      )}
 
       <Table<Employee>
         rowKey="id"

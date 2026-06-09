@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Flex, Popconfirm, Input, Space, Typography, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, InboxOutlined, UploadOutlined } from '@ant-design/icons';
-import { Table, Button, Tag, PageHeader, Select } from '@design-system';
+import { Flex, Popconfirm, Input, Space, Badge } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, InboxOutlined } from '@ant-design/icons';
+import { Table, Button, Tag, PageHeader, Select, BulkSelectionBar, colors, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { downloadFile } from '@shared';
 import { useBrands } from '@features/brand';
 import { useCategories } from '@features/category';
 import {
   useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useBulkDeleteProduct,
+  inventoryExportService,
 } from '../react-query';
 import { ProductFormModal } from '../components/ProductFormModal';
 import { ProductImportModal } from '../components/ProductImportModal';
@@ -26,9 +28,20 @@ export function InventoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   const params = { page, limit: pageSize, search: search || undefined, brandId, categoryId };
   const { data, isLoading, refetch } = useProducts(params);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await inventoryExportService.exportProducts({ search: search || undefined, brandId, categoryId });
+      downloadFile(res.data as unknown as Blob, 'สินค้า.xlsx');
+    } finally {
+      setExporting(false);
+    }
+  }
   const products = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
@@ -69,9 +82,9 @@ export function InventoryPage() {
       render: (v: string, r: Product) => (
         <div>
           <div style={{ fontWeight: 500 }}>{v}</div>
-          {r.sku && <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.35)' }}>{r.sku}</div>}
+          {r.sku && <div style={{ fontSize: 11, color: colors.text.tertiary }}>{r.sku}</div>}
           {r.brand?.name && (
-            <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>{r.brand.name}</div>
+            <div style={{ fontSize: 12, color: colors.text.tertiary }}>{r.brand.name}</div>
           )}
         </div>
       ),
@@ -145,7 +158,8 @@ export function InventoryPage() {
         actions={
           <>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
-            <Button icon={<UploadOutlined />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
+            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
+            <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
             <Button icon={<InboxOutlined />} onClick={() => setStockEntryOpen(true)}>รับสินค้าเข้า</Button>
             <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มสินค้า
@@ -154,50 +168,42 @@ export function InventoryPage() {
         }
       />
 
-      <Flex gap={8} wrap align="center" justify="space-between" style={{ marginBottom: 16 }}>
-        <Flex gap={8} wrap>
-          <Search
-            prefix={<SearchOutlined />}
-            placeholder="ค้นหาชื่อ, barcode..."
-            allowClear
-            style={{ width: 260 }}
-            onSearch={(val) => { setSearch(val); setPage(1); }}
-          />
-          <Select
-            allowClear
-            placeholder="แบรนด์"
-            value={brandId}
-            onChange={(v) => { setBrandId(v); setPage(1); }}
-            options={brands.map((b) => ({ label: b.name, value: b.id }))}
-            style={{ width: 160 }}
-            showSearch={{ optionFilterProp: 'label' }}
-          />
-          <Select
-            allowClear
-            placeholder="หมวดหมู่"
-            value={categoryId}
-            onChange={(v) => { setCategoryId(v); setPage(1); }}
-            options={categories.map((c) => ({ label: c.name, value: c.id }))}
-            style={{ width: 160 }}
-            showSearch={{ optionFilterProp: 'label' }}
-          />
-        </Flex>
-        {selectedKeys.length > 0 && (
-          <Space>
-            <Typography.Text type="secondary">เลือก {selectedKeys.length} รายการ</Typography.Text>
-            <Popconfirm
-              title={`ลบ ${selectedKeys.length} รายการที่เลือก?`}
-              onConfirm={handleBulkDelete}
-              okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading: bulkDelete.isPending }}
-            >
-              <Button variant="danger" icon={<DeleteOutlined />} loading={bulkDelete.isPending}>
-                ลบที่เลือก
-              </Button>
-            </Popconfirm>
-            <Button onClick={() => setSelectedKeys([])}>ยกเลิก</Button>
-          </Space>
-        )}
+      <Flex gap={8} wrap style={{ marginBottom: 12 }}>
+        <Search
+          prefix={<SearchOutlined />}
+          placeholder="ค้นหาชื่อ, barcode..."
+          allowClear
+          style={{ width: 260 }}
+          onSearch={(val) => { setSearch(val); setPage(1); }}
+        />
+        <Select
+          allowClear
+          placeholder="แบรนด์"
+          value={brandId}
+          onChange={(v) => { setBrandId(v); setPage(1); }}
+          options={brands.map((b) => ({ label: b.name, value: b.id }))}
+          style={{ width: 160 }}
+          showSearch={{ optionFilterProp: 'label' }}
+        />
+        <Select
+          allowClear
+          placeholder="หมวดหมู่"
+          value={categoryId}
+          onChange={(v) => { setCategoryId(v); setPage(1); }}
+          options={categories.map((c) => ({ label: c.name, value: c.id }))}
+          style={{ width: 160 }}
+          showSearch={{ optionFilterProp: 'label' }}
+        />
       </Flex>
+
+      {selectedKeys.length > 0 && (
+        <BulkSelectionBar
+          count={selectedKeys.length}
+          isDeleting={bulkDelete.isPending}
+          onDelete={handleBulkDelete}
+          onClear={() => setSelectedKeys([])}
+        />
+      )}
 
       <Table<Product>
         rowKey="barcode"

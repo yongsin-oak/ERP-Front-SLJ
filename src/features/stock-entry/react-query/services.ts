@@ -26,4 +26,7 @@ export const stockEntryService = {
 
   bulkAdjust: (data: BulkStockAdjustDto) =>
     req.post<ApiData<BulkStockResult>>(`${BASE}/bulk-adjust`, data),
+
+  exportXlsx: (params: Omit<StockEntryParams, 'page' | 'limit'>) =>
+    req.get<Blob>(`${BASE}/export`, { params, responseType: 'blob' }),
 };

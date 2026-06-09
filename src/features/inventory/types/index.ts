@@ -62,19 +62,13 @@ export interface CreateProductDto {
 
 export type UpdateProductDto = Partial<Omit<CreateProductDto, 'barcode'>>;
 
-export type StockEntryType = 'in' | 'adjust' | 'return';
+export const StockEntryTypes = {
+  in:     { label: 'รับสินค้าเข้า', color: 'green' },
+  adjust: { label: 'ปรับสต็อก',    color: 'orange' },
+  return: { label: 'รับคืน',        color: 'blue' },
+} as const;
 
-export const StockEntryTypeLabel: Record<StockEntryType, string> = {
-  in: 'รับสินค้าเข้า',
-  adjust: 'ปรับสต้อค',
-  return: 'รับคืน',
-};
-
-export const StockEntryTypeColor: Record<StockEntryType, string> = {
-  in: 'green',
-  adjust: 'orange',
-  return: 'blue',
-};
+export type StockEntryType = keyof typeof StockEntryTypes;
 
 export interface StockEntry {
   id: string;

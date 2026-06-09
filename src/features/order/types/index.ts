@@ -1,16 +1,11 @@
 import type { Platform } from '@features/shop';
 
-export type OrderStatus = 'completed' | 'cancelled';
+export const OrderStatuses = {
+  completed: { label: 'สำเร็จ',  color: 'green' },
+  cancelled: { label: 'ยกเลิก', color: 'red' },
+} as const;
 
-export const OrderStatusLabel: Record<OrderStatus, string> = {
-  completed: 'สำเร็จ',
-  cancelled: 'ยกเลิก',
-};
-
-export const OrderStatusColor: Record<OrderStatus, string> = {
-  completed: 'green',
-  cancelled: 'red',
-};
+export type OrderStatus = keyof typeof OrderStatuses;
 
 /** Row ใน OrderItemsEditor — UI representation */
 export interface OrderItem {

@@ -83,7 +83,7 @@ export function ProductImportModal({ open, onClose }: ProductImportModalProps) {
       dbFields={DB_FIELDS}
       validateRow={validateRow}
       transformRow={transformRow}
-      onImport={(rows) => bulkCreate.mutateAsync(rows)}
+      onImport={async (rows) => { await bulkCreate.mutateAsync(rows); }}
       loading={bulkCreate.isPending}
     />
   );

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Flex, Popconfirm, Space, Typography } from 'antd';
+import { Popconfirm, Space } from 'antd';
 import {
   PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader } from '@design-system';
+import { Table, Button, PageHeader, BulkSelectionBar } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
@@ -110,9 +110,9 @@ export function BrandPage() {
       />
 
       {selectedKeys.length > 0 && (
-        <BulkBar
+        <BulkSelectionBar
           count={selectedKeys.length}
-          loading={bulkDelete.isPending}
+          isDeleting={bulkDelete.isPending}
           onDelete={handleBulkDelete}
           onClear={() => setSelectedKeys([])}
         />
@@ -140,26 +140,3 @@ export function BrandPage() {
   );
 }
 
-function BulkBar({
-  count, loading, onDelete, onClear,
-}: { count: number; loading: boolean; onDelete: () => void; onClear: () => void }) {
-  return (
-    <Flex
-      align="center"
-      justify="space-between"
-      style={{ marginBottom: 12, padding: '8px 12px', background: '#fafafa', borderRadius: 6 }}
-    >
-      <Typography.Text type="secondary">เลือก {count} รายการ</Typography.Text>
-      <Space>
-        <Popconfirm
-          title={`ลบ ${count} รายการที่เลือก?`}
-          onConfirm={onDelete}
-          okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true, loading }}
-        >
-          <Button variant="danger" icon={<DeleteOutlined />} loading={loading}>ลบที่เลือก</Button>
-        </Popconfirm>
-        <Button onClick={onClear}>ยกเลิก</Button>
-      </Space>
-    </Flex>
-  );
-}

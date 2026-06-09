@@ -1,5 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { Flex } from 'antd';
+import type { InputRef } from 'antd';
 import { BarcodeOutlined } from '@ant-design/icons';
 import { Input } from '../Input';
 import { colors, spacing } from '../../tokens';
@@ -31,7 +32,7 @@ export function ScanInput({
   loading = false,
   hint,
 }: ScanInputProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<InputRef | null>(null);
 
   const refocus = useCallback(() => {
     setTimeout(() => inputRef.current?.focus(), 0);

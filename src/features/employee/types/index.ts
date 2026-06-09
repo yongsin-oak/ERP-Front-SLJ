@@ -1,41 +1,21 @@
-export type Department =
-  | 'Operator'
-  | 'Warehouse'
-  | 'Admin'
-  | 'Accountant'
-  | 'HR'
-  | 'Marketing'
-  | 'Sales';
+export const Departments = {
+  Operator: { label: "ปฏิบัติการ", color: "blue" },
+  Warehouse: { label: "คลังสินค้า", color: "orange" },
+  Admin: { label: "แอดมิน", color: "purple" },
+  Accountant: { label: "บัญชี", color: "green" },
+  HR: { label: "HR", color: "pink" },
+  Marketing: { label: "การตลาด", color: "cyan" },
+  Sales: { label: "ขาย", color: "gold" },
+} as const;
 
-export const DepartmentOptions: { label: string; value: Department }[] = [
-  { label: 'ปฏิบัติการ', value: 'Operator' },
-  { label: 'คลังสินค้า', value: 'Warehouse' },
-  { label: 'แอดมิน', value: 'Admin' },
-  { label: 'บัญชี', value: 'Accountant' },
-  { label: 'HR', value: 'HR' },
-  { label: 'การตลาด', value: 'Marketing' },
-  { label: 'ขาย', value: 'Sales' },
-];
+export type Department = keyof typeof Departments;
 
-export const DepartmentLabel: Record<Department, string> = {
-  Operator: 'ปฏิบัติการ',
-  Warehouse: 'คลังสินค้า',
-  Admin: 'แอดมิน',
-  Accountant: 'บัญชี',
-  HR: 'HR',
-  Marketing: 'การตลาด',
-  Sales: 'ขาย',
-};
-
-export const DepartmentColor: Record<Department, string> = {
-  Operator: 'blue',
-  Warehouse: 'orange',
-  Admin: 'purple',
-  Accountant: 'green',
-  HR: 'pink',
-  Marketing: 'cyan',
-  Sales: 'gold',
-};
+export const DepartmentOptions = Object.entries(Departments).map(
+  ([value, cfg]) => ({
+    value: value as Department,
+    label: cfg.label,
+  }),
+);
 
 export interface Employee {
   id: string;

@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Flex, Select, InputNumber, Table as AntTable, Typography } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, PageHeader } from '@design-system';
+import { Button, PageHeader, colors } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkCreateStockEntry } from '../react-query';
-import { useEmployeeList } from '@features/employee';
+import { useEmployeeList } from '@features/employee/react-query';
 import { useProducts } from '@features/inventory';
 
 interface ReceiveRow {
@@ -210,7 +210,7 @@ export function StockReceivePage() {
         </Flex>
 
         {validRows.length > 0 && (
-          <div style={{ marginTop: 16, padding: '10px 16px', background: '#f6ffed', borderRadius: 6, border: '1px solid #b7eb8f' }}>
+          <div style={{ marginTop: 16, padding: '10px 16px', background: colors.semantic.successBg, borderRadius: 6, border: `1px solid ${colors.semantic.successBorder}` }}>
             <Typography.Text type="secondary" style={{ fontSize: 13 }}>
               สรุป: {validRows.length} รายการ · รวม {totalQty.toLocaleString()} แพ็ค
               {totalCost > 0 && ` · มูลค่ารับเข้า ฿${totalCost.toLocaleString()}`}

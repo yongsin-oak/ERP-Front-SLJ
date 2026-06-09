@@ -12,6 +12,7 @@ export interface BulkSelectionBarProps {
   onClear: () => void;
   isDeleting?: boolean;
   itemLabel?: string;
+  deleteTitle?: string;
 }
 
 const Bar = styled.div`
@@ -29,27 +30,27 @@ export function BulkSelectionBar({
   onDelete,
   onClear,
   isDeleting = false,
-  itemLabel = 'items',
+  itemLabel = 'รายการ',
+  deleteTitle,
 }: BulkSelectionBarProps) {
   return (
     <Bar>
       <Text size="sm" type="secondary">
-        {count} {itemLabel} selected
+        เลือก {count} {itemLabel}
       </Text>
       <Flex gap={spacing[2]}>
         <DeleteConfirmButton
           onConfirm={onDelete}
           loading={isDeleting}
-          title={`Delete ${count} ${itemLabel}?`}
-          description="This action cannot be undone."
+          title={deleteTitle ?? `ลบ ${count} ${itemLabel} ที่เลือก?`}
           size="middle"
         >
           <Button variant="danger" icon={<DeleteOutlined />} loading={isDeleting}>
-            Delete selected
+            ลบที่เลือก
           </Button>
         </DeleteConfirmButton>
         <Button variant="ghost" onClick={onClear} disabled={isDeleting}>
-          Clear
+          ยกเลิก
         </Button>
       </Flex>
     </Bar>

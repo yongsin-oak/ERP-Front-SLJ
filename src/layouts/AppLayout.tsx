@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Layout, Menu, Button, Drawer, Flex, Typography, Popconfirm, Avatar, Tag } from 'antd';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Layout, Menu, Button, Drawer, Flex, Typography, Popconfirm, Avatar, Tag, App } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 import {
@@ -28,10 +28,14 @@ import {
   UnorderedListOutlined,
   TruckOutlined,
 } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
 import { ActorModal } from '@features/auth';
-import { colors } from '@design-system';
+import { colors, AppIcons } from '@design-system';
+import { inventoryService } from '@features/inventory/react-query/services';
+import { productKeys } from '@features/inventory/react-query/queryKeys';
+import { STALE_TIME } from '@shared';
 
 type MenuItem = Required<MenuProps>['items'][number];
 const { Sider, Content, Header } = Layout;
@@ -65,6 +69,7 @@ type NavSection = NavLeaf | NavGroup;
 
 const NAV: NavSection[] = [
   { key: '/dashboard', icon: <DashboardOutlined />, label: 'แดชบอร์ด' },
+  { key: '/report', icon: <AppIcons.report size={16} />, label: 'รายงาน' },
   {
     groupKey: 'order',
     icon: <ShoppingCartOutlined />,
@@ -93,6 +98,7 @@ const NAV: NavSection[] = [
       { key: '/stock/damage',  icon: <FireOutlined />,          label: 'บันทึกของเสีย' },
       { key: '/stock/adjust',  icon: <SlidersOutlined />,       label: 'ปรับสต็อก',     roles: ['SuperAdmin'] },
       { key: '/stock/history', icon: <UnorderedListOutlined />, label: 'ประวัติสต็อก' },
+      { key: '/stock/count',   icon: <AppIcons.stockCount size={16} />, label: 'นับสต็อก' },
     ],
   },
   {
@@ -211,10 +217,11 @@ function Brand({ collapsed }: { collapsed: boolean }) {
 /* ── UserFooter ─────────────────────────────────────── */
 interface FooterUser { username?: string; terminalCode?: string; role: Role; isTerminal?: boolean }
 
-function UserFooter({ collapsed, user, onLogout }: {
+function UserFooter({ collapsed, user, onLogout, onProfile }: {
   collapsed: boolean;
   user: FooterUser | null;
   onLogout: () => void;
+  onProfile: () => void;
 }) {
   return (
     <div style={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, padding: '10px 8px 8px' }}>
@@ -241,6 +248,15 @@ function UserFooter({ collapsed, user, onLogout }: {
           </div>
         </Flex>
       )}
+      <Button
+        type="text"
+        icon={<UserOutlined />}
+        block
+        onClick={onProfile}
+        style={{ textAlign: collapsed ? 'center' : 'left', justifyContent: collapsed ? 'center' : 'flex-start', marginBottom: 2 }}
+      >
+        {!collapsed && 'โปรไฟล์'}
+      </Button>
       <Popconfirm
         title="ออกจากระบบ?"
         onConfirm={onLogout}
@@ -268,6 +284,27 @@ export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const { notification } = App.useApp();
+  const notifiedRef = useRef(false);
+
+  const { data: lowStockProducts } = useQuery({
+    queryKey: [...productKeys.all, 'low-stock'],
+    queryFn: () =>
+      inventoryService.getAll({ page: 1, limit: 500, isActive: true }).then((r) =>
+        r.data.data.filter((p) => p.minStock != null && p.remaining < p.minStock),
+      ),
+    staleTime: STALE_TIME.STATIC,
+  });
+
+  useEffect(() => {
+    if (notifiedRef.current || !lowStockProducts?.length) return;
+    notifiedRef.current = true;
+    notification.warning({
+      message: 'สินค้าใกล้หมดสต็อก',
+      description: `มี ${lowStockProducts.length} รายการที่ต่ำกว่าสต็อกขั้นต่ำ — ตรวจสอบที่หน้าสินค้าคงคลัง`,
+      duration: 8,
+    });
+  }, [lowStockProducts, notification]);
 
   async function handleLogout() {
     await logout();
@@ -333,7 +370,7 @@ export function AppLayout() {
             <SidebarMenu collapsed={collapsed} />
           </div>
 
-          <UserFooter collapsed={collapsed} user={footerUser} onLogout={handleLogout} />
+          <UserFooter collapsed={collapsed} user={footerUser} onLogout={handleLogout} onProfile={() => navigate('/profile')} />
         </Flex>
       </Sider>
 
@@ -389,6 +426,7 @@ export function AppLayout() {
           collapsed={false}
           user={footerUser}
           onLogout={async () => { await handleLogout(); setDrawerOpen(false); }}
+          onProfile={() => { navigate('/profile'); setDrawerOpen(false); }}
         />
       </Drawer>
 

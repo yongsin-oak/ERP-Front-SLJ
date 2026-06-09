@@ -21,3 +21,4 @@ export {
 // ── Utils ─────────────────────────────────────────────────────────────────────
 export { useSheet } from './utils/sheet';
 export type { SheetColumn, UseSheetOptions, ImportResult } from './utils/sheet';
+export { downloadFile } from './utils/downloadFile';

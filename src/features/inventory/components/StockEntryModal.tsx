@@ -3,18 +3,17 @@ import { Modal, Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from '
 import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
 import { message } from 'antd';
-import { Input, Select, Button } from '@design-system';
-import { useEmployees } from '@features/employee';
+import { Input, Select, Button, colors } from '@design-system';
+import { useEmployees } from '@features/employee/react-query';
 import { inventoryService } from '../react-query';
 import { useCreateStockEntry } from '../react-query';
-import { StockEntryTypeLabel, StockEntryTypeColor } from '../types';
+import { StockEntryTypes } from '../types';
 import type { CreateStockEntryDto, StockEntryType, Product } from '../types';
 
-const TYPE_OPTIONS: { label: string; value: StockEntryType }[] = [
-  { label: StockEntryTypeLabel.in, value: 'in' },
-  { label: StockEntryTypeLabel.adjust, value: 'adjust' },
-  { label: StockEntryTypeLabel.return, value: 'return' },
-];
+const TYPE_OPTIONS = (Object.keys(StockEntryTypes) as StockEntryType[]).map((value) => ({
+  value,
+  label: StockEntryTypes[value].label,
+}));
 
 interface Props {
   open: boolean;
@@ -70,7 +69,7 @@ export function StockEntryModal({ open, onClose }: Props) {
       open={open}
       title={
         <Space>
-          <InboxOutlined style={{ color: '#52c41a' }} />
+          <InboxOutlined style={{ color: colors.semantic.success }} />
           บันทึกรับสินค้าเข้าสต้อค
         </Space>
       }
@@ -116,7 +115,7 @@ export function StockEntryModal({ open, onClose }: Props) {
               <br />
               <Space size={4} style={{ marginTop: 4 }}>
                 <Tag>{product.barcode}</Tag>
-                <span style={{ fontSize: 12, color: 'rgba(0,0,0,0.45)' }}>
+                <span style={{ fontSize: 12, color: colors.text.tertiary }}>
                   สต้อคปัจจุบัน: <strong>{product.remaining} ชิ้น</strong>
                 </span>
               </Space>
@@ -134,7 +133,7 @@ export function StockEntryModal({ open, onClose }: Props) {
               <Select
                 style={{ width: '100%' }}
                 options={TYPE_OPTIONS.map((t) => ({
-                  label: <Tag color={StockEntryTypeColor[t.value]} style={{ margin: 0 }}>{t.label}</Tag>,
+                  label: <Tag color={StockEntryTypes[t.value].color} style={{ margin: 0 }}>{t.label}</Tag>,
                   value: t.value,
                 }))}
               />
@@ -168,4 +167,3 @@ export function StockEntryModal({ open, onClose }: Props) {
   );
 }
 
-export { StockEntryTypeLabel, StockEntryTypeColor };

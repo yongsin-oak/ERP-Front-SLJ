@@ -1,18 +1,11 @@
-export type StockEntryType = 'in' | 'return' | 'adjust' | 'damage';
+export const StockEntryTypes = {
+  in:     { label: 'รับสินค้าเข้า', color: 'green' },
+  return: { label: 'รับคืน',        color: 'blue' },
+  adjust: { label: 'ปรับสต็อก',    color: 'orange' },
+  damage: { label: 'ของเสีย',       color: 'red' },
+} as const;
 
-export const StockEntryTypeLabel: Record<StockEntryType, string> = {
-  in: 'รับสินค้าเข้า',
-  return: 'รับคืน',
-  adjust: 'ปรับสต็อก',
-  damage: 'ของเสีย',
-};
-
-export const StockEntryTypeColor: Record<StockEntryType, string> = {
-  in: 'green',
-  return: 'blue',
-  adjust: 'orange',
-  damage: 'red',
-};
+export type StockEntryType = keyof typeof StockEntryTypes;
 
 export interface StockEntry {
   id: string;

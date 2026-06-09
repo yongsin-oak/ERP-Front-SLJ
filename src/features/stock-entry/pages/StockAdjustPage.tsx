@@ -4,7 +4,7 @@ import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, PageHeader } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkAdjustStock } from '../react-query';
-import { useEmployeeList } from '@features/employee';
+import { useEmployeeList } from '@features/employee/react-query';
 import { useProducts } from '@features/inventory';
 
 interface AdjustRow {

@@ -9,5 +9,5 @@ export {
 } from './mutations';
 export { productKeys, stockEntryKeys, PRODUCT_DROPDOWN_LIMIT } from './queryKeys';
 export type { ProductParams, ProductDropdownSearchParams } from './queryKeys';
-export { inventoryService, stockEntryService } from './services';
-export type { ProductParams, StockEntryParams, BulkStockEntryDto, BulkStockAdjustDto, BulkStockResult } from './services';
+export { inventoryService, stockEntryService, inventoryExportService } from './services';
+export type { StockEntryParams, BulkStockEntryDto, BulkStockAdjustDto, BulkStockResult } from './services';
