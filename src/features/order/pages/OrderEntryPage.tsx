@@ -9,9 +9,9 @@ import {
   ShopOutlined,
   ShoppingCartOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Select, Input, Button, PageHeader } from '@design-system';
+import { Select, Input, Button, PageHeader, COL_PROPS } from '@design-system';
 import { colors, shadow } from '@design-system';
 import { useShops, PlatformBadge, PLATFORM_ORDER, PlatformHex } from '@features/shop';
 import type { Shop, Platform } from '@features/shop';
@@ -31,8 +31,10 @@ interface HeaderForm {
 
 export function OrderEntryPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form] = Form.useForm<HeaderForm>();
-  const [items, setItems] = useState<OrderItem[]>([]);
+  const locationItems = (location.state as { items?: OrderItem[] } | null)?.items;
+  const [items, setItems] = useState<OrderItem[]>(locationItems ?? []);
   const [resetTick, setResetTick] = useState(0);
   const headerValues = Form.useWatch([], form) ?? {};
   const orderNumberRef = useRef<InputRef>(null);
@@ -120,7 +122,7 @@ export function OrderEntryPage() {
     form.setFieldsValue({ orderNumber: '', note: '' });
     setItems([]);
     setResetTick((t) => t + 1);
-    setTimeout(() => orderNumberRef.current?.focus(), 0);
+    requestAnimationFrame(() => orderNumberRef.current?.focus());
   }
 
   function handleClear() {
@@ -149,7 +151,7 @@ export function OrderEntryPage() {
       <Form form={form} layout="vertical" requiredMark="optional">
         <Card size="small">
           <Row gutter={16}>
-            <Col xs={24} md={8}>
+            <Col {...COL_PROPS.formField}>
               <Form.Item
                 name="employeeId"
                 label={<Space size={6}><UserOutlined /> พนักงานผู้บันทึก</Space>}
@@ -164,7 +166,7 @@ export function OrderEntryPage() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
+            <Col {...COL_PROPS.formField}>
               <Form.Item
                 name="shopId"
                 label={<Space size={6}><ShopOutlined /> ร้านค้า / แพลตฟอร์ม</Space>}
@@ -179,7 +181,7 @@ export function OrderEntryPage() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={8}>
+            <Col {...COL_PROPS.formField}>
               <Form.Item
                 name="orderNumber"
                 label="เลขคำสั่งซื้อ"
@@ -299,16 +301,16 @@ function PaperOrderCard({
         <Divider style={{ margin: '12px 0 10px' }} />
 
         <Row gutter={[20, 6]}>
-          <Col xs={24} sm={8}>
+          <Col {...COL_PROPS.infoField}>
             <InfoLine
               label="พนักงาน"
               value={employee ? `${employee.firstName} (${employee.nickname})` : '-'}
             />
           </Col>
-          <Col xs={24} sm={8}>
+          <Col {...COL_PROPS.infoField}>
             <InfoLine label="วันที่บันทึก" value={dayjs().format('DD/MM/YYYY HH:mm')} />
           </Col>
-          <Col xs={24} sm={8}>
+          <Col {...COL_PROPS.infoField}>
             <div>{noteField}</div>
           </Col>
         </Row>

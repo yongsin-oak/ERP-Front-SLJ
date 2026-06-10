@@ -105,6 +105,9 @@ export type { FilterBarProps, FilterItem, FilterValues } from './components/Filt
 export { StatsCard } from './components/StatsCard';
 export type { StatsCardProps } from './components/StatsCard';
 
+export { SummaryCard } from './components/SummaryCard';
+export type { SummaryCardProps } from './components/SummaryCard';
+
 export { ScanInput } from './components/ScanInput';
 export type { ScanInputProps } from './components/ScanInput';
 

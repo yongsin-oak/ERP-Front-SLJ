@@ -62,6 +62,28 @@ export interface CreateProductDto {
 
 export type UpdateProductDto = Partial<Omit<CreateProductDto, 'barcode'>>;
 
+export interface ShopPrice {
+  id: string;
+  productBarcode: string;
+  shopId: string;
+  sellPrice: PriceSet;
+  costPrice?: PriceSet | null;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateShopPriceDto {
+  shopId: string;
+  sellPrice: PriceSet;
+  costPrice?: PriceSet;
+  effectiveFrom?: string | null;
+  effectiveTo?: string | null;
+}
+
+export type UpdateShopPriceDto = Partial<Omit<CreateShopPriceDto, 'shopId'>>;
+
 export const StockEntryTypes = {
   in:     { label: 'รับสินค้าเข้า', color: 'green' },
   adjust: { label: 'ปรับสต็อก',    color: 'orange' },

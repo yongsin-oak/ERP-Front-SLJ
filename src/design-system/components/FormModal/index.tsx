@@ -14,6 +14,7 @@ export interface FormModalProps {
   loading?: boolean;
   width?: number;
   submitLabel?: string;
+  cancelLabel?: string;
   children: ReactNode;
 }
 
@@ -25,7 +26,8 @@ export function FormModal({
   onFinish,
   loading = false,
   width,
-  submitLabel = 'Save',
+  submitLabel = 'บันทึก',
+  cancelLabel = 'ยกเลิก',
   children,
 }: FormModalProps) {
   useEffect(() => {
@@ -50,7 +52,7 @@ export function FormModal({
       footer={
         <Space>
           <Button variant="ghost" onClick={onClose} disabled={loading}>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button variant="primary" onClick={handleSubmit} loading={loading}>
             {submitLabel}

@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
-import { handleError } from '@shared';
+import { handleError, notify } from '@shared';
 import { supplierService } from './services';
 import { supplierKeys } from './queryKeys';
 import type { CreateSupplierDto, UpdateSupplierDto } from '../types';
@@ -12,7 +11,7 @@ export function useCreateSupplier() {
       supplierService.create(data).then((r) => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supplierKeys.lists() });
-      message.success('เพิ่มซัพพลายเออร์สำเร็จ');
+      notify.success('เพิ่มซัพพลายเออร์สำเร็จ');
     },
     onError: handleError('เพิ่มซัพพลายเออร์'),
   });
@@ -26,7 +25,7 @@ export function useUpdateSupplier() {
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: supplierKeys.lists() });
       qc.setQueryData(supplierKeys.detail(updated.id), updated);
-      message.success('แก้ไขสำเร็จ');
+      notify.success('แก้ไขซัพพลายเออร์สำเร็จ');
     },
     onError: handleError('แก้ไขซัพพลายเออร์'),
   });
@@ -38,7 +37,7 @@ export function useDeleteSupplier() {
     mutationFn: (id: string) => supplierService.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: supplierKeys.lists() });
-      message.success('ลบซัพพลายเออร์สำเร็จ');
+      notify.success('ลบซัพพลายเออร์สำเร็จ');
     },
     onError: handleError('ลบซัพพลายเออร์'),
   });

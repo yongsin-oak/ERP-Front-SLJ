@@ -1,14 +1,26 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { STALE_TIME, PAGINATION } from '@shared';
-import { inventoryService } from './services';
-import { productKeys, PRODUCT_DROPDOWN_LIMIT } from './queryKeys';
+import { inventoryService, stockEntryService, shopPriceService } from './services';
+import { productKeys, stockEntryKeys, shopPriceKeys, PRODUCT_DROPDOWN_LIMIT } from './queryKeys';
 import type { ProductParams, ProductDropdownSearchParams } from './queryKeys';
+import type { StockEntryParams } from './services';
 
 export function useProducts(params: ProductParams) {
   return useQuery({
     queryKey: productKeys.list(params),
     queryFn: () => inventoryService.getAll(params).then((r) => r.data),
     placeholderData: (prev) => prev,
+    staleTime: STALE_TIME.SHORT,
+  });
+}
+
+export function useStockEntries(params: StockEntryParams, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: stockEntryKeys.list(params),
+    queryFn: () => stockEntryService.getAll(params).then((r) => r.data),
+    placeholderData: (prev) => prev,
+    staleTime: STALE_TIME.SHORT,
+    enabled: options?.enabled !== false,
   });
 }
 
@@ -17,6 +29,15 @@ export function useProductByBarcode(barcode: string | null) {
     queryKey: productKeys.detail(barcode ?? ''),
     queryFn: () => inventoryService.getByBarcode(barcode!).then((r) => r.data.data),
     enabled: !!barcode,
+    staleTime: STALE_TIME.SHORT,
+  });
+}
+
+export function useShopPrices(barcode: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: shopPriceKeys.byProduct(barcode),
+    queryFn: () => shopPriceService.getAll(barcode).then((r) => r.data.data ?? []),
+    enabled: options?.enabled !== false && !!barcode,
     staleTime: STALE_TIME.SHORT,
   });
 }

@@ -1,7 +1,13 @@
 import { useState } from 'react';
-import { Flex, Popconfirm, Input, Space, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, InboxOutlined } from '@ant-design/icons';
-import { Table, Button, Tag, PageHeader, Select, BulkSelectionBar, colors, AppIcons } from '@design-system';
+import { Flex, Input, Space, Badge, Tabs, Tooltip } from 'antd';
+import {
+  PlusOutlined, EditOutlined, SearchOutlined, ReloadOutlined,
+  InboxOutlined, DollarOutlined, WarningFilled,
+} from '@ant-design/icons';
+import {
+  Table, Button, Tag, PageHeader, Select, BulkSelectionBar,
+  colors, AppIcons, DeleteConfirmButton, CodeCell,
+} from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
 import { useBrands } from '@features/brand';
@@ -13,35 +19,43 @@ import {
 import { ProductFormModal } from '../components/ProductFormModal';
 import { ProductImportModal } from '../components/ProductImportModal';
 import { StockEntryModal } from '../components/StockEntryModal';
+import { ShopPriceModal } from '../components/ShopPriceModal';
+import { StockHistoryTab } from '../components/StockHistoryTab';
 import type { Product, CreateProductDto, UpdateProductDto } from '../types';
 
 const { Search } = Input;
 
+type ActiveTab = 'products' | 'history';
+
 export function InventoryPage() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('products');
+
+  // Product tab state
   const [modalOpen, setModalOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [stockEntryOpen, setStockEntryOpen] = useState(false);
+  const [stockEntryBarcode, setStockEntryBarcode] = useState<string | undefined>();
   const [selected, setSelected] = useState<Product | null>(null);
   const [search, setSearch] = useState('');
   const [brandId, setBrandId] = useState<string | undefined>();
   const [categoryId, setCategoryId] = useState<string | undefined>();
+  const [isActive, setIsActive] = useState<boolean | undefined>();
+  const [lowStock, setLowStock] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [shopPriceBarcode, setShopPriceBarcode] = useState<string | null>(null);
+  const [deletingBarcode, setDeletingBarcode] = useState<string | null>(null);
 
-  const params = { page, limit: pageSize, search: search || undefined, brandId, categoryId };
+  const params = {
+    page, limit: pageSize,
+    search: search || undefined,
+    brandId, categoryId, isActive,
+    lowStock: lowStock || undefined,
+  };
   const { data, isLoading, refetch } = useProducts(params);
 
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const res = await inventoryExportService.exportProducts({ search: search || undefined, brandId, categoryId });
-      downloadFile(res.data as unknown as Blob, 'สินค้า.xlsx');
-    } finally {
-      setExporting(false);
-    }
-  }
   const products = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
@@ -69,12 +83,29 @@ export function InventoryPage() {
     setSelectedKeys([]);
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await inventoryExportService.exportProducts({
+        search: search || undefined, brandId, categoryId, isActive, lowStock: lowStock || undefined,
+      });
+      downloadFile(res.data as unknown as Blob, 'สินค้า.xlsx');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  function openStockEntry(barcode?: string) {
+    setStockEntryBarcode(barcode);
+    setStockEntryOpen(true);
+  }
+
   const columns: ColumnType<Product>[] = [
     {
       title: 'Barcode',
       dataIndex: 'barcode',
       width: 150,
-      render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code>,
+      render: (v: string) => <CodeCell>{v}</CodeCell>,
     },
     {
       title: 'ชื่อสินค้า',
@@ -96,18 +127,25 @@ export function InventoryPage() {
       render: (_: unknown, r: Product) => (r.category?.name ? <Tag>{r.category.name}</Tag> : '-'),
     },
     {
-      title: 'ราคาทุน/แพ็ค',
-      dataIndex: ['costPrice', 'pack'],
-      width: 110,
-      align: 'right',
-      render: (v?: number) => (v != null ? `฿${v.toLocaleString()}` : '-'),
-    },
-    {
       title: 'ราคาขาย/แพ็ค',
-      dataIndex: ['sellPrice', 'pack'],
-      width: 110,
+      key: 'sellPrice',
+      width: 130,
       align: 'right',
-      render: (v?: number) => (v != null ? `฿${v.toLocaleString()}` : '-'),
+      render: (_: unknown, r: Product) => {
+        const pack = r.sellPrice?.pack;
+        const carton = r.sellPrice?.carton;
+        const noPrice = !pack && !carton;
+        return (
+          <Space size={4}>
+            {noPrice && (
+              <Tooltip title="ยังไม่ตั้งราคาขาย">
+                <WarningFilled style={{ color: colors.semantic.warning, fontSize: 13 }} />
+              </Tooltip>
+            )}
+            <span>{pack != null ? `฿${pack.toLocaleString()}` : '-'}</span>
+          </Space>
+        );
+      },
     },
     {
       title: 'คงเหลือ',
@@ -131,43 +169,44 @@ export function InventoryPage() {
     {
       title: '',
       key: 'action',
-      width: 100,
+      width: 160,
       render: (_: unknown, r: Product) => (
         <Space>
+          <Tooltip title="รับสินค้าเข้า">
+            <Button
+              variant="ghost" size="small" icon={<InboxOutlined />}
+              onClick={() => openStockEntry(r.barcode)}
+            />
+          </Tooltip>
+          <Tooltip title="ราคาร้านค้าเฉพาะ">
+            <Button
+              variant="ghost" size="small" icon={<DollarOutlined />}
+              onClick={() => setShopPriceBarcode(r.barcode)}
+            />
+          </Tooltip>
           <Button
             variant="ghost" size="small" icon={<EditOutlined />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
-          <Popconfirm
+          <DeleteConfirmButton
+            onConfirm={async () => {
+              setDeletingBarcode(r.barcode);
+              try {
+                await deleteProduct.mutateAsync(r.barcode);
+              } finally {
+                setDeletingBarcode(null);
+              }
+            }}
+            loading={deletingBarcode === r.barcode}
             title="ลบสินค้านี้?"
-            onConfirm={() => deleteProduct.mutate(r.barcode)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
-          >
-            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
+          />
         </Space>
       ),
     },
   ];
 
-  return (
+  const productTabContent = (
     <div>
-      <PageHeader
-        title="สินค้าคงคลัง"
-        subtitle={`ทั้งหมด ${total} รายการ`}
-        actions={
-          <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
-            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
-            <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
-            <Button icon={<InboxOutlined />} onClick={() => setStockEntryOpen(true)}>รับสินค้าเข้า</Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
-              เพิ่มสินค้า
-            </Button>
-          </>
-        }
-      />
-
       <Flex gap={8} wrap style={{ marginBottom: 12 }}>
         <Search
           prefix={<SearchOutlined />}
@@ -194,6 +233,26 @@ export function InventoryPage() {
           style={{ width: 160 }}
           showSearch={{ optionFilterProp: 'label' }}
         />
+        <Select
+          allowClear
+          placeholder="สถานะ"
+          value={isActive === undefined ? undefined : isActive ? 'true' : 'false'}
+          onChange={(v: string | undefined) => {
+            setIsActive(v === 'true' ? true : v === 'false' ? false : undefined);
+            setPage(1);
+          }}
+          options={[
+            { label: 'ใช้งาน', value: 'true' },
+            { label: 'ปิด', value: 'false' },
+          ]}
+          style={{ width: 120 }}
+        />
+        <Button
+          variant={lowStock ? 'primary' : 'ghost'}
+          onClick={() => { setLowStock(!lowStock); setPage(1); }}
+        >
+          สต็อกต่ำ
+        </Button>
       </Flex>
 
       {selectedKeys.length > 0 && (
@@ -222,23 +281,66 @@ export function InventoryPage() {
           onChange: (p, ps) => { setPage(p); setPageSize(ps); },
         }}
       />
+    </div>
+  );
+
+  return (
+    <div>
+      <PageHeader
+        title="สินค้าคงคลัง"
+        subtitle={activeTab === 'products' ? `ทั้งหมด ${total} รายการ` : 'ประวัติการเคลื่อนไหวสต็อก'}
+        actions={
+          activeTab === 'products' ? (
+            <>
+              <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
+              <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
+              <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
+              <Button icon={<InboxOutlined />} onClick={() => openStockEntry()}>รับสินค้าเข้า</Button>
+              <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
+                เพิ่มสินค้า
+              </Button>
+            </>
+          ) : undefined
+        }
+      />
+
+      <Tabs
+        activeKey={activeTab}
+        onChange={(k) => setActiveTab(k as ActiveTab)}
+        style={{ marginTop: 4 }}
+        items={[
+          { key: 'products', label: 'สินค้า', children: productTabContent },
+          { key: 'history', label: 'ประวัติการเคลื่อนไหว', children: <StockHistoryTab active={activeTab === 'history'} /> },
+        ]}
+      />
 
       <ProductFormModal
         open={modalOpen}
         product={selected}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
+        loading={createProduct.isPending || updateProduct.isPending}
       />
 
       <StockEntryModal
         open={stockEntryOpen}
-        onClose={() => setStockEntryOpen(false)}
+        onClose={() => { setStockEntryOpen(false); setStockEntryBarcode(undefined); }}
+        initialBarcode={stockEntryBarcode}
       />
 
       <ProductImportModal
         open={importOpen}
         onClose={() => setImportOpen(false)}
       />
+
+      {shopPriceBarcode && (
+        <ShopPriceModal
+          open={!!shopPriceBarcode}
+          barcode={shopPriceBarcode}
+          productName={products.find((p) => p.barcode === shopPriceBarcode)?.name ?? shopPriceBarcode}
+          onClose={() => setShopPriceBarcode(null)}
+        />
+      )}
     </div>
   );
 }

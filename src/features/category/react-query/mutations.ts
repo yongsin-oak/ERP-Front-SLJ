@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
-import { handleError } from '@shared';
+import { handleError, notify } from '@shared';
 import { categoryService } from './services';
 import { categoryKeys } from './queryKeys';
 import type { CreateCategoryDto, UpdateCategoryDto } from '../types';
@@ -11,7 +10,7 @@ export function useCreateCategory() {
     mutationFn: (data: CreateCategoryDto) => categoryService.create(data).then((r) => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: categoryKeys.all });
-      message.success('เพิ่มหมวดหมู่สำเร็จ');
+      notify.success('เพิ่มหมวดหมู่สำเร็จ');
     },
     onError: handleError('เพิ่มหมวดหมู่'),
   });
@@ -24,7 +23,7 @@ export function useUpdateCategory() {
       categoryService.update(id, data).then((r) => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: categoryKeys.all });
-      message.success('แก้ไขหมวดหมู่สำเร็จ');
+      notify.success('แก้ไขหมวดหมู่สำเร็จ');
     },
     onError: handleError('แก้ไขหมวดหมู่'),
   });
@@ -37,7 +36,7 @@ export function useDeleteCategory() {
       categoryService.delete(id, deleteChild),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: categoryKeys.all });
-      message.success('ลบหมวดหมู่สำเร็จ');
+      notify.success('ลบหมวดหมู่สำเร็จ');
     },
     onError: handleError('ลบหมวดหมู่'),
   });

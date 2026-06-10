@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Flex, Select, InputNumber, Table as AntTable, Typography } from 'antd';
+import { Flex, InputNumber, Typography } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, PageHeader, colors } from '@design-system';
+import { Table, Button, PageHeader, Select, colors } from '@design-system';
+import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkCreateStockEntry } from '../react-query';
 import { useEmployeeList } from '@features/employee/react-query';
@@ -81,7 +82,7 @@ export function StockReceivePage() {
     .filter((r) => r.type === 'in' && r.costPricePerUnit)
     .reduce((s, r) => s + r.quantity * (r.costPricePerUnit ?? 0), 0);
 
-  const columns = [
+  const columns: ColumnType<ReceiveRow>[] = [
     {
       title: 'สินค้า',
       dataIndex: 'productBarcode',
@@ -187,7 +188,7 @@ export function StockReceivePage() {
           onNoteChange={setNote}
         />
 
-        <AntTable
+        <Table<ReceiveRow>
           rowKey="key"
           columns={columns}
           dataSource={rows}

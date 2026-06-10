@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Popconfirm, Space } from 'antd';
-import {
-  PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
-} from '@ant-design/icons';
+import { Flex } from 'antd';
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, BulkSelectionBar } from '@design-system';
+import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
@@ -20,6 +18,9 @@ export function BrandPage() {
   const { data, isLoading, refetch, isFetching } = useBrands({ page: 1, limit: 200 });
   const brands = useMemo(() => data?.data ?? [], [data]);
   const total = data?.pagination?.total ?? brands.length;
+
+  const withDescCount = useMemo(() => brands.filter((b) => !!b.description).length, [brands]);
+  const withoutDescCount = useMemo(() => brands.filter((b) => !b.description).length, [brands]);
 
   const createBrand = useCreateBrand();
   const updateBrand = useUpdateBrand();
@@ -76,20 +77,13 @@ export function BrandPage() {
       width: 100,
       fixed: 'right',
       render: (_: unknown, r: Brand) => (
-        <Space>
-          <Button
-            variant="ghost" size="small" icon={<EditOutlined />}
-            onClick={() => { setSelected(r); setModalOpen(true); }}
-          />
-          <Popconfirm
-            title="ลบแบรนด์นี้?"
-            description="สินค้าที่ผูกอยู่กับแบรนด์นี้จะไม่มีแบรนด์"
-            onConfirm={() => deleteBrand.mutate(r.id)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
-          >
-            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
+        <ActionCell
+          onEdit={() => { setSelected(r); setModalOpen(true); }}
+          onDelete={() => deleteBrand.mutate(r.id)}
+          isDeleting={deleteBrand.isPending}
+          deleteTitle="ลบแบรนด์นี้?"
+          deleteDescription="สินค้าที่ผูกอยู่กับแบรนด์นี้จะไม่มีแบรนด์"
+        />
       ),
     },
   ];
@@ -108,6 +102,12 @@ export function BrandPage() {
           </>
         }
       />
+
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="มีรายละเอียด (หน้านี้)" value={withDescCount} suffix="แบรนด์" color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="ไม่มีรายละเอียด (หน้านี้)" value={withoutDescCount} suffix="แบรนด์" color={colors.text.secondary} style={{ flex: 1 }} />
+      </Flex>
 
       {selectedKeys.length > 0 && (
         <BulkSelectionBar
@@ -135,8 +135,8 @@ export function BrandPage() {
         brand={selected}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
+        loading={createBrand.isPending || updateBrand.isPending}
       />
     </div>
   );
 }
-

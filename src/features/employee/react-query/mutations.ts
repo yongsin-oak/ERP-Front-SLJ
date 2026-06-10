@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
-import { handleError } from '@shared';
+import { handleError, notify } from '@shared';
 import { employeeService } from './services';
 import { employeeKeys } from './queryKeys';
 import type { CreateEmployeeDto, UpdateEmployeeDto } from '../types';
@@ -13,7 +12,7 @@ export function useBulkCreateEmployees() {
     onSuccess: (employees) => {
       qc.invalidateQueries({ queryKey: employeeKeys.lists() });
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
-      message.success(`นำเข้าพนักงาน ${employees.length} คนสำเร็จ`);
+      notify.success('นำเข้าพนักงานสำเร็จ', `${employees.length} คนถูกเพิ่มเข้าระบบ`);
     },
     onError: handleError('นำเข้าพนักงาน'),
   });
@@ -27,7 +26,7 @@ export function useCreateEmployee() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: employeeKeys.lists() });
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
-      message.success('เพิ่มพนักงานสำเร็จ');
+      notify.success('เพิ่มพนักงานสำเร็จ');
     },
     onError: handleError('เพิ่มพนักงาน'),
   });
@@ -42,7 +41,7 @@ export function useUpdateEmployee() {
       qc.invalidateQueries({ queryKey: employeeKeys.lists() });
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
       qc.setQueryData(employeeKeys.detail(updated.id), updated);
-      message.success('แก้ไขข้อมูลสำเร็จ');
+      notify.success('แก้ไขข้อมูลพนักงานสำเร็จ');
     },
     onError: handleError('แก้ไขข้อมูลพนักงาน'),
   });
@@ -55,7 +54,7 @@ export function useDeleteEmployee() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: employeeKeys.lists() });
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
-      message.success('ลบพนักงานสำเร็จ');
+      notify.success('ลบพนักงานสำเร็จ');
     },
     onError: handleError('ลบพนักงาน'),
   });
@@ -66,7 +65,7 @@ export function useSetEmployeePin() {
     mutationFn: ({ id, pin }: { id: string; pin: string }) =>
       employeeService.setPin(id, pin),
     onSuccess: () => {
-      message.success('ตั้ง PIN สำเร็จ');
+      notify.success('ตั้ง PIN สำเร็จ');
     },
     onError: handleError('ตั้ง PIN'),
   });
@@ -79,7 +78,7 @@ export function useBulkDeleteEmployee() {
     onSuccess: (_, ids) => {
       qc.invalidateQueries({ queryKey: employeeKeys.lists() });
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });
-      message.success(`ลบ ${ids.length} รายการสำเร็จ`);
+      notify.success('ลบพนักงานสำเร็จ', `${ids.length} รายการถูกลบออกจากระบบ`);
     },
     onError: handleError('ลบพนักงาน'),
   });

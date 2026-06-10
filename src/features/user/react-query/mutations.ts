@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
-import { handleError } from '@shared';
+import { handleError, notify } from '@shared';
 import { userService } from './services';
 import { userKeys } from './queryKeys';
 import type { Role } from '@features/auth/types';
@@ -12,7 +11,7 @@ export function useCreateUser() {
     mutationFn: (data: CreateUserDto) => userService.create(data).then((r) => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
-      message.success('เพิ่มผู้ใช้งานสำเร็จ');
+      notify.success('เพิ่มผู้ใช้งานสำเร็จ');
     },
     onError: handleError('เพิ่มผู้ใช้งาน'),
   });
@@ -26,7 +25,7 @@ export function useUpdateUserRole() {
     onSuccess: (updated) => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
       qc.setQueryData(userKeys.detail(updated.id), updated);
-      message.success('เปลี่ยนบทบาทสำเร็จ');
+      notify.success('เปลี่ยนบทบาทสำเร็จ');
     },
     onError: handleError('เปลี่ยนบทบาท'),
   });
@@ -38,7 +37,7 @@ export function useDeleteUser() {
     mutationFn: (id: string) => userService.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: userKeys.lists() });
-      message.success('ลบผู้ใช้งานสำเร็จ');
+      notify.success('ลบผู้ใช้งานสำเร็จ');
     },
     onError: handleError('ลบผู้ใช้งาน'),
   });

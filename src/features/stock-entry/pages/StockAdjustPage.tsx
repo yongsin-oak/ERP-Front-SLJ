@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Flex, Select, InputNumber, Table as AntTable, Typography, Alert } from 'antd';
+import { Flex, InputNumber, Typography, Alert } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, PageHeader } from '@design-system';
+import { Table, Button, PageHeader, Select } from '@design-system';
+import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkAdjustStock } from '../react-query';
 import { useEmployeeList } from '@features/employee/react-query';
@@ -73,7 +74,7 @@ export function StockAdjustPage() {
 
   const canSave = rows.some((r) => r.productBarcode);
 
-  const columns = [
+  const columns: ColumnType<AdjustRow>[] = [
     {
       title: 'สินค้า',
       dataIndex: 'productBarcode',
@@ -169,7 +170,7 @@ export function StockAdjustPage() {
           onNoteChange={setNote}
         />
 
-        <AntTable
+        <Table<AdjustRow>
           rowKey="key"
           columns={columns}
           dataSource={rows}

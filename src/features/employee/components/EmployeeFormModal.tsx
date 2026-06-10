@@ -1,65 +1,56 @@
 import { useEffect } from 'react';
-import { DatePicker, Switch, Form as AntForm } from 'antd';
+import { DatePicker, Switch } from 'antd';
 import dayjs from 'dayjs';
-import { Modal, Form, Input, Select, Button } from '@design-system';
+import { FormModal, Form, Input, Select } from '@design-system';
 import { DepartmentOptions } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
 
-interface EmployeeFormModalProps {
+interface Props {
   open: boolean;
   employee?: Employee | null;
   onClose: () => void;
   onSubmit: (values: CreateEmployeeDto) => Promise<void>;
+  loading?: boolean;
 }
 
-export function EmployeeFormModal({ open, employee, onClose, onSubmit }: EmployeeFormModalProps) {
+export function EmployeeFormModal({ open, employee, onClose, onSubmit, loading }: Props) {
   const [form] = Form.useForm<CreateEmployeeDto & { startDateObj?: dayjs.Dayjs }>();
   const isEdit = !!employee;
 
   useEffect(() => {
-    if (open) {
-      if (employee) {
-        form.setFieldsValue({
-          firstName: employee.firstName,
-          lastName: employee.lastName,
-          nickname: employee.nickname,
-          phoneNumber: employee.phoneNumber ?? undefined,
-          department: employee.department,
-          isActive: employee.isActive,
-          startDateObj: employee.startDate ? dayjs(employee.startDate) : undefined,
-        });
-      } else {
-        form.resetFields();
-        form.setFieldsValue({ isActive: true });
-      }
+    if (open && employee) {
+      form.setFieldsValue({
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        nickname: employee.nickname,
+        phoneNumber: employee.phoneNumber ?? undefined,
+        department: employee.department,
+        isActive: employee.isActive,
+        startDateObj: employee.startDate ? dayjs(employee.startDate) : undefined,
+      });
     }
   }, [open, employee, form]);
 
-  const handleOk = async () => {
-    const values = await form.validateFields();
+  async function handleFinish(raw: unknown) {
+    const values = raw as CreateEmployeeDto & { startDateObj?: dayjs.Dayjs };
     const { startDateObj, ...rest } = values;
     await onSubmit({
       ...rest,
       startDate: startDateObj ? startDateObj.format('YYYY-MM-DD') : undefined,
     });
-    onClose();
-  };
+  }
 
   return (
-    <Modal
+    <FormModal
       open={open}
       title={isEdit ? 'แก้ไขพนักงาน' : 'เพิ่มพนักงาน'}
-      onCancel={onClose}
-      footer={[
-        <Button key="cancel" onClick={onClose}>
-          ยกเลิก
-        </Button>,
-        <Button key="submit" variant="primary" onClick={handleOk}>
-          {isEdit ? 'บันทึก' : 'เพิ่มพนักงาน'}
-        </Button>,
-      ]}
+      onClose={onClose}
+      form={form}
+      onFinish={handleFinish}
+      loading={loading}
+      submitLabel={isEdit ? 'บันทึก' : 'เพิ่มพนักงาน'}
     >
-      <Form form={form} style={{ marginTop: 16 }}>
+      <Form form={form} style={{ marginTop: 16 }} initialValues={{ isActive: true }}>
         <Form.Item name="firstName" label="ชื่อ" rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}>
           <Input placeholder="ชื่อ" />
         </Form.Item>
@@ -78,10 +69,10 @@ export function EmployeeFormModal({ open, employee, onClose, onSubmit }: Employe
         <Form.Item name="startDateObj" label="วันที่เริ่มงาน">
           <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="วัน/เดือน/ปี" />
         </Form.Item>
-        <AntForm.Item name="isActive" label="สถานะ" valuePropName="checked">
+        <Form.Item name="isActive" label="สถานะ" valuePropName="checked">
           <Switch checkedChildren="ใช้งาน" unCheckedChildren="ระงับ" />
-        </AntForm.Item>
+        </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

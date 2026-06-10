@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Flex, DatePicker, Select } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
+import { useState, useMemo } from 'react';
+import { DatePicker, Flex, Space } from 'antd';
+import { ReloadOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
+import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, colors, AppIcons } from '@design-system';
+import { Table, Button, PageHeader, Tag, Select, colors, AppIcons, SummaryCard, Card } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
 import { useStockEntries, stockEntryService } from '../react-query';
@@ -14,6 +15,11 @@ import { useProducts } from '@features/inventory';
 const { RangePicker } = DatePicker;
 
 const DECREASE_TYPES: StockEntryType[] = ['damage'];
+
+const TYPE_OPTIONS = (Object.keys(StockEntryTypes) as StockEntryType[]).map((k) => ({
+  label: StockEntryTypes[k].label,
+  value: k,
+}));
 
 function quantityDisplay(r: StockEntry) {
   if (r.type === 'adjust') return String(r.quantity);
@@ -33,22 +39,50 @@ export function StockHistoryPage() {
   const [search, setSearch] = useState<string | undefined>();
   const [type, setType] = useState<StockEntryType | undefined>();
   const [employeeId, setEmployeeId] = useState<string | undefined>();
-  const [dateRange, setDateRange] = useState<[string, string] | null>(null);
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [exporting, setExporting] = useState(false);
 
-  const params = {
-    page, limit: pageSize,
-    productBarcode: search || undefined,
-    type,
-    employeeId,
-    dateFrom: dateRange?.[0],
-    dateTo: dateRange?.[1],
-  };
+  const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
+  const employees = empData?.data ?? [];
+
+  const { data: prodData } = useProducts({ page: 1, limit: 500 });
+  const products = prodData?.data ?? [];
+
+  const productOptions = useMemo(
+    () => products.map((p) => ({ label: `${p.name} (${p.barcode})`, value: p.barcode })),
+    [products],
+  );
+  const employeeOptions = useMemo(
+    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
+    [employees],
+  );
+
+  const params = useMemo(
+    () => ({
+      page,
+      limit: pageSize,
+      productBarcode: search || undefined,
+      type,
+      employeeId,
+      dateFrom: dateRange?.[0].startOf('day').toISOString(),
+      dateTo: dateRange?.[1].endOf('day').toISOString(),
+    }),
+    [page, pageSize, search, type, employeeId, dateRange],
+  );
 
   const { data, isLoading, refetch, isFetching } = useStockEntries(params);
   const entries = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
-  const [exporting, setExporting] = useState(false);
+  const filtersActive = search || type || employeeId || dateRange;
+
+  function clearFilters() {
+    setSearch(undefined);
+    setType(undefined);
+    setEmployeeId(undefined);
+    setDateRange(null);
+    setPage(1);
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -60,11 +94,20 @@ export function StockHistoryPage() {
     }
   }
 
-  const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
-  const employees = empData?.data ?? [];
-
-  const { data: prodData } = useProducts({ page: 1, limit: 500 });
-  const products = prodData?.data ?? [];
+  const receiveValue = useMemo(
+    () =>
+      entries
+        .filter((e) => e.type === 'in' || e.type === 'return')
+        .reduce((s, e) => s + e.quantity * (e.costPricePerUnit ?? 0), 0),
+    [entries],
+  );
+  const damageValue = useMemo(
+    () =>
+      entries
+        .filter((e) => e.type === 'damage')
+        .reduce((s, e) => s + e.quantity * (e.costPricePerUnit ?? 0), 0),
+    [entries],
+  );
 
   const columns: ColumnType<StockEntry>[] = [
     {
@@ -114,15 +157,14 @@ export function StockHistoryPage() {
       dataIndex: 'newRemaining',
       width: 100,
       align: 'right',
-      render: (v?: number) => v != null ? <strong>{v}</strong> : '-',
+      render: (v?: number) => (v != null ? <strong>{v}</strong> : '-'),
     },
     {
       title: 'ราคาทุน/หน่วย',
       dataIndex: 'costPricePerUnit',
       width: 120,
       align: 'right',
-      render: (v?: number | null) =>
-        v != null ? `฿${Number(v).toLocaleString()}` : '-',
+      render: (v?: number | null) => (v != null ? `฿${Number(v).toLocaleString()}` : '-'),
     },
     {
       title: 'มูลค่า',
@@ -131,8 +173,7 @@ export function StockHistoryPage() {
       align: 'right',
       render: (_: unknown, r: StockEntry) => {
         if (r.costPricePerUnit == null) return '-';
-        const val = r.quantity * Number(r.costPricePerUnit);
-        return `฿${val.toLocaleString()}`;
+        return `฿${(r.quantity * Number(r.costPricePerUnit)).toLocaleString()}`;
       },
     },
     {
@@ -154,7 +195,7 @@ export function StockHistoryPage() {
     <div>
       <PageHeader
         title="ประวัติการเคลื่อนไหวสต็อก"
-        subtitle={`ทั้งหมด ${total} รายการ`}
+        subtitle={`ทั้งหมด ${total.toLocaleString()} รายการ`}
         actions={
           <>
             <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
@@ -167,53 +208,70 @@ export function StockHistoryPage() {
         }
       />
 
-      <Flex gap={8} wrap style={{ marginBottom: 16 }}>
-        <Select
-          allowClear
-          placeholder="บาร์โค้ดสินค้า"
-          showSearch={{ optionFilterProp: 'label' }}
-          style={{ width: 220 }}
-          options={products.map((p) => ({ label: `${p.name} (${p.barcode})`, value: p.barcode }))}
-          onChange={(v) => { setSearch(v); setPage(1); }}
-        />
-        <Select
-          allowClear
-          placeholder="ประเภท"
-          style={{ width: 150 }}
-          options={[
-            { label: 'รับสินค้าเข้า', value: 'in' },
-            { label: 'รับคืน', value: 'return' },
-            { label: 'ปรับสต็อก', value: 'adjust' },
-            { label: 'ของเสีย', value: 'damage' },
-          ]}
-          onChange={(v) => { setType(v); setPage(1); }}
-        />
-        <Select
-          allowClear
-          placeholder="พนักงาน"
-          showSearch={{ optionFilterProp: 'label' }}
-          style={{ width: 180 }}
-          options={employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id }))}
-          onChange={(v) => { setEmployeeId(v); setPage(1); }}
-        />
-        <RangePicker
-          style={{ width: 240 }}
-          onChange={(dates) => {
-            if (dates?.[0] && dates?.[1]) {
-              setDateRange([dates[0].toISOString(), dates[1].toISOString()]);
-            } else {
-              setDateRange(null);
-            }
-            setPage(1);
-          }}
-        />
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="รายการทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="มูลค่ารับเข้า (หน้านี้)" value={receiveValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="มูลค่าของเสีย (หน้านี้)" value={damageValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error} style={{ flex: 1 }} />
       </Flex>
+
+      <Card
+        size="small"
+        title={<Space><FilterOutlined /> ตัวกรอง</Space>}
+        extra={
+          filtersActive ? (
+            <Button size="small" icon={<ClearOutlined />} onClick={clearFilters}>
+              ล้างตัวกรอง
+            </Button>
+          ) : null
+        }
+        style={{ marginBottom: 16 }}
+      >
+        <Flex gap={8} wrap>
+          <Select
+            allowClear
+            placeholder="สินค้า"
+            showSearch={{ optionFilterProp: 'label' }}
+            style={{ width: 220 }}
+            options={productOptions}
+            value={search}
+            onChange={(v) => { setSearch(v); setPage(1); }}
+          />
+          <Select
+            allowClear
+            placeholder="ประเภท"
+            style={{ width: 150 }}
+            options={TYPE_OPTIONS}
+            value={type}
+            onChange={(v) => { setType(v); setPage(1); }}
+          />
+          <Select
+            allowClear
+            placeholder="พนักงาน"
+            showSearch={{ optionFilterProp: 'label' }}
+            style={{ width: 180 }}
+            options={employeeOptions}
+            value={employeeId}
+            onChange={(v) => { setEmployeeId(v); setPage(1); }}
+          />
+          <RangePicker
+            style={{ width: 240 }}
+            value={dateRange}
+            onChange={(dates) => {
+              setDateRange(dates?.[0] && dates?.[1] ? [dates[0], dates[1]] : null);
+              setPage(1);
+            }}
+            format="DD/MM/YYYY"
+            placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
+          />
+        </Flex>
+      </Card>
 
       <Table<StockEntry>
         rowKey="id"
         columns={columns}
         dataSource={entries}
         loading={isLoading}
+        scroll={{ x: 1100 }}
         pagination={{
           current: page,
           pageSize,

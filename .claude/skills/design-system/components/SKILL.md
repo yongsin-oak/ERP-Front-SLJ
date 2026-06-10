@@ -215,3 +215,30 @@ const columns = [
 ```
 
 `QuantityCell` automatically colors: green (ok) → orange (low) → red (critical).
+
+### SummaryCard
+
+Stats bar above filters on list pages. Wraps `Card size="small" + Statistic` — never write them inline.
+
+```tsx
+import { SummaryCard, colors } from '@design-system';
+import { Flex } from 'antd';
+
+<Flex gap={12} style={{ marginBottom: 16 }}>
+  <SummaryCard title="ทั้งหมด"        value={total}    suffix="รายการ" color={colors.brand.primary}    style={{ flex: 1 }} />
+  <SummaryCard title="มูลค่ารับเข้า"  value={income}   prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1 }} />
+  <SummaryCard title="มูลค่าของเสีย"  value={damage}   prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error}   style={{ flex: 1 }} />
+</Flex>
+```
+
+| Prop | Type | Notes |
+|---|---|---|
+| `title` | `string` | Card label |
+| `value` | `number \| string` | Stat value |
+| `suffix` | `string?` | Unit after value (e.g. "รายการ") |
+| `prefix` | `ReactNode?` | Before value (e.g. "฿") |
+| `color` | `string?` | Value text color — use `colors.*` token |
+| `formatter` | `StatisticProps['formatter']?` | Custom value renderer (e.g. toLocaleString) |
+| `style` | `CSSProperties?` | Pass `{{ flex: 1 }}` for equal-width flex layout |
+
+> **Rule**: `DashboardPage` has its own richer `StatCard` (with icon, hoverable, larger font) defined locally — that will be promoted to design-system during the dashboard audit.

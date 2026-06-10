@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Form } from 'antd';
-import { Modal, Input, TextArea, Button, Select } from '@design-system';
+import { FormModal, Input, TextArea, Select } from '@design-system';
 import type { Category, CreateCategoryDto } from '../types';
 
 interface Props {
@@ -10,48 +10,41 @@ interface Props {
   parentOptions: { label: string; value: string }[];
   onClose: () => void;
   onSubmit: (values: CreateCategoryDto) => Promise<void>;
+  loading?: boolean;
 }
 
-export function CategoryFormModal({ open, category, parentOptions, onClose, onSubmit }: Props) {
+export function CategoryFormModal({ open, category, parentOptions, onClose, onSubmit, loading }: Props) {
   const [form] = Form.useForm<CreateCategoryDto>();
   const isEdit = !!category;
 
   useEffect(() => {
-    if (!open) return;
-    if (category) {
-      form.setFieldsValue({
-        name: category.name,
-        description: category.description ?? '',
-        parentId: category.parentId ?? undefined,
-      });
-    } else {
-      form.resetFields();
-    }
+    if (!open || !category) return;
+    form.setFieldsValue({
+      name: category.name,
+      description: category.description ?? '',
+      parentId: category.parentId ?? undefined,
+    });
   }, [open, category, form]);
 
-  async function handleOk() {
-    const values = await form.validateFields();
+  async function handleFinish(raw: unknown) {
+    const values = raw as CreateCategoryDto;
     await onSubmit({
       ...values,
       parentId: values.parentId || undefined,
       description: values.description || undefined,
     });
-    onClose();
   }
 
   return (
-    <Modal
+    <FormModal
       open={open}
       title={isEdit ? 'แก้ไขหมวดหมู่' : 'เพิ่มหมวดหมู่'}
-      onCancel={onClose}
+      onClose={onClose}
+      form={form}
+      onFinish={handleFinish}
+      loading={loading}
       width={520}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" onClick={onClose}>ยกเลิก</Button>,
-        <Button key="submit" variant="primary" onClick={handleOk}>
-          {isEdit ? 'บันทึก' : 'เพิ่มหมวดหมู่'}
-        </Button>,
-      ]}
+      submitLabel={isEdit ? 'บันทึก' : 'เพิ่มหมวดหมู่'}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
         <Form.Item name="name" label="ชื่อหมวดหมู่" rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}>
@@ -69,6 +62,6 @@ export function CategoryFormModal({ open, category, parentOptions, onClose, onSu
           <TextArea rows={3} placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)" />
         </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

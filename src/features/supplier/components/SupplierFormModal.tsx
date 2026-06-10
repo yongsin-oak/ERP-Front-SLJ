@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Form, Input, Switch, Row, Col } from 'antd';
-import { Modal, Button } from '@design-system';
+import { Form, Switch, Row, Col } from 'antd';
+import { FormModal, Input, TextArea } from '@design-system';
 import type { Supplier, CreateSupplierDto } from '../types';
 
 interface Props {
@@ -15,47 +15,32 @@ export function SupplierFormModal({ open, supplier, onClose, onSubmit, loading }
   const [form] = Form.useForm<CreateSupplierDto>();
 
   useEffect(() => {
-    if (open) {
-      form.setFieldsValue(
-        supplier
-          ? {
-              name: supplier.name,
-              contactName: supplier.contactName ?? undefined,
-              phone: supplier.phone ?? undefined,
-              email: supplier.email ?? undefined,
-              address: supplier.address ?? undefined,
-              taxId: supplier.taxId ?? undefined,
-              isActive: supplier.isActive,
-              note: supplier.note ?? undefined,
-            }
-          : { isActive: true },
-      );
-    } else {
-      form.resetFields();
+    if (open && supplier) {
+      form.setFieldsValue({
+        name: supplier.name,
+        contactName: supplier.contactName ?? undefined,
+        phone: supplier.phone ?? undefined,
+        email: supplier.email ?? undefined,
+        address: supplier.address ?? undefined,
+        taxId: supplier.taxId ?? undefined,
+        isActive: supplier.isActive,
+        note: supplier.note ?? undefined,
+      });
     }
   }, [open, supplier, form]);
 
-  async function handleOk() {
-    const values = await form.validateFields();
-    await onSubmit(values);
-  }
-
   return (
-    <Modal
+    <FormModal
       open={open}
       title={supplier ? 'แก้ไขซัพพลายเออร์' : 'เพิ่มซัพพลายเออร์'}
-      onCancel={onClose}
+      onClose={onClose}
+      form={form}
+      onFinish={(values) => onSubmit(values as CreateSupplierDto)}
+      loading={loading}
       width={560}
-      footer={
-        <>
-          <Button onClick={onClose}>ยกเลิก</Button>
-          <Button variant="primary" loading={loading} onClick={handleOk}>
-            {supplier ? 'บันทึก' : 'เพิ่ม'}
-          </Button>
-        </>
-      }
+      submitLabel={supplier ? 'บันทึก' : 'เพิ่ม'}
     >
-      <Form form={form} layout="vertical" style={{ paddingTop: 8 }}>
+      <Form form={form} layout="vertical" style={{ paddingTop: 8 }} initialValues={{ isActive: true }}>
         <Form.Item name="name" label="ชื่อบริษัท / ซัพพลายเออร์" rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}>
           <Input placeholder="บริษัท โค้กไทย จำกัด" />
         </Form.Item>
@@ -82,15 +67,15 @@ export function SupplierFormModal({ open, supplier, onClose, onSubmit, loading }
           </Col>
         </Row>
         <Form.Item name="address" label="ที่อยู่">
-          <Input.TextArea rows={2} placeholder="ที่อยู่" />
+          <TextArea rows={2} placeholder="ที่อยู่" />
         </Form.Item>
         <Form.Item name="note" label="หมายเหตุ">
-          <Input.TextArea rows={2} />
+          <TextArea rows={2} />
         </Form.Item>
         <Form.Item name="isActive" label="สถานะ" valuePropName="checked">
           <Switch checkedChildren="ใช้งาน" unCheckedChildren="ปิดใช้งาน" />
         </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

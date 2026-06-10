@@ -1,32 +1,21 @@
-import { useState } from "react";
-import { Tag, Popconfirm, Space, Tooltip, Badge } from "antd";
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
-import dayjs from "dayjs";
-import { Table, Button, PageHeader, colors } from "@design-system";
-import type { ColumnType } from "@design-system";
-import type { Role } from "@features/auth/types";
+import { useMemo, useState } from 'react';
+import { Flex, Tag, Badge } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { Table, Button, PageHeader, colors, ActionCell, CodeCell, DateCell, SummaryCard } from '@design-system';
+import type { ColumnType } from '@design-system';
+import type { Role } from '@features/auth/types';
 import {
   useTerminals,
   useCreateTerminal,
   useUpdateTerminal,
   useDeleteTerminal,
-} from "../react-query";
-import { TerminalFormModal } from "../components/TerminalFormModal";
-import type { Terminal, CreateTerminalDto, UpdateTerminalDto } from "../types";
+} from '../react-query';
+import { TerminalFormModal } from '../components/TerminalFormModal';
+import type { Terminal, CreateTerminalDto, UpdateTerminalDto } from '../types';
 
 const ROLE_COLOR: Record<Role, string> = {
-  SuperAdmin: "red",
-  Admin: "orange",
-  Operator: "blue",
-  Warehouse: "cyan",
-  Accountant: "green",
-  HR: "purple",
-  Marketing: "magenta",
-  Sales: "gold",
+  SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
+  Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
 };
 
 export function TerminalPage() {
@@ -37,6 +26,9 @@ export function TerminalPage() {
   const createTerminal = useCreateTerminal();
   const updateTerminal = useUpdateTerminal();
   const deleteTerminal = useDeleteTerminal();
+
+  const activeCount = useMemo(() => terminals.filter((t) => t.isActive).length, [terminals]);
+  const inactiveCount = useMemo(() => terminals.filter((t) => !t.isActive).length, [terminals]);
 
   function openCreate() {
     setSelected(null);
@@ -53,29 +45,23 @@ export function TerminalPage() {
 
   async function handleSubmit(values: CreateTerminalDto | UpdateTerminalDto) {
     if (selected) {
-      await updateTerminal.mutateAsync({
-        id: selected.id,
-        data: values as UpdateTerminalDto,
-      });
+      await updateTerminal.mutateAsync({ id: selected.id, data: values as UpdateTerminalDto });
     } else {
       await createTerminal.mutateAsync(values as CreateTerminalDto);
     }
+    handleClose();
   }
 
   const columns: ColumnType<Terminal>[] = [
     {
-      title: "Terminal Code",
-      dataIndex: "terminalCode",
+      title: 'Terminal Code',
+      dataIndex: 'terminalCode',
       width: 140,
-      render: (v: string) => (
-        <code style={{ fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>
-          {v}
-        </code>
-      ),
+      render: (v: string) => <CodeCell>{v}</CodeCell>,
     },
     {
-      title: "ชื่อ Terminal",
-      dataIndex: "name",
+      title: 'ชื่อ Terminal',
+      dataIndex: 'name',
       render: (v: string, r: Terminal) => (
         <div>
           <div style={{ fontWeight: 500 }}>{v}</div>
@@ -84,74 +70,59 @@ export function TerminalPage() {
       ),
     },
     {
-      title: "บทบาท",
-      dataIndex: "role",
+      title: 'บทบาท',
+      dataIndex: 'role',
       width: 130,
       render: (v: Role) => <Tag color={ROLE_COLOR[v]}>{v}</Tag>,
     },
     {
-      title: "สถานะ",
-      dataIndex: "isActive",
+      title: 'สถานะ',
+      dataIndex: 'isActive',
       width: 110,
       render: (v: boolean) => (
-        <Badge
-          status={v ? "success" : "default"}
-          text={v ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-        />
+        <Badge status={v ? 'success' : 'default'} text={v ? 'เปิดใช้งาน' : 'ปิดใช้งาน'} />
       ),
     },
     {
-      title: "สร้างเมื่อ",
-      dataIndex: "createdAt",
+      title: 'สร้างเมื่อ',
+      dataIndex: 'createdAt',
       width: 130,
-      render: (v: string) => dayjs(v).format("DD/MM/YY HH:mm"),
+      render: (v: string) => <DateCell value={v} format="DD/MM/YY HH:mm" />,
     },
     {
-      title: "",
-      key: "actions",
+      title: '',
+      key: 'actions',
       width: 90,
-      align: "right" as const,
+      align: 'right' as const,
       render: (_: unknown, r: Terminal) => (
-        <Space size={4}>
-          <Tooltip title="แก้ไข">
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEdit(r)}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="ลบ Terminal นี้?"
-            description={`"${r.name}" จะถูกลบออกจากระบบ`}
-            okText="ลบ"
-            okButtonProps={{ danger: true }}
-            cancelText="ยกเลิก"
-            onConfirm={() => deleteTerminal.mutate(r.id)}
-          >
-            <Tooltip title="ลบ">
-              <Button size="small" variant="danger" icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
+        <ActionCell
+          onEdit={() => openEdit(r)}
+          onDelete={() => deleteTerminal.mutate(r.id)}
+          isDeleting={deleteTerminal.isPending}
+          deleteTitle="ลบ Terminal นี้?"
+          deleteDescription={`"${r.name}" จะถูกลบออกจากระบบ`}
+        />
       ),
     },
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <Flex vertical gap={16}>
       <PageHeader
         title="Terminal"
         subtitle={`${terminals.length} เครื่องในระบบ`}
         actions={
-          <Button
-            variant="primary"
-            icon={<PlusOutlined />}
-            onClick={openCreate}
-          >
+          <Button variant="primary" icon={<PlusOutlined />} onClick={openCreate}>
             เพิ่ม Terminal
           </Button>
         }
       />
+
+      <Flex gap={12}>
+        <SummaryCard title="Terminal ทั้งหมด" value={terminals.length} suffix="เครื่อง" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="เปิดใช้งาน" value={activeCount} suffix="เครื่อง" color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="ปิดใช้งาน" value={inactiveCount} suffix="เครื่อง" color={colors.text.secondary} style={{ flex: 1 }} />
+      </Flex>
 
       <Table<Terminal>
         rowKey="id"
@@ -169,6 +140,6 @@ export function TerminalPage() {
         onSubmit={handleSubmit}
         loading={createTerminal.isPending || updateTerminal.isPending}
       />
-    </div>
+    </Flex>
   );
 }

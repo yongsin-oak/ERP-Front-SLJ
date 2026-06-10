@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { Flex, Popconfirm, Space, Input, Typography, Badge, Modal } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
-import { Table, Button, Tag, PageHeader, BulkSelectionBar, colors, AppIcons } from '@design-system';
+import { useMemo, useState } from 'react';
+import { Flex, Space, Input, Typography, Badge } from 'antd';
+import { PlusOutlined, EditOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
+import {
+  Table, Button, Tag, PageHeader, BulkSelectionBar, colors, AppIcons,
+  DeleteConfirmButton, Modal, InputPassword, SummaryCard, DateCell,
+} from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
 import {
@@ -26,13 +28,21 @@ export function EmployeePage() {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [pinEmployee, setPinEmployee] = useState<Employee | null>(null);
   const [pinValue, setPinValue] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const params = { page, limit: pageSize, search: search || undefined };
   const { data, isLoading, refetch } = useEmployeeList(params);
   const employees = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
-  const [exporting, setExporting] = useState(false);
+  const createEmployee = useCreateEmployee();
+  const updateEmployee = useUpdateEmployee();
+  const deleteEmployee = useDeleteEmployee();
+  const bulkDelete = useBulkDeleteEmployee();
+  const setPin = useSetEmployeePin();
+
+  const activeCount = useMemo(() => employees.filter((e) => e.isActive).length, [employees]);
+  const inactiveCount = useMemo(() => employees.filter((e) => !e.isActive).length, [employees]);
 
   async function handleExport() {
     setExporting(true);
@@ -43,12 +53,6 @@ export function EmployeePage() {
       setExporting(false);
     }
   }
-
-  const createEmployee = useCreateEmployee();
-  const updateEmployee = useUpdateEmployee();
-  const deleteEmployee = useDeleteEmployee();
-  const bulkDelete = useBulkDeleteEmployee();
-  const setPin = useSetEmployeePin();
 
   async function handleBulkDelete() {
     await bulkDelete.mutateAsync(selectedKeys.map(String));
@@ -100,7 +104,7 @@ export function EmployeePage() {
       title: 'วันที่เริ่มงาน',
       dataIndex: 'startDate',
       width: 130,
-      render: (v: string | null) => v ? dayjs(v).format('DD/MM/YYYY') : '-',
+      render: (v: string | null) => <DateCell value={v} format="DD/MM/YYYY" />,
     },
     {
       title: 'สถานะ',
@@ -125,13 +129,11 @@ export function EmployeePage() {
             variant="ghost" size="small" icon={<EditOutlined />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
-          <Popconfirm
-            title="ลบพนักงานนี้?"
+          <DeleteConfirmButton
             onConfirm={() => deleteEmployee.mutate(r.id)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
-          >
-            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
+            loading={deleteEmployee.isPending}
+            title="ลบพนักงานนี้?"
+          />
         </Space>
       ),
     },
@@ -153,6 +155,12 @@ export function EmployeePage() {
           </>
         }
       />
+
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color={colors.text.secondary} style={{ flex: 1 }} />
+      </Flex>
 
       <Flex gap={12} align="center" style={{ marginBottom: 12 }}>
         <Search
@@ -196,6 +204,7 @@ export function EmployeePage() {
         employee={selected}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
+        loading={createEmployee.isPending || updateEmployee.isPending}
       />
 
       <EmployeeImportModal
@@ -216,7 +225,7 @@ export function EmployeePage() {
           <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
             PIN ต้องเป็นตัวเลข 4–6 หลัก
           </Typography.Text>
-          <Input.Password
+          <InputPassword
             value={pinValue}
             onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="กรอก PIN 4-6 หลัก"

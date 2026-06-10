@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
-import { Form, Switch, Space, Row, Col } from 'antd';
-import { DesktopOutlined } from '@ant-design/icons';
-import { Modal, Input, InputPassword, Select, Button, colors } from '@design-system';
+import { Switch, Row, Col } from 'antd';
+import { FormModal, Form, Input, InputPassword, Select } from '@design-system';
 import type { Role } from '@features/auth/types';
 import type { Terminal, CreateTerminalDto, UpdateTerminalDto } from '../types';
 
@@ -31,51 +30,37 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
   const isEdit = !!terminal;
 
   useEffect(() => {
-    if (open) {
-      if (terminal) {
-        form.setFieldsValue({
-          terminalCode: terminal.terminalCode,
-          name: terminal.name,
-          role: terminal.role,
-          isActive: terminal.isActive,
-          password: undefined,
-        });
-      } else {
-        form.resetFields();
-      }
+    if (open && terminal) {
+      form.setFieldsValue({
+        terminalCode: terminal.terminalCode,
+        name: terminal.name,
+        role: terminal.role,
+        isActive: terminal.isActive,
+        password: undefined,
+      });
     }
   }, [open, terminal, form]);
 
-  async function handleOk() {
-    const values = await form.validateFields();
-    // ถ้าแก้ไขและไม่ได้กรอก password ให้ไม่ส่ง field นั้น
+  async function handleFinish(raw: unknown) {
+    const values = raw as FormValues;
     if (isEdit && !values.password) {
       const { password: _, ...rest } = values;
-      await onSubmit(rest);
+      await onSubmit(rest as UpdateTerminalDto);
     } else {
       await onSubmit(values);
     }
-    onClose();
   }
 
   return (
-    <Modal
+    <FormModal
       open={open}
-      title={
-        <Space>
-          <DesktopOutlined style={{ color: colors.semantic.info }} />
-          {isEdit ? 'แก้ไข Terminal' : 'เพิ่ม Terminal'}
-        </Space>
-      }
-      onCancel={onClose}
+      title={isEdit ? 'แก้ไข Terminal' : 'เพิ่ม Terminal'}
+      onClose={onClose}
+      form={form}
+      onFinish={handleFinish}
+      loading={loading}
+      submitLabel={isEdit ? 'บันทึก' : 'เพิ่ม Terminal'}
       width={480}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" onClick={onClose}>ยกเลิก</Button>,
-        <Button key="submit" variant="primary" onClick={handleOk} loading={loading}>
-          {isEdit ? 'บันทึก' : 'เพิ่ม Terminal'}
-        </Button>,
-      ]}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
         <Row gutter={16}>
@@ -126,7 +111,10 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
                 ]
           }
         >
-          <InputPassword placeholder={isEdit ? 'เว้นว่างถ้าไม่เปลี่ยน' : 'รหัสผ่านอย่างน้อย 8 ตัว'} autoComplete="new-password" />
+          <InputPassword
+            placeholder={isEdit ? 'เว้นว่างถ้าไม่เปลี่ยน' : 'รหัสผ่านอย่างน้อย 8 ตัว'}
+            autoComplete="new-password"
+          />
         </Form.Item>
 
         {isEdit && (
@@ -135,6 +123,6 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
           </Form.Item>
         )}
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

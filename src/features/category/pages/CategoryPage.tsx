@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Space, Modal as AntModal, Checkbox, Typography } from 'antd';
+import { Space, Modal as AntModal, Checkbox, Typography, Flex } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag } from '@design-system';
+import { Table, Button, PageHeader, Tag, DeleteConfirmButton, colors, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
@@ -21,6 +21,9 @@ export function CategoryPage() {
   const createCat = useCreateCategory();
   const updateCat = useUpdateCategory();
   const deleteCat = useDeleteCategory();
+
+  const rootCount = useMemo(() => categories.filter((c) => !c.parentId).length, [categories]);
+  const subCount = useMemo(() => categories.filter((c) => !!c.parentId).length, [categories]);
 
   const descendantsMap = useMemo(() => {
     const map = new Map<string, Set<string>>();
@@ -64,16 +67,7 @@ export function CategoryPage() {
     setModalOpen(false);
   }
 
-  function handleDelete(c: Category) {
-    const hasChildren = (c.childrenId?.length ?? 0) > 0;
-    if (!hasChildren) {
-      AntModal.confirm({
-        title: `ลบหมวดหมู่ "${c.name}"?`,
-        okText: 'ลบ', okType: 'danger', cancelText: 'ยกเลิก',
-        onOk: () => deleteCat.mutateAsync({ id: c.id }),
-      });
-      return;
-    }
+  function handleDeleteWithChildren(c: Category) {
     let deleteChild = false;
     AntModal.confirm({
       title: `ลบหมวดหมู่ "${c.name}"?`,
@@ -172,10 +166,19 @@ export function CategoryPage() {
             variant="ghost" size="small" icon={<EditOutlined />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
-          <Button
-            variant="danger-ghost" size="small" icon={<DeleteOutlined />}
-            onClick={() => handleDelete(r)}
-          />
+          {(r.childrenId?.length ?? 0) > 0 ? (
+            <Button
+              variant="danger-ghost" size="small" icon={<DeleteOutlined />}
+              onClick={() => handleDeleteWithChildren(r)}
+            />
+          ) : (
+            <DeleteConfirmButton
+              onConfirm={() => deleteCat.mutateAsync({ id: r.id })}
+              loading={deleteCat.isPending}
+              title={`ลบหมวดหมู่ "${r.name}"?`}
+              description="ลบหมวดหมู่นี้ออกจากระบบ"
+            />
+          )}
         </Space>
       ),
     },
@@ -198,6 +201,12 @@ export function CategoryPage() {
         }
       />
 
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color={colors.text.secondary} style={{ flex: 1 }} />
+      </Flex>
+
       <Table<CatNode>
         rowKey="id"
         columns={columns}
@@ -217,6 +226,7 @@ export function CategoryPage() {
         parentOptions={parentOptions}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
+        loading={createCat.isPending || updateCat.isPending}
       />
     </div>
   );

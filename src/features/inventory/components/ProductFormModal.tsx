@@ -1,18 +1,19 @@
 import { useEffect } from 'react';
 import { InputNumber, Row, Col, Switch, Form as AntForm } from 'antd';
-import { Modal, Form, Input, Select, Button } from '@design-system';
+import { FormModal, Form, Input, Select } from '@design-system';
 import { useBrands } from '@features/brand';
 import { useCategories } from '@features/category';
-import type { Product, CreateProductDto } from '../types';
+import type { Product, CreateProductDto, UpdateProductDto } from '../types';
 
 interface ProductFormModalProps {
   open: boolean;
   product?: Product | null;
   onClose: () => void;
-  onSubmit: (values: CreateProductDto) => Promise<void>;
+  onSubmit: (values: CreateProductDto | UpdateProductDto) => Promise<void>;
+  loading?: boolean;
 }
 
-export function ProductFormModal({ open, product, onClose, onSubmit }: ProductFormModalProps) {
+export function ProductFormModal({ open, product, onClose, onSubmit, loading = false }: ProductFormModalProps) {
   const [form] = Form.useForm<CreateProductDto>();
   const isEdit = !!product;
 
@@ -46,32 +47,23 @@ export function ProductFormModal({ open, product, onClose, onSubmit }: ProductFo
           cartonDimensions: product.cartonDimensions,
         });
       } else {
-        form.resetFields();
         form.setFieldsValue({ isActive: true, remaining: 0 });
       }
     }
   }, [open, product, form]);
 
-  const handleOk = async () => {
-    const values = await form.validateFields();
-    await onSubmit(values);
-    onClose();
-  };
-
   return (
-    <Modal
+    <FormModal
       open={open}
       title={isEdit ? 'แก้ไขสินค้า' : 'เพิ่มสินค้า'}
-      onCancel={onClose}
+      form={form}
+      onFinish={async (values) => {
+        await onSubmit(values as CreateProductDto | UpdateProductDto);
+      }}
+      onClose={onClose}
+      loading={loading}
       width={720}
-      footer={[
-        <Button key="cancel" onClick={onClose}>
-          ยกเลิก
-        </Button>,
-        <Button key="submit" variant="primary" onClick={handleOk}>
-          {isEdit ? 'บันทึก' : 'เพิ่มสินค้า'}
-        </Button>,
-      ]}
+      submitLabel={isEdit ? 'บันทึก' : 'เพิ่มสินค้า'}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <Row gutter={16}>
@@ -178,6 +170,6 @@ export function ProductFormModal({ open, product, onClose, onSubmit }: ProductFo
           <Switch checkedChildren="ใช้งาน" unCheckedChildren="ปิด" />
         </AntForm.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

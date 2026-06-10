@@ -1,6 +1,4 @@
-import { useEffect } from 'react';
-import { Form } from 'antd';
-import { Modal, Input, InputPassword, Button, Select } from '@design-system';
+import { FormModal, Form, Input, InputPassword, Select } from '@design-system';
 import type { Role } from '@features/auth/types';
 import type { CreateUserDto } from '../types';
 
@@ -9,32 +7,22 @@ interface Props {
   roles: Role[];
   onClose: () => void;
   onSubmit: (values: CreateUserDto) => Promise<void>;
+  loading?: boolean;
 }
 
-export function UserFormModal({ open, roles, onClose, onSubmit }: Props) {
+export function UserFormModal({ open, roles, onClose, onSubmit, loading }: Props) {
   const [form] = Form.useForm<CreateUserDto>();
 
-  useEffect(() => {
-    if (open) form.resetFields();
-  }, [open, form]);
-
-  async function handleOk() {
-    const values = await form.validateFields();
-    await onSubmit(values);
-    onClose();
-  }
-
   return (
-    <Modal
+    <FormModal
       open={open}
       title="เพิ่มผู้ใช้งาน"
-      onCancel={onClose}
+      onClose={onClose}
+      form={form}
+      onFinish={(raw) => onSubmit(raw as CreateUserDto)}
+      loading={loading}
+      submitLabel="เพิ่มผู้ใช้งาน"
       width={480}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" onClick={onClose}>ยกเลิก</Button>,
-        <Button key="submit" variant="primary" onClick={handleOk}>เพิ่มผู้ใช้งาน</Button>,
-      ]}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
         <Form.Item
@@ -48,7 +36,6 @@ export function UserFormModal({ open, roles, onClose, onSubmit }: Props) {
         >
           <Input placeholder="username" autoComplete="off" />
         </Form.Item>
-
         <Form.Item
           name="password"
           label="Password"
@@ -59,7 +46,6 @@ export function UserFormModal({ open, roles, onClose, onSubmit }: Props) {
         >
           <InputPassword placeholder="password" autoComplete="new-password" />
         </Form.Item>
-
         <Form.Item name="role" label="บทบาท" rules={[{ required: true, message: 'กรุณาเลือกบทบาท' }]}>
           <Select
             placeholder="เลือกบทบาท"
@@ -68,6 +54,6 @@ export function UserFormModal({ open, roles, onClose, onSubmit }: Props) {
           />
         </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

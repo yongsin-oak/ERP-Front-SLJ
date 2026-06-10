@@ -1,20 +1,20 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  InputNumber, Space, Flex, Progress, Statistic, Row, Col, Card, Popconfirm, Alert,
+  InputNumber, Space, Flex, Progress, Row, Col, Card, Popconfirm, Alert,
 } from 'antd';
 import {
   ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined,
   FileExcelOutlined, SearchOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, Input, colors } from '@design-system';
+import { Table, Button, PageHeader, Tag, Input, colors, AppIcons, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { AppIcons } from '@design-system';
 import {
   useStockCount,
   useUpdateStockCountItems,
   useCompleteStockCount,
+  useApplyStockCountAdjustments,
   stockCountService,
 } from '../react-query';
 import { StockCountStatuses } from '../types';
@@ -38,6 +38,7 @@ export function StockCountDetailPage() {
 
   const updateItems = useUpdateStockCountItems(id!);
   const completeCount = useCompleteStockCount();
+  const applyAdjustments = useApplyStockCountAdjustments();
 
   const isDraft = session?.status === 'Draft';
 
@@ -247,6 +248,26 @@ export function StockCountDetailPage() {
                 Export ผลลัพธ์
               </Button>
             )}
+            {status === 'Completed' && !session.adjustedAt && (
+              <Popconfirm
+                title="ปรับสต็อกตามผลนับ?"
+                description={`จะสร้าง stock adjustment สำหรับทุกรายการที่มีส่วนต่าง และประวัติจะปรากฏใน /stock/history`}
+                onConfirm={() => applyAdjustments.mutate(id!)}
+                okText="ปรับสต็อก"
+                cancelText="ยกเลิก"
+              >
+                <Button
+                  variant="primary"
+                  icon={<CheckCircleOutlined />}
+                  loading={applyAdjustments.isPending}
+                >
+                  ปรับสต็อกตามผลนับ
+                </Button>
+              </Popconfirm>
+            )}
+            {status === 'Completed' && session.adjustedAt && (
+              <Tag color="success">ปรับสต็อกแล้ว</Tag>
+            )}
             {isDraft && (
               <>
                 <Button
@@ -284,19 +305,13 @@ export function StockCountDetailPage() {
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={6}>
-          <Card size="small">
-            <Statistic title="สินค้าทั้งหมด" value={totalItems} suffix="รายการ" />
-          </Card>
+          <SummaryCard title="สินค้าทั้งหมด" value={totalItems} suffix="รายการ" />
         </Col>
         <Col span={6}>
-          <Card size="small">
-            <Statistic title="นับแล้ว" value={countedItems} suffix={`/ ${totalItems}`} valueStyle={{ color: colors.semantic.successText }} />
-          </Card>
+          <SummaryCard title="นับแล้ว" value={countedItems} suffix={`/ ${totalItems}`} color={colors.semantic.successText} />
         </Col>
         <Col span={6}>
-          <Card size="small">
-            <Statistic title="ยังไม่นับ" value={totalItems - countedItems} suffix="รายการ" valueStyle={{ color: totalItems - countedItems > 0 ? colors.semantic.warningText : undefined }} />
-          </Card>
+          <SummaryCard title="ยังไม่นับ" value={totalItems - countedItems} suffix="รายการ" color={totalItems - countedItems > 0 ? colors.semantic.warningText : undefined} />
         </Col>
         <Col span={6}>
           <Card size="small">

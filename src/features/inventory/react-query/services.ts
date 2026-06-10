@@ -1,6 +1,6 @@
 import { req } from '@shared';
 import type { Paginated, ApiData } from '@shared/types';
-import type { Product, ProductDropdown, CreateProductDto, UpdateProductDto, StockEntry, CreateStockEntryDto } from '../types';
+import type { Product, ProductDropdown, CreateProductDto, UpdateProductDto, StockEntry, CreateStockEntryDto, ShopPrice, CreateShopPriceDto, UpdateShopPriceDto } from '../types';
 
 export interface ProductParams {
   page: number;
@@ -9,6 +9,7 @@ export interface ProductParams {
   brandId?: string;
   categoryId?: string;
   isActive?: boolean;
+  lowStock?: boolean;
 }
 
 export interface StockEntryParams {
@@ -88,6 +89,20 @@ export const stockEntryService = {
 
   bulkAdjust: (data: BulkStockAdjustDto) =>
     req.post<ApiData<BulkStockResult>>(`${STOCK_BASE}/bulk-adjust`, data),
+};
+
+export const shopPriceService = {
+  getAll: (barcode: string) =>
+    req.get<ApiData<ShopPrice[]>>(`${BASE}/${barcode}/shop-price`),
+
+  create: (barcode: string, body: CreateShopPriceDto) =>
+    req.post<ApiData<ShopPrice>>(`${BASE}/${barcode}/shop-price`, body),
+
+  update: (barcode: string, shopId: string, body: UpdateShopPriceDto) =>
+    req.patch<ApiData<ShopPrice>>(`${BASE}/${barcode}/shop-price/${shopId}`, body),
+
+  remove: (barcode: string, shopId: string) =>
+    req.delete<ApiData<{ barcode: string; shopId: string }>>(`${BASE}/${barcode}/shop-price/${shopId}`),
 };
 
 export const inventoryExportService = {

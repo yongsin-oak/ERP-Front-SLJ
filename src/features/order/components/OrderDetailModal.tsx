@@ -1,7 +1,10 @@
-import { Descriptions, Divider } from 'antd';
+import { Descriptions, Divider, Spin } from 'antd';
+import { CopyOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { Modal, Table, Tag, Button, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { useOrderDetail } from '../react-query';
 import { OrderStatuses } from '../types';
 import type { Order, OrderDetail } from '../types';
 
@@ -12,9 +15,24 @@ interface OrderDetailModalProps {
 }
 
 export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps) {
-  if (!order) return null;
+  const navigate = useNavigate();
+  const { data: freshOrder, isLoading } = useOrderDetail(open && order ? order.id : null);
+  const displayOrder = freshOrder ?? order;
 
-  const details = order.orderDetails ?? [];
+  function handleReorder() {
+    if (!displayOrder?.orderDetails?.length) return;
+    const items = displayOrder.orderDetails.map((d) => ({
+      barcode: d.product.barcode,
+      name: d.product.name,
+      sellingPrice: d.product.sellPrice?.pack ?? d.product.sellPrice?.carton ?? 0,
+      costPrice: d.product.costPrice?.pack ?? d.product.costPrice?.carton ?? 0,
+      quantity: d.quantityPack + d.quantityCarton,
+    }));
+    onClose();
+    navigate('/order', { state: { items } });
+  }
+
+  const details = displayOrder?.orderDetails ?? [];
   const totalQty = details.reduce((s, d) => s + d.quantityPack + d.quantityCarton, 0);
   const totalPrice = details.reduce((s, d) => {
     const pack = d.product.sellPrice?.pack ?? 0;
@@ -68,59 +86,82 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
   return (
     <Modal
       open={open}
-      title={`Order ${order.id}`}
+      title={displayOrder ? `Order ${displayOrder.id}` : 'รายละเอียด Order'}
       onCancel={onClose}
       width={720}
-      footer={<Button onClick={onClose}>ปิด</Button>}
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Button
+            icon={<CopyOutlined />}
+            onClick={handleReorder}
+            disabled={!details.length}
+          >
+            สั่งซ้ำ (Re-order)
+          </Button>
+          <Button onClick={onClose}>ปิด</Button>
+        </div>
+      }
     >
-      <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
-        <Descriptions.Item label="สถานะ">
-          <Tag color={OrderStatuses[order.status].color}>{OrderStatuses[order.status].label}</Tag>
-        </Descriptions.Item>
-        <Descriptions.Item label="วันที่บันทึก">
-          {order.startRecordAt
-            ? dayjs(order.startRecordAt).format('DD/MM/YYYY HH:mm')
-            : order.createdAt
-              ? dayjs(order.createdAt).format('DD/MM/YYYY HH:mm')
-              : '-'}
-        </Descriptions.Item>
-        {order.shop && (
-          <Descriptions.Item label="ร้านค้า">
-            {order.shop.name} ({order.shop.platform})
-          </Descriptions.Item>
-        )}
-        {order.recordBy && (
-          <Descriptions.Item label="ผู้บันทึก">
-            {order.recordBy.firstName} {order.recordBy.lastName} ({order.recordBy.nickname})
-          </Descriptions.Item>
-        )}
-        {order.note && <Descriptions.Item label="หมายเหตุ" span={2}>{order.note}</Descriptions.Item>}
-      </Descriptions>
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <Spin />
+        </div>
+      ) : displayOrder ? (
+        <>
+          <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
+            <Descriptions.Item label="สถานะ">
+              <Tag color={OrderStatuses[displayOrder.status]?.color}>
+                {OrderStatuses[displayOrder.status]?.label ?? displayOrder.status}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="วันที่บันทึก">
+              {displayOrder.startRecordAt
+                ? dayjs(displayOrder.startRecordAt).format('DD/MM/YYYY HH:mm')
+                : displayOrder.createdAt
+                  ? dayjs(displayOrder.createdAt).format('DD/MM/YYYY HH:mm')
+                  : '-'}
+            </Descriptions.Item>
+            {displayOrder.shop && (
+              <Descriptions.Item label="ร้านค้า">
+                {displayOrder.shop.name} ({displayOrder.shop.platform})
+              </Descriptions.Item>
+            )}
+            {displayOrder.recordBy && (
+              <Descriptions.Item label="ผู้บันทึก">
+                {displayOrder.recordBy.firstName} {displayOrder.recordBy.lastName} ({displayOrder.recordBy.nickname})
+              </Descriptions.Item>
+            )}
+            {displayOrder.note && (
+              <Descriptions.Item label="หมายเหตุ" span={2}>{displayOrder.note}</Descriptions.Item>
+            )}
+          </Descriptions>
 
-      <Divider style={{ margin: '8px 0' }} />
+          <Divider style={{ margin: '8px 0' }} />
 
-      <Table<OrderDetail>
-        rowKey="id"
-        columns={columns}
-        dataSource={details}
-        pagination={false}
-        size="small"
-      />
+          <Table<OrderDetail>
+            rowKey="id"
+            columns={columns}
+            dataSource={details}
+            pagination={false}
+            size="small"
+          />
 
-      <div
-        style={{
-          marginTop: 12,
-          padding: '10px 16px',
-          background: colors.neutral[50],
-          borderRadius: 6,
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 24,
-        }}
-      >
-        <span>จำนวนรวม: <strong>{totalQty.toLocaleString()} หน่วย</strong></span>
-        <span>ยอดรวม: <strong style={{ fontSize: 15 }}>฿{totalPrice.toLocaleString()}</strong></span>
-      </div>
+          <div
+            style={{
+              marginTop: 12,
+              padding: '10px 16px',
+              background: colors.neutral[50],
+              borderRadius: 6,
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 24,
+            }}
+          >
+            <span>จำนวนรวม: <strong>{totalQty.toLocaleString()} หน่วย</strong></span>
+            <span>ยอดรวม: <strong style={{ fontSize: 15 }}>฿{totalPrice.toLocaleString()}</strong></span>
+          </div>
+        </>
+      ) : null}
     </Modal>
   );
 }

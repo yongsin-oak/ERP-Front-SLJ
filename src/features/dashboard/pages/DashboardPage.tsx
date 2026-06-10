@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Card, Row, Col, Statistic, Table, Tag, Typography, Space, Skeleton, Alert, Segmented, Select } from 'antd';
+import { Card, Row, Col, Statistic, Tag, Typography, Space, Skeleton, Alert, Segmented } from 'antd';
 import {
   ShoppingCartOutlined,
   InboxOutlined,
@@ -21,9 +21,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { Flex } from 'antd';
 import dayjs from 'dayjs';
-import { Button, PageHeader } from '@design-system';
-import { colors } from '@design-system';
+import { Button, PageHeader, COL_PROPS, colors, Table, Select, CodeCell, DateCell } from '@design-system';
 import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock, dashboardKeys } from '../react-query';
 import { useShops } from '@features/shop';
 import type { ColumnType } from '@design-system';
@@ -143,7 +143,7 @@ export function DashboardPage() {
         <div>
           <div style={{ fontWeight: 500 }}>{`#${r.id.slice(0, 8)}`}</div>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            {dayjs(r.createdAt).format('DD/MM HH:mm')}
+            <DateCell value={r.createdAt} format="DD/MM HH:mm" />
           </Text>
         </div>
       ),
@@ -173,7 +173,7 @@ export function DashboardPage() {
       render: (_: unknown, r: LowStockProduct) => (
         <div>
           <div style={{ fontWeight: 500 }}>{r.name}</div>
-          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.barcode}</code>
+          <CodeCell style={{ fontSize: 11, color: colors.text.tertiary }}>{r.barcode}</CodeCell>
         </div>
       ),
     },
@@ -196,7 +196,7 @@ export function DashboardPage() {
     : 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Flex vertical gap={20}>
       <PageHeader
         title="แดชบอร์ด"
         subtitle={`อัพเดตล่าสุด: ${dayjs().format('DD/MM/YYYY HH:mm')}`}
@@ -207,7 +207,6 @@ export function DashboardPage() {
         }
       />
 
-      {/* Filter bar */}
       <Card size="small">
         <Space wrap>
           <Text type="secondary" style={{ fontSize: 13 }}>ช่วงเวลา:</Text>
@@ -229,9 +228,8 @@ export function DashboardPage() {
         </Space>
       </Card>
 
-      {/* Stat Cards */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title={`Order ${periodLabel}`}
             value={stats?.todayOrders}
@@ -242,7 +240,7 @@ export function DashboardPage() {
             onClick={() => navigate('/order')}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title={`ยอดขาย${periodLabel}`}
             value={stats?.todayRevenue?.toLocaleString()}
@@ -252,7 +250,7 @@ export function DashboardPage() {
             loading={statsLoading}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title={`กำไร${periodLabel}`}
             value={periodProfit.toLocaleString()}
@@ -263,7 +261,7 @@ export function DashboardPage() {
             loading={statsLoading}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title="สินค้าใกล้หมด"
             value={lowStock.length}
@@ -277,7 +275,7 @@ export function DashboardPage() {
       </Row>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title="สินค้าทั้งหมด"
             value={stats?.totalProducts}
@@ -287,7 +285,7 @@ export function DashboardPage() {
             onClick={() => navigate('/inventory')}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title="พนักงาน"
             value={stats?.totalEmployees}
@@ -297,7 +295,7 @@ export function DashboardPage() {
             onClick={() => navigate('/employee')}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <StatCard
             title="ยอดขายรวม"
             value={stats?.totalRevenue?.toLocaleString()}
@@ -307,7 +305,7 @@ export function DashboardPage() {
             loading={statsLoading}
           />
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col {...COL_PROPS.statsCard}>
           <Card style={{ height: '100%' }}>
             <Statistic
               title="ต้นทุนรวม"
@@ -320,9 +318,8 @@ export function DashboardPage() {
         </Col>
       </Row>
 
-      {/* Chart + Low stock */}
       <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
+        <Col {...COL_PROPS.chartMain}>
           <Card title={`รายได้ ${periodLabel}`}>
             {dailyLoading ? (
               <Skeleton active paragraph={{ rows: 6 }} />
@@ -351,27 +348,15 @@ export function DashboardPage() {
                     ]}
                   />
                   <Legend formatter={(v) => (v === 'revenue' ? 'รายได้' : 'ต้นทุน')} />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke={colors.semantic.info}
-                    fill="url(#gradRevenue)"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="cost"
-                    stroke={colors.semantic.error}
-                    fill="url(#gradCost)"
-                    strokeWidth={2}
-                  />
+                  <Area type="monotone" dataKey="revenue" stroke={colors.semantic.info} fill="url(#gradRevenue)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="cost" stroke={colors.semantic.error} fill="url(#gradCost)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
           </Card>
         </Col>
 
-        <Col xs={24} lg={8}>
+        <Col {...COL_PROPS.chartSide}>
           <Card
             title={
               <Space>
@@ -387,7 +372,7 @@ export function DashboardPage() {
             {lowStockLoading ? (
               <Skeleton active paragraph={{ rows: 5 }} />
             ) : lowStock.length === 0 ? (
-              <Alert type="success" message="สินค้าทุกรายการมีเพียงพอ" showIcon />
+              <Alert type="success" title="สินค้าทุกรายการมีเพียงพอ" showIcon />
             ) : (
               <Table<LowStockProduct>
                 rowKey="barcode"
@@ -401,7 +386,6 @@ export function DashboardPage() {
         </Col>
       </Row>
 
-      {/* Recent Orders */}
       <Card
         title="Order ล่าสุด"
         extra={
@@ -423,6 +407,6 @@ export function DashboardPage() {
           />
         )}
       </Card>
-    </div>
+    </Flex>
   );
 }

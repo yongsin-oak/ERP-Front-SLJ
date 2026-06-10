@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { Flex, Tag, Popconfirm, Space, Tooltip, Form } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
-import { Table, Button, PageHeader, Select, Modal, colors } from '@design-system';
+import { useMemo, useState } from 'react';
+import { Flex, Space } from 'antd';
+import { PlusOutlined, UserOutlined } from '@ant-design/icons';
+import {
+  Table, Button, PageHeader, Select, FormModal, Form, Tag, colors,
+  ActionCell, CodeCell, SummaryCard,
+} from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
 import { useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../react-query';
@@ -12,6 +15,8 @@ const ROLE_COLOR: Record<Role, string> = {
   SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
   Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
 };
+
+const ADMIN_ROLES: Role[] = ['SuperAdmin', 'Admin'];
 
 export function UserPage() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -24,16 +29,12 @@ export function UserPage() {
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
 
+  const adminCount = useMemo(() => users.filter((u) => ADMIN_ROLES.includes(u.role)).length, [users]);
+  const operatorCount = useMemo(() => users.filter((u) => !ADMIN_ROLES.includes(u.role)).length, [users]);
+
   function openEdit(u: User) {
     setEditTarget(u);
     editForm.setFieldsValue({ role: u.role });
-  }
-
-  async function handleEditRole() {
-    if (!editTarget) return;
-    const { role } = await editForm.validateFields();
-    await updateRole.mutateAsync({ id: editTarget.id, role });
-    setEditTarget(null);
   }
 
   const columns: ColumnType<User>[] = [
@@ -57,9 +58,7 @@ export function UserPage() {
       title: 'ID',
       dataIndex: 'id',
       width: 160,
-      render: (v: string) => (
-        <code style={{ fontSize: 11, color: colors.text.tertiary }}>{v}</code>
-      ),
+      render: (v: string) => <CodeCell>{v}</CodeCell>,
     },
     {
       title: '',
@@ -67,23 +66,13 @@ export function UserPage() {
       width: 90,
       align: 'right' as const,
       render: (_: unknown, r: User) => (
-        <Space size={4}>
-          <Tooltip title="เปลี่ยนบทบาท">
-            <Button size="small" icon={<EditOutlined />} onClick={() => openEdit(r)} />
-          </Tooltip>
-          <Popconfirm
-            title="ลบผู้ใช้งานนี้?"
-            description={`"${r.username}" จะถูกลบออกจากระบบถาวร`}
-            okText="ลบ"
-            okButtonProps={{ danger: true }}
-            cancelText="ยกเลิก"
-            onConfirm={() => deleteUser.mutate(r.id)}
-          >
-            <Tooltip title="ลบ">
-              <Button size="small" variant="danger-ghost" icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
+        <ActionCell
+          onEdit={() => openEdit(r)}
+          onDelete={() => deleteUser.mutate(r.id)}
+          isDeleting={deleteUser.isPending}
+          deleteTitle="ลบผู้ใช้งานนี้?"
+          deleteDescription={`"${r.username}" จะถูกลบออกจากระบบถาวร`}
+        />
       ),
     },
   ];
@@ -100,6 +89,12 @@ export function UserPage() {
         }
       />
 
+      <Flex gap={12}>
+        <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color={colors.semantic.error} style={{ flex: 1 }} />
+        <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color={colors.semantic.success} style={{ flex: 1 }} />
+      </Flex>
+
       <Table<User>
         rowKey="id"
         columns={columns}
@@ -109,37 +104,30 @@ export function UserPage() {
         size="middle"
       />
 
-      {/* create modal */}
       <UserFormModal
         open={createOpen}
         roles={roles}
         onClose={() => setCreateOpen(false)}
-        onSubmit={async (values) => { await createUser.mutateAsync(values); }}
+        onSubmit={async (values) => {
+          await createUser.mutateAsync(values);
+          setCreateOpen(false);
+        }}
+        loading={createUser.isPending}
       />
 
-      {/* edit role modal */}
-      <Modal
+      <FormModal
         open={!!editTarget}
-        title={
-          <Space>
-            <EditOutlined />
-            เปลี่ยนบทบาท — {editTarget?.username}
-          </Space>
-        }
-        onCancel={() => setEditTarget(null)}
+        title={`เปลี่ยนบทบาท — ${editTarget?.username ?? ''}`}
+        onClose={() => setEditTarget(null)}
+        form={editForm}
+        onFinish={async (raw) => {
+          const { role } = raw as { role: Role };
+          await updateRole.mutateAsync({ id: editTarget!.id, role });
+          setEditTarget(null);
+        }}
+        loading={updateRole.isPending}
+        submitLabel="บันทึก"
         width={360}
-        destroyOnHidden
-        footer={[
-          <Button key="cancel" onClick={() => setEditTarget(null)}>ยกเลิก</Button>,
-          <Button
-            key="save"
-            variant="primary"
-            loading={updateRole.isPending}
-            onClick={handleEditRole}
-          >
-            บันทึก
-          </Button>,
-        ]}
       >
         <Form form={editForm} layout="vertical" style={{ marginTop: 8 }}>
           <Form.Item name="role" label="บทบาทใหม่" rules={[{ required: true }]}>
@@ -152,7 +140,7 @@ export function UserPage() {
             />
           </Form.Item>
         </Form>
-      </Modal>
+      </FormModal>
     </Flex>
   );
 }

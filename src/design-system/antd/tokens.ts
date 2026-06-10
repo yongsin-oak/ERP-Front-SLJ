@@ -2,7 +2,7 @@ import type { ThemeConfig } from 'antd/es/config-provider/context';
 import { colors, shadow } from '@design-system/tokens';
 
 const FONT_FAMILY =
-  "'IBM Plex Sans Thai', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  "'Bai Jamjuree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
 export const globalTokens: ThemeConfig['token'] = {
   colorPrimary: colors.brand.primary,

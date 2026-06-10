@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Form, Space } from 'antd';
-import { Modal, Input, TextArea, Button, Select } from '@design-system';
+import { FormModal, Input, TextArea, Select } from '@design-system';
 import { PlatformBadge } from './PlatformBadge';
 import { PLATFORM_ORDER } from '../types';
 import type { Shop, CreateShopDto, Platform } from '../types';
@@ -10,30 +10,22 @@ interface Props {
   shop?: Shop | null;
   onClose: () => void;
   onSubmit: (values: CreateShopDto) => Promise<void>;
+  loading?: boolean;
 }
 
-export function ShopFormModal({ open, shop, onClose, onSubmit }: Props) {
+export function ShopFormModal({ open, shop, onClose, onSubmit, loading }: Props) {
   const [form] = Form.useForm<CreateShopDto>();
   const isEdit = !!shop;
 
   useEffect(() => {
-    if (!open) return;
-    if (shop) {
+    if (open && shop) {
       form.setFieldsValue({
         name: shop.name,
         platform: shop.platform,
         description: shop.description ?? '',
       });
-    } else {
-      form.resetFields();
     }
   }, [open, shop, form]);
-
-  async function handleOk() {
-    const values = await form.validateFields();
-    await onSubmit({ ...values, description: values.description || undefined });
-    onClose();
-  }
 
   const platformOptions = PLATFORM_ORDER.map((p: Platform) => ({
     label: (
@@ -45,19 +37,21 @@ export function ShopFormModal({ open, shop, onClose, onSubmit }: Props) {
     value: p,
   }));
 
+  async function handleFinish(raw: unknown) {
+    const values = raw as CreateShopDto;
+    await onSubmit({ ...values, description: values.description || undefined });
+  }
+
   return (
-    <Modal
+    <FormModal
       open={open}
       title={isEdit ? 'แก้ไขร้านค้า' : 'เพิ่มร้านค้า'}
-      onCancel={onClose}
+      onClose={onClose}
+      form={form}
+      onFinish={handleFinish}
+      loading={loading}
       width={520}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" onClick={onClose}>ยกเลิก</Button>,
-        <Button key="submit" variant="primary" onClick={handleOk}>
-          {isEdit ? 'บันทึก' : 'เพิ่มร้านค้า'}
-        </Button>,
-      ]}
+      submitLabel={isEdit ? 'บันทึก' : 'เพิ่มร้านค้า'}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
         <Form.Item name="platform" label="แพลตฟอร์ม" rules={[{ required: true, message: 'กรุณาเลือกแพลตฟอร์ม' }]}>
@@ -70,6 +64,6 @@ export function ShopFormModal({ open, shop, onClose, onSubmit }: Props) {
           <TextArea rows={3} placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)" />
         </Form.Item>
       </Form>
-    </Modal>
+    </FormModal>
   );
 }

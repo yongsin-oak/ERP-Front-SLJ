@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios';
-import { message as antMessage } from 'antd';
+import { notify } from '../utils/notify';
 
 export interface ApiErrorBody {
   success: false;
@@ -11,14 +11,14 @@ export interface ApiErrorBody {
 }
 
 const STATUS_LABEL: Record<number, string> = {
-  400: 'ข้อมูลที่ส่งไม่ถูกต้อง',
-  401: 'กรุณาเข้าสู่ระบบใหม่',
-  403: 'ไม่มีสิทธิ์ทำรายการนี้',
-  404: 'ไม่พบข้อมูลที่ร้องขอ',
-  409: 'ข้อมูลซ้ำ — มีอยู่แล้วในระบบ',
-  422: 'ไม่สามารถดำเนินการได้',
-  500: 'เซิร์ฟเวอร์ขัดข้อง',
-  503: 'บริการไม่พร้อมใช้งาน',
+  400: 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง',
+  401: 'หมดเซสชัน กรุณาเข้าสู่ระบบใหม่',
+  403: 'ไม่มีสิทธิ์ดำเนินการนี้',
+  404: 'ไม่พบข้อมูลที่ร้องขอ อาจถูกลบไปแล้ว',
+  409: 'ข้อมูลนี้มีอยู่ในระบบแล้ว ไม่สามารถบันทึกซ้ำได้',
+  422: 'ไม่สามารถดำเนินการได้ในขณะนี้',
+  500: 'เซิร์ฟเวอร์ขัดข้อง กรุณาลองใหม่ภายหลัง',
+  503: 'บริการไม่พร้อมใช้งาน กรุณาลองใหม่ภายหลัง',
 };
 
 /**
@@ -70,7 +70,7 @@ export function getErrorStatus(err: unknown): number | null {
  */
 export function showError(err: unknown, prefix?: string): void {
   const detail = getErrorMessage(err);
-  antMessage.error(prefix ? `${prefix}ไม่สำเร็จ — ${detail}` : detail);
+  notify.error(prefix ? `${prefix}ไม่สำเร็จ` : 'เกิดข้อผิดพลาด', detail);
 }
 
 /**

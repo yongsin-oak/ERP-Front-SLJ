@@ -1,12 +1,11 @@
-import { useState, useRef } from 'react';
-import { Modal, Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from 'antd';
+import { useState, useRef, useEffect } from 'react';
+import { Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from 'antd';
 import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
-import { message } from 'antd';
-import { Input, Select, Button, colors } from '@design-system';
+import { Modal, Input, Select, Button, colors } from '@design-system';
 import { useEmployees } from '@features/employee/react-query';
-import { inventoryService } from '../react-query';
-import { useCreateStockEntry } from '../react-query';
+import { inventoryService, useCreateStockEntry } from '../react-query';
+import { notify } from '@shared';
 import { StockEntryTypes } from '../types';
 import type { CreateStockEntryDto, StockEntryType, Product } from '../types';
 
@@ -18,9 +17,10 @@ const TYPE_OPTIONS = (Object.keys(StockEntryTypes) as StockEntryType[]).map((val
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialBarcode?: string;
 }
 
-export function StockEntryModal({ open, onClose }: Props) {
+export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
   const [form] = Form.useForm<CreateStockEntryDto & { quantity: number }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -35,19 +35,30 @@ export function StockEntryModal({ open, onClose }: Props) {
     value: e.id,
   }));
 
-  async function handleBarcodeSubmit() {
-    const barcode = barcodeInput.trim();
+  async function lookupBarcode(barcode: string) {
     if (!barcode) return;
     setLookingUp(true);
     try {
       const res = await inventoryService.getByBarcode(barcode);
       setProduct(res.data.data);
     } catch {
-      message.error(`ไม่พบสินค้า barcode: ${barcode}`);
+      notify.error('สแกน barcode ไม่สำเร็จ', `ไม่พบสินค้า "${barcode}"`);
       setProduct(null);
     } finally {
       setLookingUp(false);
     }
+  }
+
+  useEffect(() => {
+    if (open && initialBarcode) {
+      setBarcodeInput(initialBarcode);
+      void lookupBarcode(initialBarcode);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialBarcode]);
+
+  async function handleBarcodeSubmit() {
+    await lookupBarcode(barcodeInput.trim());
   }
 
   async function handleOk() {
@@ -166,4 +177,3 @@ export function StockEntryModal({ open, onClose }: Props) {
     </Modal>
   );
 }
-

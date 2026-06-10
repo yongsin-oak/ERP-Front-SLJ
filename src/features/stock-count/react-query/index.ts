@@ -7,4 +7,5 @@ export {
   useUpdateStockCountItems,
   useCompleteStockCount,
   useDeleteStockCount,
+  useApplyStockCountAdjustments,
 } from './mutations';

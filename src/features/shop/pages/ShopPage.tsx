@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Popconfirm, Space } from 'antd';
+import { Flex, Space } from 'antd';
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
-  PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined,
-} from '@ant-design/icons';
-import dayjs from 'dayjs';
-import { Table, Button, Tag, PageHeader, BulkSelectionBar } from '@design-system';
+  Table, Button, Tag, PageHeader, BulkSelectionBar, ActionCell,
+  SummaryCard, DateCell, CodeCell, colors,
+} from '@design-system';
 import type { ColumnType } from '@design-system';
 import { ShopFormModal } from '../components/ShopFormModal';
 import { PlatformBadge } from '../components/PlatformBadge';
 import { useShops, useCreateShop, useUpdateShop, useDeleteShop, useBulkDeleteShop } from '../react-query';
 import { PlatformColor, PLATFORM_ORDER } from '../types';
 import type { Shop, CreateShopDto, Platform } from '../types';
+
+const ONLINE_PLATFORMS: Platform[] = ['Shopee', 'Lazada', 'TikTok', 'LineOA', 'LineMan'];
 
 export function ShopPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -44,6 +46,15 @@ export function ShopPage() {
     return m;
   }, [shops]);
 
+  const onlineCount = useMemo(
+    () => shops.filter((s) => ONLINE_PLATFORMS.includes(s.platform)).length,
+    [shops],
+  );
+  const offlineCount = useMemo(
+    () => shops.filter((s) => s.platform === 'Offline').length,
+    [shops],
+  );
+
   const columns: ColumnType<Shop>[] = [
     {
       title: 'แพลตฟอร์ม',
@@ -72,7 +83,7 @@ export function ShopPage() {
       dataIndex: 'id',
       width: 180,
       searchable: true,
-      render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code>,
+      render: (v: string) => <CodeCell>{v}</CodeCell>,
     },
     {
       title: 'รายละเอียด',
@@ -85,7 +96,7 @@ export function ShopPage() {
       dataIndex: 'updatedAt',
       width: 160,
       sorter: (a, b) => (a.updatedAt ?? '').localeCompare(b.updatedAt ?? ''),
-      render: (v?: string) => (v ? dayjs(v).format('DD/MM/YYYY HH:mm') : '-'),
+      render: (v?: string) => <DateCell value={v} />,
     },
     {
       title: '',
@@ -93,19 +104,12 @@ export function ShopPage() {
       width: 100,
       fixed: 'right',
       render: (_: unknown, r: Shop) => (
-        <Space>
-          <Button
-            variant="ghost" size="small" icon={<EditOutlined />}
-            onClick={() => { setSelected(r); setModalOpen(true); }}
-          />
-          <Popconfirm
-            title="ลบร้านค้านี้?"
-            onConfirm={() => deleteShop.mutate(r.id)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
-          >
-            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
+        <ActionCell
+          onEdit={() => { setSelected(r); setModalOpen(true); }}
+          onDelete={() => deleteShop.mutate(r.id)}
+          isDeleting={deleteShop.isPending}
+          deleteTitle="ลบร้านค้านี้?"
+        />
       ),
     },
   ];
@@ -137,6 +141,12 @@ export function ShopPage() {
         }
       />
 
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="ร้านทั้งหมด" value={shops.length} suffix="ร้าน" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="ออนไลน์" value={onlineCount} suffix="ร้าน" color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="ออฟไลน์" value={offlineCount} suffix="ร้าน" color={colors.text.secondary} style={{ flex: 1 }} />
+      </Flex>
+
       {selectedKeys.length > 0 && (
         <BulkSelectionBar
           count={selectedKeys.length}
@@ -163,6 +173,7 @@ export function ShopPage() {
         shop={selected}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
+        loading={createShop.isPending || updateShop.isPending}
       />
     </div>
   );

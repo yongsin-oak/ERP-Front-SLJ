@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Popconfirm, Space, Badge, Progress, Form, Select } from 'antd';
-import { PlusOutlined, DeleteOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { useState, useMemo } from 'react';
+import { Space, Badge, Progress, Form, Flex } from 'antd';
+import { PlusOutlined, EyeOutlined, ReloadOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, FormModal, Input } from '@design-system';
+import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, colors, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useEmployees } from '@features/employee/react-query';
 import {
@@ -35,10 +35,25 @@ export function StockCountListPage() {
   const createCount = useCreateStockCount();
   const deleteCount = useDeleteStockCount();
 
+  const filtersActive = !!statusFilter;
+
+  function clearFilters() {
+    setStatusFilter(undefined);
+    setPage(1);
+  }
+
   async function handleCreate(values: unknown) {
     await createCount.mutateAsync(values as { note?: string; employeeId?: string });
     setCreateOpen(false);
   }
+
+  const draftCount = useMemo(() => sessions.filter((s) => s.status === 'Draft').length, [sessions]);
+  const completedCount = useMemo(() => sessions.filter((s) => s.status === 'Completed').length, [sessions]);
+
+  const statusOptions = (Object.keys(StockCountStatuses) as StockCountStatus[]).map((s) => ({
+    label: StockCountStatuses[s].label,
+    value: s,
+  }));
 
   const columns: ColumnType<StockCount>[] = [
     {
@@ -69,11 +84,11 @@ export function StockCountListPage() {
       key: 'progress',
       width: 180,
       render: (_: unknown, r: StockCount) => {
-        const tot = (r as unknown as { totalItems: number }).totalItems ?? 0;
-        const counted = (r as unknown as { countedItems: number }).countedItems ?? 0;
+        const tot = r.totalItems ?? 0;
+        const counted = r.countedItems ?? 0;
         const pct = tot > 0 ? Math.round((counted / tot) * 100) : 0;
         return (
-          <Space orientation="vertical" size={0} style={{ width: '100%' }}>
+          <Space direction="vertical" size={0} style={{ width: '100%' }}>
             <Progress percent={pct} size="small" style={{ margin: 0 }} />
             <span style={{ fontSize: 11, color: '#888' }}>{counted}/{tot} รายการ</span>
           </Space>
@@ -113,26 +128,17 @@ export function StockCountListPage() {
             onClick={() => navigate(`/stock/count/${r.id}`)}
           />
           {r.status === 'Draft' && (
-            <Popconfirm
-              title={`ลบรายการนับสต็อก ${r.id}?`}
-              description="ลบได้เฉพาะรายการที่ยังไม่สิ้นสุด"
+            <DeleteConfirmButton
               onConfirm={() => deleteCount.mutate(r.id)}
-              okText="ลบ"
-              cancelText="ยกเลิก"
-              okButtonProps={{ danger: true }}
-            >
-              <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-            </Popconfirm>
+              loading={deleteCount.isPending}
+              title="ลบรายการนับสต็อก?"
+              description="ลบได้เฉพาะรายการที่ยังไม่สิ้นสุด"
+            />
           )}
         </Space>
       ),
     },
   ];
-
-  const statusOptions = (Object.keys(StockCountStatuses) as StockCountStatus[]).map((s) => ({
-    label: StockCountStatuses[s].label,
-    value: s,
-  }));
 
   return (
     <div>
@@ -155,15 +161,33 @@ export function StockCountListPage() {
         }
       />
 
-      <div style={{ marginBottom: 16 }}>
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="รอบนับทั้งหมด" value={total} suffix="รอบ" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="กำลังนับ (หน้านี้)" value={draftCount} suffix="รอบ" color={colors.semantic.warning} style={{ flex: 1 }} />
+        <SummaryCard title="สิ้นสุดแล้ว (หน้านี้)" value={completedCount} suffix="รอบ" color={colors.semantic.success} style={{ flex: 1 }} />
+      </Flex>
+
+      <Card
+        size="small"
+        title={<Space><FilterOutlined /> ตัวกรอง</Space>}
+        extra={
+          filtersActive ? (
+            <Button size="small" icon={<ClearOutlined />} onClick={clearFilters}>
+              ล้างตัวกรอง
+            </Button>
+          ) : null
+        }
+        style={{ marginBottom: 16 }}
+      >
         <Select
           allowClear
           placeholder="ทุกสถานะ"
           style={{ width: 180 }}
           options={statusOptions}
+          value={statusFilter}
           onChange={(v) => { setStatusFilter(v); setPage(1); }}
         />
-      </div>
+      </Card>
 
       <Table<StockCount>
         rowKey="id"

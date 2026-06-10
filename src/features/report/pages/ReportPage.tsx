@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Card, Table, Tag, Tabs, Select, Space, DatePicker } from 'antd';
+import { Flex, Card, Tag, Tabs, Space, DatePicker } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { PageHeader, MoneyCell, Button, AppIcons, colors } from '@design-system';
+import { PageHeader, MoneyCell, Button, AppIcons, colors, Table, Select, CodeCell } from '@design-system';
 import { downloadFile } from '@shared';
 import { useSalesSummary, useSalesByShop, useSalesByProduct, useManHour, reportService } from '../react-query';
 import { useShops } from '@features/shop';
@@ -13,8 +13,10 @@ import { REPORT_GROUP_BY } from '../types';
 import type { ReportGroupBy, SalesSummaryItem, SalesByShopItem, SalesByProductItem, ManHourItem } from '../types';
 import type { ColumnType } from '@design-system';
 
-
 const { RangePicker } = DatePicker;
+
+const DEFAULT_DATE_FROM = dayjs().subtract(29, 'day').format('YYYY-MM-DD');
+const DEFAULT_DATE_TO = dayjs().format('YYYY-MM-DD');
 
 const GROUP_BY_OPTIONS: { label: string; value: ReportGroupBy }[] = [
   { label: 'รายวัน', value: REPORT_GROUP_BY.DAY },
@@ -22,33 +24,18 @@ const GROUP_BY_OPTIONS: { label: string; value: ReportGroupBy }[] = [
   { label: 'รายเดือน', value: REPORT_GROUP_BY.MONTH },
 ];
 
-const DEFAULT_DATE_FROM = dayjs().subtract(29, 'day').format('YYYY-MM-DD');
-const DEFAULT_DATE_TO = dayjs().format('YYYY-MM-DD');
-
-const RANGE_PRESETS: { label: string; value: [Dayjs, Dayjs] }[] = [
-  { label: 'สัปดาห์นี้', value: [dayjs().startOf('week'), dayjs()] },
-  { label: '7 วัน', value: [dayjs().subtract(6, 'day'), dayjs()] },
-  { label: '30 วัน', value: [dayjs().subtract(29, 'day'), dayjs()] },
-  { label: 'เดือนนี้', value: [dayjs().startOf('month'), dayjs()] },
-  { label: '3 เดือน', value: [dayjs().subtract(89, 'day'), dayjs()] },
-];
-
 function ProfitCell({ value }: { value: number }) {
   const color = value > 0 ? colors.semantic.successText : value < 0 ? colors.semantic.errorText : colors.text.secondary;
   return <span style={{ color, fontWeight: 600 }}>฿{value.toLocaleString()}</span>;
 }
 
-function SalesSummaryTab({
-  dateFrom, dateTo,
-}: {
-  dateFrom: string;
-  dateTo: string;
-}) {
+function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const [shopId, setShopId] = useState<string | undefined>();
   const [groupBy, setGroupBy] = useState<ReportGroupBy>(REPORT_GROUP_BY.DAY);
   const { data: shops, isLoading: shopsLoading } = useShops();
   const { data = [], isFetching } = useSalesSummary({ dateFrom, dateTo, shopId, groupBy });
   const [exporting, setExporting] = useState(false);
+
   async function handleExport() {
     setExporting(true);
     try {
@@ -61,23 +48,17 @@ function SalesSummaryTab({
     { title: 'วันที่', dataIndex: 'date', width: 130, sorter: (a, b) => a.date.localeCompare(b.date) },
     { title: 'จำนวน Order', dataIndex: 'orderCount', align: 'right', width: 120, sorter: (a, b) => a.orderCount - b.orderCount },
     {
-      title: 'รายได้',
-      dataIndex: 'revenue',
-      align: 'right',
+      title: 'รายได้', dataIndex: 'revenue', align: 'right',
       sorter: (a, b) => a.revenue - b.revenue,
       render: (v: number) => <MoneyCell value={v} />,
     },
     {
-      title: 'ต้นทุน',
-      dataIndex: 'cost',
-      align: 'right',
+      title: 'ต้นทุน', dataIndex: 'cost', align: 'right',
       sorter: (a, b) => a.cost - b.cost,
       render: (v: number) => <MoneyCell value={v} />,
     },
     {
-      title: 'กำไร',
-      dataIndex: 'profit',
-      align: 'right',
+      title: 'กำไร', dataIndex: 'profit', align: 'right',
       sorter: (a, b) => a.profit - b.profit,
       render: (v: number) => <ProfitCell value={v} />,
     },
@@ -134,6 +115,7 @@ function SalesSummaryTab({
 function SalesByShopTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const { data = [], isFetching } = useSalesByShop({ dateFrom, dateTo });
   const [exporting, setExporting] = useState(false);
+
   async function handleExport() {
     setExporting(true);
     try {
@@ -145,24 +127,18 @@ function SalesByShopTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string
   const columns: ColumnType<SalesByShopItem>[] = [
     { title: 'ร้านค้า', dataIndex: 'shopName', sorter: (a, b) => a.shopName.localeCompare(b.shopName) },
     {
-      title: 'Platform',
-      dataIndex: 'platform',
-      width: 120,
+      title: 'Platform', dataIndex: 'platform', width: 120,
       render: (v: string) => <Tag>{v}</Tag>,
     },
     { title: 'จำนวน Order', dataIndex: 'orderCount', align: 'right', width: 130, sorter: (a, b) => a.orderCount - b.orderCount },
     {
-      title: 'รายได้',
-      dataIndex: 'revenue',
-      align: 'right',
+      title: 'รายได้', dataIndex: 'revenue', align: 'right',
       defaultSortOrder: 'descend' as const,
       sorter: (a, b) => a.revenue - b.revenue,
       render: (v: number) => <MoneyCell value={v} />,
     },
     {
-      title: 'ต้นทุน',
-      dataIndex: 'cost',
-      align: 'right',
+      title: 'ต้นทุน', dataIndex: 'cost', align: 'right',
       sorter: (a, b) => a.cost - b.cost,
       render: (v: number) => <MoneyCell value={v} />,
     },
@@ -173,30 +149,30 @@ function SalesByShopTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string
       <div style={{ marginBottom: 16 }}>
         <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
       </div>
-    <Table<SalesByShopItem>
-      rowKey="shopId"
-      columns={columns}
-      dataSource={data}
-      loading={isFetching}
-      size="small"
-      pagination={false}
-      scroll={{ y: 480 }}
-      summary={(rows) => {
-        const totals = rows.reduce(
-          (acc, r) => ({ revenue: acc.revenue + r.revenue, cost: acc.cost + r.cost, orderCount: acc.orderCount + r.orderCount }),
-          { revenue: 0, cost: 0, orderCount: 0 },
-        );
-        return (
-          <Table.Summary.Row style={{ fontWeight: 700 }}>
-            <Table.Summary.Cell index={0}>รวม</Table.Summary.Cell>
-            <Table.Summary.Cell index={1} />
-            <Table.Summary.Cell index={2} align="right">{totals.orderCount.toLocaleString()}</Table.Summary.Cell>
-            <Table.Summary.Cell index={3} align="right"><MoneyCell value={totals.revenue} /></Table.Summary.Cell>
-            <Table.Summary.Cell index={4} align="right"><MoneyCell value={totals.cost} /></Table.Summary.Cell>
-          </Table.Summary.Row>
-        );
-      }}
-    />
+      <Table<SalesByShopItem>
+        rowKey="shopId"
+        columns={columns}
+        dataSource={data}
+        loading={isFetching}
+        size="small"
+        pagination={false}
+        scroll={{ y: 480 }}
+        summary={(rows) => {
+          const totals = rows.reduce(
+            (acc, r) => ({ revenue: acc.revenue + r.revenue, cost: acc.cost + r.cost, orderCount: acc.orderCount + r.orderCount }),
+            { revenue: 0, cost: 0, orderCount: 0 },
+          );
+          return (
+            <Table.Summary.Row style={{ fontWeight: 700 }}>
+              <Table.Summary.Cell index={0}>รวม</Table.Summary.Cell>
+              <Table.Summary.Cell index={1} />
+              <Table.Summary.Cell index={2} align="right">{totals.orderCount.toLocaleString()}</Table.Summary.Cell>
+              <Table.Summary.Cell index={3} align="right"><MoneyCell value={totals.revenue} /></Table.Summary.Cell>
+              <Table.Summary.Cell index={4} align="right"><MoneyCell value={totals.cost} /></Table.Summary.Cell>
+            </Table.Summary.Row>
+          );
+        }}
+      />
     </>
   );
 }
@@ -210,6 +186,7 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
   const { data: brandsPage, isLoading: brandsLoading } = useBrands();
   const { data = [], isFetching } = useSalesByProduct({ dateFrom, dateTo, shopId, categoryId, brandId });
   const [exporting, setExporting] = useState(false);
+
   async function handleExport() {
     setExporting(true);
     try {
@@ -226,31 +203,25 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
       render: (name: string, r) => (
         <div>
           <div style={{ fontWeight: 500 }}>{name}</div>
-          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.barcode}</code>
+          <CodeCell style={{ fontSize: 11, color: colors.text.tertiary }}>{r.barcode}</CodeCell>
         </div>
       ),
     },
     { title: 'Pack', dataIndex: 'quantityPack', align: 'right', width: 90, sorter: (a, b) => a.quantityPack - b.quantityPack },
     { title: 'Carton', dataIndex: 'quantityCarton', align: 'right', width: 90, sorter: (a, b) => a.quantityCarton - b.quantityCarton },
     {
-      title: 'รายได้',
-      dataIndex: 'revenue',
-      align: 'right',
+      title: 'รายได้', dataIndex: 'revenue', align: 'right',
       defaultSortOrder: 'descend' as const,
       sorter: (a, b) => a.revenue - b.revenue,
       render: (v: number) => <MoneyCell value={v} />,
     },
     {
-      title: 'ต้นทุน',
-      dataIndex: 'cost',
-      align: 'right',
+      title: 'ต้นทุน', dataIndex: 'cost', align: 'right',
       sorter: (a, b) => a.cost - b.cost,
       render: (v: number) => <MoneyCell value={v} />,
     },
     {
-      title: 'กำไร',
-      dataIndex: 'profit',
-      align: 'right',
+      title: 'กำไร', dataIndex: 'profit', align: 'right',
       sorter: (a, b) => a.profit - b.profit,
       render: (v: number) => <ProfitCell value={v} />,
     },
@@ -307,6 +278,7 @@ function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
   const { data: employees, isLoading: empLoading } = useEmployees();
   const { data = [], isFetching } = useManHour({ dateFrom, dateTo, employeeId });
   const [exporting, setExporting] = useState(false);
+
   async function handleExport() {
     setExporting(true);
     try {
@@ -319,18 +291,12 @@ function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
     { title: 'พนักงาน', dataIndex: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
     { title: 'Order', dataIndex: 'orderCount', align: 'right', width: 100, sorter: (a, b) => a.orderCount - b.orderCount },
     {
-      title: 'เวลารวม (นาที)',
-      dataIndex: 'totalMinutes',
-      align: 'right',
-      width: 150,
+      title: 'เวลารวม (นาที)', dataIndex: 'totalMinutes', align: 'right', width: 150,
       sorter: (a, b) => a.totalMinutes - b.totalMinutes,
       render: (v: number) => v.toLocaleString(),
     },
     {
-      title: 'เฉลี่ย/Order (นาที)',
-      dataIndex: 'avgMinutesPerOrder',
-      align: 'right',
-      width: 170,
+      title: 'เฉลี่ย/Order (นาที)', dataIndex: 'avgMinutesPerOrder', align: 'right', width: 170,
       defaultSortOrder: 'ascend' as const,
       sorter: (a, b) => a.avgMinutesPerOrder - b.avgMinutesPerOrder,
     },
@@ -380,11 +346,19 @@ export function ReportPage() {
   ]);
   const [activeTab, setActiveTab] = useState('summary');
 
+  const rangePresets: { label: string; value: [Dayjs, Dayjs] }[] = [
+    { label: 'สัปดาห์นี้', value: [dayjs().startOf('week'), dayjs()] },
+    { label: '7 วัน', value: [dayjs().subtract(6, 'day'), dayjs()] },
+    { label: '30 วัน', value: [dayjs().subtract(29, 'day'), dayjs()] },
+    { label: 'เดือนนี้', value: [dayjs().startOf('month'), dayjs()] },
+    { label: '3 เดือน', value: [dayjs().subtract(89, 'day'), dayjs()] },
+  ];
+
   const dateFrom = dateRange[0].format('YYYY-MM-DD');
   const dateTo = dateRange[1].format('YYYY-MM-DD');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Flex vertical gap={20}>
       <PageHeader
         title="รายงาน"
         subtitle={`${dateFrom} — ${dateTo}`}
@@ -392,7 +366,7 @@ export function ReportPage() {
           <RangePicker
             value={dateRange}
             onChange={(v) => { if (v?.[0] && v[1]) setDateRange([v[0], v[1]]); }}
-            presets={RANGE_PRESETS}
+            presets={rangePresets}
             allowClear={false}
             format="DD/MM/YYYY"
           />
@@ -412,6 +386,6 @@ export function ReportPage() {
           {activeTab === 'man-hour' && <ManHourTab dateFrom={dateFrom} dateTo={dateTo} />}
         </div>
       </Card>
-    </div>
+    </Flex>
   );
 }

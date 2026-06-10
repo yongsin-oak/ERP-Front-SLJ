@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { InputNumber, Space, message } from 'antd';
+import { InputNumber, Space } from 'antd';
 import type { InputRef } from 'antd';
 import {
   BarcodeOutlined,
@@ -10,7 +10,7 @@ import { Button, Input, Table, Tag, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { inventoryService } from '@features/inventory/react-query/services';
 import { ProductDropdownSelect } from '@features/inventory/components';
-import { getErrorMessage } from '@shared';
+import { getErrorMessage, notify } from '@shared';
 import type { OrderItem } from '../types';
 import type { ProductDropdown } from '@features/inventory/types';
 
@@ -53,7 +53,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       setBarcodeInput('');
       barcodeRef.current?.focus();
     } catch (err) {
-      message.error(getErrorMessage(err, `ไม่พบสินค้า barcode: ${barcode}`));
+      notify.error('สแกน barcode ไม่สำเร็จ', getErrorMessage(err, `ไม่พบสินค้า barcode: ${barcode}`));
       barcodeRef.current?.focus();
     }
   };

@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Flex, InputNumber, Table as AntTable, Typography, Alert } from 'antd';
+import { Flex, InputNumber, Typography, Alert } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, PageHeader, colors } from '@design-system';
+import { Table, Button, PageHeader, Select, colors } from '@design-system';
+import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
 import { useEmployeeList } from '@features/employee/react-query';
 import { useProducts } from '@features/inventory';
-import { Select } from '@design-system';
 
 interface DamageRow {
   key: string;
@@ -85,7 +85,7 @@ export function StockDamagePage() {
   const totalQty = validRows.reduce((s, r) => s + r.quantity, 0);
   const totalLoss = validRows.reduce((s, r) => s + r.quantity * (r.costPricePerUnit ?? 0), 0);
 
-  const columns = [
+  const columns: ColumnType<DamageRow>[] = [
     {
       title: 'สินค้า',
       dataIndex: 'productBarcode',
@@ -191,7 +191,7 @@ export function StockDamagePage() {
           onNoteChange={setNote}
         />
 
-        <AntTable
+        <Table<DamageRow>
           rowKey="key"
           columns={columns}
           dataSource={rows}

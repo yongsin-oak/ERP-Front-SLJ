@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Popconfirm, Row, Col, Space, DatePicker, Card } from 'antd';
+import { Row, Col, Space, DatePicker, Flex } from 'antd';
 import {
-  DeleteOutlined,
   EyeOutlined,
   ReloadOutlined,
   PlusOutlined,
@@ -11,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
-import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons } from '@design-system';
+import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons, DeleteConfirmButton, COL_PROPS, Card, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
 import { useShops } from '@features/shop';
@@ -50,7 +49,7 @@ export function OrderHistoryPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<Order | null>(null);
   const [exporting, setExporting] = useState(false);
-
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: shops = [] } = useShops();
   const { data: employees = [] } = useEmployees();
@@ -184,10 +183,20 @@ export function OrderHistoryPage() {
         r.recordBy ? `${r.recordBy.firstName} (${r.recordBy.nickname})` : '-',
     },
     {
-      title: 'หมายเหตุ',
+      title: 'เลขออเดอร์ / หมายเหตุ',
       dataIndex: 'note',
-      ellipsis: true,
-      render: (v?: string | null) => v ?? '-',
+      render: (v?: string | null) => {
+        if (!v) return '-';
+        const parts = v.split(' | ');
+        const orderNum = parts[0];
+        const note = parts.slice(1).join(' | ');
+        return (
+          <div>
+            <code style={{ fontSize: 11, fontWeight: 600 }}>{orderNum}</code>
+            {note && <div style={{ fontSize: 12, color: colors.text.tertiary }}>{note}</div>}
+          </div>
+        );
+      },
     },
     {
       title: '',
@@ -200,13 +209,18 @@ export function OrderHistoryPage() {
             variant="ghost" size="small" icon={<EyeOutlined />}
             onClick={() => { setSelected(r); setDetailOpen(true); }}
           />
-          <Popconfirm
+          <DeleteConfirmButton
+            onConfirm={async () => {
+              setDeletingId(r.id);
+              try {
+                await deleteOrder.mutateAsync(r.id);
+              } finally {
+                setDeletingId(null);
+              }
+            }}
+            loading={deletingId === r.id}
             title="ลบ order นี้?"
-            onConfirm={() => deleteOrder.mutate(r.id)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
-          >
-            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
+          />
         </Space>
       ),
     },
@@ -232,6 +246,19 @@ export function OrderHistoryPage() {
         }
       />
 
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="ออเดอร์ทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard
+          title="ยอดรวม (หน้านี้)"
+          value={orders.reduce((s, r) => s + (r.orderDetails ?? []).reduce((os, d) => os + d.quantityPack * (d.product.sellPrice?.pack ?? 0) + d.quantityCarton * (d.product.sellPrice?.carton ?? 0), 0), 0)}
+          prefix="฿"
+          formatter={(v) => Number(v).toLocaleString()}
+          color={colors.semantic.success}
+          style={{ flex: 1 }}
+        />
+        <SummaryCard title="รายการสินค้ารวม (หน้านี้)" value={orders.reduce((s, r) => s + (r.orderDetails?.length ?? 0), 0)} suffix="รายการ" style={{ flex: 1 }} />
+      </Flex>
+
       <Card
         size="small"
         title={<Space><FilterOutlined /> ตัวกรอง</Space>}
@@ -245,7 +272,7 @@ export function OrderHistoryPage() {
         style={{ marginBottom: 16 }}
       >
         <Row gutter={[12, 12]}>
-          <Col xs={24} sm={12} lg={8}>
+          <Col {...COL_PROPS.filterItem}>
             <Input
               prefix={<SearchOutlined />}
               placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
@@ -254,7 +281,7 @@ export function OrderHistoryPage() {
               onChange={(e) => patchFilter({ search: e.target.value })}
             />
           </Col>
-          <Col xs={24} sm={12} lg={8}>
+          <Col {...COL_PROPS.filterItem}>
             <RangePicker
               value={filters.dateRange}
               onChange={(v) => patchFilter({ dateRange: v as [Dayjs, Dayjs] | null })}
@@ -263,7 +290,7 @@ export function OrderHistoryPage() {
               placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
             />
           </Col>
-          <Col xs={24} sm={12} lg={8}>
+          <Col {...COL_PROPS.filterItem}>
             <Select
               allowClear
               placeholder="สถานะ"
@@ -273,7 +300,7 @@ export function OrderHistoryPage() {
               style={{ width: '100%' }}
             />
           </Col>
-          <Col xs={24} sm={12} lg={8}>
+          <Col {...COL_PROPS.filterItem}>
             <Select
               allowClear
               placeholder="ร้านค้า"
@@ -284,7 +311,7 @@ export function OrderHistoryPage() {
               showSearch={{ optionFilterProp: 'label' }}
             />
           </Col>
-          <Col xs={24} sm={12} lg={8}>
+          <Col {...COL_PROPS.filterItem}>
             <Select
               allowClear
               placeholder="พนักงาน"

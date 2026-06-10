@@ -8,6 +8,7 @@ export interface ProductParams {
   brandId?: string;
   categoryId?: string;
   isActive?: boolean;
+  lowStock?: boolean;
 }
 
 export interface ProductDropdownSearchParams {
@@ -28,4 +29,9 @@ export const stockEntryKeys = {
   all: ['stock-entries'] as const,
   lists: () => [...stockEntryKeys.all, 'list'] as const,
   list: (params: object) => [...stockEntryKeys.lists(), params] as const,
+};
+
+export const shopPriceKeys = {
+  all: ['shop-prices'] as const,
+  byProduct: (barcode: string) => [...shopPriceKeys.all, barcode] as const,
 };

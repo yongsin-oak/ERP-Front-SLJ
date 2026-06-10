@@ -27,6 +27,9 @@ export const stockCountService = {
   complete: (id: string) =>
     req.post<ApiData<{ success: boolean }>>(`${BASE}/${id}/complete`),
 
+  applyAdjustments: (id: string) =>
+    req.post<ApiData<{ success: boolean; adjusted: number }>>(`${BASE}/${id}/apply-adjustments`),
+
   remove: (id: string) =>
     req.delete<ApiData<{ success: boolean }>>(`${BASE}/${id}`),
 

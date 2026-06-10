@@ -38,6 +38,7 @@ export interface StockCount {
   employee?: StockCountEmployee | null;
   note: string | null;
   completedAt: string | null;
+  adjustedAt: string | null;
   items: StockCountItem[];
   totalItems?: number;
   countedItems?: number;

@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { Popconfirm, Space, Input, Badge } from 'antd';
-import dayjs from 'dayjs';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
-import { Table, Button, PageHeader, AppIcons } from '@design-system';
+import { useMemo, useState } from 'react';
+import { Input, Badge, Flex } from 'antd';
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
 import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, supplierService } from '../react-query';
@@ -17,13 +16,19 @@ export function SupplierPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [exporting, setExporting] = useState(false);
 
   const params = { page, limit: pageSize, search: search || undefined };
   const { data, isLoading, refetch, isFetching } = useSuppliers(params);
   const suppliers = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
-  const [exporting, setExporting] = useState(false);
+  const createSupplier = useCreateSupplier();
+  const updateSupplier = useUpdateSupplier();
+  const deleteSupplier = useDeleteSupplier();
+
+  const activeCount = useMemo(() => suppliers.filter((s) => s.isActive).length, [suppliers]);
+  const inactiveCount = useMemo(() => suppliers.filter((s) => !s.isActive).length, [suppliers]);
 
   async function handleExport() {
     setExporting(true);
@@ -34,10 +39,6 @@ export function SupplierPage() {
       setExporting(false);
     }
   }
-
-  const createSupplier = useCreateSupplier();
-  const updateSupplier = useUpdateSupplier();
-  const deleteSupplier = useDeleteSupplier();
 
   async function handleSubmit(values: CreateSupplierDto) {
     if (selected) {
@@ -76,7 +77,7 @@ export function SupplierPage() {
       title: 'เลขผู้เสียภาษี',
       dataIndex: 'taxId',
       width: 150,
-      render: (v?: string | null) => v ? <code style={{ fontSize: 12 }}>{v}</code> : '-',
+      render: (v?: string | null) => v ? <CodeCell>{v}</CodeCell> : '-',
     },
     {
       title: 'สถานะ',
@@ -91,7 +92,7 @@ export function SupplierPage() {
       dataIndex: 'updatedAt',
       width: 150,
       sorter: (a, b) => (a.updatedAt ?? '').localeCompare(b.updatedAt ?? ''),
-      render: (v?: string) => v ? dayjs(v).format('DD/MM/YYYY HH:mm') : '-',
+      render: (v?: string) => <DateCell value={v} />,
     },
     {
       title: '',
@@ -99,21 +100,12 @@ export function SupplierPage() {
       width: 90,
       fixed: 'right',
       render: (_: unknown, r: Supplier) => (
-        <Space>
-          <Button
-            variant="ghost"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => { setSelected(r); setModalOpen(true); }}
-          />
-          <Popconfirm
-            title={`ลบ "${r.name}"?`}
-            onConfirm={() => deleteSupplier.mutate(r.id)}
-            okText="ลบ" cancelText="ยกเลิก" okButtonProps={{ danger: true }}
-          >
-            <Button variant="danger-ghost" size="small" icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </Space>
+        <ActionCell
+          onEdit={() => { setSelected(r); setModalOpen(true); }}
+          onDelete={() => deleteSupplier.mutate(r.id)}
+          isDeleting={deleteSupplier.isPending}
+          deleteTitle={`ลบ "${r.name}"?`}
+        />
       ),
     },
   ];
@@ -141,6 +133,12 @@ export function SupplierPage() {
           </>
         }
       />
+
+      <Flex gap={12} style={{ marginBottom: 16 }}>
+        <SummaryCard title="ทั้งหมด" value={total} suffix="ราย" color={colors.brand.primary} style={{ flex: 1 }} />
+        <SummaryCard title="ใช้งาน (หน้านี้)" value={activeCount} suffix="ราย" color={colors.semantic.success} style={{ flex: 1 }} />
+        <SummaryCard title="ปิดใช้งาน (หน้านี้)" value={inactiveCount} suffix="ราย" color={colors.text.secondary} style={{ flex: 1 }} />
+      </Flex>
 
       <div style={{ marginBottom: 16 }}>
         <Search
