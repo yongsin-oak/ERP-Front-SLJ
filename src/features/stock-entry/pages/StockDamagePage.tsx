@@ -197,6 +197,7 @@ export function StockDamagePage() {
           dataSource={rows}
           pagination={false}
           size="middle"
+          scroll={{ x: 'max-content' }}
         />
 
         <Flex gap={8} style={{ marginTop: 12 }}>

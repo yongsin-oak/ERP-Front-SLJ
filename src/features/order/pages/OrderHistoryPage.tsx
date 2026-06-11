@@ -246,17 +246,17 @@ export function OrderHistoryPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="ออเดอร์ทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="ออเดอร์ทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1, minWidth: 160 }} />
         <SummaryCard
           title="ยอดรวม (หน้านี้)"
           value={orders.reduce((s, r) => s + (r.orderDetails ?? []).reduce((os, d) => os + d.quantityPack * (d.product.sellPrice?.pack ?? 0) + d.quantityCarton * (d.product.sellPrice?.carton ?? 0), 0), 0)}
           prefix="฿"
           formatter={(v) => Number(v).toLocaleString()}
           color={colors.semantic.success}
-          style={{ flex: 1 }}
+          style={{ flex: 1, minWidth: 160 }}
         />
-        <SummaryCard title="รายการสินค้ารวม (หน้านี้)" value={orders.reduce((s, r) => s + (r.orderDetails?.length ?? 0), 0)} suffix="รายการ" style={{ flex: 1 }} />
+        <SummaryCard title="รายการสินค้ารวม (หน้านี้)" value={orders.reduce((s, r) => s + (r.orderDetails?.length ?? 0), 0)} suffix="รายการ" style={{ flex: 1, minWidth: 160 }} />
       </Flex>
 
       <Card

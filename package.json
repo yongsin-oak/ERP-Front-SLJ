@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "clean": "rimraf dist node_modules/.vite",
-    "health:dev": "curl -f http://localhost:5173 || echo 'Dev server not running'"
+    "health:dev": "curl -f http://localhost:5173 || echo 'Dev server not running'",
+    "ngrok": "./ngrok-dev.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -92,6 +92,9 @@ export type { QuantityInputProps, QuantityUnit } from './components/QuantityInpu
 export { SearchableSelect } from './components/SearchableSelect';
 export type { SearchableSelectProps } from './components/SearchableSelect';
 
+export { InfiniteSearchSelect } from './components/InfiniteSearchSelect';
+export type { InfiniteSearchSelectProps, InfiniteSearchOption } from './components/InfiniteSearchSelect';
+
 export { InlineEdit } from './components/InlineEdit';
 export type { InlineEditProps } from './components/InlineEdit';
 
@@ -135,3 +138,6 @@ export { AppIcons } from './icons';
 export type { AppIconKey } from './icons';
 
 export * from './tokens';
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+export { highlightText } from './utils/highlightText';

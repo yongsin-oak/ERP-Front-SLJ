@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { STALE_TIME } from '@shared';
 import { shopService } from './services';
 import { shopKeys } from './queryKeys';
@@ -10,6 +10,19 @@ export function useShops() {
     queryKey: shopKeys.all_flat(),
     queryFn: () => shopService.getAll({ page: 1, limit: 100 }).then((r) => r.data.data),
     staleTime: STALE_TIME.MASTER,
+  });
+}
+
+const DROPDOWN_LIMIT = 20;
+
+export function useShopDropdown(search?: string) {
+  return useInfiniteQuery({
+    queryKey: [...shopKeys.all, 'dropdown', search ?? ''],
+    queryFn: ({ pageParam = 1 }) =>
+      shopService.getAll({ page: pageParam as number, limit: DROPDOWN_LIMIT, search }).then((r) => r.data),
+    getNextPageParam: (last) => last.pagination.hasNextPage ? last.pagination.page + 1 : undefined,
+    initialPageParam: 1,
+    staleTime: STALE_TIME.SHORT,
   });
 }
 

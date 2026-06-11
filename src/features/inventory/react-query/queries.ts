@@ -10,17 +10,6 @@ export function useProducts(params: ProductParams) {
     queryKey: productKeys.list(params),
     queryFn: () => inventoryService.getAll(params).then((r) => r.data),
     placeholderData: (prev) => prev,
-    staleTime: STALE_TIME.SHORT,
-  });
-}
-
-export function useStockEntries(params: StockEntryParams, options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: stockEntryKeys.list(params),
-    queryFn: () => stockEntryService.getAll(params).then((r) => r.data),
-    placeholderData: (prev) => prev,
-    staleTime: STALE_TIME.SHORT,
-    enabled: options?.enabled !== false,
   });
 }
 
@@ -38,6 +27,16 @@ export function useShopPrices(barcode: string, options?: { enabled?: boolean }) 
     queryKey: shopPriceKeys.byProduct(barcode),
     queryFn: () => shopPriceService.getAll(barcode).then((r) => r.data.data ?? []),
     enabled: options?.enabled !== false && !!barcode,
+    staleTime: STALE_TIME.SHORT,
+  });
+}
+
+export function useStockEntries(params: StockEntryParams, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: stockEntryKeys.list(params),
+    queryFn: () => stockEntryService.getAll(params).then((r) => r.data),
+    enabled: options?.enabled !== false,
+    placeholderData: (prev) => prev,
     staleTime: STALE_TIME.SHORT,
   });
 }

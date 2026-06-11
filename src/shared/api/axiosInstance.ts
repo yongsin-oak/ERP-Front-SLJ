@@ -5,6 +5,8 @@ const req = axios.create({
   baseURL: ENV.API_URL,
   headers: {
     "Content-Type": "application/json",
+    // ngrok free tier requires this header to skip the browser warning interstitial
+    "ngrok-skip-browser-warning": "true",
   },
   withCredentials: true, // ใช้สำหรับการส่งคุกกี้
   timeout: 30000, // 30s — รองรับ bulk operation / network ช้า

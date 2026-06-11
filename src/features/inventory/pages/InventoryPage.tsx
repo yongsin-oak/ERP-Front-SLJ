@@ -280,6 +280,7 @@ export function InventoryPage() {
           total,
           onChange: (p, ps) => { setPage(p); setPageSize(ps); },
         }}
+        scroll={{ x: 'max-content' }}
       />
     </div>
   );

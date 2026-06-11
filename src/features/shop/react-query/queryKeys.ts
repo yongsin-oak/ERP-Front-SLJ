@@ -4,6 +4,7 @@ export interface ShopListParams {
   page: number;
   limit: number;
   platform?: Platform;
+  search?: string;
 }
 
 export const shopKeys = {

@@ -89,10 +89,10 @@ export function UserPage() {
         }
       />
 
-      <Flex gap={12}>
-        <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color={colors.semantic.error} style={{ flex: 1 }} />
-        <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color={colors.semantic.success} style={{ flex: 1 }} />
+      <Flex gap={12} wrap>
+        <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color={colors.semantic.error} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       <Table<User>
@@ -102,6 +102,7 @@ export function UserPage() {
         loading={isLoading}
         pagination={false}
         size="middle"
+        scroll={{ x: 'max-content' }}
       />
 
       <UserFormModal

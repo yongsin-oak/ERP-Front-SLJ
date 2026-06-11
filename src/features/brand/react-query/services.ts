@@ -5,7 +5,7 @@ import type { Brand, CreateBrandDto, UpdateBrandDto } from '../types';
 const BASE = '/brand';
 
 export const brandService = {
-  getAll: (params: { page: number; limit: number }) =>
+  getAll: (params: { page: number; limit: number; search?: string }) =>
     req.get<Paginated<Brand>>(BASE, { params }),
 
   getById: (id: string) => req.get<ApiData<Brand>>(`${BASE}/${id}`),

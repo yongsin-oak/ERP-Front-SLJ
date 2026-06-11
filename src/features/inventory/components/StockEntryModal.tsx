@@ -3,7 +3,7 @@ import { Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from 'antd';
 import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
 import { Modal, Input, Select, Button, colors } from '@design-system';
-import { useEmployees } from '@features/employee/react-query';
+import { EmployeeSearchSelect } from '@features/employee/components';
 import { inventoryService, useCreateStockEntry } from '../react-query';
 import { notify } from '@shared';
 import { StockEntryTypes } from '../types';
@@ -27,13 +27,7 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
   const [lookingUp, setLookingUp] = useState(false);
   const barcodeRef = useRef<InputRef>(null);
 
-  const { data: employees = [] } = useEmployees();
   const createStockEntry = useCreateStockEntry();
-
-  const employeeOptions = employees.map((e) => ({
-    label: `${e.firstName} ${e.lastName} (${e.nickname})`,
-    value: e.id,
-  }));
 
   async function lookupBarcode(barcode: string) {
     if (!barcode) return;
@@ -162,12 +156,7 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
           label="พนักงานผู้บันทึก"
           rules={[{ required: true, message: 'กรุณาเลือกพนักงาน' }]}
         >
-          <Select
-            options={employeeOptions}
-            placeholder="เลือกพนักงาน"
-            style={{ width: '100%' }}
-            showSearch={{ optionFilterProp: 'label' }}
-          />
+          <EmployeeSearchSelect />
         </Form.Item>
 
         <Form.Item name="note" label="หมายเหตุ">

@@ -134,10 +134,10 @@ export function SupplierPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="ทั้งหมด" value={total} suffix="ราย" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="ใช้งาน (หน้านี้)" value={activeCount} suffix="ราย" color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="ปิดใช้งาน (หน้านี้)" value={inactiveCount} suffix="ราย" color={colors.text.secondary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="ทั้งหมด" value={total} suffix="ราย" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ใช้งาน (หน้านี้)" value={activeCount} suffix="ราย" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปิดใช้งาน (หน้านี้)" value={inactiveCount} suffix="ราย" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       <div style={{ marginBottom: 16 }}>

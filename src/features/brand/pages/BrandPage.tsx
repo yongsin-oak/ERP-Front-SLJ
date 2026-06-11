@@ -103,10 +103,10 @@ export function BrandPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="มีรายละเอียด (หน้านี้)" value={withDescCount} suffix="แบรนด์" color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="ไม่มีรายละเอียด (หน้านี้)" value={withoutDescCount} suffix="แบรนด์" color={colors.text.secondary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="มีรายละเอียด (หน้านี้)" value={withDescCount} suffix="แบรนด์" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ไม่มีรายละเอียด (หน้านี้)" value={withoutDescCount} suffix="แบรนด์" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       {selectedKeys.length > 0 && (
@@ -128,6 +128,7 @@ export function BrandPage() {
           onChange: setSelectedKeys,
           preserveSelectedRowKeys: true,
         }}
+        scroll={{ x: 'max-content' }}
       />
 
       <BrandFormModal

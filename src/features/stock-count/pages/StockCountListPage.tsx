@@ -161,10 +161,10 @@ export function StockCountListPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="รอบนับทั้งหมด" value={total} suffix="รอบ" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="กำลังนับ (หน้านี้)" value={draftCount} suffix="รอบ" color={colors.semantic.warning} style={{ flex: 1 }} />
-        <SummaryCard title="สิ้นสุดแล้ว (หน้านี้)" value={completedCount} suffix="รอบ" color={colors.semantic.success} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="รอบนับทั้งหมด" value={total} suffix="รอบ" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="กำลังนับ (หน้านี้)" value={draftCount} suffix="รอบ" color={colors.semantic.warning} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="สิ้นสุดแล้ว (หน้านี้)" value={completedCount} suffix="รอบ" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       <Card

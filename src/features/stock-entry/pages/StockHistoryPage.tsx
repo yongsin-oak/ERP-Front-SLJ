@@ -208,10 +208,10 @@ export function StockHistoryPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="รายการทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="มูลค่ารับเข้า (หน้านี้)" value={receiveValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="มูลค่าของเสีย (หน้านี้)" value={damageValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="รายการทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1, minWidth: 160 }} />
+        <SummaryCard title="มูลค่ารับเข้า (หน้านี้)" value={receiveValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1, minWidth: 160 }} />
+        <SummaryCard title="มูลค่าของเสีย (หน้านี้)" value={damageValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error} style={{ flex: 1, minWidth: 160 }} />
       </Flex>
 
       <Card

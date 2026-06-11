@@ -156,10 +156,10 @@ export function EmployeePage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color={colors.text.secondary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       <Flex gap={12} align="center" style={{ marginBottom: 12 }}>
@@ -191,6 +191,7 @@ export function EmployeePage() {
           onChange: setSelectedKeys,
           preserveSelectedRowKeys: true,
         }}
+        scroll={{ x: 'max-content' }}
         pagination={{
           current: page,
           pageSize,

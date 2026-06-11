@@ -96,3 +96,5 @@ export function Table<T extends object = object>({
     />
   );
 }
+
+Table.Summary = AntTable.Summary;

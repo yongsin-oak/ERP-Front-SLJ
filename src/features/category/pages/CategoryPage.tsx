@@ -201,10 +201,10 @@ export function CategoryPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color={colors.text.secondary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       <Table<CatNode>
@@ -218,6 +218,7 @@ export function CategoryPage() {
           rowExpandable: (r) => (r.children?.length ?? 0) > 0,
         }}
         pagination={false}
+        scroll={{ x: 'max-content' }}
       />
 
       <CategoryFormModal

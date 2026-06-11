@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { InputNumber, Row, Col, Switch, Form as AntForm } from 'antd';
-import { FormModal, Form, Input, Select } from '@design-system';
-import { useBrands } from '@features/brand';
-import { useCategories } from '@features/category';
+import { FormModal, Form, Input } from '@design-system';
+import { BrandSearchSelect } from '@features/brand/components';
+import { CategorySearchSelect } from '@features/category/components';
 import type { Product, CreateProductDto, UpdateProductDto } from '../types';
 
 interface ProductFormModalProps {
@@ -17,13 +17,6 @@ export function ProductFormModal({ open, product, onClose, onSubmit, loading = f
   const [form] = Form.useForm<CreateProductDto>();
   const isEdit = !!product;
 
-  const { data: brandsData } = useBrands({ page: 1, limit: 200 });
-  const brands = brandsData?.data ?? [];
-  const { data: categoriesData } = useCategories({ page: 1, limit: 200 });
-  const categories = categoriesData?.data ?? [];
-
-  const brandOptions = brands.map((b) => ({ label: b.name, value: b.id }));
-  const categoryOptions = categories.map((c) => ({ label: c.name, value: c.id }));
 
   useEffect(() => {
     if (open) {
@@ -86,24 +79,12 @@ export function ProductFormModal({ open, product, onClose, onSubmit, loading = f
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item name="brandId" label="แบรนด์">
-              <Select
-                options={brandOptions}
-                placeholder="เลือกแบรนด์"
-                allowClear
-                showSearch={{ optionFilterProp: 'label' }}
-                style={{ width: '100%' }}
-              />
+              <BrandSearchSelect allowClear />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="categoryId" label="หมวดหมู่">
-              <Select
-                options={categoryOptions}
-                placeholder="เลือกหมวดหมู่"
-                allowClear
-                showSearch={{ optionFilterProp: 'label' }}
-                style={{ width: '100%' }}
-              />
+              <CategorySearchSelect allowClear />
             </Form.Item>
           </Col>
         </Row>

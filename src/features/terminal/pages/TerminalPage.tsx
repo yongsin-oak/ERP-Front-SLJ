@@ -118,10 +118,10 @@ export function TerminalPage() {
         }
       />
 
-      <Flex gap={12}>
-        <SummaryCard title="Terminal ทั้งหมด" value={terminals.length} suffix="เครื่อง" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="เปิดใช้งาน" value={activeCount} suffix="เครื่อง" color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="ปิดใช้งาน" value={inactiveCount} suffix="เครื่อง" color={colors.text.secondary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap>
+        <SummaryCard title="Terminal ทั้งหมด" value={terminals.length} suffix="เครื่อง" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="เปิดใช้งาน" value={activeCount} suffix="เครื่อง" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปิดใช้งาน" value={inactiveCount} suffix="เครื่อง" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       <Table<Terminal>
@@ -131,6 +131,7 @@ export function TerminalPage() {
         loading={isLoading}
         pagination={false}
         size="middle"
+        scroll={{ x: 'max-content' }}
       />
 
       <TerminalFormModal

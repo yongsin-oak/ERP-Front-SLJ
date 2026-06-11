@@ -1,3 +1,4 @@
+import type React from 'react';
 import styled from '@emotion/styled';
 import dayjs from 'dayjs';
 import { colors, spacing } from '../../tokens';
@@ -45,10 +46,12 @@ const CodeEl = styled.code`
 
 interface CodeCellProps {
   children: string;
+  style?: React.CSSProperties;
+  className?: string;
 }
 
-export function CodeCell({ children }: CodeCellProps) {
-  return <CodeEl>{children}</CodeEl>;
+export function CodeCell({ children, style, className }: CodeCellProps) {
+  return <CodeEl style={style} className={className}>{children}</CodeEl>;
 }
 
 // ── QuantityCell ─────────────────────────────────────────────

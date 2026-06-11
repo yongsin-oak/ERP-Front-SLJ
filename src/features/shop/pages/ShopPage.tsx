@@ -141,10 +141,10 @@ export function ShopPage() {
         }
       />
 
-      <Flex gap={12} style={{ marginBottom: 16 }}>
-        <SummaryCard title="ร้านทั้งหมด" value={shops.length} suffix="ร้าน" color={colors.brand.primary} style={{ flex: 1 }} />
-        <SummaryCard title="ออนไลน์" value={onlineCount} suffix="ร้าน" color={colors.semantic.success} style={{ flex: 1 }} />
-        <SummaryCard title="ออฟไลน์" value={offlineCount} suffix="ร้าน" color={colors.text.secondary} style={{ flex: 1 }} />
+      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+        <SummaryCard title="ร้านทั้งหมด" value={shops.length} suffix="ร้าน" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ออนไลน์" value={onlineCount} suffix="ร้าน" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ออฟไลน์" value={offlineCount} suffix="ร้าน" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
       </Flex>
 
       {selectedKeys.length > 0 && (
@@ -166,6 +166,7 @@ export function ShopPage() {
           onChange: setSelectedKeys,
           preserveSelectedRowKeys: true,
         }}
+        scroll={{ x: 'max-content' }}
       />
 
       <ShopFormModal

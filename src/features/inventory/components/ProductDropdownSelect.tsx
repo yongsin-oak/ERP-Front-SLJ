@@ -1,13 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Select, Spin } from "antd";
 import type { SelectProps } from "antd";
 import { debounce } from "lodash";
-import { colors } from "@design-system";
+import { colors, highlightText } from "@design-system";
 import { useProductDropdown } from "../react-query";
 import type { ProductDropdown } from "../types";
 
 const SCROLL_THRESHOLD_PX = 60;
 const SEARCH_DEBOUNCE_MS = 300;
+const SCAN_FAST_MS = 30;
+const SCAN_JUMP_CHARS = 3;
 
 export interface ProductDropdownSelectProps extends Omit<
   SelectProps<string>,
@@ -28,29 +30,31 @@ export function ProductDropdownSelect({
   ...rest
 }: ProductDropdownSelectProps) {
   const [search, setSearch] = useState("");
+  const isScanModeRef = useRef(false);
+  const scanRef = useRef({ lastTime: 0, lastValue: "" });
 
   const { data, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
     useProductDropdown({ search: search || undefined });
+
+  // Auto-select on exact barcode match after scan
+  useEffect(() => {
+    if (!isScanModeRef.current || !search || isFetching) return;
+    const allProducts = (data?.pages ?? []).flatMap((p) => p.data);
+    const exact = allProducts.find((p) => p.barcode === search);
+    if (exact) {
+      isScanModeRef.current = false;
+      onChange?.(exact.barcode);
+      onSelect?.(exact.barcode, exact);
+    }
+  }, [data, isFetching, search]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const options = useMemo(
     () =>
       (data?.pages ?? []).flatMap((page) =>
         page.data.map((product) => ({
           value: product.barcode,
-          label: (
-            <span>
-              {product.name}
-              <span
-                style={{
-                  color: colors.text.tertiary,
-                  marginLeft: 6,
-                  fontSize: 12,
-                }}
-              >
-                {product.barcode}
-              </span>
-            </span>
-          ),
+          label: `${product.barcode} - ${product.name}`,
+          product,
         })),
       ),
     [data],
@@ -69,6 +73,25 @@ export function ProductDropdownSelect({
     [],
   );
 
+  function handleSearch(v: string) {
+    const now = Date.now();
+    const timeSinceLast = now - scanRef.current.lastTime;
+    const lenDiff = v.length - scanRef.current.lastValue.length;
+    scanRef.current = { lastTime: now, lastValue: v };
+
+    const looksLikeScan =
+      lenDiff >= SCAN_JUMP_CHARS || (lenDiff > 0 && timeSinceLast < SCAN_FAST_MS);
+
+    if (looksLikeScan) {
+      debouncedSetSearch.cancel();
+      isScanModeRef.current = true;
+      setSearch(v);
+    } else {
+      isScanModeRef.current = false;
+      debouncedSetSearch(v);
+    }
+  }
+
   const handlePopupScroll = (e: React.UIEvent<HTMLElement>) => {
     if (isFetchingNextPage || !hasNextPage) return;
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -85,13 +108,24 @@ export function ProductDropdownSelect({
   return (
     <Select<string>
       showSearch={{
-        onSearch: debouncedSetSearch,
-        filterOption: false
+        onSearch: handleSearch,
+        filterOption: false,
       }}
       value={value}
       onChange={onChange}
       onSelect={handleSelect}
       options={options}
+      optionRender={(opt) => {
+        const p = (opt.data as typeof options[0]).product;
+        return (
+          <div style={{ lineHeight: 1.4, padding: "2px 0" }}>
+            <div style={{ fontFamily: "monospace", fontSize: 12, color: colors.text.secondary }}>
+              {highlightText(p.barcode, search)}
+            </div>
+            <div style={{ fontSize: 14 }}>{highlightText(p.name, search)}</div>
+          </div>
+        );
+      }}
       placeholder={placeholder}
       disabled={disabled}
       style={style}

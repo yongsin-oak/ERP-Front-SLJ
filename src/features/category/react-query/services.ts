@@ -5,7 +5,7 @@ import type { Category, CategoryTreeNode, CreateCategoryDto, UpdateCategoryDto }
 const BASE = '/category';
 
 export const categoryService = {
-  getAll: (params: { page: number; limit: number }) =>
+  getAll: (params: { page: number; limit: number; search?: string }) =>
     req.get<Paginated<Category>>(BASE, { params }),
 
   getTree: () => req.get<ApiData<CategoryTreeNode[]>>(`${BASE}/tree`),

@@ -23,8 +23,15 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: true,
-      // Enable CORS for development
       cors: true,
+      allowedHosts: ['.ngrok-free.app', '.ngrok-free.dev', '.ngrok.io', '.ngrok.app'],
+      proxy: {
+        '/api': {
+          target: env.VITE_PROXY_TARGET ?? 'http://localhost:5050',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     // Build configuration
     build: {
