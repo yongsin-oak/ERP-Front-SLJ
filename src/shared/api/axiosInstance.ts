@@ -48,11 +48,17 @@ req.interceptors.response.use(
 
     // If unauthorized
     if (status === 401) {
-      // Do NOT try to refresh when the failing request is the refresh endpoint itself
-      const isRefreshEndpoint = requestUrl.endsWith("/auth/refresh-token");
+      // Do NOT attempt a token refresh for the auth endpoints themselves. A 401
+      // from login / pin-verify is a credential error, not an expired session —
+      // refreshing would swallow the real message (e.g. "รหัสผ่านไม่ถูกต้อง") and
+      // replace it with the refresh failure. The refresh endpoint is excluded to
+      // avoid an infinite loop.
+      const isAuthEndpoint = ["/auth/login", "/auth/refresh-token", "/auth/pin/verify"].some(
+        (p) => requestUrl.endsWith(p)
+      );
 
-      // If we've already retried or it's the refresh endpoint, reject immediately
-      if (originalRequest?._retry || isRefreshEndpoint) {
+      // If we've already retried or it's an auth endpoint, reject immediately
+      if (originalRequest?._retry || isAuthEndpoint) {
         return Promise.reject(error);
       }
 
