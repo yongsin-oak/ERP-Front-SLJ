@@ -21,7 +21,10 @@ export function useUpdateStockCountItems(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: UpdateStockCountItemsDto) => stockCountService.updateItems(id, dto),
-    onSuccess: () => qc.invalidateQueries({ queryKey: stockCountKeys.detail(id) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: stockCountKeys.detail(id) });
+      notify.success('บันทึกจำนวนที่นับสำเร็จ');
+    },
     onError: handleError('บันทึกจำนวนที่นับ'),
   });
 }

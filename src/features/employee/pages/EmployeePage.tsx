@@ -6,7 +6,7 @@ import {
   DeleteConfirmButton, Modal, InputPassword, SummaryCard, DateCell,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { downloadFile } from '@shared';
+import { downloadFile, showError, useSearchState, notify } from '@shared';
 import {
   useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee,
   useBulkDeleteEmployee, useSetEmployeePin, employeeService,
@@ -18,13 +18,14 @@ import type { Employee, CreateEmployeeDto } from '../types';
 
 const { Search } = Input;
 
+const EMPLOYEE_LIST_DEFAULTS = { search: '', page: 1, pageSize: 20 };
+
 export function EmployeePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [selected, setSelected] = useState<Employee | null>(null);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [tableState, setTableState] = useSearchState('employee-list', EMPLOYEE_LIST_DEFAULTS);
+  const { search, page, pageSize } = tableState;
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [pinEmployee, setPinEmployee] = useState<Employee | null>(null);
   const [pinValue, setPinValue] = useState('');
@@ -46,9 +47,14 @@ export function EmployeePage() {
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel พนักงาน...');
     try {
       const res = await employeeService.exportXlsx({ search: search || undefined });
       downloadFile(res.data as unknown as Blob, 'พนักงาน.xlsx');
+      notify.resolve(key, 'success', 'ส่งออก Excel พนักงาน สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel พนักงาน');
     } finally {
       setExporting(false);
     }
@@ -168,7 +174,7 @@ export function EmployeePage() {
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
           allowClear
           style={{ width: 280 }}
-          onSearch={(val) => { setSearch(val); setPage(1); }}
+          onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
         />
       </Flex>
 
@@ -196,7 +202,7 @@ export function EmployeePage() {
           current: page,
           pageSize,
           total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
         }}
       />
 

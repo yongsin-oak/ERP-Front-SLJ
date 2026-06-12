@@ -6,7 +6,7 @@ import { userKeys } from './queryKeys';
 export function useUsers() {
   return useQuery({
     queryKey: userKeys.lists(),
-    queryFn: () => userService.getAll().then((r) => r.data.data),
+    queryFn: () => userService.getAll({ page: 1, limit: 200 }).then((r) => r.data.data),
   });
 }
 

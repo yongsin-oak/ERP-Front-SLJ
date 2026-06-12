@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useSearchState } from '@shared';
 import { Space, Badge, Progress, Form, Flex } from 'antd';
 import { PlusOutlined, EyeOutlined, ReloadOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -14,11 +15,13 @@ import {
 import { StockCountStatuses } from '../types';
 import type { StockCount, StockCountStatus } from '../types';
 
+const STOCK_COUNT_LIST_DEFAULTS = { status: '', page: 1, pageSize: 20 };
+
 export function StockCountListPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [statusFilter, setStatusFilter] = useState<StockCountStatus | undefined>();
+  const [tableState, setTableState] = useSearchState('stock-count-list', STOCK_COUNT_LIST_DEFAULTS);
+  const { page, pageSize } = tableState;
+  const statusFilter = (tableState.status as StockCountStatus) || undefined;
   const [createOpen, setCreateOpen] = useState(false);
   const [form] = Form.useForm();
 
@@ -38,8 +41,7 @@ export function StockCountListPage() {
   const filtersActive = !!statusFilter;
 
   function clearFilters() {
-    setStatusFilter(undefined);
-    setPage(1);
+    setTableState({ ...tableState, status: '', page: 1 });
   }
 
   async function handleCreate(values: unknown) {
@@ -185,7 +187,7 @@ export function StockCountListPage() {
           style={{ width: 180 }}
           options={statusOptions}
           value={statusFilter}
-          onChange={(v) => { setStatusFilter(v); setPage(1); }}
+          onChange={(v) => setTableState({ ...tableState, status: v ?? '', page: 1 })}
         />
       </Card>
 
@@ -198,7 +200,7 @@ export function StockCountListPage() {
           current: page,
           pageSize,
           total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
         }}
         scroll={{ x: 900 }}
       />

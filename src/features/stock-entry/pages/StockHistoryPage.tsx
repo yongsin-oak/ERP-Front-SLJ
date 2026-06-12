@@ -3,9 +3,10 @@ import { DatePicker, Flex, Space } from 'antd';
 import { ReloadOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
+import { useSearchState } from '@shared';
 import { Table, Button, PageHeader, Tag, Select, colors, AppIcons, SummaryCard, Card } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { downloadFile } from '@shared';
+import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, stockEntryService } from '../react-query';
 import { StockEntryTypes } from '../types';
 import type { StockEntry, StockEntryType } from '../types';
@@ -33,13 +34,15 @@ function quantityColor(type: StockEntryType) {
   return colors.semantic.successText;
 }
 
+const STOCK_HISTORY_DEFAULTS = {
+  search: '', type: '', employeeId: '', startDate: '', endDate: '', page: 1, pageSize: 20,
+};
+
 export function StockHistoryPage() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [search, setSearch] = useState<string | undefined>();
-  const [type, setType] = useState<StockEntryType | undefined>();
-  const [employeeId, setEmployeeId] = useState<string | undefined>();
-  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>(null);
+  const [tableState, setTableState] = useSearchState('stock-history', STOCK_HISTORY_DEFAULTS);
+  const { search, type, employeeId, startDate, endDate, page, pageSize } = tableState;
+  const dateRange: [Dayjs, Dayjs] | null =
+    startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : null;
   const [exporting, setExporting] = useState(false);
 
   const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
@@ -62,8 +65,8 @@ export function StockHistoryPage() {
       page,
       limit: pageSize,
       productBarcode: search || undefined,
-      type,
-      employeeId,
+      type: (type || undefined) as StockEntryType | undefined,
+      employeeId: employeeId || undefined,
       dateFrom: dateRange?.[0].startOf('day').toISOString(),
       dateTo: dateRange?.[1].endOf('day').toISOString(),
     }),
@@ -77,18 +80,19 @@ export function StockHistoryPage() {
   const filtersActive = search || type || employeeId || dateRange;
 
   function clearFilters() {
-    setSearch(undefined);
-    setType(undefined);
-    setEmployeeId(undefined);
-    setDateRange(null);
-    setPage(1);
+    setTableState({ ...tableState, search: '', type: '', employeeId: '', startDate: '', endDate: '', page: 1 });
   }
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ประวัติสต็อก...');
     try {
       const res = await stockEntryService.exportXlsx(params);
       downloadFile(res.data as unknown as Blob, 'ประวัติสต็อก.xlsx');
+      notify.resolve(key, 'success', 'ส่งออก Excel ประวัติสต็อก สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ประวัติสต็อก');
     } finally {
       setExporting(false);
     }
@@ -234,15 +238,15 @@ export function StockHistoryPage() {
             style={{ width: 220 }}
             options={productOptions}
             value={search}
-            onChange={(v) => { setSearch(v); setPage(1); }}
+            onChange={(v) => setTableState({ ...tableState, search: v ?? '', page: 1 })}
           />
           <Select
             allowClear
             placeholder="ประเภท"
             style={{ width: 150 }}
             options={TYPE_OPTIONS}
-            value={type}
-            onChange={(v) => { setType(v); setPage(1); }}
+            value={type || undefined}
+            onChange={(v) => setTableState({ ...tableState, type: v ?? '', page: 1 })}
           />
           <Select
             allowClear
@@ -250,16 +254,18 @@ export function StockHistoryPage() {
             showSearch={{ optionFilterProp: 'label' }}
             style={{ width: 180 }}
             options={employeeOptions}
-            value={employeeId}
-            onChange={(v) => { setEmployeeId(v); setPage(1); }}
+            value={employeeId || undefined}
+            onChange={(v) => setTableState({ ...tableState, employeeId: v ?? '', page: 1 })}
           />
           <RangePicker
             style={{ width: 240 }}
             value={dateRange}
-            onChange={(dates) => {
-              setDateRange(dates?.[0] && dates?.[1] ? [dates[0], dates[1]] : null);
-              setPage(1);
-            }}
+            onChange={(dates) => setTableState({
+              ...tableState,
+              startDate: dates?.[0]?.toISOString() ?? '',
+              endDate: dates?.[1]?.toISOString() ?? '',
+              page: 1,
+            })}
             format="DD/MM/YYYY"
             placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
           />
@@ -276,7 +282,7 @@ export function StockHistoryPage() {
           current: page,
           pageSize,
           total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
         }}
       />
     </div>

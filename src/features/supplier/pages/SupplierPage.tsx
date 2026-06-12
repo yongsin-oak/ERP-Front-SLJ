@@ -3,19 +3,20 @@ import { Input, Badge, Flex } from 'antd';
 import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { downloadFile } from '@shared';
+import { downloadFile, showError, useSearchState, notify } from '@shared';
 import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, supplierService } from '../react-query';
 import { SupplierFormModal } from '../components/SupplierFormModal';
 import type { Supplier, CreateSupplierDto } from '../types';
 
 const { Search } = Input;
 
+const SUPPLIER_LIST_DEFAULTS = { search: '', page: 1, pageSize: 20 };
+
 export function SupplierPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Supplier | null>(null);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [tableState, setTableState] = useSearchState('supplier-list', SUPPLIER_LIST_DEFAULTS);
+  const { search, page, pageSize } = tableState;
   const [exporting, setExporting] = useState(false);
 
   const params = { page, limit: pageSize, search: search || undefined };
@@ -32,9 +33,14 @@ export function SupplierPage() {
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ซัพพลายเออร์...');
     try {
       const res = await supplierService.exportXlsx(search || undefined);
       downloadFile(res.data as unknown as Blob, 'ซัพพลายเออร์.xlsx');
+      notify.resolve(key, 'success', 'ส่งออก Excel ซัพพลายเออร์ สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ซัพพลายเออร์');
     } finally {
       setExporting(false);
     }
@@ -146,7 +152,7 @@ export function SupplierPage() {
           placeholder="ค้นหาชื่อ..."
           allowClear
           style={{ width: 280 }}
-          onSearch={(val) => { setSearch(val); setPage(1); }}
+          onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
         />
       </div>
 
@@ -159,7 +165,7 @@ export function SupplierPage() {
           current: page,
           pageSize,
           total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
         }}
         scroll={{ x: 900 }}
       />

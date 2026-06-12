@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchState, showError, notify } from '@shared';
 import { Flex, Input, Space, Badge, Tabs, Tooltip } from 'antd';
 import {
   PlusOutlined, EditOutlined, SearchOutlined, ReloadOutlined,
@@ -36,13 +37,10 @@ export function InventoryPage() {
   const [stockEntryOpen, setStockEntryOpen] = useState(false);
   const [stockEntryBarcode, setStockEntryBarcode] = useState<string | undefined>();
   const [selected, setSelected] = useState<Product | null>(null);
-  const [search, setSearch] = useState('');
-  const [brandId, setBrandId] = useState<string | undefined>();
-  const [categoryId, setCategoryId] = useState<string | undefined>();
-  const [isActive, setIsActive] = useState<boolean | undefined>();
-  const [lowStock, setLowStock] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [tableState, setTableState] = useSearchState('inventory-list', {
+    search: '', brandId: '', categoryId: '', isActive: '', lowStock: false, page: 1, pageSize: 20,
+  });
+  const { search, brandId, categoryId, isActive, lowStock, page, pageSize } = tableState;
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [exporting, setExporting] = useState(false);
   const [shopPriceBarcode, setShopPriceBarcode] = useState<string | null>(null);
@@ -51,7 +49,9 @@ export function InventoryPage() {
   const params = {
     page, limit: pageSize,
     search: search || undefined,
-    brandId, categoryId, isActive,
+    brandId: brandId || undefined,
+    categoryId: categoryId || undefined,
+    isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
     lowStock: lowStock || undefined,
   };
   const { data, isLoading, refetch } = useProducts(params);
@@ -85,11 +85,20 @@ export function InventoryPage() {
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel สินค้า...');
     try {
       const res = await inventoryExportService.exportProducts({
-        search: search || undefined, brandId, categoryId, isActive, lowStock: lowStock || undefined,
+        search: search || undefined,
+        brandId: brandId || undefined,
+        categoryId: categoryId || undefined,
+        isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
+        lowStock: lowStock || undefined,
       });
       downloadFile(res.data as unknown as Blob, 'สินค้า.xlsx');
+      notify.resolve(key, 'success', 'ส่งออก Excel สินค้า สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel สินค้า');
     } finally {
       setExporting(false);
     }
@@ -213,13 +222,13 @@ export function InventoryPage() {
           placeholder="ค้นหาชื่อ, barcode..."
           allowClear
           style={{ width: 260 }}
-          onSearch={(val) => { setSearch(val); setPage(1); }}
+          onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
         />
         <Select
           allowClear
           placeholder="แบรนด์"
-          value={brandId}
-          onChange={(v) => { setBrandId(v); setPage(1); }}
+          value={brandId || undefined}
+          onChange={(v) => setTableState({ ...tableState, brandId: v ?? '', page: 1 })}
           options={brands.map((b) => ({ label: b.name, value: b.id }))}
           style={{ width: 160 }}
           showSearch={{ optionFilterProp: 'label' }}
@@ -227,8 +236,8 @@ export function InventoryPage() {
         <Select
           allowClear
           placeholder="หมวดหมู่"
-          value={categoryId}
-          onChange={(v) => { setCategoryId(v); setPage(1); }}
+          value={categoryId || undefined}
+          onChange={(v) => setTableState({ ...tableState, categoryId: v ?? '', page: 1 })}
           options={categories.map((c) => ({ label: c.name, value: c.id }))}
           style={{ width: 160 }}
           showSearch={{ optionFilterProp: 'label' }}
@@ -236,11 +245,8 @@ export function InventoryPage() {
         <Select
           allowClear
           placeholder="สถานะ"
-          value={isActive === undefined ? undefined : isActive ? 'true' : 'false'}
-          onChange={(v: string | undefined) => {
-            setIsActive(v === 'true' ? true : v === 'false' ? false : undefined);
-            setPage(1);
-          }}
+          value={isActive || undefined}
+          onChange={(v: string | undefined) => setTableState({ ...tableState, isActive: v ?? '', page: 1 })}
           options={[
             { label: 'ใช้งาน', value: 'true' },
             { label: 'ปิด', value: 'false' },
@@ -249,7 +255,7 @@ export function InventoryPage() {
         />
         <Button
           variant={lowStock ? 'primary' : 'ghost'}
-          onClick={() => { setLowStock(!lowStock); setPage(1); }}
+          onClick={() => setTableState({ ...tableState, lowStock: !lowStock, page: 1 })}
         >
           สต็อกต่ำ
         </Button>
@@ -278,7 +284,7 @@ export function InventoryPage() {
           current: page,
           pageSize,
           total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
         }}
         scroll={{ x: 'max-content' }}
       />

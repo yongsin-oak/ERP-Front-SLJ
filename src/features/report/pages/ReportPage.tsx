@@ -3,7 +3,7 @@ import { Flex, Card, Tag, Tabs, Space, DatePicker } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { PageHeader, MoneyCell, Button, AppIcons, colors, Table, Select, CodeCell } from '@design-system';
-import { downloadFile } from '@shared';
+import { downloadFile, showError, notify } from '@shared';
 import { useSalesSummary, useSalesByShop, useSalesByProduct, useManHour, reportService } from '../react-query';
 import { useShops } from '@features/shop';
 import { useEmployees } from '@features/employee/react-query';
@@ -38,9 +38,14 @@ function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: strin
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ยอดขายรวม...');
     try {
       const res = await reportService.exportSalesSummary({ dateFrom, dateTo, shopId, groupBy });
       downloadFile(res.data as unknown as Blob, `ยอดขายรวม_${dateFrom}_${dateTo}.xlsx`);
+      notify.resolve(key, 'success', 'ส่งออก Excel ยอดขายรวม สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ยอดขายรวม');
     } finally { setExporting(false); }
   }
 
@@ -118,9 +123,14 @@ function SalesByShopTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ยอดขายตามร้าน...');
     try {
       const res = await reportService.exportSalesByShop({ dateFrom, dateTo });
       downloadFile(res.data as unknown as Blob, `ยอดขายตามร้าน_${dateFrom}_${dateTo}.xlsx`);
+      notify.resolve(key, 'success', 'ส่งออก Excel ยอดขายตามร้าน สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ยอดขายตามร้าน');
     } finally { setExporting(false); }
   }
 
@@ -189,9 +199,14 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ยอดขายตามสินค้า...');
     try {
       const res = await reportService.exportSalesByProduct({ dateFrom, dateTo, shopId, categoryId, brandId });
       downloadFile(res.data as unknown as Blob, `ยอดขายตามสินค้า_${dateFrom}_${dateTo}.xlsx`);
+      notify.resolve(key, 'success', 'ส่งออก Excel ยอดขายตามสินค้า สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ยอดขายตามสินค้า');
     } finally { setExporting(false); }
   }
 
@@ -281,9 +296,14 @@ function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ชั่วโมงทำงาน...');
     try {
       const res = await reportService.exportManHour({ dateFrom, dateTo, employeeId });
       downloadFile(res.data as unknown as Blob, `ชั่วโมงทำงาน_${dateFrom}_${dateTo}.xlsx`);
+      notify.resolve(key, 'success', 'ส่งออก Excel ชั่วโมงทำงาน สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ชั่วโมงทำงาน');
     } finally { setExporting(false); }
   }
 

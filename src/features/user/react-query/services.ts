@@ -1,14 +1,19 @@
 import { req } from '@shared';
-import type { ApiData } from '@shared/types';
+import type { ApiData, Paginated } from '@shared/types';
 import type { Role } from '@features/auth/types';
 import type { User, CreateUserDto, UpdateUserRoleDto } from '../types';
+
+export interface UserListParams {
+  page: number;
+  limit: number;
+}
 
 const BASE = '/user';
 
 export const userService = {
   getRoles: () => req.get<ApiData<Role[]>>(`${BASE}/roles`),
 
-  getAll: () => req.get<ApiData<User[]>>(BASE),
+  getAll: (params: UserListParams) => req.get<Paginated<User>>(BASE, { params }),
 
   getById: (id: string) => req.get<ApiData<User>>(`${BASE}/${id}`),
 

@@ -4,7 +4,7 @@ import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import { Table, Button, Tag, Select, Input, colors, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { downloadFile } from '@shared';
+import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, inventoryExportService } from '../react-query';
 import type { StockEntryParams } from '../react-query/services';
 import { StockEntryTypes } from '../types';
@@ -48,6 +48,7 @@ export function StockHistoryTab({ active }: Props) {
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ประวัติสต็อก...');
     try {
       const res = await inventoryExportService.exportStockHistory({
         productBarcode: productSearch || undefined,
@@ -56,6 +57,10 @@ export function StockHistoryTab({ active }: Props) {
         dateTo,
       });
       downloadFile(res.data as unknown as Blob, 'ประวัติการเคลื่อนไหวสต็อก.xlsx');
+      notify.resolve(key, 'success', 'ส่งออก Excel ประวัติสต็อก สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ประวัติสต็อก');
     } finally {
       setExporting(false);
     }

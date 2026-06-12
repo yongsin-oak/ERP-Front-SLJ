@@ -69,6 +69,7 @@ export function getErrorStatus(err: unknown): number | null {
  * รับ prefix optional เพื่อบอก context (เช่น "ลบสินค้า")
  */
 export function showError(err: unknown, prefix?: string): void {
+  console.error(`[${prefix ?? 'Error'}]`, err);
   const detail = getErrorMessage(err);
   notify.error(prefix ? `${prefix}ไม่สำเร็จ` : 'เกิดข้อผิดพลาด', detail);
 }

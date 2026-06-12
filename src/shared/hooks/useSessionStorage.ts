@@ -18,6 +18,7 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
     (value: T | ((prev: T) => T)) => {
       setStored(prev => {
         const next = typeof value === 'function' ? (value as (p: T) => T)(prev) : value;
+        // eslint-disable-next-line no-empty
         try { sessionStorage.setItem(key, JSON.stringify(next)); } catch {}
         return next;
       });

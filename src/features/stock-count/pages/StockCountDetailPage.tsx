@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSearchState } from '@shared';
 import {
   InputNumber, Space, Flex, Progress, Row, Col, Card, Popconfirm, Alert,
 } from 'antd';
@@ -10,6 +11,7 @@ import {
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader, Tag, Input, colors, AppIcons, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { showError, notify } from '@shared';
 import {
   useStockCount,
   useUpdateStockCountItems,
@@ -31,9 +33,9 @@ export function StockCountDetailPage() {
   const items = session?.items ?? [];
 
   const [countMap, setCountMap] = useState<Map<string, number>>(new Map());
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<CountFilter>('all');
-  const [page, setPage] = useState(1);
+  const [tableState, setTableState] = useSearchState('stock-count-detail', { search: '', filter: 'all', page: 1 });
+  const { search, page } = tableState;
+  const filter = tableState.filter as CountFilter;
   const [exporting, setExporting] = useState<'blank' | 'result' | null>(null);
 
   const updateItems = useUpdateStockCountItems(id!);
@@ -90,12 +92,30 @@ export function StockCountDetailPage() {
 
   async function handleExportBlank() {
     setExporting('blank');
-    try { await stockCountService.exportBlank(id!); } finally { setExporting(null); }
+    const key = notify.loading('กำลังส่งออก Excel ใบนับ...');
+    try {
+      await stockCountService.exportBlank(id!);
+      notify.resolve(key, 'success', 'ส่งออก Excel ใบนับ สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ใบนับ');
+    } finally {
+      setExporting(null);
+    }
   }
 
   async function handleExportResult() {
     setExporting('result');
-    try { await stockCountService.exportResult(id!); } finally { setExporting(null); }
+    const key = notify.loading('กำลังส่งออก Excel ผลลัพธ์...');
+    try {
+      await stockCountService.exportResult(id!);
+      notify.resolve(key, 'success', 'ส่งออก Excel ผลลัพธ์ สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ผลลัพธ์');
+    } finally {
+      setExporting(null);
+    }
   }
 
   const filterOptions: { label: string; value: CountFilter }[] = [
@@ -161,7 +181,7 @@ export function StockCountDetailPage() {
                 }
                 return next;
               });
-              setPage(1);
+              setTableState({ ...tableState, page: 1 });
             }}
           />
         );
@@ -327,7 +347,7 @@ export function StockCountDetailPage() {
           placeholder="ค้นหาชื่อสินค้า หรือ barcode..."
           allowClear
           style={{ width: 300 }}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          onChange={(e) => setTableState({ ...tableState, search: e.target.value, page: 1 })}
         />
         <Space>
           {filterOptions.map((opt) => (
@@ -335,7 +355,7 @@ export function StockCountDetailPage() {
               key={opt.value}
               size="small"
               variant={filter === opt.value ? 'primary' : 'ghost'}
-              onClick={() => { setFilter(opt.value); setPage(1); }}
+              onClick={() => setTableState({ ...tableState, filter: opt.value, page: 1 })}
             >
               {opt.label}
             </Button>
@@ -353,7 +373,7 @@ export function StockCountDetailPage() {
           pageSize: 50,
           total: displayItems.length,
           showSizeChanger: false,
-          onChange: (p) => setPage(p),
+          onChange: (p) => setTableState({ ...tableState, page: p }),
         }}
         scroll={{ x: 800 }}
         rowClassName={(r) => {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Row, Col, Space, DatePicker, Flex } from 'antd';
+import { useSearchState } from '@shared';
 import {
   EyeOutlined,
   ReloadOutlined,
@@ -12,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
 import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons, DeleteConfirmButton, COL_PROPS, Card, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { downloadFile } from '@shared';
+import { downloadFile, showError, notify } from '@shared';
 import { useShops } from '@features/shop';
 import { useEmployees } from '@features/employee/react-query';
 import {
@@ -24,27 +25,18 @@ import type { Order, OrderStatus } from '../types';
 
 const { RangePicker } = DatePicker;
 
-interface Filters {
-  search: string;
-  status: string;
-  shopId: string;
-  employeeId: string;
-  dateRange: [Dayjs, Dayjs] | null;
-}
-
-const EMPTY_FILTERS: Filters = {
-  search: '',
-  status: '',
-  shopId: '',
-  employeeId: '',
-  dateRange: null,
+const ORDER_HISTORY_DEFAULTS = {
+  search: '', status: '', shopId: '', employeeId: '', startDate: '', endDate: '', page: 1, pageSize: 20,
 };
 
 export function OrderHistoryPage() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [tableState, setTableState] = useSearchState('order-history', ORDER_HISTORY_DEFAULTS);
+  const { search, status, shopId, employeeId, startDate, endDate, page, pageSize } = tableState;
+  const dateRange = useMemo<[Dayjs, Dayjs] | null>(
+    () => (startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : null),
+    [startDate, endDate],
+  );
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<Order | null>(null);
@@ -58,14 +50,14 @@ export function OrderHistoryPage() {
     () => ({
       page,
       limit: pageSize,
-      status: filters.status || undefined,
-      shopId: filters.shopId || undefined,
-      employeeId: filters.employeeId || undefined,
-      search: filters.search.trim() || undefined,
-      dateFrom: filters.dateRange?.[0].startOf('day').toISOString(),
-      dateTo: filters.dateRange?.[1].endOf('day').toISOString(),
+      status: status || undefined,
+      shopId: shopId || undefined,
+      employeeId: employeeId || undefined,
+      search: search.trim() || undefined,
+      dateFrom: dateRange?.[0].startOf('day').toISOString(),
+      dateTo: dateRange?.[1].endOf('day').toISOString(),
     }),
-    [page, pageSize, filters],
+    [page, pageSize, status, shopId, employeeId, search, dateRange],
   );
 
   const { data, isLoading, refetch, isFetching } = useOrders(queryParams);
@@ -75,17 +67,10 @@ export function OrderHistoryPage() {
   const deleteOrder = useDeleteOrder();
   const bulkDelete = useBulkDeleteOrder();
 
-  const filtersActive =
-    filters.search || filters.status || filters.shopId || filters.employeeId || filters.dateRange;
-
-  function patchFilter(patch: Partial<Filters>) {
-    setFilters((f) => ({ ...f, ...patch }));
-    setPage(1);
-  }
+  const filtersActive = search || status || shopId || employeeId || startDate;
 
   function clearFilters() {
-    setFilters(EMPTY_FILTERS);
-    setPage(1);
+    setTableState({ ...tableState, search: '', status: '', shopId: '', employeeId: '', startDate: '', endDate: '', page: 1 });
   }
 
   async function handleBulkDelete() {
@@ -95,9 +80,14 @@ export function OrderHistoryPage() {
 
   async function handleExport() {
     setExporting(true);
+    const key = notify.loading('กำลังส่งออก Excel ออเดอร์...');
     try {
       const res = await orderService.exportXlsx(queryParams);
       downloadFile(res.data as unknown as Blob, 'ออเดอร์.xlsx');
+      notify.resolve(key, 'success', 'ส่งออก Excel ออเดอร์ สำเร็จ');
+    } catch (err) {
+      notify.dismiss(key);
+      showError(err, 'ส่งออก Excel ออเดอร์');
     } finally {
       setExporting(false);
     }
@@ -277,14 +267,19 @@ export function OrderHistoryPage() {
               prefix={<SearchOutlined />}
               placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
               allowClear
-              value={filters.search}
-              onChange={(e) => patchFilter({ search: e.target.value })}
+              value={search}
+              onChange={(e) => setTableState({ ...tableState, search: e.target.value, page: 1 })}
             />
           </Col>
           <Col {...COL_PROPS.filterItem}>
             <RangePicker
-              value={filters.dateRange}
-              onChange={(v) => patchFilter({ dateRange: v as [Dayjs, Dayjs] | null })}
+              value={dateRange}
+              onChange={(v) => setTableState({
+                ...tableState,
+                startDate: v?.[0]?.toISOString() ?? '',
+                endDate: v?.[1]?.toISOString() ?? '',
+                page: 1,
+              })}
               format="DD/MM/YYYY"
               style={{ width: '100%' }}
               placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
@@ -294,8 +289,8 @@ export function OrderHistoryPage() {
             <Select
               allowClear
               placeholder="สถานะ"
-              value={filters.status || undefined}
-              onChange={(v) => patchFilter({ status: v ?? '' })}
+              value={status || undefined}
+              onChange={(v) => setTableState({ ...tableState, status: v ?? '', page: 1 })}
               options={statusOptions}
               style={{ width: '100%' }}
             />
@@ -304,8 +299,8 @@ export function OrderHistoryPage() {
             <Select
               allowClear
               placeholder="ร้านค้า"
-              value={filters.shopId || undefined}
-              onChange={(v) => patchFilter({ shopId: v ?? '' })}
+              value={shopId || undefined}
+              onChange={(v) => setTableState({ ...tableState, shopId: v ?? '', page: 1 })}
               options={shopOptions}
               style={{ width: '100%' }}
               showSearch={{ optionFilterProp: 'label' }}
@@ -315,8 +310,8 @@ export function OrderHistoryPage() {
             <Select
               allowClear
               placeholder="พนักงาน"
-              value={filters.employeeId || undefined}
-              onChange={(v) => patchFilter({ employeeId: v ?? '' })}
+              value={employeeId || undefined}
+              onChange={(v) => setTableState({ ...tableState, employeeId: v ?? '', page: 1 })}
               options={employeeOptions}
               style={{ width: '100%' }}
               showSearch={{ optionFilterProp: 'label' }}
@@ -349,7 +344,7 @@ export function OrderHistoryPage() {
           current: page,
           pageSize,
           total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
         }}
       />
 
