@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import dayjs from 'dayjs';
 
 function readCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${encodeURIComponent(name)}=([^;]*)`));
@@ -14,7 +15,7 @@ export function useCookie(name: string, defaultValue?: string) {
 
   const set = useCallback(
     (val: string, days = 7) => {
-      const expires = new Date(Date.now() + days * 86_400_000).toUTCString();
+      const expires = dayjs().add(days, 'day').toDate().toUTCString();
       document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(val)}; expires=${expires}; path=/; SameSite=Lax`;
       setValue(val);
     },

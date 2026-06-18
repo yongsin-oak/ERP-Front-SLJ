@@ -15,6 +15,7 @@ export function useMediaQuery(query: string): boolean {
 
   useEffect(() => {
     const mq = window.matchMedia(query);
+    setMatches(mq.matches); // resync เมื่อ query เปลี่ยน กันค่าค้างจาก query เดิม
     const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);

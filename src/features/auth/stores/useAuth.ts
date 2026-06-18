@@ -66,7 +66,9 @@ export const useAuth = create<AuthStore>((set) => ({
     try {
       set({ isLoadingUser: true });
       const res = await authService.getMe();
-      set({ user: res.data.data, isAuth: true });
+      const me = res.data.data;
+      // backend /me ส่ง `type` แต่ไม่ส่ง `isTerminal` — derive เองกัน flag หายหลัง refresh
+      set({ user: { ...me, isTerminal: me.type === 'terminal' }, isAuth: true });
     } catch {
       set({ user: null, isAuth: false });
     } finally {

@@ -14,6 +14,7 @@ export function useDashboardStats(filter?: DashboardFilter) {
     queryKey: dashboardKeys.stats(filter),
     queryFn: () => dashboardService.getStats(filter).then((r) => r.data.data),
     refetchInterval: REFETCH_INTERVAL.SHORT,
+    placeholderData: (prev) => prev,
     ...DASHBOARD_OPTS,
   });
 }
@@ -23,6 +24,7 @@ export function useDailyRevenue(filter?: DailyRevenueFilter) {
     queryKey: dashboardKeys.dailyRevenue(filter),
     queryFn: () => dashboardService.getDailyRevenue(filter).then((r) => r.data.data),
     refetchInterval: REFETCH_INTERVAL.MEDIUM,
+    placeholderData: (prev) => prev,
     ...DASHBOARD_OPTS,
   });
 }
@@ -32,6 +34,7 @@ export function useRecentOrders(filter?: RecentOrdersFilter) {
     queryKey: dashboardKeys.recentOrders(filter),
     queryFn: () => dashboardService.getRecentOrders(filter).then((r) => r.data.data),
     refetchInterval: REFETCH_INTERVAL.REALTIME,
+    placeholderData: (prev) => prev,
     ...DASHBOARD_OPTS,
   });
 }
@@ -41,6 +44,7 @@ export function useLowStock(threshold = 5) {
     queryKey: dashboardKeys.lowStock(threshold),
     queryFn: () => dashboardService.getLowStock(threshold).then((r) => r.data.data),
     refetchInterval: REFETCH_INTERVAL.MEDIUM,
+    placeholderData: (prev) => prev,
     ...DASHBOARD_OPTS,
   });
 }

@@ -22,7 +22,7 @@ export function useUpdateBrand() {
     mutationFn: ({ id, data }: { id: string; data: UpdateBrandDto }) =>
       brandService.update(id, data).then((r) => r.data.data),
     onSuccess: (updated) => {
-      qc.invalidateQueries({ queryKey: brandKeys.lists() });
+      qc.invalidateQueries({ queryKey: brandKeys.all }); // ครอบทั้ง list + dropdown
       qc.setQueryData(brandKeys.detail(updated.id), updated);
       notify.success('แก้ไขแบรนด์สำเร็จ');
     },
@@ -45,10 +45,15 @@ export function useDeleteBrand() {
 export function useBulkDeleteBrand() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => brandService.delete(id))),
-    onSuccess: (_, ids) => {
+    // ไม่มี bulk-delete endpoint ฝั่ง backend — ใช้ allSettled กันลบครึ่ง ๆ กลาง ๆ แล้วรายงานผลตามจริง
+    mutationFn: (ids: string[]) => Promise.allSettled(ids.map((id) => brandService.delete(id))),
+    onSuccess: (results, ids) => {
       qc.invalidateQueries({ queryKey: brandKeys.all });
-      notify.success('ลบแบรนด์สำเร็จ', `${ids.length} แบรนด์ถูกลบออกจากระบบ`);
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      const ok = ids.length - failed;
+      if (failed === 0) notify.success('ลบแบรนด์สำเร็จ', `${ok} แบรนด์ถูกลบออกจากระบบ`);
+      else if (ok === 0) notify.error('ลบแบรนด์ไม่สำเร็จ', `ลบไม่สำเร็จทั้ง ${failed} รายการ`);
+      else notify.warning('ลบแบรนด์สำเร็จบางส่วน', `สำเร็จ ${ok} รายการ, ล้มเหลว ${failed} รายการ`);
     },
     onError: handleError('ลบแบรนด์'),
   });

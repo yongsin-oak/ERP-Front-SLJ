@@ -28,7 +28,7 @@ import {
   UnorderedListOutlined,
   TruckOutlined,
 } from '@ant-design/icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
 import { ActorModal } from '@features/auth';
@@ -284,6 +284,7 @@ export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { notification } = App.useApp();
   const notifiedRef = useRef(false);
 
@@ -308,6 +309,7 @@ export function AppLayout() {
 
   async function handleLogout() {
     await logout();
+    queryClient.clear(); // ล้าง cache กันข้อมูลผู้ใช้คนก่อนรั่วไปยังผู้ใช้คนถัดไป
     navigate('/login');
   }
 

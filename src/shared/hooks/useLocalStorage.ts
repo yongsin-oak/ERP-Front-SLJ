@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 /**
  * Sync React state with localStorage. JSON-serialized.
@@ -13,6 +13,17 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       return initialValue;
     }
   });
+
+  // re-read เมื่อ key เปลี่ยน กันค่าค้างจาก key เดิม
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      setStored(raw !== null ? (JSON.parse(raw) as T) : initialValue);
+    } catch {
+      setStored(initialValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   const set = useCallback(
     (value: T | ((prev: T) => T)) => {

@@ -23,7 +23,7 @@ export function useUpdateSupplier() {
     mutationFn: ({ id, data }: { id: string; data: UpdateSupplierDto }) =>
       supplierService.update(id, data).then((r) => r.data.data),
     onSuccess: (updated) => {
-      qc.invalidateQueries({ queryKey: supplierKeys.lists() });
+      qc.invalidateQueries({ queryKey: supplierKeys.all }); // ครอบทั้ง list + dropdown
       qc.setQueryData(supplierKeys.detail(updated.id), updated);
       notify.success('แก้ไขซัพพลายเออร์สำเร็จ');
     },

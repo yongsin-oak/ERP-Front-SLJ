@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 // Draft survives 24h; after that it's stale and discarded on next read
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -35,6 +35,24 @@ export function useDraftState<T>(key: string, initialValue: T) {
       return initialValue;
     }
   });
+
+  // re-read เมื่อ key เปลี่ยน (เช่นสลับ user/page) กัน draft ค้างจาก key เดิม
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) { setDraft(initialValue); return; }
+      const entry = JSON.parse(raw) as DraftEntry<T>;
+      if (Date.now() - entry.savedAt > DRAFT_TTL_MS) {
+        localStorage.removeItem(storageKey);
+        setDraft(initialValue);
+        return;
+      }
+      setDraft(entry.data);
+    } catch {
+      setDraft(initialValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
 
   const save = useCallback(
     (value: T | ((prev: T) => T)) => {

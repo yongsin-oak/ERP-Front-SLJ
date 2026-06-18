@@ -181,7 +181,6 @@ export function StockCountDetailPage() {
                 }
                 return next;
               });
-              setTableState({ ...tableState, page: 1 });
             }}
           />
         );
@@ -347,6 +346,7 @@ export function StockCountDetailPage() {
           placeholder="ค้นหาชื่อสินค้า หรือ barcode..."
           allowClear
           style={{ width: 300 }}
+          value={search}
           onChange={(e) => setTableState({ ...tableState, search: e.target.value, page: 1 })}
         />
         <Space>

@@ -1,4 +1,5 @@
 import { utils, writeFile, read } from 'xlsx';
+import { downloadFile } from '../downloadFile';
 
 export interface SheetColumn<T> {
   /** Header ที่แสดงใน Excel/Sheet */
@@ -53,12 +54,7 @@ export function useSheet<T extends object>(options: UseSheetOptions<T>) {
     const ws = utils.json_to_sheet(rows);
     const csv = utils.sheet_to_csv(ws);
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM for Thai
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${customFileName ?? fileName}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(blob, `${customFileName ?? fileName}.csv`);
   }
 
   /**

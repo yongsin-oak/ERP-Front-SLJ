@@ -152,6 +152,7 @@ export function SupplierPage() {
           placeholder="ค้นหาชื่อ..."
           allowClear
           style={{ width: 280 }}
+          defaultValue={search}
           onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
         />
       </div>

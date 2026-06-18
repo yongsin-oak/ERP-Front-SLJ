@@ -74,7 +74,7 @@ export function useSetEmployeePin() {
 export function useBulkDeleteEmployee() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => employeeService.delete(id))),
+    mutationFn: (ids: string[]) => employeeService.bulkDelete(ids).then((r) => r.data.data),
     onSuccess: (_, ids) => {
       qc.invalidateQueries({ queryKey: employeeKeys.lists() });
       qc.invalidateQueries({ queryKey: [...employeeKeys.all, 'all'] });

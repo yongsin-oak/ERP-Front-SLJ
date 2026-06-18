@@ -2,7 +2,6 @@ export interface Category {
   id: string;
   name: string;
   parentId?: string | null;
-  childrenId?: string[];
   description?: string | null;
   createdAt?: string;
   updatedAt?: string;

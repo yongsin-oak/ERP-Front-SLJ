@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { handleError, notify } from '@shared';
+import { productKeys } from '@features/inventory';
 import { stockEntryService } from './services';
 import { stockEntryKeys } from './queryKeys';
 import type { CreateStockEntryDto, BulkStockEntryDto, BulkStockAdjustDto } from '../types';
@@ -11,7 +12,7 @@ export function useCreateStockEntry() {
       stockEntryService.create(data).then((r) => r.data.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: stockEntryKeys.lists() });
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: productKeys.all });
       notify.success('บันทึกรายการสำเร็จ');
     },
     onError: handleError('บันทึกรายการ'),
@@ -25,7 +26,7 @@ export function useBulkCreateStockEntry() {
       stockEntryService.bulkCreate(data).then((r) => r.data.data),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: stockEntryKeys.lists() });
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: productKeys.all });
       const created = result.created?.length ?? 0;
       const failed = result.errors?.length ?? 0;
       if (failed > 0) {
@@ -45,7 +46,7 @@ export function useBulkDamage() {
       stockEntryService.bulkCreate(data).then((r) => r.data.data),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: stockEntryKeys.lists() });
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: productKeys.all });
       const created = result.created?.length ?? 0;
       const failed = result.errors?.length ?? 0;
       if (failed > 0) {
@@ -65,7 +66,7 @@ export function useBulkAdjustStock() {
       stockEntryService.bulkAdjust(data).then((r) => r.data.data),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: stockEntryKeys.lists() });
-      qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: productKeys.all });
       const created = result.created?.length ?? 0;
       const failed = result.errors?.length ?? 0;
       if (failed > 0) {

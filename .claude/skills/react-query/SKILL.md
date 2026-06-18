@@ -149,6 +149,27 @@ export function useDeleteOrder() {
 }
 ```
 
+### Bulk delete
+
+- **If the backend has a bulk endpoint** (`DELETE /x/bulk` — exists for `order`, `product`, `employee`), call it directly: `mutationFn: (ids) => xService.bulkDelete(ids).then(r => r.data.data)`. One atomic request.
+- **If it does NOT** (e.g. `brand`, `shop`), use `Promise.allSettled` — never `Promise.all` (which rejects on the first failure → partial delete with a misleading toast). `allSettled` never rejects, so `onError` won't fire; report the outcome inside `onSuccess` from the results:
+
+```ts
+mutationFn: (ids: string[]) => Promise.allSettled(ids.map((id) => brandService.delete(id))),
+onSuccess: (results, ids) => {
+  qc.invalidateQueries({ queryKey: brandKeys.all });
+  const failed = results.filter((r) => r.status === 'rejected').length;
+  const ok = ids.length - failed;
+  if (failed === 0) notify.success('ลบสำเร็จ', `${ok} รายการ`);
+  else if (ok === 0) notify.error('ลบไม่สำเร็จ', `ทั้ง ${failed} รายการ`);
+  else notify.warning('ลบสำเร็จบางส่วน', `สำเร็จ ${ok}, ล้มเหลว ${failed}`);
+},
+```
+
+### Invalidate `.all` when a dropdown shares the namespace
+
+When a feature has both a list query (`keys.lists()`) and a dropdown/infinite query (`[...keys.all, 'dropdown', …]`), an **update** mutation must invalidate `keys.all` (prefix-covers list + dropdown + detail), not just `keys.lists()` — otherwise edited labels go stale in `SearchSelect` dropdowns.
+
 ---
 
 ## 4. hooks/index.ts — Barrel

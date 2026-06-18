@@ -23,7 +23,7 @@ export function useUpdateTerminal() {
     mutationFn: ({ id, data }: { id: string; data: UpdateTerminalDto }) =>
       terminalService.update(id, data).then((r) => r.data.data),
     onSuccess: (updated) => {
-      qc.invalidateQueries({ queryKey: terminalKeys.lists() });
+      qc.invalidateQueries({ queryKey: terminalKeys.all }); // ครอบทั้ง list + dropdown
       qc.setQueryData(terminalKeys.detail(updated.id), updated);
       notify.success('แก้ไข Terminal สำเร็จ');
     },

@@ -22,5 +22,6 @@ export function useSuppliers(params: SupplierParams) {
     queryKey: supplierKeys.list(params),
     queryFn: () => supplierService.getAll(params).then((r) => r.data),
     placeholderData: (prev) => prev,
+    staleTime: STALE_TIME.MASTER,
   });
 }

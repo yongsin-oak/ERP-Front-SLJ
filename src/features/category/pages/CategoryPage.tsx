@@ -67,15 +67,34 @@ export function CategoryPage() {
     setModalOpen(false);
   }
 
+  const nameById = useMemo(() => {
+    const map = new Map<string, string>();
+    categories.forEach((c) => map.set(c.id, c.name));
+    return map;
+  }, [categories]);
+
   function handleDeleteWithChildren(c: Category) {
     let deleteChild = false;
+    // ลบแบบ cascade: backend ลบหมวดย่อยทั้งสายลึก (descendant) — แสดงรายชื่อทั้งหมดให้ผู้ใช้เห็นก่อนยืนยัน
+    const descendantIds = Array.from(descendantsMap.get(c.id) ?? []);
+    const descendantNames = descendantIds.map((id) => nameById.get(id) ?? id);
     AntModal.confirm({
       title: `ลบหมวดหมู่ "${c.name}"?`,
       content: (
         <div>
-          <p style={{ marginBottom: 8 }}>หมวดหมู่นี้มีหมวดหมู่ย่อย {c.childrenId?.length} รายการ</p>
+          <p style={{ marginBottom: 8 }}>
+            หมวดหมู่นี้มีหมวดหมู่ย่อยทั้งหมด {descendantNames.length} รายการ
+            หากเลือกลบด้วย รายการต่อไปนี้จะถูกลบทั้งหมด:
+          </p>
+          <ul style={{ margin: '0 0 8px', paddingInlineStart: 18, maxHeight: 160, overflow: 'auto' }}>
+            {descendantNames.map((name, i) => (
+              <li key={descendantIds[i]}>
+                <Text type="secondary">{name}</Text>
+              </li>
+            ))}
+          </ul>
           <Checkbox onChange={(e) => { deleteChild = e.target.checked; }}>
-            ลบหมวดหมู่ย่อยทั้งหมดด้วย
+            ลบหมวดหมู่ย่อยทั้งหมดด้วย (สินค้าในหมวดจะไม่ถูกลบ)
           </Checkbox>
         </div>
       ),
@@ -104,10 +123,11 @@ export function CategoryPage() {
   const seenKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const allParentIds: string[] = [];
-    categories.forEach((c) => {
-      if ((c.childrenId?.length ?? 0) > 0) allParentIds.push(c.id);
-    });
+    // หมวดที่เป็น "พ่อ" = id ที่ถูกอ้างเป็น parentId ของหมวดอื่น (childrenId จาก backend ไม่เคยถูก populate)
+    const parentIds = new Set(
+      categories.filter((c) => c.parentId).map((c) => c.parentId as string),
+    );
+    const allParentIds = categories.filter((c) => parentIds.has(c.id)).map((c) => c.id);
     const seen = seenKeysRef.current;
     if (seen.size === 0) {
       setExpandedKeys(allParentIds);
@@ -166,7 +186,7 @@ export function CategoryPage() {
             variant="ghost" size="small" icon={<EditOutlined />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
-          {(r.childrenId?.length ?? 0) > 0 ? (
+          {(r.children?.length ?? 0) > 0 ? (
             <Button
               variant="danger-ghost" size="small" icon={<DeleteOutlined />}
               onClick={() => handleDeleteWithChildren(r)}
