@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useSearchState } from '@shared';
 import { Space, Badge, Progress, Form, Flex } from 'antd';
-import { PlusOutlined, EyeOutlined, ReloadOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, colors, SummaryCard } from '@design-system';
+import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, colors, SummaryCard , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useEmployees } from '@features/employee/react-query';
 import {
@@ -126,7 +125,7 @@ export function StockCountListPage() {
           <Button
             variant="ghost"
             size="small"
-            icon={<EyeOutlined />}
+            icon={<AppIcons.view />}
             onClick={() => navigate(`/stock/count/${r.id}`)}
           />
           {r.status === 'Draft' && (
@@ -149,12 +148,12 @@ export function StockCountListPage() {
         subtitle={`ทั้งหมด ${total} รายการ`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
             <Button
               variant="primary"
-              icon={<PlusOutlined />}
+              icon={<AppIcons.add />}
               onClick={() => setCreateOpen(true)}
             >
               เริ่มนับสต็อก
@@ -171,10 +170,10 @@ export function StockCountListPage() {
 
       <Card
         size="small"
-        title={<Space><FilterOutlined /> ตัวกรอง</Space>}
+        title={<Space><AppIcons.filter /> ตัวกรอง</Space>}
         extra={
           filtersActive ? (
-            <Button size="small" icon={<ClearOutlined />} onClick={clearFilters}>
+            <Button size="small" icon={<AppIcons.clear />} onClick={clearFilters}>
               ล้างตัวกรอง
             </Button>
           ) : null

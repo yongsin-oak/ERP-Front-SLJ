@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Modal, Space, Typography, Alert } from "antd";
-import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import styled from "@emotion/styled";
-import { Select, Button } from "@design-system";
+import { Select, Button , AppIcons } from '@design-system';
 import { colors } from "@design-system";
 import { showError } from "@shared";
 import { useEmployees } from "@features/employee/react-query";
@@ -145,7 +144,7 @@ export function ActorModal() {
       open={open}
       title={
         <Space>
-          <LockOutlined style={{ color: colors.brand.primary }} />
+          <AppIcons.lock style={{ color: colors.brand.primary }} />
           ยืนยันตัวตนพนักงาน
         </Space>
       }
@@ -158,7 +157,7 @@ export function ActorModal() {
       {/* employee */}
       <div style={{ marginBottom: 12 }}>
         <Text type="secondary" style={{ fontSize: 12 }}>
-          <UserOutlined style={{ marginRight: 4 }} />
+          <AppIcons.user style={{ marginRight: 4 }} />
           พนักงาน
         </Text>
         <Select
@@ -176,7 +175,7 @@ export function ActorModal() {
 
       {/* PIN dots (show up to PIN_MAX slots, filled = entered digits) */}
       <Text type="secondary" style={{ fontSize: 12 }}>
-        <LockOutlined style={{ marginRight: 4 }} />
+        <AppIcons.lock style={{ marginRight: 4 }} />
         PIN ({PIN_MIN}–{PIN_MAX} หลัก)
       </Text>
       <DotsRow>

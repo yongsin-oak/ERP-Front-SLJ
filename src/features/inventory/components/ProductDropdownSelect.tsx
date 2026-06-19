@@ -53,7 +53,7 @@ export function ProductDropdownSelect({
       (data?.pages ?? []).flatMap((page) =>
         page.data.map((product) => ({
           value: product.barcode,
-          label: `${product.barcode} - ${product.name}`,
+          label: `[${product.barcode}] - ${product.name}`,
           product,
         })),
       ),
@@ -118,11 +118,11 @@ export function ProductDropdownSelect({
       optionRender={(opt) => {
         const p = (opt.data as typeof options[0]).product;
         return (
-          <div style={{ lineHeight: 1.4, padding: "2px 0" }}>
-            <div style={{ fontFamily: "monospace", fontSize: 12, color: colors.text.secondary }}>
-              {highlightText(p.barcode, search)}
-            </div>
-            <div style={{ fontSize: 14 }}>{highlightText(p.name, search)}</div>
+          <div style={{ fontSize: 14, padding: "2px 0" }}>
+            <span style={{ fontFamily: "monospace", color: colors.text.secondary }}>
+              [{highlightText(p.barcode, search)}]
+            </span>{" "}
+            - {highlightText(p.name, search)}
           </div>
         );
       }}

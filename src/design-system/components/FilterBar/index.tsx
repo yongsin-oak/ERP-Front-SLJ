@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 import { Flex } from 'antd';
-import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import { Input } from '../Input';
 import { Select } from '../Select';
@@ -9,6 +8,7 @@ import { Button } from '../Button';
 import { Text } from '../Typography';
 import { spacing } from '../../tokens';
 import type { DefaultOptionType } from 'antd/es/select';
+import { AppIcons } from '../../icons';
 
 const DEBOUNCE_MS = 300;
 
@@ -64,7 +64,7 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
             <Flex key={item.key} vertical gap={2}>
               {item.label && <Text size="xs" type="secondary">{item.label}</Text>}
               <Input
-                prefix={<SearchOutlined />}
+                prefix={<AppIcons.search />}
                 placeholder={item.placeholder ?? `ค้นหา${item.label ? ` ${item.label}` : ''}…`}
                 defaultValue={val as string}
                 onChange={e => debounceSet(item.key, e.target.value || undefined)}
@@ -112,7 +112,7 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
         <Button
           variant="ghost"
           size="small"
-          icon={<ClearOutlined />}
+          icon={<AppIcons.clear />}
           onClick={() => { onChange({}); onClear?.(); }}
           style={{ alignSelf: 'flex-end', marginBottom: 2 }}
         >

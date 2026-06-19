@@ -1,5 +1,5 @@
 import { notification } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { AppIcons } from '@design-system';
 
 notification.config({ maxCount: 5, placement: 'topRight' });
 
@@ -23,7 +23,7 @@ export const notify = {
   /** Returns a key — pass to `resolve()` or `dismiss()` when done */
   loading(title: string, description?: string): string {
     const key = `notify-${++_seq}`;
-    notification.open({ key, message: title, description, duration: 0, icon: <LoadingOutlined spin /> });
+    notification.open({ key, message: title, description, duration: 0, icon: <AppIcons.loading spin /> });
     return key;
   },
 

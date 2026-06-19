@@ -2,32 +2,6 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { Layout, Menu, Button, Drawer, Flex, Typography, Popconfirm, Avatar, Tag, App } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { MenuProps } from 'antd';
-import {
-  InboxOutlined,
-  TeamOutlined,
-  ShoppingCartOutlined,
-  HistoryOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  LogoutOutlined,
-  MenuOutlined,
-  DashboardOutlined,
-  UserOutlined,
-  ShopOutlined,
-  TagsOutlined,
-  AppstoreOutlined,
-  SafetyCertificateOutlined,
-  DesktopOutlined,
-  SettingOutlined,
-  BarcodeOutlined,
-  PlusOutlined,
-  ContainerOutlined,
-  DownloadOutlined,
-  FireOutlined,
-  SlidersOutlined,
-  UnorderedListOutlined,
-  TruckOutlined,
-} from '@ant-design/icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
@@ -68,57 +42,57 @@ interface NavGroup {
 type NavSection = NavLeaf | NavGroup;
 
 const NAV: NavSection[] = [
-  { key: '/dashboard', icon: <DashboardOutlined />, label: 'แดชบอร์ด' },
+  { key: '/dashboard', icon: <AppIcons.dashboard />, label: 'แดชบอร์ด' },
   { key: '/report', icon: <AppIcons.report size={16} />, label: 'รายงาน' },
   {
     groupKey: 'order',
-    icon: <ShoppingCartOutlined />,
+    icon: <AppIcons.cart />,
     label: 'Order',
     children: [
-      { key: '/order',         icon: <PlusOutlined />,    label: 'บันทึก Order' },
-      { key: '/order/history', icon: <HistoryOutlined />, label: 'ประวัติ Order' },
+      { key: '/order',         icon: <AppIcons.add />,    label: 'บันทึก Order' },
+      { key: '/order/history', icon: <AppIcons.history />, label: 'ประวัติ Order' },
     ],
   },
   {
     groupKey: 'inventory',
-    icon: <InboxOutlined />,
+    icon: <AppIcons.inbox />,
     label: 'สินค้า',
     children: [
-      { key: '/inventory', icon: <BarcodeOutlined />,   label: 'คลังสินค้า' },
-      { key: '/brand',     icon: <TagsOutlined />,      label: 'แบรนด์',    roles: ['SuperAdmin'] },
-      { key: '/category',  icon: <AppstoreOutlined />,  label: 'หมวดหมู่',  roles: ['SuperAdmin'] },
+      { key: '/inventory', icon: <AppIcons.barcode />,   label: 'คลังสินค้า' },
+      { key: '/brand',     icon: <AppIcons.tags />,      label: 'แบรนด์',    roles: ['SuperAdmin'] },
+      { key: '/category',  icon: <AppIcons.grid />,  label: 'หมวดหมู่',  roles: ['SuperAdmin'] },
     ],
   },
   {
     groupKey: 'stock',
-    icon: <ContainerOutlined />,
+    icon: <AppIcons.container />,
     label: 'สต็อก',
     children: [
-      { key: '/stock/receive', icon: <DownloadOutlined />,      label: 'รับสินค้าเข้า' },
-      { key: '/stock/damage',  icon: <FireOutlined />,          label: 'บันทึกของเสีย' },
-      { key: '/stock/adjust',  icon: <SlidersOutlined />,       label: 'ปรับสต็อก',     roles: ['SuperAdmin'] },
-      { key: '/stock/history', icon: <UnorderedListOutlined />, label: 'ประวัติสต็อก' },
+      { key: '/stock/receive', icon: <AppIcons.download />,      label: 'รับสินค้าเข้า' },
+      { key: '/stock/damage',  icon: <AppIcons.damage />,          label: 'บันทึกของเสีย' },
+      { key: '/stock/adjust',  icon: <AppIcons.adjust />,       label: 'ปรับสต็อก',     roles: ['SuperAdmin'] },
+      { key: '/stock/history', icon: <AppIcons.list />, label: 'ประวัติสต็อก' },
       { key: '/stock/count',   icon: <AppIcons.stockCount size={16} />, label: 'นับสต็อก' },
     ],
   },
   {
     groupKey: 'management',
-    icon: <TeamOutlined />,
+    icon: <AppIcons.employees />,
     label: 'จัดการ',
     children: [
-      { key: '/shop',     icon: <ShopOutlined />,  label: 'ร้านค้า',       roles: ['SuperAdmin'] },
-      { key: '/employee', icon: <TeamOutlined />,  label: 'พนักงาน',      roles: ['SuperAdmin'] },
-      { key: '/supplier', icon: <TruckOutlined />, label: 'ซัพพลายเออร์' },
+      { key: '/shop',     icon: <AppIcons.shop />,  label: 'ร้านค้า',       roles: ['SuperAdmin'] },
+      { key: '/employee', icon: <AppIcons.employees />,  label: 'พนักงาน',      roles: ['SuperAdmin'] },
+      { key: '/supplier', icon: <AppIcons.delivery />, label: 'ซัพพลายเออร์' },
     ],
   },
   {
     groupKey: 'system',
-    icon: <SettingOutlined />,
+    icon: <AppIcons.settings />,
     label: 'ระบบ',
     children: [
-      { key: '/user',     icon: <UserOutlined />,              label: 'ผู้ใช้งาน', roles: ['SuperAdmin'] },
-      { key: '/terminal', icon: <DesktopOutlined />,           label: 'Terminal',   roles: ['SuperAdmin'] },
-      { key: '/role',     icon: <SafetyCertificateOutlined />, label: 'บทบาท',     roles: ['SuperAdmin'] },
+      { key: '/user',     icon: <AppIcons.user />,              label: 'ผู้ใช้งาน', roles: ['SuperAdmin'] },
+      { key: '/terminal', icon: <AppIcons.desktop />,           label: 'Terminal',   roles: ['SuperAdmin'] },
+      { key: '/role',     icon: <AppIcons.roles />, label: 'บทบาท',     roles: ['SuperAdmin'] },
     ],
   },
 ];
@@ -229,7 +203,7 @@ function UserFooter({ collapsed, user, onLogout, onProfile }: {
         <Flex align="center" gap={10} style={{ padding: '4px 8px 10px' }}>
           <Avatar
             size={32}
-            icon={<UserOutlined />}
+            icon={<AppIcons.user />}
             style={{ background: colors.brand.primary, flexShrink: 0, fontSize: 13 }}
           />
           <div style={{ overflow: 'hidden', flex: 1 }}>
@@ -250,7 +224,7 @@ function UserFooter({ collapsed, user, onLogout, onProfile }: {
       )}
       <Button
         type="text"
-        icon={<UserOutlined />}
+        icon={<AppIcons.user />}
         block
         onClick={onProfile}
         style={{ textAlign: collapsed ? 'center' : 'left', justifyContent: collapsed ? 'center' : 'flex-start', marginBottom: 2 }}
@@ -266,7 +240,7 @@ function UserFooter({ collapsed, user, onLogout, onProfile }: {
       >
         <Button
           type="text"
-          icon={<LogoutOutlined />}
+          icon={<AppIcons.logout />}
           danger
           block
           style={{ textAlign: collapsed ? 'center' : 'left', justifyContent: collapsed ? 'center' : 'flex-start' }}
@@ -351,7 +325,7 @@ export function AppLayout() {
               <Button
                 type="text"
                 size="small"
-                icon={<MenuFoldOutlined />}
+                icon={<AppIcons.collapseSidebar />}
                 onClick={() => setCollapsed(true)}
                 style={{ color: colors.text.tertiary, flexShrink: 0 }}
               />
@@ -360,7 +334,7 @@ export function AppLayout() {
               <Button
                 type="text"
                 size="small"
-                icon={<MenuUnfoldOutlined />}
+                icon={<AppIcons.expandSidebar />}
                 onClick={() => setCollapsed(false)}
                 style={{ color: colors.text.tertiary, position: 'absolute', bottom: 72, left: 0, right: 0, margin: '0 auto', width: 40 }}
               />
@@ -401,7 +375,7 @@ export function AppLayout() {
             </Tag>
             <Button
               type="text"
-              icon={<MenuOutlined />}
+              icon={<AppIcons.menu />}
               onClick={() => setDrawerOpen(true)}
               style={{ color: colors.text.secondary }}
             />

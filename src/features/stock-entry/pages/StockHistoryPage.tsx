@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { DatePicker, Flex, Space } from 'antd';
-import { ReloadOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useSearchState } from '@shared';
@@ -11,7 +10,7 @@ import { useStockEntries, stockEntryService } from '../react-query';
 import { StockEntryTypes } from '../types';
 import type { StockEntry, StockEntryType } from '../types';
 import { useEmployeeList } from '@features/employee/react-query';
-import { useProducts } from '@features/inventory';
+import { ProductDropdownSelect } from '@features/inventory';
 
 const { RangePicker } = DatePicker;
 
@@ -48,13 +47,6 @@ export function StockHistoryPage() {
   const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
   const employees = empData?.data ?? [];
 
-  const { data: prodData } = useProducts({ page: 1, limit: 500 });
-  const products = prodData?.data ?? [];
-
-  const productOptions = useMemo(
-    () => products.map((p) => ({ label: `${p.name} (${p.barcode})`, value: p.barcode })),
-    [products],
-  );
   const employeeOptions = useMemo(
     () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
     [employees],
@@ -202,7 +194,7 @@ export function StockHistoryPage() {
         subtitle={`ทั้งหมด ${total.toLocaleString()} รายการ`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
             <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>
@@ -220,10 +212,10 @@ export function StockHistoryPage() {
 
       <Card
         size="small"
-        title={<Space><FilterOutlined /> ตัวกรอง</Space>}
+        title={<Space><AppIcons.filter /> ตัวกรอง</Space>}
         extra={
           filtersActive ? (
-            <Button size="small" icon={<ClearOutlined />} onClick={clearFilters}>
+            <Button size="small" icon={<AppIcons.clear />} onClick={clearFilters}>
               ล้างตัวกรอง
             </Button>
           ) : null
@@ -231,13 +223,11 @@ export function StockHistoryPage() {
         style={{ marginBottom: 16 }}
       >
         <Flex gap={8} wrap>
-          <Select
+          <ProductDropdownSelect
             allowClear
             placeholder="สินค้า"
-            showSearch={{ optionFilterProp: 'label' }}
             style={{ width: 220 }}
-            options={productOptions}
-            value={search}
+            value={search || undefined}
             onChange={(v) => setTableState({ ...tableState, search: v ?? '', page: 1 })}
           />
           <Select

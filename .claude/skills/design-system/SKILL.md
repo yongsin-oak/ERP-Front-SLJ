@@ -6,6 +6,34 @@
 
 ---
 
+## 🚧 UI Migration: Ant Design → shadcn/ui + Tailwind (in progress)
+
+The UI layer is being migrated off Ant Design to **shadcn/ui (Radix + Tailwind v4)** for full control + smaller bundle. Strategy = **strangler**: rewrite each `@design-system` wrapper's *internals* to Tailwind/shadcn while **keeping the same prop API**, so consumers never change.
+
+- **Tailwind v4** via `@tailwindcss/vite`; styles in `src/index.css`. shadcn primitives in `src/components/ui/` (own-the-code), `cn()` in `src/lib/utils.ts`, alias `@/* → src/*`.
+- **Token architecture — 3 tiers in `src/index.css`** (this is the source for Tailwind components):
+  1. **Tier 1 — primitive/global** (`:root`): raw scales `--neutral-*`, `--brand-*`, `--red/green/gold/blue-*`, `--ink-*`. Never use directly in components.
+  2. **Tier 2 — semantic** (`:root` + `.dark`): meaning-based vars referencing Tier 1 — shadcn core (`--primary → var(--brand-500)`, `--background`, `--border`…) **plus app states** `--success/-bg/-border/-text`, `--warning*`, `--error*`, `--info*`.
+  3. **Tier 3 — `@theme inline`**: maps semantic → Tailwind utilities, so `bg-primary`, `hover:bg-primary-hover`, `active:bg-primary-active`, `text-success`, `bg-success-bg`, `border-divider`, `bg-control-off`, `bg-data-volcano-bg` etc. exist.
+
+  **Rules (strict):**
+  - **No hardcoded colors in components** — no `#hex`, no `bg-black/25`, no `text-white`. Use a semantic token (`text-primary-foreground` for white-on-brand, `bg-control-off` for an off track, etc.).
+  - **Components consume semantic (Tier 3) only** — never reference Tier 1 primitives directly (no `bg-[var(--neutral-300)]`). If a need isn't covered, **add a semantic token** (and a primitive if the hue is new) rather than reaching for a primitive.
+  - **Every primitive must be referenced** by ≥1 semantic (no orphan globals). Conversely keep semantics comprehensive so primitives never leak into components.
+  - **Declare all interaction states as tokens**: `--primary-hover/-active`, `--destructive-hover/-active`, `--accent` (hover surface) / `--accent-active` (pressed), `--disabled` / `--disabled-bg`, `--control-off`, `--divider`.
+  - Dynamic class maps must use **literal strings** (e.g. `success: 'bg-success-bg border-success-border text-success-text'`) so Tailwind's scanner emits them. Tailwind only emits *used* utilities — a declared-but-unused token (e.g. `border-divider`) won't appear in the build until a component uses it; that's expected.
+  - Categorical/data-viz colors (antd preset palette: `Tag color="blue|volcano|…"`) are tokenized too as `--data-<hue>-{bg,border,text}` and consumed via literal classes — **not** inline hex.
+  - ⚠️ CSS can't import `.ts` — Tier 1 hex **mirrors `colors.ts`** (still feeding antd); change both until antd is gone.
+- **Font**: Bai Jamjuree kept via `--font-sans` (not the preset's Inter).
+- **Icons**: shadcn configured with `iconLibrary: tabler` (matches `@tabler/icons-react`).
+- **Migrated so far**: `Button`, `Tag`/`StatusTag`, `Badge`, `Switch`, `Alert`, `Card` (Tailwind, no antd, API-compatible). `Button` accepts antd-style `variant`/`size`/`loading`/`icon`/`block`/`htmlType`.
+- **Still antd** (hard pieces, do with care): `Input` (+Search/Password/TextArea), `Select`, `Table` (→ TanStack Table + react-virtual), `DatePicker`, `Modal`/`Drawer`, notifications. Emotion is removed per-component as migrated; goal is to drop both antd + Emotion.
+- **Storybook** (`bun run storybook` / `build-storybook`): stories co-located as `<Component>.stories.tsx`. Add a story when migrating a component. Tailwind CSS + Bai Jamjuree are loaded via `.storybook/preview.tsx` + `preview-head.html`.
+
+When migrating a component: keep the exported prop names, run `tsc -b` (catches consumer breakage), add/update its `.stories.tsx`, then `bun run build`.
+
+---
+
 ## Trigger
 
 Use this skill when:

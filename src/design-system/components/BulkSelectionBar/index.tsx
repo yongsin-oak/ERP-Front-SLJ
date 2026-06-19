@@ -1,10 +1,10 @@
 import styled from '@emotion/styled';
 import { Flex } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
 import { colors, spacing, radius } from '../../tokens';
 import { Button } from '../Button';
 import { Text } from '../Typography';
 import { DeleteConfirmButton } from '../DeleteConfirmButton';
+import { AppIcons } from '../../icons';
 
 export interface BulkSelectionBarProps {
   count: number;
@@ -45,7 +45,7 @@ export function BulkSelectionBar({
           title={deleteTitle ?? `ลบ ${count} ${itemLabel} ที่เลือก?`}
           size="middle"
         >
-          <Button variant="danger" icon={<DeleteOutlined />} loading={isDeleting}>
+          <Button variant="danger" icon={<AppIcons.delete />} loading={isDeleting}>
             ลบที่เลือก
           </Button>
         </DeleteConfirmButton>

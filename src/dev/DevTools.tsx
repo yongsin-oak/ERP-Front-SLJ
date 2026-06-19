@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Button, Select, Space, Tag, Tooltip, Drawer, Divider, Typography, Switch } from 'antd';
-import { BugOutlined, UserOutlined, ReloadOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useAuth, DEV_USER } from '@features/auth';
-import type { Role } from '@features/auth/types';
+import type { Role, AuthUser } from '@features/auth/types';
 import { ENV } from '@config/env';
+import { AppIcons } from '@design-system';
 
 const { Text } = Typography;
 
@@ -17,6 +17,28 @@ const ROLE_COLOR: Record<Role, string> = {
   SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
   Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
 };
+
+/** Preset bypass account ต่อ role — คลิกเดียว login ทันที (ไม่ต้องผ่าน backend) */
+const DEV_USER_ACCOUNTS: AuthUser[] = ALL_ROLES.map((role) => ({
+  sub: `dev-${role.toLowerCase()}`,
+  username: `dev_${role.toLowerCase()}`,
+  role,
+  type: 'user',
+}));
+
+/** POS/Terminal bypass account — type 'terminal' เหมือน login ด้วย terminal code */
+const DEV_POS_ACCOUNT: AuthUser = {
+  terminalCode: 'POS-DEV-01',
+  name: 'POS Terminal (Dev)',
+  role: 'Operator',
+  type: 'terminal',
+  isTerminal: true,
+};
+
+/** ระบุชื่อที่ใช้แสดง/เทียบความเป็น account เดียวกัน (user → sub, terminal → terminalCode) */
+function accountId(u: AuthUser): string {
+  return u.type === 'terminal' ? (u.terminalCode ?? '') : (u.sub ?? '');
+}
 
 export function DevTools() {
   const [open, setOpen] = useState(false);
@@ -41,7 +63,7 @@ export function DevTools() {
           type="primary"
           shape="circle"
           size="large"
-          icon={<BugOutlined />}
+          icon={<AppIcons.debug />}
           onClick={() => setOpen(true)}
           style={{
             position: 'fixed',
@@ -58,7 +80,7 @@ export function DevTools() {
       <Drawer
         title={
           <Space>
-            <BugOutlined style={{ color: '#722ed1' }} />
+            <AppIcons.debug style={{ color: '#722ed1' }} />
             <span>Dev Tools</span>
             <Tag color="purple">DEV MODE</Tag>
           </Space>
@@ -81,6 +103,37 @@ export function DevTools() {
 
           <Divider style={{ margin: 0 }} />
 
+          {/* Login as — bypass ครบทุก account + POS */}
+          <div>
+            <Label>Login as (bypass)</Label>
+            <Space wrap size={[6, 6]} style={{ marginTop: 8 }}>
+              {DEV_USER_ACCOUNTS.map((acc) => {
+                const active = !!user && accountId(user) === accountId(acc);
+                return (
+                  <Button
+                    key={acc.sub}
+                    size="small"
+                    type={active ? 'primary' : 'default'}
+                    onClick={() => setUser(acc)}
+                  >
+                    <Tag color={ROLE_COLOR[acc.role]} style={{ margin: 0 }}>{acc.role}</Tag>
+                  </Button>
+                );
+              })}
+            </Space>
+            <Button
+              icon={<AppIcons.desktop />}
+              block
+              style={{ marginTop: 8 }}
+              type={user && user.type === 'terminal' ? 'primary' : 'default'}
+              onClick={() => setUser(DEV_POS_ACCOUNT)}
+            >
+              POS / Terminal ({DEV_POS_ACCOUNT.terminalCode})
+            </Button>
+          </div>
+
+          <Divider style={{ margin: 0 }} />
+
           {/* Current user */}
           <div>
             <Label>Current User</Label>
@@ -88,11 +141,14 @@ export function DevTools() {
               {user ? (
                 <Space direction="vertical" size={4}>
                   <Space>
-                    <UserOutlined />
-                    <Text strong>{user.username}</Text>
+                    {user.type === 'terminal' ? <AppIcons.desktop /> : <AppIcons.user />}
+                    <Text strong>{user.type === 'terminal' ? user.name : user.username}</Text>
                     <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
+                    {user.type === 'terminal' && <Tag color="volcano">POS</Tag>}
                   </Space>
-                  <Text type="secondary" style={{ fontSize: 12 }}>ID: {user.sub}</Text>
+                  <Text type="secondary" style={{ fontSize: 12 }}>
+                    {user.type === 'terminal' ? `Terminal: ${user.terminalCode}` : `ID: ${user.sub}`}
+                  </Text>
                 </Space>
               ) : (
                 <Text type="secondary">— ไม่ได้ login —</Text>
@@ -123,14 +179,14 @@ export function DevTools() {
           <div>
             <Label>Quick Actions</Label>
             <Space style={{ marginTop: 8, width: '100%' }} direction="vertical">
-              <Button icon={<UserOutlined />} block onClick={() => setUser(DEV_USER)}>
+              <Button icon={<AppIcons.user />} block onClick={() => setUser(DEV_USER)}>
                 Reset to Dev User
               </Button>
-              <Button icon={<ReloadOutlined />} block onClick={() => window.location.reload()}>
+              <Button icon={<AppIcons.refresh />} block onClick={() => window.location.reload()}>
                 Reload Page
               </Button>
               <Button
-                icon={<DatabaseOutlined />}
+                icon={<AppIcons.database />}
                 block
                 onClick={() => {
                   // Zustand store snapshot — print ไปยัง console devtools

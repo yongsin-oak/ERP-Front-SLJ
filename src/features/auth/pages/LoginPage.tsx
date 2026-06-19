@@ -1,10 +1,9 @@
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Segmented, Typography, Space } from 'antd';
-import { LockOutlined, UserOutlined, DesktopOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
 import { useAuth } from '../stores';
-import { Button, Form, Input, InputPassword, Card } from '@design-system';
+import { Button, Form, Input, InputPassword, Card , AppIcons } from '@design-system';
 import { colors, shadow } from '@design-system';
 import { showError } from '@shared';
 
@@ -51,7 +50,7 @@ function Logo() {
         marginBottom: 12,
         boxShadow: `0 4px 16px ${colors.brand.primary}44`,
       }}>
-        <LockOutlined style={{ color: colors.text.inverse, fontSize: 24 }} />
+        <AppIcons.lock style={{ color: colors.text.inverse, fontSize: 24 }} />
       </div>
       <Typography.Title level={4} style={{ margin: 0, fontSize: 20 }}>SLJ ERP</Typography.Title>
     </div>
@@ -126,8 +125,8 @@ export function LoginPage() {
             value={mode}
             onChange={(v) => handleModeChange(v as LoginMode)}
             options={[
-              { label: <Space><UserOutlined />เจ้าหน้าที่</Space>,   value: 'staff' },
-              { label: <Space><DesktopOutlined />Terminal</Space>, value: 'terminal' },
+              { label: <Space><AppIcons.user />เจ้าหน้าที่</Space>,   value: 'staff' },
+              { label: <Space><AppIcons.desktop />Terminal</Space>, value: 'terminal' },
             ]}
             block
           />
@@ -137,10 +136,10 @@ export function LoginPage() {
         {mode === 'staff' && (
           <Form form={staffForm} onFinish={handleStaffSubmit}>
             <Form.Item name="username" rules={[{ required: true, message: 'กรุณากรอกชื่อผู้ใช้' }]}>
-              <Input prefix={<UserOutlined />} placeholder="ชื่อผู้ใช้" size="large" autoComplete="username" />
+              <Input prefix={<AppIcons.user />} placeholder="ชื่อผู้ใช้" size="large" autoComplete="username" />
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน' }]}>
-              <InputPassword prefix={<LockOutlined />} placeholder="รหัสผ่าน" size="large" autoComplete="current-password" />
+              <InputPassword prefix={<AppIcons.lock />} placeholder="รหัสผ่าน" size="large" autoComplete="current-password" />
             </Form.Item>
             <Form.Item style={{ marginBottom: 0 }}>
               <Button variant="primary" htmlType="submit" size="large" block loading={submitting}>
@@ -154,7 +153,7 @@ export function LoginPage() {
         {mode === 'terminal' && (
           <Form form={terminalForm} onFinish={handleTerminalSubmit}>
             <Text type="secondary" style={{ fontSize: 12, marginBottom: 6, display: 'block' }}>
-              <DesktopOutlined style={{ marginRight: 4 }} />Terminal Code
+              <AppIcons.desktop style={{ marginRight: 4 }} />Terminal Code
             </Text>
             <Form.Item
               name="terminalCode"
@@ -174,7 +173,7 @@ export function LoginPage() {
               rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน Terminal' }]}
             >
               <InputPassword
-                prefix={<LockOutlined />}
+                prefix={<AppIcons.lock />}
                 placeholder="รหัสผ่าน Terminal"
                 size="large"
                 autoComplete="current-password"

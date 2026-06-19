@@ -3,15 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, Row, Col, Statistic, Tag, Typography, Space, Skeleton, Alert, Segmented } from 'antd';
 import {
-  ShoppingCartOutlined,
-  InboxOutlined,
-  TeamOutlined,
-  RiseOutlined,
-  FallOutlined,
-  WarningOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
-import {
   AreaChart,
   Area,
   XAxis,
@@ -23,7 +14,7 @@ import {
 } from 'recharts';
 import { Flex } from 'antd';
 import dayjs from 'dayjs';
-import { Button, PageHeader, COL_PROPS, colors, Table, Select, CodeCell, DateCell } from '@design-system';
+import { Button, PageHeader, COL_PROPS, colors, Table, Select, CodeCell, DateCell , AppIcons } from '@design-system';
 import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock, dashboardKeys } from '../react-query';
 import { useShops } from '@features/shop';
 import type { ColumnType } from '@design-system';
@@ -201,7 +192,7 @@ export function DashboardPage() {
         title="แดชบอร์ด"
         subtitle={`อัพเดตล่าสุด: ${dayjs().format('DD/MM/YYYY HH:mm')}`}
         actions={
-          <Button icon={<ReloadOutlined />} onClick={handleRefetch}>
+          <Button icon={<AppIcons.refresh />} onClick={handleRefetch}>
             รีเฟรช
           </Button>
         }
@@ -234,7 +225,7 @@ export function DashboardPage() {
             title={`Order ${periodLabel}`}
             value={stats?.todayOrders}
             suffix="รายการ"
-            icon={<ShoppingCartOutlined />}
+            icon={<AppIcons.cart />}
             color={colors.semantic.info}
             loading={statsLoading}
             onClick={() => navigate('/order')}
@@ -245,7 +236,7 @@ export function DashboardPage() {
             title={`ยอดขาย${periodLabel}`}
             value={stats?.todayRevenue?.toLocaleString()}
             prefix="฿"
-            icon={<RiseOutlined />}
+            icon={<AppIcons.trendUp />}
             color={colors.semantic.success}
             loading={statsLoading}
           />
@@ -256,7 +247,7 @@ export function DashboardPage() {
             value={periodProfit.toLocaleString()}
             prefix="฿"
             suffix={profitMargin > 0 ? `(${profitMargin}%)` : undefined}
-            icon={<FallOutlined />}
+            icon={<AppIcons.trendDown />}
             color={periodProfit >= 0 ? colors.semantic.success : colors.semantic.error}
             loading={statsLoading}
           />
@@ -266,7 +257,7 @@ export function DashboardPage() {
             title="สินค้าใกล้หมด"
             value={lowStock.length}
             suffix="รายการ"
-            icon={<WarningOutlined />}
+            icon={<AppIcons.warning />}
             color={lowStock.length > 0 ? colors.semantic.warning : colors.text.tertiary}
             loading={lowStockLoading}
             onClick={() => navigate('/inventory')}
@@ -280,7 +271,7 @@ export function DashboardPage() {
             title="สินค้าทั้งหมด"
             value={stats?.totalProducts}
             suffix="รายการ"
-            icon={<InboxOutlined />}
+            icon={<AppIcons.inbox />}
             loading={statsLoading}
             onClick={() => navigate('/inventory')}
           />
@@ -290,7 +281,7 @@ export function DashboardPage() {
             title="พนักงาน"
             value={stats?.totalEmployees}
             suffix="คน"
-            icon={<TeamOutlined />}
+            icon={<AppIcons.employees />}
             loading={statsLoading}
             onClick={() => navigate('/employee')}
           />
@@ -300,7 +291,7 @@ export function DashboardPage() {
             title="ยอดขายรวม"
             value={stats?.totalRevenue?.toLocaleString()}
             prefix="฿"
-            icon={<ShoppingCartOutlined />}
+            icon={<AppIcons.cart />}
             color={colors.brand.primary}
             loading={statsLoading}
           />
@@ -360,7 +351,7 @@ export function DashboardPage() {
           <Card
             title={
               <Space>
-                <WarningOutlined style={{ color: colors.semantic.warning }} />
+                <AppIcons.warning style={{ color: colors.semantic.warning }} />
                 สินค้าใกล้หมด
               </Space>
             }

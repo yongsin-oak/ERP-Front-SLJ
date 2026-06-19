@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Space, Modal as AntModal, Checkbox, Typography, Flex } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, DeleteConfirmButton, colors, SummaryCard } from '@design-system';
+import { Table, Button, PageHeader, Tag, DeleteConfirmButton, colors, SummaryCard , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
@@ -183,12 +182,12 @@ export function CategoryPage() {
       render: (_: unknown, r: CatNode) => (
         <Space>
           <Button
-            variant="ghost" size="small" icon={<EditOutlined />}
+            variant="ghost" size="small" icon={<AppIcons.edit />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
           {(r.children?.length ?? 0) > 0 ? (
             <Button
-              variant="danger-ghost" size="small" icon={<DeleteOutlined />}
+              variant="danger-ghost" size="small" icon={<AppIcons.delete />}
               onClick={() => handleDeleteWithChildren(r)}
             />
           ) : (
@@ -211,10 +210,10 @@ export function CategoryPage() {
         subtitle={`ทั้งหมด ${total} หมวดหมู่`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
+            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มหมวดหมู่
             </Button>
           </>

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { Table as AntTable } from 'antd';
 import type { TableProps as AntTableProps, ColumnType as AntColumnType } from 'antd/es/table';
-import { SearchOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
+import { AppIcons } from '../../icons';
 
 export type ColumnType<T> = AntColumnType<T> & {
   /** เปิด text-search filter อัตโนมัติบน column นี้ (search ใน dataIndex หรือ field ที่ระบุ) */
@@ -48,7 +48,7 @@ function enhanceColumns<T extends object>(columns: ColumnType<T>[]): ColumnType<
         </div>
       );
       out.filterIcon = (filtered) => (
-        <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
+        <AppIcons.search style={{ color: filtered ? '#1677ff' : undefined }} />
       );
       if (!out.onFilter && searchPath !== undefined) {
         out.onFilter = (value, record) => {

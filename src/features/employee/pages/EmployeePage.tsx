@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Flex, Space, Input, Typography, Badge } from 'antd';
-import { PlusOutlined, EditOutlined, ReloadOutlined, SearchOutlined, KeyOutlined } from '@ant-design/icons';
 import {
   Table, Button, Tag, PageHeader, BulkSelectionBar, colors, AppIcons,
   DeleteConfirmButton, Modal, InputPassword, SummaryCard, DateCell,
@@ -127,12 +126,12 @@ export function EmployeePage() {
       render: (_: unknown, r: Employee) => (
         <Space>
           <Button
-            variant="ghost" size="small" icon={<KeyOutlined />}
+            variant="ghost" size="small" icon={<AppIcons.key />}
             title="ตั้ง PIN"
             onClick={() => { setPinEmployee(r); setPinValue(''); }}
           />
           <Button
-            variant="ghost" size="small" icon={<EditOutlined />}
+            variant="ghost" size="small" icon={<AppIcons.edit />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
           <DeleteConfirmButton
@@ -152,10 +151,10 @@ export function EmployeePage() {
         subtitle={`ทั้งหมด ${total} คน`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()}>รีเฟรช</Button>
             <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
             <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
+            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มพนักงาน
             </Button>
           </>
@@ -170,7 +169,7 @@ export function EmployeePage() {
 
       <Flex gap={12} align="center" style={{ marginBottom: 12 }}>
         <Search
-          prefix={<SearchOutlined />}
+          prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
           allowClear
           style={{ width: 280 }}

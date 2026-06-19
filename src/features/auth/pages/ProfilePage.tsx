@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, Form, Input, Tag, Flex, Typography } from 'antd';
-import { KeyOutlined, UserOutlined } from '@ant-design/icons';
-import { PageHeader, Button } from '@design-system';
+import { PageHeader, Button , AppIcons } from '@design-system';
 import { colors } from '@design-system';
 import { useAuth, authService } from '@features/auth';
 import { handleError } from '@shared';
@@ -48,7 +47,7 @@ export function ProfilePage() {
     <Flex vertical gap={20}>
       <PageHeader title="โปรไฟล์" subtitle="ข้อมูลบัญชีและการตั้งค่าความปลอดภัย" />
 
-      <Card size="small" title={<Flex gap={8} align="center"><UserOutlined /> ข้อมูลบัญชี</Flex>}>
+      <Card size="small" title={<Flex gap={8} align="center"><AppIcons.user /> ข้อมูลบัญชี</Flex>}>
         <Flex vertical gap={12} style={{ padding: '4px 0' }}>
           <InfoRow label="ชื่อ" value={displayName} />
           {user.username && <InfoRow label="Username" value={<code style={{ fontSize: 13 }}>{user.username}</code>} />}
@@ -65,7 +64,7 @@ export function ProfilePage() {
       </Card>
 
       {!user.isTerminal && (
-        <Card size="small" title={<Flex gap={8} align="center"><KeyOutlined /> เปลี่ยนรหัสผ่าน</Flex>}>
+        <Card size="small" title={<Flex gap={8} align="center"><AppIcons.key /> เปลี่ยนรหัสผ่าน</Flex>}>
           <Form
             form={form}
             layout="vertical"
@@ -98,7 +97,7 @@ export function ProfilePage() {
               <Input.Password placeholder="ยืนยันรหัสผ่านใหม่" autoComplete="new-password" />
             </Form.Item>
             <Form.Item style={{ marginBottom: 0 }}>
-              <Button variant="primary" icon={<KeyOutlined />} htmlType="submit" loading={saving}>
+              <Button variant="primary" icon={<AppIcons.key />} htmlType="submit" loading={saving}>
                 เปลี่ยนรหัสผ่าน
               </Button>
             </Form.Item>

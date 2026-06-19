@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Flex } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard, colors } from '@design-system';
+import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard, colors , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
@@ -95,8 +94,8 @@ export function BrandPage() {
         subtitle={`ทั้งหมด ${total} แบรนด์`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>รีเฟรช</Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>รีเฟรช</Button>
+            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มแบรนด์
             </Button>
           </>

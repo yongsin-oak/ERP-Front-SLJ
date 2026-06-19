@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from 'antd';
-import { BarcodeOutlined, InboxOutlined } from '@ant-design/icons';
 import type { InputRef } from 'antd';
-import { Modal, Input, Select, Button, colors } from '@design-system';
+import { Modal, Input, Select, Button, colors , AppIcons } from '@design-system';
 import { EmployeeSearchSelect } from '@features/employee/components';
 import { inventoryService, useCreateStockEntry } from '../react-query';
 import { notify } from '@shared';
@@ -74,7 +73,7 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
       open={open}
       title={
         <Space>
-          <InboxOutlined style={{ color: colors.semantic.success }} />
+          <AppIcons.inbox style={{ color: colors.semantic.success }} />
           บันทึกรับสินค้าเข้าสต้อค
         </Space>
       }
@@ -99,7 +98,7 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
         <Space.Compact style={{ width: '100%' }}>
           <Input
             ref={barcodeRef}
-            prefix={<BarcodeOutlined />}
+            prefix={<AppIcons.barcode />}
             placeholder="สแกนหรือพิมพ์ barcode แล้วกด Enter"
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value)}

@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import styled from '@emotion/styled';
 import { Flex } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined, MinusOutlined } from '@ant-design/icons';
 import { Skeleton } from 'antd';
 import { colors, spacing, radius, shadow } from '../../tokens';
 import { Text } from '../Typography';
+import { AppIcons } from '../../icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ export function StatsCard({
 }: StatsCardProps) {
   const dir = delta == null ? 'neutral' : delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
   const DeltaIcon =
-    dir === 'up' ? ArrowUpOutlined : dir === 'down' ? ArrowDownOutlined : MinusOutlined;
+    dir === 'up' ? AppIcons.arrowUp : dir === 'down' ? AppIcons.arrowDown : AppIcons.minus;
 
   if (loading) {
     return (

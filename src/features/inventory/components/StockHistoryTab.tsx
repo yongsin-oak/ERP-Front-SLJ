@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Flex, DatePicker } from 'antd';
-import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { Dayjs } from 'dayjs';
 import { Table, Button, Tag, Select, Input, colors, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -137,7 +136,7 @@ export function StockHistoryTab({ active }: Props) {
       <Flex gap={8} wrap style={{ marginBottom: 12 }} justify="space-between">
         <Flex gap={8} wrap>
           <Input
-            prefix={<SearchOutlined />}
+            prefix={<AppIcons.search />}
             placeholder="barcode สินค้า..."
             allowClear
             style={{ width: 200 }}
@@ -155,7 +154,7 @@ export function StockHistoryTab({ active }: Props) {
             style={{ width: 240 }}
             placeholder={['วันเริ่มต้น', 'วันสิ้นสุด']}
           />
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} />
+          <Button icon={<AppIcons.refresh />} onClick={() => refetch()} />
         </Flex>
         <Button
           icon={<AppIcons.exportFile size={16} />}

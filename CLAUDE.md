@@ -89,8 +89,7 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 | Package Manager | **bun** (primary) / npm | — |
 | Language | TypeScript | 5.9 (strict) |
 | UI Components | Ant Design | 6 |
-| Icons (UI chrome) | @ant-design/icons | bundled with antd |
-| Icons (domain) | **@tabler/icons-react** | 3 |
+| Icons (all) | **@tabler/icons-react** via `AppIcons` | 3 |
 | Styling | Emotion (`@emotion/styled`) | 11 |
 | State | Zustand | 5 |
 | Data Fetching | @tanstack/react-query | 5 |
@@ -129,7 +128,7 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 - **No `new Date()` or `moment`** — use `dayjs`
 - **No raw `axios`** — use `req` from `@lib`
 - **No inline `#hex` or `px` literals** — use design tokens from `@design-system/tokens`
-- **Domain icons via `AppIcons`** — `import { AppIcons } from '@design-system'`; `<AppIcons.product />`. Antd icons for generic UI chrome only. See `.claude/skills/design-system/SKILL.md` § Icons.
+- **All icons via `AppIcons`** (Tabler only) — `import { AppIcons } from '@design-system'`; `<AppIcons.add />`, `<AppIcons.delete />`. Key by **purpose**, not shape. NEVER import `@tabler/icons-react` or `@ant-design/icons` directly. See `.claude/skills/design-system/icons/SKILL.md`.
 - **No hardcoded query keys** — use key factories from `hooks/queryKeys.ts`
 - **No magic timing numbers** — use `STALE_TIME`, `GC_TIME`, `REFETCH_INTERVAL` from `@lib`
 - **All pages lazy-loaded** — wrap in `lazy()` + `<Suspense>` in `routes/index.tsx`
@@ -155,7 +154,7 @@ Detailed patterns and examples live in `.claude/skills/`.
 | `folder-structure` | Feature anatomy, barrel exports, file naming, import rules |
 | `design-system` | Tokens (colors/spacing/radius/shadow), Emotion rules, responsive layout |
 | `design-system/components` | Component catalog, ERP composite components (Table, Modal, FormModal, ActionCell…) |
-| `design-system/icons` | AppIcons map, two-library split, adding new icons |
+| `design-system/icons` | AppIcons map (Tabler-only, purpose-named), adding new icons |
 | `react-query` | queryKeys factory, useQuery, useMutation, invalidate vs setQueryData |
 | `constants` | Where to define constants, naming conventions, status/label/color pattern |
 | `component-patterns` | Component anatomy, page/table/modal patterns, naming, anti-patterns |

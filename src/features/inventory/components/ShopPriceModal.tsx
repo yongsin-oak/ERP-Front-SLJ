@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Form, InputNumber, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, colors } from '@design-system';
+import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, colors , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useShops } from '@features/shop';
 import { PlatformBadge } from '@features/shop';
@@ -162,7 +161,7 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
         <div style={{ marginBottom: 12, textAlign: 'right' }}>
           <Button
             variant="primary"
-            icon={<PlusOutlined />}
+            icon={<AppIcons.add />}
             onClick={openAdd}
             disabled={availableShops.length === 0}
           >

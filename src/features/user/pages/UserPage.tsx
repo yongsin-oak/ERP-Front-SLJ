@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Flex, Space } from 'antd';
-import { PlusOutlined, UserOutlined } from '@ant-design/icons';
 import {
   Table, Button, PageHeader, Select, FormModal, Form, Tag, colors,
-  ActionCell, CodeCell, SummaryCard,
+  ActionCell, CodeCell, SummaryCard, AppIcons,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
@@ -43,7 +42,7 @@ export function UserPage() {
       dataIndex: 'username',
       render: (v: string) => (
         <Space>
-          <UserOutlined style={{ color: colors.text.tertiary }} />
+          <AppIcons.user style={{ color: colors.text.tertiary }} />
           <span style={{ fontWeight: 500 }}>{v}</span>
         </Space>
       ),
@@ -83,7 +82,7 @@ export function UserPage() {
         title="ผู้ใช้งาน"
         subtitle={`${users.length} บัญชีในระบบ`}
         actions={
-          <Button variant="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
+          <Button variant="primary" icon={<AppIcons.add />} onClick={() => setCreateOpen(true)}>
             เพิ่มผู้ใช้งาน
           </Button>
         }

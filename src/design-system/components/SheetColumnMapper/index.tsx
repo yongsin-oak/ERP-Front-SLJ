@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
 import { Flex } from 'antd';
-import {
-  ArrowRightOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-} from '@ant-design/icons';
 import { Select } from '../Select';
 import { colors, spacing, radius } from '../../tokens';
 import { Text } from '../Typography';
 import type { SheetData } from '../DropZoneSheet';
+import { AppIcons } from '../../icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -161,7 +157,7 @@ export function SheetColumnMapper({ sheetData, dbFields, onChange }: SheetColumn
               <SampleText title={sampleByCol[col]}>{sampleByCol[col]}</SampleText>
             </ColChip>
 
-            <ArrowRightOutlined
+            <AppIcons.arrowRight
               style={{
                 fontSize: 13,
                 color: isMapped ? colors.brand.primary : colors.text.disabled,
@@ -181,7 +177,7 @@ export function SheetColumnMapper({ sheetData, dbFields, onChange }: SheetColumn
 
       <Footer align="center" justify="space-between" gap={spacing[4]}>
         <Flex align="center" gap={spacing[1]}>
-          <CheckCircleOutlined style={{ color: colors.semantic.successText, fontSize: 13 }} />
+          <AppIcons.success style={{ color: colors.semantic.successText, fontSize: 13 }} />
           <Text size="xs" style={{ color: colors.semantic.successText }}>
             จับคู่แล้ว {mappedCount}/{sheetData.headers.length} คอลัมน์
           </Text>
@@ -189,7 +185,7 @@ export function SheetColumnMapper({ sheetData, dbFields, onChange }: SheetColumn
 
         {missingRequired.length > 0 && (
           <Flex align="center" gap={spacing[1]}>
-            <ExclamationCircleOutlined style={{ color: colors.semantic.errorText, fontSize: 13 }} />
+            <AppIcons.alert style={{ color: colors.semantic.errorText, fontSize: 13 }} />
             <Text size="xs" style={{ color: colors.semantic.errorText }}>
               ต้องกำหนด: {missingRequired.map(f => f.label).join(', ')}
             </Text>

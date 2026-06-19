@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Popconfirm } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
 import { Button } from '../Button';
+import { AppIcons } from '../../icons';
 
 export interface DeleteConfirmButtonProps {
   onConfirm: () => void;
@@ -40,7 +40,7 @@ export function DeleteConfirmButton({
         <Button
           variant="danger-ghost"
           size={size}
-          icon={<DeleteOutlined />}
+          icon={<AppIcons.delete />}
           loading={loading}
           disabled={disabled}
         />

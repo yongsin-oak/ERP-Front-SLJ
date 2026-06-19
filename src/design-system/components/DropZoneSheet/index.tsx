@@ -2,16 +2,11 @@ import { useState, useCallback, useRef } from 'react';
 import type { DragEvent, ChangeEvent } from 'react';
 import styled from '@emotion/styled';
 import { Flex } from 'antd';
-import {
-  InboxOutlined,
-  FileExcelOutlined,
-  CloseOutlined,
-  WarningOutlined,
-} from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import { colors, spacing, radius, shadow } from '../../tokens';
 import { Text } from '../Typography';
 import { Button } from '../Button';
+import { AppIcons } from '../../icons';
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -188,7 +183,7 @@ export function DropZoneSheet({
         <FileCard>
           <Flex align="center" justify="space-between">
             <Flex align="center" gap={spacing[2]}>
-              <FileExcelOutlined style={{ fontSize: 22, color: colors.semantic.successText }} />
+              <AppIcons.excel style={{ fontSize: 22, color: colors.semantic.successText }} />
               <div>
                 <Text size="sm" strong>{sheet.fileName}</Text>
                 <br />
@@ -197,7 +192,7 @@ export function DropZoneSheet({
                 </Text>
               </div>
             </Flex>
-            <Button variant="ghost" size="small" icon={<CloseOutlined />} onClick={handleClear}>
+            <Button variant="ghost" size="small" icon={<AppIcons.close />} onClick={handleClear}>
               เปลี่ยนไฟล์
             </Button>
           </Flex>
@@ -208,7 +203,7 @@ export function DropZoneSheet({
               gap={spacing[1]}
               style={{ marginTop: spacing[2], color: colors.semantic.warningText }}
             >
-              <WarningOutlined />
+              <AppIcons.warning />
               <Text size="xs" style={{ color: colors.semantic.warningText }}>
                 มีข้อมูลมากกว่า {warnRows.toLocaleString()} แถว การนำเข้าอาจใช้เวลานาน
               </Text>
@@ -247,7 +242,7 @@ export function DropZoneSheet({
           disabled={disabled}
         />
         <Flex vertical align="center" gap={spacing[2]}>
-          <InboxOutlined
+          <AppIcons.inbox
             style={{
               fontSize: 40,
               color: loading ? colors.brand.primary : colors.text.tertiary,

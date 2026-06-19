@@ -1,8 +1,8 @@
 import { Flex } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
 import { spacing } from '../../tokens';
 import { Button } from '../Button';
 import { DeleteConfirmButton } from '../DeleteConfirmButton';
+import { AppIcons } from '../../icons';
 
 export interface ActionCellProps {
   onEdit?: () => void;
@@ -25,7 +25,7 @@ export function ActionCell({
         <Button
           variant="ghost"
           size="small"
-          icon={<EditOutlined />}
+          icon={<AppIcons.edit />}
           onClick={onEdit}
         />
       )}

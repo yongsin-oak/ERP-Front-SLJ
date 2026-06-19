@@ -4,10 +4,6 @@ import { useSearchState } from '@shared';
 import {
   InputNumber, Space, Flex, Progress, Row, Col, Card, Popconfirm, Alert,
 } from 'antd';
-import {
-  ArrowLeftOutlined, SaveOutlined, CheckCircleOutlined,
-  FileExcelOutlined, SearchOutlined,
-} from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader, Tag, Input, colors, AppIcons, SummaryCard } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -246,7 +242,7 @@ export function StockCountDetailPage() {
           <Space wrap>
             <Button
               variant="ghost"
-              icon={<ArrowLeftOutlined />}
+              icon={<AppIcons.arrowLeft />}
               onClick={() => navigate('/stock/count')}
             >
               กลับ
@@ -260,7 +256,7 @@ export function StockCountDetailPage() {
             </Button>
             {status === 'Completed' && (
               <Button
-                icon={<FileExcelOutlined />}
+                icon={<AppIcons.excel />}
                 loading={exporting === 'result'}
                 onClick={handleExportResult}
               >
@@ -277,7 +273,7 @@ export function StockCountDetailPage() {
               >
                 <Button
                   variant="primary"
-                  icon={<CheckCircleOutlined />}
+                  icon={<AppIcons.success />}
                   loading={applyAdjustments.isPending}
                 >
                   ปรับสต็อกตามผลนับ
@@ -290,7 +286,7 @@ export function StockCountDetailPage() {
             {isDraft && (
               <>
                 <Button
-                  icon={<SaveOutlined />}
+                  icon={<AppIcons.save />}
                   onClick={handleSave}
                   loading={updateItems.isPending}
                   disabled={!hasChanges}
@@ -308,7 +304,7 @@ export function StockCountDetailPage() {
                 >
                   <Button
                     variant="primary"
-                    icon={<CheckCircleOutlined />}
+                    icon={<AppIcons.success />}
                     loading={completeCount.isPending}
                     disabled={countedItems < totalItems}
                     title={countedItems < totalItems ? `ยังเหลือ ${totalItems - countedItems} รายการที่ยังไม่นับ` : undefined}
@@ -342,7 +338,7 @@ export function StockCountDetailPage() {
 
       <Flex gap={8} style={{ marginBottom: 16 }}>
         <Input
-          prefix={<SearchOutlined />}
+          prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อสินค้า หรือ barcode..."
           allowClear
           style={{ width: 300 }}

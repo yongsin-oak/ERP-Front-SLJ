@@ -1,18 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { InputNumber, Space } from 'antd';
 import type { InputRef } from 'antd';
-import {
-  BarcodeOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
-import { Button, Input, Table, Tag, colors } from '@design-system';
+import { Button, Input, Table, Tag, colors , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { inventoryService } from '@features/inventory/react-query/services';
-import { ProductDropdownSelect } from '@features/inventory/components';
+import { ProductDropdownSelect, inventoryService } from '@features/inventory';
+import type { ProductDropdown } from '@features/inventory';
 import { getErrorMessage, notify } from '@shared';
 import type { OrderItem } from '../types';
-import type { ProductDropdown } from '@features/inventory/types';
 
 interface OrderItemsEditorProps {
   items: OrderItem[];
@@ -134,7 +128,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
         <Button
           variant="danger"
           size="small"
-          icon={<DeleteOutlined />}
+          icon={<AppIcons.delete />}
           onClick={() => removeItem(record.barcode)}
         />
       ),
@@ -151,13 +145,13 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
           <Space.Compact style={{ width: '100%' }}>
             <Input
               ref={barcodeRef}
-              prefix={<BarcodeOutlined />}
+              prefix={<AppIcons.barcode />}
               placeholder="สแกน หรือพิมพ์ barcode แล้วกด Enter"
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
               onPressEnter={handleBarcodeSubmit}
             />
-            <Button variant="primary" icon={<PlusOutlined />} onClick={handleBarcodeSubmit}>
+            <Button variant="primary" icon={<AppIcons.add />} onClick={handleBarcodeSubmit}>
               เพิ่ม
             </Button>
           </Space.Compact>

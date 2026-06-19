@@ -1,10 +1,10 @@
 import { useRef, useCallback } from 'react';
 import { Flex } from 'antd';
 import type { InputRef } from 'antd';
-import { BarcodeOutlined } from '@ant-design/icons';
 import { Input } from '../Input';
 import { colors, spacing } from '../../tokens';
 import { Text } from '../Typography';
+import { AppIcons } from '../../icons';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -58,7 +58,7 @@ export function ScanInput({
       <Input
         ref={inputRef}
         prefix={
-          <BarcodeOutlined
+          <AppIcons.barcode
             style={{ color: loading ? colors.brand.primary : colors.text.tertiary }}
           />
         }

@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Flex, Space } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
   Table, Button, Tag, PageHeader, BulkSelectionBar, ActionCell,
-  SummaryCard, DateCell, CodeCell, colors,
+  SummaryCard, DateCell, CodeCell, colors, AppIcons,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { ShopFormModal } from '../components/ShopFormModal';
@@ -131,10 +130,10 @@ export function ShopPage() {
         }
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
+            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
               เพิ่มร้านค้า
             </Button>
           </>

@@ -1,17 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Flex, Row, Col, Card, Form, Tag, Space, Typography, Alert, Divider } from 'antd';
 import type { InputRef } from 'antd';
-import {
-  SaveOutlined,
-  ReloadOutlined,
-  HistoryOutlined,
-  UserOutlined,
-  ShopOutlined,
-  ShoppingCartOutlined,
-} from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Select, Input, Button, PageHeader, COL_PROPS } from '@design-system';
+import { Select, Input, Button, PageHeader, COL_PROPS , AppIcons } from '@design-system';
 import { colors, shadow } from '@design-system';
 import { useShops, PlatformBadge, PLATFORM_ORDER, PlatformHex } from '@features/shop';
 import type { Shop, Platform } from '@features/shop';
@@ -138,10 +130,10 @@ export function OrderEntryPage() {
         subtitle="เลือกพนักงาน → ร้านค้า → กรอกเลขคำสั่งซื้อ → สแกนสินค้า"
         actions={
           <>
-            <Button icon={<HistoryOutlined />} onClick={() => navigate('/order/history')}>
+            <Button icon={<AppIcons.history />} onClick={() => navigate('/order/history')}>
               ประวัติออเดอร์
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={handleClear}>
+            <Button icon={<AppIcons.refresh />} onClick={handleClear}>
               ล้างฟอร์ม
             </Button>
           </>
@@ -154,7 +146,7 @@ export function OrderEntryPage() {
             <Col {...COL_PROPS.formField}>
               <Form.Item
                 name="employeeId"
-                label={<Space size={6}><UserOutlined /> พนักงานผู้บันทึก</Space>}
+                label={<Space size={6}><AppIcons.user /> พนักงานผู้บันทึก</Space>}
                 rules={[{ required: true, message: 'กรุณาเลือกพนักงาน' }]}
               >
                 <Select
@@ -169,7 +161,7 @@ export function OrderEntryPage() {
             <Col {...COL_PROPS.formField}>
               <Form.Item
                 name="shopId"
-                label={<Space size={6}><ShopOutlined /> ร้านค้า / แพลตฟอร์ม</Space>}
+                label={<Space size={6}><AppIcons.shop /> ร้านค้า / แพลตฟอร์ม</Space>}
                 rules={[{ required: true, message: 'กรุณาเลือกร้านค้า' }]}
               >
                 <Select
@@ -318,7 +310,7 @@ function PaperOrderCard({
 
       <div style={{ padding: '14px 20px 18px' }}>
         <Flex align="center" gap={8} style={{ marginBottom: 10 }}>
-          <ShoppingCartOutlined style={{ color: accent }} />
+          <AppIcons.cart style={{ color: accent }} />
           <Text strong>รายการสินค้า</Text>
           {items.length > 0 && (
             <Tag color="blue" style={{ marginLeft: 4 }}>{items.length} รายการ</Tag>
@@ -384,7 +376,7 @@ function SaveBar({
       </Space>
       <Button
         variant="primary"
-        icon={<SaveOutlined />}
+        icon={<AppIcons.save />}
         disabled={!ready}
         loading={loading}
         onClick={onSave}

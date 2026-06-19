@@ -1,6 +1,6 @@
 # Skill: Design System — Icons
 
-> Two-library split, AppIcons map, and rules for domain icons.
+> Tabler-only, AppIcons map, purpose-based naming.
 > Back to parent: [design-system](../SKILL.md)
 
 ---
@@ -11,26 +11,21 @@ Use this skill when adding any icon to the UI.
 
 ---
 
-## Two-Library Split
+## Rules (Tabler-only, via AppIcons)
 
-| Library | Purpose | How to import |
-| --- | --- | --- |
-| `@ant-design/icons` | Generic UI chrome — edit, delete, search, close, arrows, etc. | `import { EditOutlined } from '@ant-design/icons'` |
-| `@tabler/icons-react` via `AppIcons` | Domain concepts where Antd falls short | `import { AppIcons } from '@design-system'` |
-
----
-
-## AppIcons — Domain Icon Map
-
-Defined in `src/design-system/icons.ts`. Import once, access by key:
+- **One library: `@tabler/icons-react`.** `@ant-design/icons` has been removed.
+- **Always go through `AppIcons`** — `import { AppIcons } from '@design-system'`. NEVER import `@tabler/icons-react` (or any icon lib) directly in a component.
+- **Key by purpose, not shape** — `AppIcons.add` / `AppIcons.delete` / `AppIcons.search`, not `AppIcons.plus` / `AppIcons.trash`. The key says *what it's for / where it's used*.
+- Icons default to **`size="1em"`** (inherit font-size, like the old antd icons). Pass `size={16}` to override. Pass `spin` for a spinning loader (`<AppIcons.loading spin />`).
+- **Need an icon that's not in the map?** Add a new purpose-named entry to `src/design-system/icons.tsx` (import the Tabler glyph there, wrap with `make()`), then use `AppIcons.<key>`. Don't reach for the raw glyph in the component.
 
 ```tsx
 import { AppIcons } from '@design-system';
 
-<AppIcons.product size={16} />
+<AppIcons.add />               {/* 1em — matches surrounding text */}
+<AppIcons.delete size={16} />
+<AppIcons.loading spin />
 <AppIcons.baht size={14} />
-<AppIcons.importFile size={16} />
-<AppIcons.pin size={16} />
 ```
 
 | Key | Icon | Use case |

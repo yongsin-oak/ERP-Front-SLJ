@@ -1,14 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Row, Col, Space, DatePicker, Flex } from 'antd';
 import { useSearchState } from '@shared';
-import {
-  EyeOutlined,
-  ReloadOutlined,
-  PlusOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  ClearOutlined,
-} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
 import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons, DeleteConfirmButton, COL_PROPS, Card, SummaryCard } from '@design-system';
@@ -114,7 +106,10 @@ export function OrderHistoryPage() {
       key: 'id',
       render: (_: unknown, r: Order) => (
         <div>
-          <div style={{ fontWeight: 500, fontFamily: 'monospace', fontSize: 12 }}>{r.id}</div>
+          <div style={{ fontWeight: 500, fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <AppIcons.barcode size={14} style={{ color: colors.text.tertiary, flexShrink: 0 }} />
+            {r.id}
+          </div>
           <div style={{ fontSize: 12, color: colors.text.tertiary }}>
             {r.startRecordAt
               ? dayjs(r.startRecordAt).format('DD/MM/YYYY HH:mm')
@@ -196,7 +191,7 @@ export function OrderHistoryPage() {
       render: (_: unknown, r: Order) => (
         <Space>
           <Button
-            variant="ghost" size="small" icon={<EyeOutlined />}
+            variant="ghost" size="small" icon={<AppIcons.view />}
             onClick={() => { setSelected(r); setDetailOpen(true); }}
           />
           <DeleteConfirmButton
@@ -223,13 +218,13 @@ export function OrderHistoryPage() {
         subtitle={`ทั้งหมด ${total.toLocaleString()} รายการ`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
             <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>
               Export Excel
             </Button>
-            <Button variant="primary" icon={<PlusOutlined />} onClick={() => navigate('/order')}>
+            <Button variant="primary" icon={<AppIcons.add />} onClick={() => navigate('/order')}>
               สร้าง Order
             </Button>
           </>
@@ -251,10 +246,10 @@ export function OrderHistoryPage() {
 
       <Card
         size="small"
-        title={<Space><FilterOutlined /> ตัวกรอง</Space>}
+        title={<Space><AppIcons.filter /> ตัวกรอง</Space>}
         extra={
           filtersActive ? (
-            <Button size="small" icon={<ClearOutlined />} onClick={clearFilters}>
+            <Button size="small" icon={<AppIcons.clear />} onClick={clearFilters}>
               ล้างตัวกรอง
             </Button>
           ) : null
@@ -264,7 +259,7 @@ export function OrderHistoryPage() {
         <Row gutter={[12, 12]}>
           <Col {...COL_PROPS.filterItem}>
             <Input
-              prefix={<SearchOutlined />}
+              prefix={<AppIcons.search />}
               placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
               allowClear
               value={search}

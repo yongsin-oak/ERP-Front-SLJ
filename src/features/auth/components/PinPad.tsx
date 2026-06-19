@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
-import { DeleteOutlined } from '@ant-design/icons';
-import { colors } from '@design-system';
+import { colors , AppIcons } from '@design-system';
 
 const Grid = styled.div`
   display: grid;
@@ -53,7 +52,7 @@ export function PinPad({ onKey, disabled }: Props) {
           onClick={() => onKey(k)}
           aria-label={k}
         >
-          {k === 'backspace' ? <DeleteOutlined style={{ fontSize: 18 }} /> :
+          {k === 'backspace' ? <AppIcons.delete style={{ fontSize: 18 }} /> :
            k === 'clear'     ? 'C' : k}
         </Key>
       ))}

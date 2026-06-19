@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Flex, Tag, Badge } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import { Table, Button, PageHeader, colors, ActionCell, CodeCell, DateCell, SummaryCard } from '@design-system';
+import { Table, Button, PageHeader, colors, ActionCell, CodeCell, DateCell, SummaryCard , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
 import {
@@ -112,7 +111,7 @@ export function TerminalPage() {
         title="Terminal"
         subtitle={`${terminals.length} เครื่องในระบบ`}
         actions={
-          <Button variant="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          <Button variant="primary" icon={<AppIcons.add />} onClick={openCreate}>
             เพิ่ม Terminal
           </Button>
         }

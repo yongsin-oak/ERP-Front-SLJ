@@ -26,6 +26,7 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
+      "@/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
       "@design-system": ["src/design-system/index.ts"],
       "@design-system/*": ["src/design-system/*"],

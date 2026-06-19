@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Input, Badge, Flex } from 'antd';
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons';
 import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, colors } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, useSearchState, notify } from '@shared';
@@ -123,7 +122,7 @@ export function SupplierPage() {
         subtitle={`ทั้งหมด ${total} ราย`}
         actions={
           <>
-            <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
+            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
               รีเฟรช
             </Button>
             <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>
@@ -131,7 +130,7 @@ export function SupplierPage() {
             </Button>
             <Button
               variant="primary"
-              icon={<PlusOutlined />}
+              icon={<AppIcons.add />}
               onClick={() => { setSelected(null); setModalOpen(true); }}
             >
               เพิ่มซัพพลายเออร์
@@ -148,7 +147,7 @@ export function SupplierPage() {
 
       <div style={{ marginBottom: 16 }}>
         <Search
-          prefix={<SearchOutlined />}
+          prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อ..."
           allowClear
           style={{ width: 280 }}

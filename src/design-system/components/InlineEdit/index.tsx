@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import styled from '@emotion/styled';
-import { EditOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import { Flex } from 'antd';
 import { colors, spacing, radius } from '../../tokens';
+import { AppIcons } from '../../icons';
 
 // ── Styled ────────────────────────────────────────────────────────────────────
 
@@ -130,10 +130,10 @@ export function InlineEdit({
           autoFocus
         />
         <ActionBtn $confirm onMouseDown={e => { e.preventDefault(); confirm(); }}>
-          <CheckOutlined />
+          <AppIcons.check />
         </ActionBtn>
         <ActionBtn onMouseDown={e => { e.preventDefault(); cancel(); }}>
-          <CloseOutlined />
+          <AppIcons.close />
         </ActionBtn>
       </Flex>
     );
@@ -144,7 +144,7 @@ export function InlineEdit({
       <span style={{ color: value ? colors.text.primary : colors.text.tertiary }}>
         {renderDisplay ? renderDisplay(value) : (value || placeholder)}
       </span>
-      {!disabled && <EditOutlined className="edit-icon" />}
+      {!disabled && <AppIcons.edit className="edit-icon" />}
     </DisplayWrap>
   );
 }

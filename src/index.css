@@ -1,3 +1,9 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -13,24 +19,280 @@ body {
 
 /* Desktop sidebar visible, mobile header hidden */
 @media (min-width: 768px) {
-  .mobile-header {
-    display: none !important;
-  }
-  .main-content-layout {
-    display: block !important;
-  }
+  .mobile-header { display: none !important; }
+  .main-content-layout { display: block !important; }
 }
 
 /* Mobile: hide desktop sidebar, show mobile header */
 @media (max-width: 767px) {
-  .desktop-sidebar {
-    display: none !important;
-  }
-  .main-content-layout {
-    margin-left: 0 !important;
-  }
-  .main-content {
-    padding-top: 68px !important;
-  }
+  .desktop-sidebar { display: none !important; }
+  .main-content-layout { margin-left: 0 !important; }
+  .main-content { padding-top: 68px !important; }
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   TIER 1 — PRIMITIVE / GLOBAL TOKENS  (raw palette — NEVER use directly in components)
+   ทุกตัวต้องถูกอ้างอิงโดย semantic อย่างน้อยหนึ่งที่ · มิเรอร์กับ colors.ts (ที่ยังป้อน antd)
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Neutral */
+  --neutral-0: #ffffff;
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+
+  /* Ink (text alpha on light) */
+  --ink-88: rgba(0, 0, 0, 0.88);
+  --ink-65: rgba(0, 0, 0, 0.65);
+  --ink-45: rgba(0, 0, 0, 0.45);
+  --ink-25: rgba(0, 0, 0, 0.25);
+  --ink-04: rgba(0, 0, 0, 0.04);
+  --ink-08: rgba(0, 0, 0, 0.08);
+
+  /* Lines */
+  --line-default: #e3e8ee;
+  --line-subtle: #f0f2f5;
+
+  /* Brand (red) — 500 base / 600 hover / 700 active */
+  --brand-500: #e0282e;
+  --brand-600: #c1252a;
+  --brand-700: #a71f23;
+
+  /* Functional hues — bg(50) · border(200) · solid(500) · text(700) [+600 for red hover] */
+  --red-50: #fff2f0;   --red-200: #ffccc7; --red-500: #ff4d4f; --red-600: #f5222d; --red-700: #cf1322;
+  --green-50: #f6ffed; --green-200: #b7eb8f; --green-500: #52c41a; --green-700: #389e0d;
+  --gold-50: #fffbe6;  --gold-200: #ffe58f;  --gold-500: #faad14;  --gold-700: #d48806;
+  --blue-50: #e6f4ff;  --blue-200: #91caff;  --blue-500: #1677ff;  --blue-700: #0958d9;
+
+  /* Categorical / data-viz hues — bg(50) · border(200) · text(700) */
+  --volcano-50: #fff2e8;  --volcano-200: #ffbb96;  --volcano-700: #d4380d;
+  --orange-50: #fff7e6;   --orange-200: #ffd591;   --orange-700: #d46b08;
+  --yellow-50: #feffe6;   --yellow-200: #fffb8f;   --yellow-700: #d4b106;
+  --lime-50: #fcffe6;     --lime-200: #eaff8f;     --lime-700: #7cb305;
+  --cyan-50: #e6fffb;     --cyan-200: #87e8de;     --cyan-700: #08979c;
+  --geekblue-50: #f0f5ff; --geekblue-200: #adc6ff; --geekblue-700: #1d39c4;
+  --purple-50: #f9f0ff;   --purple-200: #d3adf7;   --purple-700: #531dab;
+  --magenta-50: #fff0f6;  --magenta-200: #ffadd2;  --magenta-700: #c41d7f;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   TIER 2 — SEMANTIC TOKENS  (reference Tier 1 — the ONLY thing components consume)
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --background: var(--neutral-0);
+  --foreground: var(--ink-88);
+  --foreground-subtle: var(--ink-45);          /* tertiary / placeholder */
+  --card: var(--neutral-0);
+  --card-foreground: var(--ink-88);
+  --popover: var(--neutral-0);
+  --popover-foreground: var(--ink-88);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--ink-65);
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--ink-88);
+
+  /* Interaction surfaces (overlay) */
+  --accent: var(--ink-04);                       /* hover bg (ghost/row) */
+  --accent-foreground: var(--ink-88);
+  --accent-active: var(--ink-08);                /* pressed bg */
+
+  /* Primary (interactive) */
+  --primary: var(--brand-500);
+  --primary-hover: var(--brand-600);
+  --primary-active: var(--brand-700);
+  --primary-foreground: var(--neutral-0);
+
+  /* Destructive (interactive) */
+  --destructive: var(--red-500);
+  --destructive-hover: var(--red-600);
+  --destructive-active: var(--red-700);
+  --destructive-foreground: var(--neutral-0);
+
+  /* States */
+  --disabled: var(--ink-25);                     /* disabled foreground */
+  --disabled-bg: var(--neutral-100);
+  --control-off: var(--ink-25);                  /* switch/checkbox off track */
+
+  /* Borders */
+  --border: var(--line-default);
+  --input: var(--line-default);
+  --divider: var(--line-subtle);
+  --ring: var(--brand-500);
+
+  /* Status — bg · border · solid(accent) · text(readable) */
+  --success-bg: var(--green-50); --success-border: var(--green-200); --success: var(--green-500); --success-text: var(--green-700);
+  --warning-bg: var(--gold-50);  --warning-border: var(--gold-200);  --warning: var(--gold-500);  --warning-text: var(--gold-700);
+  --error-bg: var(--red-50);     --error-border: var(--red-200);     --error: var(--red-500);     --error-text: var(--red-700);
+  --info-bg: var(--blue-50);     --info-border: var(--blue-200);     --info: var(--blue-500);     --info-text: var(--blue-700);
+
+  /* Data palette (categorical labels/charts) — bg · border · text */
+  --data-red-bg: var(--red-50);           --data-red-border: var(--red-200);           --data-red-text: var(--red-700);
+  --data-volcano-bg: var(--volcano-50);   --data-volcano-border: var(--volcano-200);   --data-volcano-text: var(--volcano-700);
+  --data-orange-bg: var(--orange-50);     --data-orange-border: var(--orange-200);     --data-orange-text: var(--orange-700);
+  --data-gold-bg: var(--gold-50);         --data-gold-border: var(--gold-200);         --data-gold-text: var(--gold-700);
+  --data-yellow-bg: var(--yellow-50);     --data-yellow-border: var(--yellow-200);     --data-yellow-text: var(--yellow-700);
+  --data-lime-bg: var(--lime-50);         --data-lime-border: var(--lime-200);         --data-lime-text: var(--lime-700);
+  --data-green-bg: var(--green-50);       --data-green-border: var(--green-200);       --data-green-text: var(--green-700);
+  --data-cyan-bg: var(--cyan-50);         --data-cyan-border: var(--cyan-200);         --data-cyan-text: var(--cyan-700);
+  --data-blue-bg: var(--blue-50);         --data-blue-border: var(--blue-200);         --data-blue-text: var(--blue-700);
+  --data-geekblue-bg: var(--geekblue-50); --data-geekblue-border: var(--geekblue-200); --data-geekblue-text: var(--geekblue-700);
+  --data-purple-bg: var(--purple-50);     --data-purple-border: var(--purple-200);     --data-purple-text: var(--purple-700);
+  --data-magenta-bg: var(--magenta-50);   --data-magenta-border: var(--magenta-200);   --data-magenta-text: var(--magenta-700);
+  --data-default-bg: var(--neutral-100);  --data-default-border: var(--line-default);  --data-default-text: var(--ink-65);
+
+  /* charts */
+  --chart-1: var(--brand-500);
+  --chart-2: var(--blue-500);
+  --chart-3: var(--green-500);
+  --chart-4: var(--gold-500);
+  --chart-5: var(--purple-700);
+
+  --radius: 0.375rem; /* 6px — ตรงกับ antd borderRadius */
+
+  /* sidebar */
+  --sidebar: var(--neutral-50);
+  --sidebar-foreground: var(--ink-88);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: var(--neutral-0);
+  --sidebar-accent: var(--ink-04);
+  --sidebar-accent-foreground: var(--ink-88);
+  --sidebar-border: var(--line-default);
+  --sidebar-ring: var(--brand-500);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --foreground-subtle: oklch(0.708 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --accent: oklch(1 0 0 / 8%);
+  --accent-foreground: oklch(0.985 0 0);
+  --accent-active: oklch(1 0 0 / 12%);
+  --disabled: oklch(1 0 0 / 25%);
+  --disabled-bg: oklch(0.269 0 0);
+  --control-off: oklch(1 0 0 / 25%);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --divider: oklch(1 0 0 / 8%);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   TIER 3 — TAILWIND THEME MAP  (semantic → utility classes only)
+   ════════════════════════════════════════════════════════════════════════ */
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Bai Jamjuree', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* surfaces */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-active: var(--accent-active);
+
+  /* interactive */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-active: var(--destructive-active);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* states */
+  --color-disabled: var(--disabled);
+  --color-disabled-bg: var(--disabled-bg);
+  --color-control-off: var(--control-off);
+
+  /* borders */
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-divider: var(--divider);
+  --color-ring: var(--ring);
+
+  /* status */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-text: var(--success-text);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-warning-text: var(--warning-text);
+  --color-error: var(--error);
+  --color-error-bg: var(--error-bg);
+  --color-error-border: var(--error-border);
+  --color-error-text: var(--error-text);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-border: var(--info-border);
+  --color-info-text: var(--info-text);
+
+  /* data palette */
+  --color-data-red-bg: var(--data-red-bg); --color-data-red-border: var(--data-red-border); --color-data-red-text: var(--data-red-text);
+  --color-data-volcano-bg: var(--data-volcano-bg); --color-data-volcano-border: var(--data-volcano-border); --color-data-volcano-text: var(--data-volcano-text);
+  --color-data-orange-bg: var(--data-orange-bg); --color-data-orange-border: var(--data-orange-border); --color-data-orange-text: var(--data-orange-text);
+  --color-data-gold-bg: var(--data-gold-bg); --color-data-gold-border: var(--data-gold-border); --color-data-gold-text: var(--data-gold-text);
+  --color-data-yellow-bg: var(--data-yellow-bg); --color-data-yellow-border: var(--data-yellow-border); --color-data-yellow-text: var(--data-yellow-text);
+  --color-data-lime-bg: var(--data-lime-bg); --color-data-lime-border: var(--data-lime-border); --color-data-lime-text: var(--data-lime-text);
+  --color-data-green-bg: var(--data-green-bg); --color-data-green-border: var(--data-green-border); --color-data-green-text: var(--data-green-text);
+  --color-data-cyan-bg: var(--data-cyan-bg); --color-data-cyan-border: var(--data-cyan-border); --color-data-cyan-text: var(--data-cyan-text);
+  --color-data-blue-bg: var(--data-blue-bg); --color-data-blue-border: var(--data-blue-border); --color-data-blue-text: var(--data-blue-text);
+  --color-data-geekblue-bg: var(--data-geekblue-bg); --color-data-geekblue-border: var(--data-geekblue-border); --color-data-geekblue-text: var(--data-geekblue-text);
+  --color-data-purple-bg: var(--data-purple-bg); --color-data-purple-border: var(--data-purple-border); --color-data-purple-text: var(--data-purple-text);
+  --color-data-magenta-bg: var(--data-magenta-bg); --color-data-magenta-border: var(--data-magenta-border); --color-data-magenta-text: var(--data-magenta-text);
+  --color-data-default-bg: var(--data-default-bg); --color-data-default-border: var(--data-default-border); --color-data-default-text: var(--data-default-text);
+
+  /* charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

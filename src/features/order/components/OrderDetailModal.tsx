@@ -1,8 +1,7 @@
 import { Descriptions, Divider, Spin } from 'antd';
-import { CopyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Modal, Table, Tag, Button, colors } from '@design-system';
+import { Modal, Table, Tag, Button, colors , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useOrderDetail } from '../react-query';
 import { OrderStatuses } from '../types';
@@ -92,7 +91,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Button
-            icon={<CopyOutlined />}
+            icon={<AppIcons.copy />}
             onClick={handleReorder}
             disabled={!details.length}
           >

@@ -2,10 +2,6 @@ import { useState } from 'react';
 import { useSearchState, showError, notify } from '@shared';
 import { Flex, Input, Space, Badge, Tabs, Tooltip } from 'antd';
 import {
-  PlusOutlined, EditOutlined, SearchOutlined, ReloadOutlined,
-  InboxOutlined, DollarOutlined, WarningFilled,
-} from '@ant-design/icons';
-import {
   Table, Button, Tag, PageHeader, Select, BulkSelectionBar,
   colors, AppIcons, DeleteConfirmButton, CodeCell,
 } from '@design-system';
@@ -148,7 +144,7 @@ export function InventoryPage() {
           <Space size={4}>
             {noPrice && (
               <Tooltip title="ยังไม่ตั้งราคาขาย">
-                <WarningFilled style={{ color: colors.semantic.warning, fontSize: 13 }} />
+                <AppIcons.warningFilled style={{ color: colors.semantic.warning, fontSize: 13 }} />
               </Tooltip>
             )}
             <span>{pack != null ? `฿${pack.toLocaleString()}` : '-'}</span>
@@ -183,18 +179,18 @@ export function InventoryPage() {
         <Space>
           <Tooltip title="รับสินค้าเข้า">
             <Button
-              variant="ghost" size="small" icon={<InboxOutlined />}
+              variant="ghost" size="small" icon={<AppIcons.inbox />}
               onClick={() => openStockEntry(r.barcode)}
             />
           </Tooltip>
           <Tooltip title="ราคาร้านค้าเฉพาะ">
             <Button
-              variant="ghost" size="small" icon={<DollarOutlined />}
+              variant="ghost" size="small" icon={<AppIcons.money />}
               onClick={() => setShopPriceBarcode(r.barcode)}
             />
           </Tooltip>
           <Button
-            variant="ghost" size="small" icon={<EditOutlined />}
+            variant="ghost" size="small" icon={<AppIcons.edit />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
           />
           <DeleteConfirmButton
@@ -218,7 +214,7 @@ export function InventoryPage() {
     <div>
       <Flex gap={8} wrap style={{ marginBottom: 12 }}>
         <Search
-          prefix={<SearchOutlined />}
+          prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อ, barcode..."
           allowClear
           style={{ width: 260 }}
@@ -299,11 +295,11 @@ export function InventoryPage() {
         actions={
           activeTab === 'products' ? (
             <>
-              <Button icon={<ReloadOutlined />} onClick={() => refetch()}>รีเฟรช</Button>
+              <Button icon={<AppIcons.refresh />} onClick={() => refetch()}>รีเฟรช</Button>
               <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
               <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
-              <Button icon={<InboxOutlined />} onClick={() => openStockEntry()}>รับสินค้าเข้า</Button>
-              <Button variant="primary" icon={<PlusOutlined />} onClick={() => { setSelected(null); setModalOpen(true); }}>
+              <Button icon={<AppIcons.inbox />} onClick={() => openStockEntry()}>รับสินค้าเข้า</Button>
+              <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
                 เพิ่มสินค้า
               </Button>
             </>

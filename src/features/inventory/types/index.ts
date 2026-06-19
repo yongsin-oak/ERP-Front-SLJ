@@ -39,6 +39,7 @@ export interface ProductDropdown {
   name: string;
   remaining: number;
   sellPrice?: PriceSet;
+  costPrice?: PriceSet;
 }
 
 export interface CreateProductDto {

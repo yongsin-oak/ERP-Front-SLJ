@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Flex, InputNumber, Typography, Alert } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Table, Button, PageHeader, Select, colors } from '@design-system';
+import { Table, Button, PageHeader, colors , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
 import { useEmployeeList } from '@features/employee/react-query';
-import { useProducts } from '@features/inventory';
+import { ProductDropdownSelect } from '@features/inventory';
 
 interface DamageRow {
   key: string;
@@ -35,29 +34,8 @@ export function StockDamagePage() {
     [employees],
   );
 
-  const { data: prodData } = useProducts({ page: 1, limit: 500 });
-  const products = prodData?.data ?? [];
-  const productMap = useMemo(() => new Map(products.map((p) => [p.barcode, p])), [products]);
-  const productOptions = useMemo(
-    () =>
-      products.map((p) => ({
-        label: `${p.name} (${p.barcode}) — สต็อก: ${p.remaining}`,
-        value: p.barcode,
-      })),
-    [products],
-  );
-
   function updateRow(key: string, patch: Partial<DamageRow>) {
-    setRows((prev) => prev.map((r) => {
-      if (r.key !== key) return r;
-      const updated = { ...r, ...patch };
-      if (patch.productBarcode !== undefined) {
-        const prod = productMap.get(patch.productBarcode);
-        updated.currentRemaining = prod?.remaining;
-        updated.costPricePerUnit = prod?.costPrice?.pack ?? 0;
-      }
-      return updated;
-    }));
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   }
 
   function removeRow(key: string) {
@@ -90,13 +68,26 @@ export function StockDamagePage() {
       title: 'สินค้า',
       dataIndex: 'productBarcode',
       render: (_: string, r: DamageRow) => (
-        <Select
-          showSearch={{ optionFilterProp: 'label' }}
+        <ProductDropdownSelect
           placeholder="เลือกสินค้า"
           style={{ width: '100%', minWidth: 240 }}
-          options={productOptions}
+          allowClear
           value={r.productBarcode || undefined}
-          onChange={(v) => updateRow(r.key, { productBarcode: v })}
+          onChange={(v) =>
+            updateRow(
+              r.key,
+              v
+                ? { productBarcode: v }
+                : { productBarcode: '', currentRemaining: undefined, costPricePerUnit: 0 },
+            )
+          }
+          onSelect={(barcode, product) =>
+            updateRow(r.key, {
+              productBarcode: barcode,
+              currentRemaining: product.remaining,
+              costPricePerUnit: product.costPrice?.pack ?? 0,
+            })
+          }
         />
       ),
     },
@@ -159,7 +150,7 @@ export function StockDamagePage() {
         <Button
           variant="danger-ghost"
           size="small"
-          icon={<DeleteOutlined />}
+          icon={<AppIcons.delete />}
           onClick={() => removeRow(r.key)}
           disabled={rows.length === 1}
         />
@@ -201,7 +192,7 @@ export function StockDamagePage() {
         />
 
         <Flex gap={8} style={{ marginTop: 12 }}>
-          <Button icon={<PlusOutlined />} onClick={() => setRows((p) => [...p, newRow()])}>
+          <Button icon={<AppIcons.add />} onClick={() => setRows((p) => [...p, newRow()])}>
             เพิ่มรายการ
           </Button>
           <Button
