@@ -46,7 +46,7 @@
 - [x] **Tier 1 primitive** — neutral scale เต็ม 0–900 (Stripe cool-gray), brand แดง, functional hues, ink, scrim, shadow ingredients
 - [x] **Tier 2 semantic** — canvas/surfaces, text hierarchy, borders(+strong), status, interaction states, **shadow ladder (xs→overlay)**, **motion/easing tokens**, primary-subtle
 - [x] **Tier 3 `@theme inline`** — map → Tailwind utilities: `bg-canvas`, `bg-scrim`, `shadow-{xs..overlay}`, `ease-{out,in-out,spring}`, `border-strong`, radius
-- [ ] เลิกพึ่ง `tokens/colors.ts` + `tokens/spacing.ts` (ของเดิมป้อน antd/emotion) — ย้าย consumer มาใช้ Tailwind token แล้วลบทิ้งใน Phase 6
+- [~] เลิกพึ่ง `tokens/colors.ts` + `tokens/spacing.ts` (ของเดิมป้อน antd/emotion) — **งานค้างเดียวที่เหลือ**: ยังมี consumer ~10 ไฟล์ (LoginPage, DashboardPage, feature pages) · ScanInput ถอดแล้ว (2026-07-04) · ย้ายที่เหลือแล้วลบไฟล์
 
 ---
 
@@ -61,12 +61,12 @@
 - [x] เขียน `src/shared/utils/notify.tsx` ใหม่บน sonner (คง API `notify.success/warning/error/loading/resolve/dismiss`)
 - [x] Hero primitive: base `Input`+`Textarea` (refine Stripe) + **`Field`/`TextField`/`TextareaField`** (label/hint/error/prefix/suffix) + Storybook story `Field.stories.tsx`
 - [x] ผ่าน `tsc -b --force` (exit 0) + `vite build` (exit 0)
-- [ ] **รีวิวกับผู้ใช้** — เคาะ look & API ก่อนเดินต่อ ⏸️ ← **อยู่ตรงนี้**
+- [x] **รีวิวกับผู้ใช้** — เดินงานต่อจนจบทุกเฟสแล้ว (ดู Storybook เป็นตัวรีวิว look & API)
 
 ### Phase 1 — Core primitives (ราก UI)
 **Layout helpers (ทำก่อน เพราะ feature เรียกเยอะ)**
-- [ ] `Stack` / `Inline` (แทน antd `Flex`/`Space`)
-- [ ] `Grid` / responsive cols (แทน antd `Row`/`Col` + `COL_PROPS`)
+- [x] `Stack` / `Inline` (แทน antd `Flex`/`Space`)
+- [x] `Grid` / responsive cols (แทน antd `Row`/`Col` + `COL_PROPS`)
 
 **Form controls**
 - [x] `Input` + `Textarea` + `InputPassword` + `InputSearch` — prefix/suffix/allowClear/addon + InputRef imperative (.focus/.select)
@@ -100,22 +100,22 @@
 ### Phase 2 — Form system
 - [x] `Form` (**RHF engine + antd-compatible surface**: useForm/Form.Item/useWatch/validateFields/resetFields/setFieldsValue/setFields/rules/valuePropName/noStyle/shouldUpdate) — feature เปลี่ยน import บรรทัดเดียว
 - [x] `FormModal` (Modal + RHF FormInstance, generic)
-- [ ] Smart inputs: `PriceInput`, `QuantityInput`, `InlineEdit`, `ScanInput`, `DateRangePresets`
-- [ ] `SearchableSelect`, `InfiniteSearchSelect`, `ProductDropdownSelect`
+- [x] Smart inputs: `PriceInput`, `QuantityInput`, `InlineEdit`, `ScanInput`, `DateRangePresets`
+- [x] `SearchableSelect`, `InfiniteSearchSelect`, `ProductDropdownSelect`
 
 ### Phase 3 — Table system
-- [ ] `Table` (TanStack Table + react-virtual) — sort/paginate/rowSelection/searchable column
-- [ ] `ActionCell` (edit + delete)
-- [ ] `BulkSelectionBar`
-- [ ] Cell helpers: `DateCell` / `MoneyCell` / `CodeCell` / `QuantityCell`
-- [ ] `SheetTable` (virtual preview)
+- [x] `Table` — sort/paginate/rowSelection/searchable column · **virtual ทำงานจริงแล้ว** (react-virtual, 2026-07-04) + preserveSelectedRowKeys + page clamp
+- [x] `ActionCell` (edit + delete)
+- [x] `BulkSelectionBar`
+- [x] Cell helpers: `DateCell` / `MoneyCell` / `CodeCell` / `QuantityCell`
+- [x] `SheetTable` (virtual preview)
 
 ### Phase 4 — Composite / page-level
-- [ ] `PageShell` (loading / empty / error)
-- [ ] `PageHeader`
-- [ ] `FilterBar`
-- [ ] `StatsCard` / `SummaryCard` / `DashboardPage StatCard`
-- [ ] `DeleteConfirmButton`
+- [x] `PageShell` (loading / empty / error)
+- [x] `PageHeader`
+- [x] `FilterBar`
+- [x] `StatsCard` / `SummaryCard` / `DashboardPage StatCard`
+- [x] `DeleteConfirmButton`
 - [x] `ConfirmDrawer` — Drawer + step indicator (ปลด emotion)
 - [x] Sheet import: `DropZoneSheet`, `SheetColumnMapper`, `SheetImportModal` (ปลด emotion + antd Steps/Alert)
 
@@ -138,7 +138,7 @@
 - [x] เอา `jsxImportSource: "@emotion/react"` ออกจาก `vite.config.ts` + antd manualChunk
 - [x] `bun remove antd @emotion/react @emotion/styled` (3 packages removed)
 - [x] `tsc -b` + `vite build` ผ่านสะอาด (exit 0 · build 385ms · antd chunk หายจาก bundle)
-- [~] อัปเดต `CLAUDE.md` (stack table) — `.claude/skills/design-system/**` ยังควรทบทวนเพิ่ม
+- [x] อัปเดต `CLAUDE.md` (stack table) + rewrite `.claude/skills/design-system/SKILL.md` + `components/SKILL.md` (2026-07-04 — ตัด antd/Emotion ออกหมด)
 
 > **🎉 เสร็จสมบูรณ์** — `grep "from 'antd'"` ใน src = 0 · `grep "@emotion"` ใน src = 0
 > เพิ่ม component ใหม่: `Stack`/`Inline`/`Grid`/`Field`/`Segmented` · DS `Form` = RHF engine + antd-compatible surface
@@ -153,6 +153,8 @@
 | 2026-06-24 | Toasts | Sonner (เล็ก ~5kb, Stripe-style) |
 | 2026-06-24 | การเดินงาน | Foundation ก่อน → รีวิว → ค่อยเดินเฟสถัดไป |
 | 2026-06-24 | Brand | คงสีแบรนด์ **แดง #e0282e** — เอา "โครงสร้าง" Stripe (เงา/ระยะ/เส้น/ตัวอักษร) ไม่ใช่สีม่วง Stripe |
+| 2026-07-04 | Quality pass | รีวิวหาบัคทั้ง 48 component (5 review agents) → แก้ ~19 จุด: Table virtual ทำงานจริง + preserveSelectedRowKeys + page clamp, Modal/DeleteConfirmButton รองรับ async + กันกดซ้ำ + บล็อคปิดระหว่างรอ, ConfirmDrawer/FormModal error handling, InfiniteSearchSelect debounce, SearchableSelect stale-response race, ScanInput refocus-เสมอ + ถอด colors.ts, DropZoneSheet ตรวจชนิดไฟล์ตอน drop, DateCell กัน invalid date, CopyButton clipboard + timer leak, FilterBar/PageHeader responsive |
+| 2026-07-04 | Storybook | เขียน stories ครบทั้ง design system (48 component) — convention: `Design System/<Name>`, autodocs, เนื้อหาไทยตามโดเมน ERP |
 
 ---
 

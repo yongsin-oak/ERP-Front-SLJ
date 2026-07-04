@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Dayjs } from 'dayjs';
-import { Table, Button, Tag, Select, Input, colors, AppIcons, Inline, DateRangePicker } from '@design-system';
+import { Table, Button, Tag, Select, Input, AppIcons, Inline, DateRangePicker } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, inventoryExportService } from '../react-query';
@@ -81,7 +81,7 @@ export function StockHistoryTab({ active }: Props) {
       render: (_: unknown, r: StockEntry) => (
         <div>
           <div style={{ fontWeight: 500 }}>{r.product?.name ?? '-'}</div>
-          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.productBarcode}</code>
+          <code className="text-[11px] text-foreground-subtle">{r.productBarcode}</code>
         </div>
       ),
     },

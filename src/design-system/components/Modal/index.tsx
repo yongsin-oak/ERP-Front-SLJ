@@ -17,7 +17,8 @@ export interface ModalButtonProps {
 export interface ModalProps {
   open?: boolean;
   onCancel?: () => void;
-  onOk?: () => void;
+  /** ถ้าคืน Promise ปุ่มตกลงจะขึ้น loading + กันกดซ้ำจนกว่าจะ settle */
+  onOk?: () => void | Promise<unknown>;
   title?: React.ReactNode;
   footer?: React.ReactNode | null;
   width?: number | string;
@@ -29,8 +30,9 @@ export interface ModalProps {
   centered?: boolean;
   maskClosable?: boolean;
   closable?: boolean;
-  /** antd compat — Radix unmounts content on close, so these are no-ops */
+  /** @deprecated antd compat — Radix unmount เนื้อหาตอนปิดเสมอ prop นี้ถูกเมิน */
   destroyOnHidden?: boolean;
+  /** @deprecated antd compat — Radix unmount เนื้อหาตอนปิดเสมอ prop นี้ถูกเมิน */
   destroyOnClose?: boolean;
   className?: string;
   styles?: {
@@ -60,15 +62,33 @@ export function Modal({
   styles,
   children,
 }: ModalProps) {
+  const [submitting, setSubmitting] = React.useState(false);
+  const pending = !!confirmLoading || submitting || !!okButtonProps?.loading;
+
+  async function handleOk() {
+    if (pending) return;
+    const result = onOk?.();
+    if (result instanceof Promise) {
+      setSubmitting(true);
+      try {
+        await result;
+      } catch {
+        // ผู้เรียกจัดการ error เองแล้ว (handleError ใน mutation) — กัน unhandled rejection
+      } finally {
+        setSubmitting(false);
+      }
+    }
+  }
+
   const defaultFooter = (
     <>
-      <Button variant="ghost" onClick={onCancel} disabled={cancelButtonProps?.disabled || confirmLoading}>
+      <Button variant="ghost" onClick={onCancel} disabled={cancelButtonProps?.disabled || pending}>
         {cancelText}
       </Button>
       <Button
         variant={okButtonProps?.danger ? 'danger' : 'primary'}
-        onClick={onOk}
-        loading={confirmLoading || okButtonProps?.loading}
+        onClick={handleOk}
+        loading={pending}
         disabled={okButtonProps?.disabled}
       >
         {okText}
@@ -80,13 +100,17 @@ export function Modal({
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (!o) onCancel?.();
+        // ระหว่างรอ mutation ห้ามปิด (Escape/คลิกนอก/ปุ่ม X) — กัน state ค้างกลางทาง
+        if (!o && !pending) onCancel?.();
       }}
     >
       <DialogContent
         showClose={closable !== false}
         onInteractOutside={(e) => {
-          if (maskClosable === false) e.preventDefault();
+          if (maskClosable === false || pending) e.preventDefault();
+        }}
+        onEscapeKeyDown={(e) => {
+          if (pending) e.preventDefault();
         }}
         className={cn(
           'max-h-[calc(100vh-3rem)] max-w-[calc(100vw-2rem)] gap-0 p-0',

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { IconSearch, IconMail } from '@tabler/icons-react';
+import { AppIcons } from '../../icons';
 import { TextField, TextareaField } from './index';
 
 const meta = {
@@ -32,7 +32,7 @@ export const WithPrefix: Story = {
 };
 
 export const WithSuffixIcon: Story = {
-  args: { label: 'ค้นหา', suffix: <IconSearch />, placeholder: 'พิมพ์เพื่อค้นหา…' },
+  args: { label: 'ค้นหา', suffix: <AppIcons.search />, placeholder: 'พิมพ์เพื่อค้นหา…' },
 };
 
 export const Disabled: Story = {
@@ -57,7 +57,7 @@ export const FormExample: Story = {
       <p className="mb-5 text-[13px] text-muted-foreground">กรอกข้อมูลให้ครบเพื่อสร้างบัญชี</p>
       <div className="flex flex-col gap-4">
         <TextField label="ชื่อ-นามสกุล" required placeholder="สมชาย ใจดี" />
-        <TextField label="อีเมล" required prefix={<IconMail />} placeholder="you@slj.co.th" type="email" />
+        <TextField label="อีเมล" required prefix={<AppIcons.email />} placeholder="you@slj.co.th" type="email" />
         <TextField label="ตำแหน่ง" hint="เช่น Operator, Warehouse" placeholder="ระบุตำแหน่ง" />
         <TextareaField label="หมายเหตุ" placeholder="ไม่บังคับ" rows={3} />
       </div>

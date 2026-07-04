@@ -44,8 +44,12 @@ export function ConfirmDrawer({
   }
 
   async function handleConfirm() {
-    await onConfirm();
-    setStep(0);
+    try {
+      await onConfirm();
+      setStep(0);
+    } catch {
+      // ค้างที่หน้ายืนยันให้กดซ้ำได้ — error ถูก toast โดย handleError ของ mutation แล้ว
+    }
   }
 
   return (

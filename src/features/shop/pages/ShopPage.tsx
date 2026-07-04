@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Table, Button, Tag, PageHeader, BulkSelectionBar, ActionCell,
-  SummaryCard, DateCell, CodeCell, colors, AppIcons, Inline,
+  SummaryCard, DateCell, CodeCell, AppIcons, Inline,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { ShopFormModal } from '../components/ShopFormModal';
@@ -140,9 +140,9 @@ export function ShopPage() {
       />
 
       <Inline gap={3} wrap style={{ marginBottom: 16 }}>
-        <SummaryCard title="ร้านทั้งหมด" value={shops.length} suffix="ร้าน" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ออนไลน์" value={onlineCount} suffix="ร้าน" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ออฟไลน์" value={offlineCount} suffix="ร้าน" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ร้านทั้งหมด" value={shops.length} suffix="ร้าน" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ออนไลน์" value={onlineCount} suffix="ร้าน" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ออฟไลน์" value={offlineCount} suffix="ร้าน" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       {selectedKeys.length > 0 && (

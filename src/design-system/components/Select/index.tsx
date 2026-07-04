@@ -233,7 +233,7 @@ export function Select({
           ) : (
             filtered.map((it, i) =>
               isGroup(it) ? (
-                <div key={i} className="py-1">
+                <div key={`group-${String(it.label ?? i)}`} className="py-1">
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{it.label}</div>
                   {it.options.map(renderOption)}
                 </div>

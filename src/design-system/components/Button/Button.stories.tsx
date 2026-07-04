@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { IconPlus } from '@tabler/icons-react';
+import { AppIcons } from '../../icons';
 import { Button } from './index';
 
 const meta = {
@@ -23,9 +23,9 @@ export const DangerGhost: Story = { args: { variant: 'danger-ghost', children: '
 export const Ghost: Story = { args: { variant: 'ghost' } };
 export const Link: Story = { args: { variant: 'link' } };
 
-export const WithIcon: Story = { args: { variant: 'primary', icon: <IconPlus />, children: 'เพิ่มสินค้า' } };
+export const WithIcon: Story = { args: { variant: 'primary', icon: <AppIcons.add />, children: 'เพิ่มสินค้า' } };
 export const Loading: Story = { args: { variant: 'primary', loading: true } };
-export const IconOnly: Story = { args: { variant: 'ghost', icon: <IconPlus />, 'aria-label': 'add' } };
+export const IconOnly: Story = { args: { variant: 'ghost', icon: <AppIcons.add />, 'aria-label': 'เพิ่ม' } };
 
 export const AllVariants: Story = {
   render: () => (

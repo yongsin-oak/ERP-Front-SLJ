@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, colors, Input, Badge, Inline } from '@design-system';
+import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, Input, Badge, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, useSearchState, notify } from '@shared';
 import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, supplierService } from '../react-query';
@@ -142,9 +142,9 @@ export function SupplierPage() {
       />
 
       <Inline gap={3} wrap style={{ marginBottom: 16 }}>
-        <SummaryCard title="ทั้งหมด" value={total} suffix="ราย" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ใช้งาน (หน้านี้)" value={activeCount} suffix="ราย" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ปิดใช้งาน (หน้านี้)" value={inactiveCount} suffix="ราย" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ทั้งหมด" value={total} suffix="ราย" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ใช้งาน (หน้านี้)" value={activeCount} suffix="ราย" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปิดใช้งาน (หน้านี้)" value={inactiveCount} suffix="ราย" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       <div style={{ marginBottom: 16 }}>

@@ -23,7 +23,7 @@ import {
   IconTableImport, IconTableExport, IconBarcode, IconClipboardCheck, IconLockPassword,
   IconKey,
   // actions / chrome
-  IconPlus, IconMinus, IconSearch, IconPencil, IconTrash, IconX, IconCheck,
+  IconPlus, IconMinus, IconSearch, IconPencil, IconTrash, IconX, IconCheck, IconMail,
   IconCircleCheck, IconRefresh, IconFilter, IconDeviceFloppy, IconCopy, IconEye,
   IconDownload, IconClearAll, IconLoader2, IconSettings, IconList, IconAdjustments,
   // layout / nav chrome
@@ -84,6 +84,7 @@ export const AppIcons = {
   userAvatar:   make(IconUserCircle),
   userRole:     make(IconUserShield),
   department:   make(IconBriefcase),
+  email:        make(IconMail),
 
   // ── Actions / chrome ──────────────────────────────────
   add:          make(IconPlus),

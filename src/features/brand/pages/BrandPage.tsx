@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard, colors , AppIcons, Inline } from '@design-system';
+import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard , AppIcons, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
@@ -102,9 +102,9 @@ export function BrandPage() {
       />
 
       <Inline gap={3} wrap style={{ marginBottom: 16 }}>
-        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="มีรายละเอียด (หน้านี้)" value={withDescCount} suffix="แบรนด์" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ไม่มีรายละเอียด (หน้านี้)" value={withoutDescCount} suffix="แบรนด์" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="มีรายละเอียด (หน้านี้)" value={withDescCount} suffix="แบรนด์" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ไม่มีรายละเอียด (หน้านี้)" value={withoutDescCount} suffix="แบรนด์" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       {selectedKeys.length > 0 && (

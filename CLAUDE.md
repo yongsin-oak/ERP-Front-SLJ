@@ -127,7 +127,7 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 - **No prop drilling >2 levels** — lift to Zustand or React Query cache
 - **No `new Date()` or `moment`** — use `dayjs`
 - **No raw `axios`** — use `req` from `@lib`
-- **No inline `#hex` or `px` literals** — use design tokens from `@design-system/tokens`
+- **No inline `#hex` or `px` literals** — use Tailwind semantic utilities from the 3-tier tokens in `src/index.css` (`bg-canvas`, `text-muted-foreground`, `text-success-text`…); when a prop needs a CSS color string use `var(--color-<token>)`. See `.claude/skills/design-system/SKILL.md`.
 - **All icons via `AppIcons`** (Tabler only) — `import { AppIcons } from '@design-system'`; `<AppIcons.add />`, `<AppIcons.delete />`. Key by **purpose**, not shape. NEVER import `@tabler/icons-react` or `@ant-design/icons` directly. See `.claude/skills/design-system/icons/SKILL.md`.
 - **No hardcoded query keys** — use key factories from `hooks/queryKeys.ts`
 - **No magic timing numbers** — use `STALE_TIME`, `GC_TIME`, `REFETCH_INTERVAL` from `@lib`

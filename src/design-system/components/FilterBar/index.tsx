@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Dayjs } from 'dayjs';
 import { Input } from '../Input';
 import { Select } from '../Select';
@@ -32,6 +32,13 @@ export interface FilterBarProps {
 
 export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) {
   const timerRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // ช่อง search เป็น uncontrolled (กันโฟกัสหลุดตอน debounce) — remount เฉพาะตอนกดล้างตัวกรอง
+  const [resetKey, setResetKey] = useState(0);
+
+  useEffect(() => {
+    const timers = timerRef.current;
+    return () => Object.values(timers).forEach(clearTimeout);
+  }, []);
 
   const set = useCallback(
     (key: string, value: unknown) => onChange({ ...values, [key]: value }),
@@ -62,12 +69,13 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
             <div key={item.key} className="flex flex-col gap-0.5">
               {item.label && <Text size="xs" type="secondary">{item.label}</Text>}
               <Input
+                key={resetKey}
                 prefix={<AppIcons.search />}
                 placeholder={item.placeholder ?? `ค้นหา${item.label ? ` ${item.label}` : ''}…`}
                 defaultValue={val as string}
                 onChange={e => debounceSet(item.key, e.target.value || undefined)}
                 allowClear
-                style={{ width: w }}
+                style={{ width: w, maxWidth: '100%' }}
               />
             </div>
           );
@@ -83,7 +91,7 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
                 onChange={v => set(item.key, v ?? undefined)}
                 options={item.options}
                 allowClear
-                style={{ width: w }}
+                style={{ width: w, maxWidth: '100%' }}
               />
             </div>
           );
@@ -96,7 +104,7 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
               <DateRangePresets
                 value={val as [Dayjs | null, Dayjs | null] | null ?? undefined}
                 onChange={range => set(item.key, range ?? undefined)}
-                style={{ width: w }}
+                style={{ width: w, maxWidth: '100%' }}
               />
             </div>
           );
@@ -110,8 +118,13 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
           variant="ghost"
           size="small"
           icon={<AppIcons.clear />}
-          onClick={() => { onChange({}); onClear?.(); }}
-          style={{ alignSelf: 'flex-end', marginBottom: 2 }}
+          onClick={() => {
+            Object.values(timerRef.current).forEach(clearTimeout);
+            setResetKey(k => k + 1);
+            onChange({});
+            onClear?.();
+          }}
+          className="mb-0.5 self-end"
         >
           ล้างตัวกรอง
         </Button>

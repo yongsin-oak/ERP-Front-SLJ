@@ -87,7 +87,7 @@ function MonthView({
               onMouseEnter={() => onHover?.(day)}
               onClick={() => onPick(day)}
               className={cn(
-                'mx-auto flex size-8 items-center justify-center text-sm transition-colors',
+                'mx-auto flex size-9 items-center justify-center text-sm transition-colors',
                 ranged && !selected ? 'rounded-none bg-primary-subtle' : 'rounded-md',
                 outside && !selected && 'text-foreground-subtle',
                 selected && 'bg-primary font-medium text-primary-foreground',

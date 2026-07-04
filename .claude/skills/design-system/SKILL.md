@@ -1,41 +1,8 @@
 # Skill: Design System — Tokens & Styling
 
-> Tokens, Emotion rules, and structural guidelines.
+> Tailwind v4 tokens, styling rules, and Storybook workflow.
 > Sub-skills: [components](./components/SKILL.md) · [icons](./icons/SKILL.md)
 > The design system lives at `src/design-system/` — import from `@design-system`.
-
----
-
-## 🚧 UI Migration: Ant Design → Tailwind + Radix (in progress)
-
-The UI layer is being migrated off Ant Design to **Tailwind v4 + Radix UI** (Stripe-style) for full control + smaller bundle.
-
-> **📋 Living plan + progress checklist: [`DESIGN-SYSTEM-MIGRATION.md`](../../../DESIGN-SYSTEM-MIGRATION.md) at repo root — read it before continuing this migration.**
-
-**Strategy (decided 2026-06-24): CLEAN REBUILD — new idiomatic APIs**, not strangler. Components get fresh APIs (forms → react-hook-form + zod; table → TanStack; overlays → Radix). The ~35 feature files that import antd directly get refactored in Phase 5. New + old coexist during transition (no big-bang). Toasts = **Sonner** (`notify.*` API in `notify.tsx` kept stable).
-
-- **Tailwind v4** via `@tailwindcss/vite`; styles in `src/index.css`. shadcn primitives in `src/components/ui/` (own-the-code), `cn()` in `src/lib/utils.ts`, alias `@/* → src/*`.
-- **Token architecture — 3 tiers in `src/index.css`** (this is the source for Tailwind components):
-  1. **Tier 1 — primitive/global** (`:root`): raw scales `--neutral-*`, `--brand-*`, `--red/green/gold/blue-*`, `--ink-*`. Never use directly in components.
-  2. **Tier 2 — semantic** (`:root` + `.dark`): meaning-based vars referencing Tier 1 — shadcn core (`--primary → var(--brand-500)`, `--background`, `--border`…) **plus app states** `--success/-bg/-border/-text`, `--warning*`, `--error*`, `--info*`.
-  3. **Tier 3 — `@theme inline`**: maps semantic → Tailwind utilities, so `bg-primary`, `hover:bg-primary-hover`, `active:bg-primary-active`, `text-success`, `bg-success-bg`, `border-divider`, `bg-control-off`, `bg-data-volcano-bg` etc. exist.
-
-  **Rules (strict):**
-  - **No hardcoded colors in components** — no `#hex`, no `bg-black/25`, no `text-white`. Use a semantic token (`text-primary-foreground` for white-on-brand, `bg-control-off` for an off track, etc.).
-  - **Components consume semantic (Tier 3) only** — never reference Tier 1 primitives directly (no `bg-[var(--neutral-300)]`). If a need isn't covered, **add a semantic token** (and a primitive if the hue is new) rather than reaching for a primitive.
-  - **Every primitive must be referenced** by ≥1 semantic (no orphan globals). Conversely keep semantics comprehensive so primitives never leak into components.
-  - **Declare all interaction states as tokens**: `--primary-hover/-active`, `--destructive-hover/-active`, `--accent` (hover surface) / `--accent-active` (pressed), `--disabled` / `--disabled-bg`, `--control-off`, `--divider`.
-  - Dynamic class maps must use **literal strings** (e.g. `success: 'bg-success-bg border-success-border text-success-text'`) so Tailwind's scanner emits them. Tailwind only emits *used* utilities — a declared-but-unused token (e.g. `border-divider`) won't appear in the build until a component uses it; that's expected.
-  - Categorical/data-viz colors (antd preset palette: `Tag color="blue|volcano|…"`) are tokenized too as `--data-<hue>-{bg,border,text}` and consumed via literal classes — **not** inline hex.
-  - ⚠️ CSS can't import `.ts` — Tier 1 hex **mirrors `colors.ts`** (still feeding antd); change both until antd is gone.
-- **Font**: Bai Jamjuree kept via `--font-sans` (not the preset's Inter).
-- **Icons**: shadcn configured with `iconLibrary: tabler` (matches `@tabler/icons-react`).
-- **Token v2 (Stripe-grade, 2026-06-24)**: neutral scale now full 0–900 cool-gray; added `--canvas` (page bg `bg-canvas`), `--scrim`/`bg-scrim` (overlay), `--border-strong`, `--primary-subtle`, a **shadow ladder** `shadow-{xs,sm,md,lg,xl,overlay}` (Stripe blue-ink shadows), and **motion tokens** `ease-{out,in-out,spring}` + `--duration-{fast,base,slow}`. `body` is now `bg-canvas`. Base `--radius` = 8px.
-- **Migrated so far**: `Button`, `Tag`/`StatusTag`, `Badge`, `Switch`, `Alert`, `Card`. **New form-field API**: `Field` / `TextField` / `TextareaField` (`@design-system`) — labeled control + `hint`/`error`/`required`/`prefix`/`suffix`, a11y-wired. Base primitives `ui/input`, `ui/textarea`, `ui/sonner`.
-- **Still antd** (next, clean-rebuild APIs): `Select`, `Table` (→ TanStack + react-virtual), `DatePicker`, `Modal`/`Drawer` (→ Radix), `Tabs`/`Tooltip`/`Checkbox`/`Radio` (→ Radix), `Form` (→ RHF+zod). Old antd `Input`/`Select`/etc. still exported for un-migrated features; remove in Phase 6. Emotion dropped per-component; goal = drop antd + Emotion.
-- **Storybook** (`bun run storybook` / `build-storybook`): stories co-located as `<Component>.stories.tsx`. Add a story when migrating a component. Tailwind CSS + Bai Jamjuree are loaded via `.storybook/preview.tsx` + `preview-head.html`.
-
-When migrating a component: keep the exported prop names, run `tsc -b` (catches consumer breakage), add/update its `.stories.tsx`, then `bun run build`.
 
 ---
 
@@ -45,207 +12,94 @@ Use this skill when:
 
 - Styling any component (color, spacing, layout, typography)
 - Tempted to write a raw `#hex` value or `px` literal
-- Picking between a `@design-system` wrapper and raw Ant Design
-- Adding a new design-system component
+- Adding or modifying a design-system component
+- Writing or updating a Storybook story
 
 ---
 
-## Token Reference
+## Architecture (migration จาก antd เสร็จแล้ว — 2026-07)
 
-Import tokens from `@design-system/tokens` (or the barrel `@design-system`).
+antd + Emotion ถูกถอดออกทั้งหมด (ประวัติ/เหตุผลอยู่ใน [`DESIGN-SYSTEM-MIGRATION.md`](../../../DESIGN-SYSTEM-MIGRATION.md)).
 
-### Colors — `colors`
-
-```ts
-import { colors } from '@design-system/tokens';
-```
-
-| Group | Keys | Usage |
+| Layer | Where | Role |
 | --- | --- | --- |
-| `colors.brand` | `primary` `hover` `active` `light` `border` | Brand red — primary actions |
-| `colors.neutral` | `0` `50` `100` `200` `300` `400` `500` `600` `700` `800` `900` | Gray scale |
-| `colors.semantic` | `successBg/Border/success/successText` (×4 per state: success/warning/error/info) | UX feedback — form validation, alerts, badges |
-| `colors.status` | `pending` `processing` `completed` `cancelled` `onHold` — each has `.color` `.bg` `.border` | Workflow/order status tags |
-| `colors.text` | `primary` `secondary` `tertiary` `disabled` `inverse` `link` `linkHover` | Text hierarchy + links |
-| `colors.border` | `default` `strong` `focus` | Borders, dividers, focus rings |
-| `colors.bg` | `base` `layout` `hover` `active` `selected` `disabled` `mask` `skeleton` | All background states |
+| **Tokens** | `src/index.css` (3 tiers) | สีทั้งหมด, เงา, radius, motion — source of truth เดียว |
+| **Primitives** | `src/components/ui/*` | shadcn-style own-the-code, Radix-based (dialog, popover, checkbox, select, tabs, tooltip, sonner…) |
+| **ERP wrappers** | `src/design-system/components/*` | API ระดับแอป (ส่วนใหญ่คง antd-compatible surface) — export ผ่าน `@design-system` |
+| **Toasts** | Sonner ผ่าน `notify.*` (`src/shared/utils/notify.tsx`) | อย่าเรียก `toast` ตรง |
+| **Forms** | react-hook-form + zod ผ่าน DS `Form` (antd-compatible surface: `Form.useForm`/`Form.Item`/rules) | |
+| **Table** | DS `Table` (antd-like API + `@tanstack/react-virtual` เมื่อส่ง `virtual` + `scroll.y`) | |
 
-#### Semantic — 4 tiers per state
+- `cn()` จาก `src/lib/utils.ts` (clsx + tailwind-merge) — ใช้ประกอบ className เสมอ
+- Font: Bai Jamjuree ผ่าน `--font-sans`
+- Icons: `AppIcons` เท่านั้น — ดู [icons/SKILL.md](./icons/SKILL.md)
 
-Each semantic state (success/warning/error/info) has 4 keys:
+---
 
-| Suffix | Use case |
-| --- | --- |
-| `*Bg` | Tag fill, alert background, highlighted row |
-| `*Border` | Outlined tag, form validation ring |
-| (none) | Icon, badge dot, filled button background |
-| `*Text` | Readable colored text on white — WCAG AA darker variant |
+## Token Architecture — 3 tiers ใน `src/index.css`
 
-```ts
-// ✅ form field error
-color: ${colors.semantic.errorText};
-border: 1px solid ${colors.semantic.errorBorder};
-background: ${colors.semantic.errorBg};
+1. **Tier 1 — primitive** (`:root`): raw scales `--neutral-*` (0–900 cool-gray), `--brand-*` (แดง #e0282e), `--red/green/gold/blue-*`, `--ink-*`. **ห้ามใช้ตรงใน component**
+2. **Tier 2 — semantic** (`:root` + `.dark`): shadcn core (`--primary`, `--background`, `--border`…) + app states `--success/-bg/-border/-text`, `--warning*`, `--error*`, `--info*`, interaction states (`--primary-hover/-active`, `--accent`, `--disabled*`, `--divider`, `--control-off`), `--canvas`, `--scrim`, `--border-strong`, `--primary-subtle`
+3. **Tier 3 — `@theme inline`**: map semantic → Tailwind utilities: `bg-canvas`, `bg-primary`, `hover:bg-primary-hover`, `text-success-text`, `bg-success-bg`, `border-divider`, `shadow-{xs,sm,md,lg,xl,overlay}`, `ease-{out,in-out,spring}`, `bg-data-volcano-bg` ฯลฯ
 
-// ✅ success badge
-background: ${colors.semantic.successBg};
-border: 1px solid ${colors.semantic.successBorder};
-color: ${colors.semantic.successText};
+### Rules (strict)
+
+- **No hardcoded colors** — ห้าม `#hex`, `bg-black/25`, `text-white` ใน component → ใช้ semantic token (`text-primary-foreground`, `bg-scrim`, …)
+- **Components consume Tier 3 only** — ห้าม `bg-[var(--neutral-300)]`; ถ้า token ไม่พอ ให้**เพิ่ม semantic token ใหม่** ไม่ใช่ดึง primitive
+- **Interaction states เป็น token หมด**: hover/active/disabled มีคู่ token แล้ว — อย่า hardcode
+- **Dynamic class maps ต้องเป็น literal strings** (เช่น `success: 'bg-success-bg border-success-border text-success-text'`) เพื่อให้ Tailwind scanner เห็น — ห้ามประกอบ class ด้วย template string (`grid-cols-${n}` จะไม่ถูก emit)
+- Categorical/data-viz palette ใช้ `--data-<hue>-{bg,border,text}` ผ่าน literal classes
+- Spacing/size ใช้ Tailwind scale (`px-3`, `gap-2`, `size-9`) — ถือเป็น token; ห้าม inline `style={{ padding: 16 }}`
+
+### Common utilities cheat sheet
+
 ```
-
-#### Status — workflow states
-
-```ts
-const s = colors.status[order.status];
-<Tag style={{ color: s.color, background: s.bg, border: `1px solid ${s.border}` }}>
-  {ORDER_STATUS_LABEL[order.status]}
-</Tag>
-```
-
-#### Background utilities
-
-```ts
-colors.bg.selected   // selected table row, active nav item  (#fff1f0 — brand tint)
-colors.bg.disabled   // disabled input/button background
-colors.bg.mask       // modal/drawer dark overlay
-colors.bg.skeleton   // skeleton loading placeholder color
-```
-
-```ts
-// ✅
-color: ${colors.text.primary};
-background: ${colors.bg.layout};
-border: 1px solid ${colors.border.default};
-
-// ❌ never
-color: 'rgba(0,0,0,0.88)';
-background: '#f5f5f5';
-```
-
-### Spacing — `spacing`
-
-```ts
-import { spacing } from '@design-system/tokens';
-// values: 0='0px' 1='4px' 2='8px' 3='12px' 4='16px' 5='20px' 6='24px' 8='32px' 10='40px' 12='48px' 16='64px'
-
-// ✅
-padding: ${spacing[4]};   // 16px
-gap: ${spacing[2]};       // 8px
-margin: ${spacing[6]} 0; // 24px 0
-
-// ❌ never
-padding: '16px';
-gap: 8;
-```
-
-### Border Radius — `radius`
-
-```ts
-import { radius } from '@design-system/tokens';
-// sm='4px'  md='6px'  lg='8px'  xl='12px'  full='9999px'
-
-border-radius: ${radius.md};
-```
-
-### Shadow — `shadow`
-
-```ts
-import { shadow } from '@design-system/tokens';
-// sm  md  lg  xl
-
-box-shadow: ${shadow.md};
+พื้นหลังหน้า      bg-canvas          ตัวหนังสือหลัก/รอง  text-foreground / text-muted-foreground
+พื้น card/surface  bg-card bg-popover  ตัวหนังสือจาง      text-foreground-subtle
+เส้นแบ่ง           border-divider      เส้นขอบ           border-border / border-strong
+hover ผิว          hover:bg-accent     แถว/ปุ่ม pressed   active:bg-accent-active
+โฟกัส              focus-visible:ring-[3px] focus-visible:ring-ring/20
+เงา                shadow-xs … shadow-overlay             motion  ease-out duration-150
+สถานะ              text-success-text bg-success-bg border-success-border (×warning/error/info)
 ```
 
 ---
 
-## Emotion Styled Components
+## Legacy TS tokens — deprecated
 
-Always use design tokens — never literals:
-
-```tsx
-import styled from '@emotion/styled';
-import { colors, spacing, radius, shadow } from '@design-system/tokens';
-
-// ✅
-const PageWrapper = styled.div`
-  padding: ${spacing[6]};
-  background: ${colors.bg.layout};
-  display: flex;
-  flex-direction: column;
-  gap: ${spacing[4]};
-`;
-
-const FilterCard = styled.div`
-  background: ${colors.bg.base};
-  border-radius: ${radius.lg};
-  padding: ${spacing[4]};
-  box-shadow: ${shadow.sm};
-`;
-
-// ❌
-const Bad = styled.div`
-  padding: 24px;
-  background: #f5f5f5;
-  border-radius: 8px;
-`;
-```
+`src/design-system/tokens/colors.ts` + `spacing.ts` เป็นของยุค antd/Emotion — **ห้ามใช้ในโค้ดใหม่** (ยังเหลือ consumer เก่า ~10 ไฟล์ รอ migrate แล้วลบ) ใช้ Tailwind semantic utilities แทนเสมอ
 
 ---
 
-## Responsive Layout
+## Responsive
 
-Use Ant Design Grid for responsive columns:
-
-```tsx
-import { Row, Col } from 'antd';
-
-<Row gutter={[16, 16]}>
-  <Col xs={24} sm={12} lg={8}><StatCard /></Col>
-  <Col xs={24} sm={12} lg={8}><StatCard /></Col>
-</Row>
-```
-
-Use Emotion breakpoints for component-level responsive:
+ใช้ Tailwind breakpoints ตรงๆ (`sm: md: lg: xl:`) หรือ primitive `Grid`/`Stack` จาก `@design-system`:
 
 ```tsx
-const Panel = styled.div`
-  width: 100%;
-  @media (min-width: 768px) { width: 50%; }
-  @media (min-width: 1200px) { width: 33.333%; }
-`;
+<Grid cols={4} gap={4}>…</Grid>   {/* cols = จำนวนคอลัมน์สูงสุด — ladder มือถือ 1 → sm 2 → lg 4 ในตัว */}
+<Stack gap={4}>…</Stack>  <Inline gap={2} align="center">…</Inline>
 ```
+
+(`Grid` ใช้ class map แบบ literal ภายใน — ถ้าเพิ่มค่า cols/breakpoint ใหม่ต้องเพิ่มใน map ของ component ห้าม template string)
 
 ---
 
-## When to Use Ant Design Directly
+## Storybook
 
-Use a `@design-system` wrapper for components listed in [components/SKILL.md](./components/SKILL.md).
-Use Ant Design directly for components NOT wrapped:
-
-- `Dropdown`, `Tooltip`, `Popover`, `Tabs`, `Steps`, `Upload`
-- `DatePicker`, `TimePicker`, `Checkbox`, `Radio`, `Switch`
-- `Collapse`, `Tree`, `Transfer`
-
-Import Ant Design components from `antd` — do NOT create wrappers for one-off uses.
+- รัน `bun run storybook` (port 6006) · build `bun run build-storybook`
+- Story อยู่คู่ component: `src/design-system/components/<Name>/<Name>.stories.tsx`
+- Convention: `title: 'Design System/<Name>'`, `tags: ['autodocs']`, `satisfies Meta<typeof X>`, เนื้อหาตัวอย่างเป็นภาษาไทยตามโดเมน ERP, ไอคอนผ่าน `AppIcons`
+- **ทุก component ใหม่/แก้ API ต้องมี/อัปเดต story** — reviewer ดูของจริงจาก Storybook
+- Tailwind CSS + font โหลดผ่าน `.storybook/preview.tsx` + `preview-head.html`
 
 ---
 
 ## Adding a New Design-System Component
 
-Only wrap an Ant Design component if:
-
-1. It needs default props applied project-wide (e.g. `Modal` always `destroyOnHidden`)
-2. It needs a custom variant API (e.g. `Button` with `variant` prop)
-3. It will be reused in ≥3 features
-
-Place it in `src/design-system/components/<ComponentName>/index.tsx` and export from `src/design-system/index.ts`.
-
----
-
-## Quick Reference: Token Imports
-
-```ts
-import { colors, spacing, radius, shadow } from '@design-system/tokens';
-// or
-import { colors, spacing, radius, shadow, Button, Table, AppIcons } from '@design-system';
-```
+1. สร้าง `src/design-system/components/<Name>/index.tsx` — named export เท่านั้น
+2. ใช้ primitive จาก `src/components/ui/*` (Radix) เป็นฐานถ้ามี
+3. Semantic tokens เท่านั้น (กติกาด้านบน) + `cn()` + `focus-visible` ring + aria ครบ
+4. Async action ใน overlay ให้รองรับ Promise (ดู `Modal.onOk` / `DeleteConfirmButton.onConfirm` เป็นแบบ)
+5. Export จาก `src/design-system/index.ts`
+6. เขียน `<Name>.stories.tsx` + `tsc -b` ผ่าน
+7. อัปเดต [components/SKILL.md](./components/SKILL.md) ถ้าเป็น pattern ใหม่

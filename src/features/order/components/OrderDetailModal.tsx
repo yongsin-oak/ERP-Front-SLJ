@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Modal, Table, Tag, Button, Divider, colors , AppIcons } from '@design-system';
+import { Modal, Table, Tag, Button, Divider, AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { Spinner } from '@/components/ui/spinner';
 import { useOrderDetail } from '../react-query';
@@ -46,7 +46,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
       render: (_: unknown, r: OrderDetail) => (
         <div>
           <div>{r.product.name}</div>
-          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.product.barcode}</code>
+          <code className="text-[11px] text-foreground-subtle">{r.product.barcode}</code>
         </div>
       ),
     },
@@ -156,17 +156,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
             size="small"
           />
 
-          <div
-            style={{
-              marginTop: 12,
-              padding: '10px 16px',
-              background: colors.neutral[50],
-              borderRadius: 6,
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 24,
-            }}
-          >
+          <div className="mt-3 flex justify-end gap-6 rounded-md bg-muted px-4 py-2.5">
             <span>จำนวนรวม: <strong>{totalQty.toLocaleString()} หน่วย</strong></span>
             <span>ยอดรวม: <strong style={{ fontSize: 15 }}>฿{totalPrice.toLocaleString()}</strong></span>
           </div>

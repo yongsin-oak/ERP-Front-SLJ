@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSearchState, showError, notify } from '@shared';
 import {
   Table, Button, Tag, PageHeader, Select, BulkSelectionBar,
-  colors, AppIcons, DeleteConfirmButton, CodeCell,
+  AppIcons, DeleteConfirmButton, CodeCell,
   Inline, Input, Badge, Tabs, Tooltip,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -117,9 +117,9 @@ export function InventoryPage() {
       render: (v: string, r: Product) => (
         <div>
           <div style={{ fontWeight: 500 }}>{v}</div>
-          {r.sku && <div style={{ fontSize: 11, color: colors.text.tertiary }}>{r.sku}</div>}
+          {r.sku && <div className="text-[11px] text-foreground-subtle">{r.sku}</div>}
           {r.brand?.name && (
-            <div style={{ fontSize: 12, color: colors.text.tertiary }}>{r.brand.name}</div>
+            <div className="text-xs text-foreground-subtle">{r.brand.name}</div>
           )}
         </div>
       ),
@@ -143,7 +143,7 @@ export function InventoryPage() {
           <Inline gap={1}>
             {noPrice && (
               <Tooltip title="ยังไม่ตั้งราคาขาย">
-                <AppIcons.warningFilled style={{ color: colors.semantic.warning, fontSize: 13 }} />
+                <AppIcons.warningFilled className="text-[13px] text-warning" />
               </Tooltip>
             )}
             <span>{pack != null ? `฿${pack.toLocaleString()}` : '-'}</span>

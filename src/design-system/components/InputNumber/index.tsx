@@ -14,7 +14,6 @@ export interface InputNumberProps {
   onChange?: (value: number | null) => void;
   min?: number;
   max?: number;
-  step?: number;
   precision?: number;
   formatter?: (value: number | undefined) => string;
   parser?: (displayValue: string | undefined) => string;
@@ -28,7 +27,6 @@ export interface InputNumberProps {
   id?: string;
   className?: string;
   style?: React.CSSProperties;
-  controls?: boolean;
 }
 
 const ADDON =

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { PageHeader, Button, AppIcons, Form, Card, InputPassword, Tag, Stack, Inline, Text } from '@design-system';
-import { colors } from '@design-system';
 import { useAuth, authService } from '@features/auth';
 import { handleError } from '@shared';
 
@@ -109,7 +108,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <Inline gap={3} align="center">
       <Text type="secondary" style={{ width: 120, flexShrink: 0, fontSize: 13 }}>{label}</Text>
-      <div style={{ fontSize: 13, color: colors.text.primary }}>{value}</div>
+      <div className="text-foreground" style={{ fontSize: 13 }}>{value}</div>
     </Inline>
   );
 }

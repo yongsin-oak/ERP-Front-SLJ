@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useSearchState } from '@shared';
-import { Table, Button, PageHeader, Tag, Select, colors, AppIcons, SummaryCard, Card, DateRangePicker, Inline } from '@design-system';
+import { Table, Button, PageHeader, Tag, Select, AppIcons, SummaryCard, Card, DateRangePicker, Inline } from '@design-system';
+import { cn } from '@/lib/utils';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, stockEntryService } from '../react-query';
@@ -24,10 +25,10 @@ function quantityDisplay(r: StockEntry) {
   return `+${r.quantity}`;
 }
 
-function quantityColor(type: StockEntryType) {
-  if (type === 'damage') return colors.semantic.errorText;
-  if (type === 'adjust') return 'inherit';
-  return colors.semantic.successText;
+function quantityColorClass(type: StockEntryType) {
+  if (type === 'damage') return 'text-error-text';
+  if (type === 'adjust') return '';
+  return 'text-success-text';
 }
 
 const STOCK_HISTORY_DEFAULTS = {
@@ -115,7 +116,7 @@ export function StockHistoryPage() {
       render: (_: unknown, r: StockEntry) => (
         <div>
           <div>{r.product?.name ?? r.productBarcode}</div>
-          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{r.productBarcode}</code>
+          <code className="text-[11px] text-foreground-subtle">{r.productBarcode}</code>
         </div>
       ),
     },
@@ -133,7 +134,7 @@ export function StockHistoryPage() {
       width: 90,
       align: 'right',
       render: (_: number, r: StockEntry) => (
-        <span style={{ color: quantityColor(r.type), fontWeight: 500 }}>
+        <span className={cn('font-medium', quantityColorClass(r.type))}>
           {quantityDisplay(r)}
         </span>
       ),
@@ -202,9 +203,9 @@ export function StockHistoryPage() {
       />
 
       <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="รายการทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1, minWidth: 160 }} />
-        <SummaryCard title="มูลค่ารับเข้า (หน้านี้)" value={receiveValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1, minWidth: 160 }} />
-        <SummaryCard title="มูลค่าของเสีย (หน้านี้)" value={damageValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error} style={{ flex: 1, minWidth: 160 }} />
+        <SummaryCard title="รายการทั้งหมด" value={total} suffix="รายการ" color="var(--color-primary)" style={{ flex: 1, minWidth: 160 }} />
+        <SummaryCard title="มูลค่ารับเข้า (หน้านี้)" value={receiveValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color="var(--color-success)" style={{ flex: 1, minWidth: 160 }} />
+        <SummaryCard title="มูลค่าของเสีย (หน้านี้)" value={damageValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color="var(--color-error)" style={{ flex: 1, minWidth: 160 }} />
       </Inline>
 
       <Card

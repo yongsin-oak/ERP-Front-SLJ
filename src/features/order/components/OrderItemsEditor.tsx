@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button, Input, InputNumber, Table, Tag, colors , AppIcons } from '@design-system';
+import { Button, Input, InputNumber, Table, Tag, AppIcons } from '@design-system';
 import type { ColumnType, InputRef } from '@design-system';
 import { ProductDropdownSelect, inventoryService } from '@features/inventory';
 import type { ProductDropdown } from '@features/inventory';
@@ -81,7 +81,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       render: (_: unknown, record: OrderItem) => (
         <div>
           <div style={{ fontWeight: 500 }}>{record.name}</div>
-          <code style={{ fontSize: 11, color: colors.text.tertiary }}>{record.barcode}</code>
+          <code className="text-[11px] text-foreground-subtle">{record.barcode}</code>
         </div>
       ),
     },
@@ -179,17 +179,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       />
 
       {items.length > 0 && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: '10px 16px',
-            background: colors.neutral[50],
-            borderRadius: 6,
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 24,
-          }}
-        >
+        <div className="mt-3 flex justify-end gap-6 rounded-md bg-muted px-4 py-2.5">
           <span>
             จำนวนรวม: <Tag status="info">{totalQty} ชิ้น</Tag>
           </span>

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Table, Button, PageHeader, Select, FormModal, Form, Tag, colors,
+  Table, Button, PageHeader, Select, FormModal, Form, Tag,
   ActionCell, CodeCell, SummaryCard, AppIcons, Inline, Stack,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -41,7 +41,7 @@ export function UserPage() {
       dataIndex: 'username',
       render: (v: string) => (
         <Inline>
-          <AppIcons.user style={{ color: colors.text.tertiary }} />
+          <AppIcons.user className="text-foreground-subtle" />
           <span style={{ fontWeight: 500 }}>{v}</span>
         </Inline>
       ),
@@ -88,9 +88,9 @@ export function UserPage() {
       />
 
       <Inline gap={3} wrap>
-        <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color={colors.semantic.error} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color="var(--color-error)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       <Table<User>

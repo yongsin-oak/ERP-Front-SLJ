@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Table, Button, PageHeader, colors, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
+import { Table, Button, PageHeader, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
@@ -203,15 +203,7 @@ export function StockDamagePage() {
         </Inline>
 
         {validRows.length > 0 && (
-          <div
-            style={{
-              marginTop: 16,
-              padding: '10px 16px',
-              background: colors.semantic.errorBg,
-              borderRadius: 6,
-              border: `1px solid ${colors.semantic.errorBorder}`,
-            }}
-          >
+          <div className="mt-4 rounded-md border border-error-border bg-error-bg px-4 py-2.5">
             <Text style={{ fontSize: 13 }}>
               สรุป: {validRows.length} รายการ · {totalQty.toLocaleString()} แพ็ค
               {totalLoss > 0 && (

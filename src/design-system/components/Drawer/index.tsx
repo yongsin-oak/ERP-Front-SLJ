@@ -14,8 +14,9 @@ export interface DrawerProps {
   footer?: React.ReactNode | null;
   extra?: React.ReactNode;
   maskClosable?: boolean;
-  /** antd compat — Radix unmounts content on close, so these are no-ops */
+  /** @deprecated antd compat — Radix unmount เนื้อหาตอนปิดเสมอ prop นี้ถูกเมิน */
   destroyOnClose?: boolean;
+  /** @deprecated antd compat — Radix unmount เนื้อหาตอนปิดเสมอ prop นี้ถูกเมิน */
   destroyOnHidden?: boolean;
   className?: string;
   styles?: {

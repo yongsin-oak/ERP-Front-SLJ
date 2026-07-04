@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, DeleteConfirmButton, colors, SummaryCard, AppIcons, Modal, Checkbox, Text, Inline } from '@design-system';
+import { Table, Button, PageHeader, Tag, DeleteConfirmButton, SummaryCard, AppIcons, Modal, Checkbox, Text, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
@@ -208,9 +208,9 @@ export function CategoryPage() {
       />
 
       <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       <Table<CatNode>

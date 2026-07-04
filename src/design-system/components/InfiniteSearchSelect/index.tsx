@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { debounce } from 'lodash';
 import { Select } from '../Select';
 import type { SelectProps } from '../Select';
@@ -34,10 +34,17 @@ export function InfiniteSearchSelect({
   notFoundText = 'ไม่พบข้อมูล',
   ...rest
 }: InfiniteSearchSelectProps) {
+  // latest-ref: ผู้เรียกมักส่ง onSearch เป็น lambda ใหม่ทุก render — ถ้าใส่ใน deps
+  // debounce จะถูกสร้างใหม่ตลอดจนไม่ได้ debounce จริง
+  const onSearchRef = useRef(onSearch);
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  });
   const debouncedSearch = useMemo(
-    () => debounce((v: string) => onSearch(v), debounceMs),
-    [onSearch, debounceMs],
+    () => debounce((v: string) => onSearchRef.current(v), debounceMs),
+    [debounceMs],
   );
+  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
 
   const handlePopupScroll = (e: React.UIEvent<HTMLElement>) => {
     if (isFetchingNextPage || !hasNextPage) return;

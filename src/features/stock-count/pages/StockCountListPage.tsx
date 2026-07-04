@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useSearchState } from '@shared';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, colors, SummaryCard , AppIcons, Form, Inline, Stack, Badge } from '@design-system';
+import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, SummaryCard , AppIcons, Form, Inline, Stack, Badge } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useEmployees } from '@features/employee/react-query';
 import {
@@ -164,9 +164,9 @@ export function StockCountListPage() {
       />
 
       <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="รอบนับทั้งหมด" value={total} suffix="รอบ" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="กำลังนับ (หน้านี้)" value={draftCount} suffix="รอบ" color={colors.semantic.warning} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="สิ้นสุดแล้ว (หน้านี้)" value={completedCount} suffix="รอบ" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="รอบนับทั้งหมด" value={total} suffix="รอบ" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="กำลังนับ (หน้านี้)" value={draftCount} suffix="รอบ" color="var(--color-warning)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="สิ้นสุดแล้ว (หน้านี้)" value={completedCount} suffix="รอบ" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       <Card

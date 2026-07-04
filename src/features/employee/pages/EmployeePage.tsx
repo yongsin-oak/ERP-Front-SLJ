@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Table, Button, Tag, PageHeader, BulkSelectionBar, colors, AppIcons,
+  Table, Button, Tag, PageHeader, BulkSelectionBar, AppIcons,
   DeleteConfirmButton, Modal, Input, InputPassword, SummaryCard, DateCell,
   Inline, Text, Badge,
 } from '@design-system';
@@ -86,7 +86,7 @@ export function EmployeePage() {
       render: (_: unknown, r: Employee) => (
         <div>
           <div style={{ fontWeight: 500 }}>{r.firstName} {r.lastName}</div>
-          <div style={{ fontSize: 12, color: colors.text.tertiary }}>({r.nickname})</div>
+          <div className="text-xs text-foreground-subtle">({r.nickname})</div>
         </div>
       ),
     },
@@ -161,9 +161,9 @@ export function EmployeePage() {
       />
 
       <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       <Inline gap={3} align="center" className="mb-3">

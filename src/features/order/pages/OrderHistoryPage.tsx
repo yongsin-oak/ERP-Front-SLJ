@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useSearchState } from '@shared';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
-import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons, DeleteConfirmButton, Card, SummaryCard, Inline, Grid, DateRangePicker } from '@design-system';
+import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, AppIcons, DeleteConfirmButton, Card, SummaryCard, Inline, Grid, DateRangePicker } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useShops } from '@features/shop';
@@ -104,10 +104,10 @@ export function OrderHistoryPage() {
       render: (_: unknown, r: Order) => (
         <div>
           <div style={{ fontWeight: 500, fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <AppIcons.barcode size={14} style={{ color: colors.text.tertiary, flexShrink: 0 }} />
+            <AppIcons.barcode size={14} className="shrink-0 text-foreground-subtle" />
             {r.id}
           </div>
-          <div style={{ fontSize: 12, color: colors.text.tertiary }}>
+          <div className="text-xs text-foreground-subtle">
             {r.startRecordAt
               ? dayjs(r.startRecordAt).format('DD/MM/YYYY HH:mm')
               : r.createdAt
@@ -175,7 +175,7 @@ export function OrderHistoryPage() {
         return (
           <div>
             <code style={{ fontSize: 11, fontWeight: 600 }}>{orderNum}</code>
-            {note && <div style={{ fontSize: 12, color: colors.text.tertiary }}>{note}</div>}
+            {note && <div className="text-xs text-foreground-subtle">{note}</div>}
           </div>
         );
       },
@@ -229,13 +229,13 @@ export function OrderHistoryPage() {
       />
 
       <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="ออเดอร์ทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1, minWidth: 160 }} />
+        <SummaryCard title="ออเดอร์ทั้งหมด" value={total} suffix="รายการ" color="var(--color-primary)" style={{ flex: 1, minWidth: 160 }} />
         <SummaryCard
           title="ยอดรวม (หน้านี้)"
           value={orders.reduce((s, r) => s + (r.orderDetails ?? []).reduce((os, d) => os + d.quantityPack * (d.product.sellPrice?.pack ?? 0) + d.quantityCarton * (d.product.sellPrice?.carton ?? 0), 0), 0)}
           prefix="฿"
           formatter={(v) => Number(v).toLocaleString()}
-          color={colors.semantic.success}
+          color="var(--color-success)"
           style={{ flex: 1, minWidth: 160 }}
         />
         <SummaryCard title="รายการสินค้ารวม (หน้านี้)" value={orders.reduce((s, r) => s + (r.orderDetails?.length ?? 0), 0)} suffix="รายการ" style={{ flex: 1, minWidth: 160 }} />

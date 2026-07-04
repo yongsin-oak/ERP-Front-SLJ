@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { PageHeader, MoneyCell, Button, AppIcons, colors, Table, Select, CodeCell, Stack, Inline, Card, Tag, Tabs, DateRangePicker } from '@design-system';
+import { PageHeader, MoneyCell, Button, AppIcons, Table, Select, CodeCell, Stack, Inline, Card, Tag, Tabs, DateRangePicker } from '@design-system';
+import { cn } from '@/lib/utils';
 import { downloadFile, showError, notify } from '@shared';
 import { useSalesSummary, useSalesByShop, useSalesByProduct, useManHour, reportService } from '../react-query';
 import { useShops } from '@features/shop';
@@ -22,8 +23,8 @@ const GROUP_BY_OPTIONS: { label: string; value: ReportGroupBy }[] = [
 ];
 
 function ProfitCell({ value }: { value: number }) {
-  const color = value > 0 ? colors.semantic.successText : value < 0 ? colors.semantic.errorText : colors.text.secondary;
-  return <span style={{ color, fontWeight: 600 }}>฿{value.toLocaleString()}</span>;
+  const colorClass = value > 0 ? 'text-success-text' : value < 0 ? 'text-error-text' : 'text-muted-foreground';
+  return <span className={cn('font-semibold', colorClass)}>฿{value.toLocaleString()}</span>;
 }
 
 function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
@@ -215,7 +216,7 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
       render: (name: string, r) => (
         <div>
           <div style={{ fontWeight: 500 }}>{name}</div>
-          <CodeCell style={{ fontSize: 11, color: colors.text.tertiary }}>{r.barcode}</CodeCell>
+          <CodeCell className="text-foreground-subtle" style={{ fontSize: 11 }}>{r.barcode}</CodeCell>
         </div>
       ),
     },

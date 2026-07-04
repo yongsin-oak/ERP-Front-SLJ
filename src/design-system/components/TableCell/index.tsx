@@ -10,7 +10,9 @@ interface DateCellProps {
 
 export function DateCell({ value, format = 'DD/MM/YYYY HH:mm' }: DateCellProps) {
   if (!value) return <>—</>;
-  return <>{dayjs(value).format(format)}</>;
+  const d = dayjs(value);
+  if (!d.isValid()) return <>—</>;
+  return <>{d.format(format)}</>;
 }
 
 // ── MoneyCell ───────────────────────────────────────────────

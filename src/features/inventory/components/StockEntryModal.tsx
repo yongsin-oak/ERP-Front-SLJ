@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import {
-  Modal, Input, Select, Button, colors, AppIcons, Form,
+  Modal, Input, Select, Button, AppIcons, Form,
   InputNumber, Inline, Alert, Tag, Divider, Grid,
 } from '@design-system';
 import type { InputRef } from '@design-system';
@@ -75,7 +75,7 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
       open={open}
       title={
         <Inline>
-          <AppIcons.inbox style={{ color: colors.semantic.success }} />
+          <AppIcons.inbox className="text-success" />
           บันทึกรับสินค้าเข้าสต้อค
         </Inline>
       }
@@ -122,7 +122,7 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
               <br />
               <Inline gap={1} style={{ marginTop: 4 }}>
                 <Tag>{product.barcode}</Tag>
-                <span style={{ fontSize: 12, color: colors.text.tertiary }}>
+                <span className="text-xs text-foreground-subtle">
                   สต้อคปัจจุบัน: <strong>{product.remaining} ชิ้น</strong>
                 </span>
               </Inline>

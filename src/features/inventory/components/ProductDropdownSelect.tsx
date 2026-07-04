@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { debounce } from "lodash";
-import { Select, colors, highlightText } from "@design-system";
+import { Select, highlightText } from "@design-system";
 import type { SelectProps } from "@design-system";
 import { Spinner } from "@/components/ui/spinner";
 import { useProductDropdown } from "../react-query";
@@ -121,7 +121,7 @@ export function ProductDropdownSelect({
         if (!p) return opt.label;
         return (
           <div style={{ fontSize: 14, padding: "2px 0" }}>
-            <span style={{ fontFamily: "monospace", color: colors.text.secondary }}>
+            <span className="font-mono text-muted-foreground">
               [{highlightText(p.barcode, search)}]
             </span>{" "}
             - {highlightText(p.name, search)}
@@ -144,13 +144,7 @@ export function ProductDropdownSelect({
       onPopupScroll={handlePopupScroll}
       dropdownFooter={
         isFetchingNextPage ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "8px 0",
-              borderTop: `1px solid ${colors.neutral[200]}`,
-            }}
-          >
+          <div className="border-t border-border py-2 text-center">
             <Spinner size="sm" />
           </div>
         ) : null

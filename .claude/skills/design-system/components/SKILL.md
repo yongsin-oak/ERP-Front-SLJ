@@ -1,7 +1,8 @@
 # Skill: Design System — Components
 
-> All `@design-system` wrapper components and ERP composite patterns.
+> All `@design-system` wrapper components and ERP composite patterns (Tailwind v4 + Radix — no antd).
 > Back to parent: [design-system](../SKILL.md) · [icons](../icons/SKILL.md)
+> ทุก component มี story: `bun run storybook` → หมวด "Design System"
 
 ---
 
@@ -11,234 +12,193 @@ Use this skill when picking a UI component or implementing a page/table/modal/fo
 
 ---
 
-## Available Components
+## Catalog
 
-```ts
-import {
-  Button, Input, InputPassword, InputSearch, TextArea,
-  Select, Table, Modal, Card, Badge, Tag, Form,
-  Text, Title, PageTitle,
-  Spinner, Empty, PageHeader,
-} from '@design-system';
-```
+| กลุ่ม | Components |
+| --- | --- |
+| Layout | `Stack` `Inline` `Grid` `Divider` `Card` |
+| Form controls | `Input` `InputPassword` `InputSearch` `Textarea` `InputNumber` `Select` `Checkbox` `Radio` `Switch` `Segmented` `DatePicker` `DateRangePicker` `DateRangePresets` |
+| Form system | `Form` (`Form.useForm`/`Form.Item` บน RHF) `FormModal` `Field` `TextField` `TextareaField` |
+| Smart inputs | `PriceInput` `QuantityInput` `ScanInput` `InlineEdit` `SearchableSelect` `InfiniteSearchSelect` |
+| Table | `Table` (+`Table.Summary`) `DateCell` `MoneyCell` `CodeCell` `QuantityCell` `ActionCell` `BulkSelectionBar` |
+| Overlay | `Modal` `Drawer` `ConfirmDrawer` `DeleteConfirmButton` `Tooltip` `FormModal` |
+| Feedback | `Alert` `Tag`/`StatusTag` `Badge` `Spinner` `Empty` `notify.*` (Sonner) |
+| Page | `PageShell` `PageHeader` `FilterBar` `StatsCard` `SummaryCard` `Tabs` `Typography` (`Text`/`Title`/`PageTitle`) |
+| Sheet import | `DropZoneSheet` `SheetColumnMapper` `SheetTable` `SheetImportModal` |
+
+---
+
+## Core components
 
 ### Button
 
 ```tsx
 // variant: 'primary' | 'secondary' | 'danger' | 'danger-ghost' | 'ghost' | 'link'
-<Button variant="primary" onClick={handleSave}>Save</Button>
-<Button variant="danger-ghost" onClick={handleDelete}>Delete</Button>
-<Button variant="ghost" icon={<EditOutlined />} />
+<Button variant="primary" onClick={handleSave}>บันทึก</Button>
+<Button variant="ghost" icon={<AppIcons.edit />} aria-label="แก้ไข" />  // icon-only ต้องมี aria-label
+<Button variant="primary" loading={mutation.isPending}>บันทึก</Button>
 ```
 
 ### Table
 
 ```tsx
-import { Table } from '@design-system';
-import type { ColumnType } from '@design-system';
-
 const columns: ColumnType<Order>[] = [
-  { title: 'ID', dataIndex: 'id', searchable: true },   // adds search dropdown
-  { title: 'Status', dataIndex: 'status', sorter: true },
+  { title: 'รหัส', dataIndex: 'sku', searchable: true },          // เพิ่ม search dropdown ในหัวคอลัมน์
+  { title: 'สถานะ', dataIndex: 'status', filters: [...], onFilter },
+  { title: 'ราคา', dataIndex: 'price', sorter: (a, b) => a.price - b.price, align: 'right' },
 ];
 
-// virtual for >100 rows
-<Table dataSource={orders} columns={columns} rowKey="id" virtual scroll={{ y: 500 }} />
+// >100 แถวโดยไม่แบ่งหน้า → ต้อง virtual + scroll.y (virtualize จริงด้วย react-virtual)
+<Table dataSource={rows} columns={columns} rowKey="id" virtual scroll={{ y: 480 }} pagination={false} />
 ```
+
+- `rowSelection={{ selectedRowKeys, onChange, preserveSelectedRowKeys: true }}` — `preserveSelectedRowKeys` ทำงานจริง: cache record ที่เคยเลือกไว้ให้ bulk action ข้ามหน้า
+- client-side pagination clamp หน้าให้เองเมื่อ filter แล้วจำนวนหน้าลด
+- `virtual` ใช้ไม่ได้ร่วมกับ `expandable` (tree) — จะ fallback เป็น render ปกติ
+- `render(value, record, index)` — index เป็น index ในหน้าปัจจุบัน (ตรงกับ antd)
 
 ### Modal
 
 ```tsx
-// default width=560, destroyOnHidden=true
-<Modal title="Edit Order" open={open} onCancel={onClose} onOk={handleSave}>
-  ...
-</Modal>
+<Modal title="แก้ไขออเดอร์" open={open} onCancel={onClose} onOk={handleSave} confirmLoading={m.isPending}>
 ```
 
-### Tag (Status)
+- `onOk` คืน `Promise` ได้ → ปุ่มตกลง loading + กันกดซ้ำ + **บล็อค Escape/คลิกนอก/ปุ่ม X ระหว่างรอ**
+- `maskClosable={false}` กันปิดด้วยคลิกนอก
+- `destroyOnHidden`/`destroyOnClose` = deprecated no-op (Radix unmount ตอนปิดเสมอ)
+
+### Form + FormModal
 
 ```tsx
-import { Tag } from '@design-system';
-import type { StatusType } from '@design-system';
-// StatusType: 'success' | 'warning' | 'error' | 'info' | 'default'
+const [form] = Form.useForm<ProductFormValues>();
 
-<Tag status="success">Active</Tag>
-<Tag status="error">Cancelled</Tag>
+useEffect(() => { if (open && item) form.setFieldsValue(item); }, [open, item, form]);
+
+<FormModal open={open} onClose={onClose} title="เพิ่มสินค้า" form={form}
+  onFinish={(v) => mutation.mutateAsync(v)} loading={mutation.isPending}>
+  <Form.Item name="name" label="ชื่อสินค้า" rules={[{ required: true }]}>
+    <Input />
+  </Form.Item>
+</FormModal>
 ```
 
-### Typography
+FormModal จัดการ: footer มาตรฐาน, `validateFields()` ก่อน submit, `resetFields()` ตอนปิด, แยก validation error (เงียบ — RHF โชว์ใต้ field) จาก runtime error (log ใน dev)
+
+### Field / TextField (ฟอร์มสไตล์ Stripe — ใช้เมื่อไม่ต้องการ Form.Item)
 
 ```tsx
-import { Text, Title, PageTitle, TEXT_SIZE } from '@design-system';
-// TEXT_SIZE: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-
-<PageTitle>Order Management</PageTitle>
-<Title level={2}>Section</Title>
-<Text size="sm" type="secondary">Helper text</Text>
-```
-
-### Spinner
-
-```tsx
-<Spinner />           // inline
-<Spinner fullPage />  // centered full-page overlay
-```
-
-### PageHeader
-
-```tsx
-<PageHeader
-  title="Orders"
-  extra={<Button variant="primary">New Order</Button>}
-/>
+<TextField label="ชื่อสินค้า" hint="ตามที่ลูกค้าเห็น" error={errors.name?.message} required {...register('name')} />
 ```
 
 ---
 
 ## ERP Composite Components
 
-These remove boilerplate common across all feature pages. Always prefer them over writing the pattern from scratch.
-
-### DeleteConfirmButton
-
-Wraps `Popconfirm` + `Button danger-ghost`. Default: icon-only trash button.
+### DeleteConfirmButton — ทุกการลบต้อง confirm
 
 ```tsx
-import { DeleteConfirmButton } from '@design-system';
-
-// icon-only (default)
-<DeleteConfirmButton onConfirm={() => deleteMutation.mutate(id)} loading={deleteMutation.isPending} />
-
-// custom trigger
-<DeleteConfirmButton onConfirm={handleDelete} title="Remove product?" description="Stock will be lost.">
-  <Button variant="danger">Remove</Button>
+<DeleteConfirmButton onConfirm={() => del.mutateAsync(id)} />
+// onConfirm คืน Promise ได้ → ปุ่มลบ loading + popover ปิดเมื่อ settle + กันกดซ้ำ
+<DeleteConfirmButton onConfirm={handleDelete} title="ลบสินค้า?" description="สต็อกจะหายด้วย">
+  <Button variant="danger">ลบ</Button>
 </DeleteConfirmButton>
+```
+
+### ActionCell — edit + delete ท้ายแถว table
+
+```tsx
+{ title: '', key: 'actions', fixed: 'right', width: 80,
+  render: (_: unknown, record: Product) => (
+    <ActionCell onEdit={() => openEdit(record)} onDelete={() => del.mutate(record.id)} isDeleting={del.isPending} />
+  ) }
 ```
 
 ### BulkSelectionBar
 
-Show when `selectedKeys.length > 0`:
-
 ```tsx
-import { BulkSelectionBar } from '@design-system';
-
 {selectedKeys.length > 0 && (
-  <BulkSelectionBar
-    count={selectedKeys.length}
-    onDelete={handleBulkDelete}
-    onClear={() => setSelectedKeys([])}
-    isDeleting={bulkDelete.isPending}
-    itemLabel="products"
-  />
+  <BulkSelectionBar count={selectedKeys.length} onDelete={handleBulkDelete}
+    onClear={() => setSelectedKeys([])} isDeleting={bulk.isPending} itemLabel="สินค้า" />
 )}
 ```
 
-### ActionCell
-
-Edit + Delete icon buttons for table row `render`:
+### PageShell — ทุกหน้า list ต้องครบ loading / empty / error
 
 ```tsx
-import { ActionCell } from '@design-system';
-
-{
-  title: 'Actions',
-  key: 'actions',
-  fixed: 'right',
-  width: 80,
-  render: (_: unknown, record: Product) => (
-    <ActionCell
-      onEdit={() => { setSelected(record); setModalOpen(true); }}
-      onDelete={() => deleteMutation.mutate(record.id)}
-      isDeleting={deleteMutation.isPending}
-    />
-  ),
-}
-```
-
-### FormModal
-
-Handles modal structure, standard footer, `form.validateFields()`, and `form.resetFields()` on close.
-
-```tsx
-import { FormModal, Form } from '@design-system';
-
-const [form] = Form.useForm<ProductFormValues>();
-
-useEffect(() => {
-  if (open && item) form.setFieldsValue(item);
-}, [open, item, form]);
-
-<FormModal
-  open={open}
-  onClose={onClose}
-  title={item ? 'Edit Product' : 'New Product'}
-  form={form}
-  onFinish={(values) => mutation.mutate(values as ProductFormValues)}
-  loading={mutation.isPending}
->
-  <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-    <Input />
-  </Form.Item>
-</FormModal>
-```
-
-### PageShell
-
-Handles loading / error / empty states on every page:
-
-```tsx
-import { PageShell, Button } from '@design-system';
-
-<PageShell
-  isLoading={isLoading}
-  isError={isError}
-  errorMessage={getErrorMessage(error)}
-  isEmpty={!data?.length}
-  emptyDescription="No products in inventory"
-  emptyAction={<Button variant="primary" onClick={onAdd}>Add first product</Button>}
->
-  <Table dataSource={data} ... />
+<PageShell isLoading={isLoading} isError={isError} errorMessage={getErrorMessage(error)}
+  onRetry={refetch} isEmpty={!data?.length} emptyDescription="ยังไม่มีสินค้า"
+  emptyAction={<Button variant="primary" onClick={onAdd}>เพิ่มสินค้าแรก</Button>}>
+  <Table … />
 </PageShell>
+```
+
+### PageHeader
+
+```tsx
+<PageHeader title="คลังสินค้า" subtitle="จัดการสต็อกทุกสาขา"
+  actions={<Button variant="primary" icon={<AppIcons.add />}>เพิ่มสินค้า</Button>} />
+```
+
+### FilterBar — แถบกรองเหนือตาราง (debounce ให้เอง 300ms สำหรับ search)
+
+```tsx
+<FilterBar
+  items={[
+    { key: 'q', label: 'ค้นหา', type: 'search' },
+    { key: 'status', label: 'สถานะ', type: 'select', options: STATUS_OPTIONS },
+    { key: 'range', label: 'ช่วงวันที่', type: 'daterange' },
+  ]}
+  values={filters} onChange={setFilters} />
 ```
 
 ### Table Cell Helpers
 
 ```tsx
-import { DateCell, MoneyCell, CodeCell, QuantityCell } from '@design-system';
-
-const columns = [
-  { title: 'Code',    dataIndex: 'sku',       render: (v: string) => <CodeCell>{v}</CodeCell> },
-  { title: 'Price',   dataIndex: 'price',     render: (v: number) => <MoneyCell value={v} /> },
-  { title: 'Stock',   dataIndex: 'stock',     render: (v: number) => <QuantityCell value={v} lowThreshold={10} criticalThreshold={3} /> },
-  { title: 'Updated', dataIndex: 'updatedAt', render: (v: string) => <DateCell value={v} /> },
-];
+{ title: 'รหัส', dataIndex: 'sku', render: (v: string) => <CodeCell>{v}</CodeCell> },
+{ title: 'ราคา', dataIndex: 'price', render: (v: number) => <MoneyCell value={v} /> },
+{ title: 'สต็อก', dataIndex: 'stock', render: (v: number) => <QuantityCell value={v} lowThreshold={10} criticalThreshold={3} /> },
+{ title: 'อัปเดต', dataIndex: 'updatedAt', render: (v: string) => <DateCell value={v} /> },
+// null → "—" ทุกตัว · DateCell กัน invalid date → "—" · QuantityCell ไล่สี เขียว→ส้ม→แดง
 ```
 
-`QuantityCell` automatically colors: green (ok) → orange (low) → red (critical).
-
-### SummaryCard
-
-Stats bar above filters on list pages. Wraps `Card size="small" + Statistic` — never write them inline.
+### StatsCard / SummaryCard
 
 ```tsx
-import { SummaryCard, colors } from '@design-system';
-import { Flex } from 'antd';
+// StatsCard — การ์ดสถิติมี delta/icon (dashboard)
+<StatsCard label="ยอดขายวันนี้" value={sales} prefix="฿" delta={12.5} deltaLabel="จากเมื่อวาน" icon={<AppIcons.report />} />
 
-<Flex gap={12} style={{ marginBottom: 16 }}>
-  <SummaryCard title="ทั้งหมด"        value={total}    suffix="รายการ" color={colors.brand.primary}    style={{ flex: 1 }} />
-  <SummaryCard title="มูลค่ารับเข้า"  value={income}   prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1 }} />
-  <SummaryCard title="มูลค่าของเสีย"  value={damage}   prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error}   style={{ flex: 1 }} />
-</Flex>
+// SummaryCard — แถบสรุปเหนือ filter บนหน้า list
+<Inline gap={3}>
+  <SummaryCard title="ทั้งหมด" value={total} suffix="รายการ" style={{ flex: 1 }} />
+  <SummaryCard title="มูลค่ารับเข้า" value={income} prefix="฿" formatter={(v) => Number(v).toLocaleString()} style={{ flex: 1 }} />
+</Inline>
 ```
 
-| Prop | Type | Notes |
-|---|---|---|
-| `title` | `string` | Card label |
-| `value` | `number \| string` | Stat value |
-| `suffix` | `string?` | Unit after value (e.g. "รายการ") |
-| `prefix` | `ReactNode?` | Before value (e.g. "฿") |
-| `color` | `string?` | Value text color — use `colors.*` token |
-| `formatter` | `StatisticProps['formatter']?` | Custom value renderer (e.g. toLocaleString) |
-| `style` | `CSSProperties?` | Pass `{{ flex: 1 }}` for equal-width flex layout |
+### ScanInput — ช่องยิงบาร์โค้ด (Operator/Warehouse)
 
-> **Rule**: `DashboardPage` has its own richer `StatCard` (with icon, hoverable, larger font) defined locally — that will be promoted to design-system during the dashboard audit.
+```tsx
+<ScanInput onScan={async (code) => { await addItem(code); }} loading={m.isPending} />
+// Enter = ยิง · เคลียร์ค่า + คืนโฟกัสเองเสมอ (แม้ onScan throw หรือเพิ่งหาย disabled/loading)
+```
+
+### ConfirmDrawer — flow 2 ขั้น (กรอก → ยืนยัน) สำหรับงานเสี่ยง
+
+```tsx
+<ConfirmDrawer open={open} onClose={close} title="ปรับสต็อก" formContent={<…/>}
+  summary={<…/>} confirmTitle="ยืนยันการปรับสต็อก 50 รายการ?"
+  onConfirm={() => adjust.mutateAsync(payload)} loading={adjust.isPending} />
+// onConfirm throw → ค้างที่หน้ายืนยัน กดซ้ำได้ (error โดน toast โดย handleError อยู่แล้ว)
+```
+
+### Sheet import suite
+
+`SheetImportModal` = flow ครบ 3 ขั้น (อัพโหลด → จับคู่คอลัมน์ → ตรวจสอบ+นำเข้า) ประกอบจาก `DropZoneSheet` (ตรวจชนิดไฟล์ .xlsx/.xls/.csv รวมถึงลากวาง) + `SheetColumnMapper` + `SheetTable` — ดู story `SheetImportModal` เป็นตัวอย่างการต่อ `dbFields`/`validateRow`/`transformRow`/`onImport`
+
+---
+
+## Conventions ที่ทุก component ทำตาม
+
+- Async callback (`onOk`/`onConfirm`) คืน Promise ได้ → loading + กันกดซ้ำอัตโนมัติ
+- `null`/`undefined` ใน cell formatter → "—" ไม่ crash
+- Popover/dropdown ปิดด้วย Escape, โฟกัสวนใน overlay, ปุ่มมี `focus-visible` ring
+- Error จาก mutation ให้ toast ผ่าน `handleError` ฝั่งผู้เรียก — component ไม่ toast เอง

@@ -29,6 +29,7 @@ export function QuantityInput({
         onChange={(v) => v && onUnitChange?.(v)}
         options={units.map((u) => ({ value: u, label: u }))}
         popupMatchSelectWidth={false}
+        disabled={props.disabled}
         className="w-24 shrink-0 rounded-l-none border-l-0"
       />
     </div>

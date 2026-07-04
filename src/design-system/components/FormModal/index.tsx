@@ -35,11 +35,17 @@ export function FormModal<T extends FieldValues = FieldValues>({
   }, [open, form]);
 
   async function handleSubmit() {
+    let values: T;
     try {
-      const values = await form.validateFields();
-      await onFinish(values);
+      values = await form.validateFields();
     } catch {
-      // RHF shows inline field errors — no additional handling needed
+      return; // validation ไม่ผ่าน — RHF แสดง error ใต้ field แล้ว
+    }
+    try {
+      await onFinish(values);
+    } catch (err) {
+      // mutation error ถูก toast โดย handleError แล้ว — log ไว้จับบัคที่ไม่คาดคิดใน dev
+      if (import.meta.env.DEV) console.error('[FormModal] onFinish error:', err);
     }
   }
 

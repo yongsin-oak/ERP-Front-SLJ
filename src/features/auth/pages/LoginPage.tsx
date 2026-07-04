@@ -2,7 +2,6 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../stores';
 import { Button, Form, Input, InputPassword, Card, Segmented, Inline, Text, Title, AppIcons } from '@design-system';
-import { colors, shadow } from '@design-system';
 import { showError } from '@shared';
 
 type LoginMode = 'staff' | 'terminal';
@@ -27,17 +26,11 @@ function resolveFrom(value: string | undefined | null): string {
 function Logo() {
   return (
     <div style={{ textAlign: 'center', marginBottom: 24 }}>
-      <div style={{
-        width: 52, height: 52,
-        background: colors.brand.primary,
-        borderRadius: 14,
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-        boxShadow: `0 4px 16px ${colors.brand.primary}44`,
-      }}>
-        <AppIcons.lock style={{ color: colors.text.inverse, fontSize: 24 }} />
+      <div
+        className="mb-3 inline-flex size-13 items-center justify-center rounded-[14px] bg-primary"
+        style={{ boxShadow: '0 4px 16px color-mix(in srgb, var(--color-primary) 27%, transparent)' }}
+      >
+        <AppIcons.lock className="text-primary-foreground" style={{ fontSize: 24 }} />
       </div>
       <Title level={4} style={{ margin: 0, fontSize: 20 }}>SLJ ERP</Title>
     </div>
@@ -96,14 +89,13 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: `linear-gradient(135deg, ${colors.brand.primary}10 0%, ${colors.bg.layout} 60%)`,
-    }}>
-      <Card style={{ width: 400, boxShadow: shadow.lg, borderRadius: 16 }}>
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 6%, transparent) 0%, var(--color-canvas) 60%)',
+      }}
+    >
+      <Card className="shadow-lg" style={{ width: 400, borderRadius: 16 }}>
         <Logo />
 
         {/* mode toggle */}

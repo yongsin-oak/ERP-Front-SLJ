@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, colors, AppIcons, Form, InputNumber, Inline } from '@design-system';
+import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, AppIcons, Form, InputNumber, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useShops } from '@features/shop';
 import { PlatformBadge } from '@features/shop';
@@ -101,8 +101,8 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
       align: 'right',
       render: (_: unknown, r: ShopPrice) =>
         r.sellPrice?.pack != null
-          ? <span style={{ color: colors.semantic.successText, fontWeight: 500 }}>฿{r.sellPrice.pack.toLocaleString()}</span>
-          : <span style={{ color: colors.text.tertiary }}>—</span>,
+          ? <span className="font-medium text-success-text">฿{r.sellPrice.pack.toLocaleString()}</span>
+          : <span className="text-foreground-subtle">—</span>,
     },
     {
       title: 'ราคาขาย / Carton',
@@ -111,8 +111,8 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
       align: 'right',
       render: (_: unknown, r: ShopPrice) =>
         r.sellPrice?.carton != null
-          ? <span style={{ color: colors.semantic.successText, fontWeight: 500 }}>฿{r.sellPrice.carton.toLocaleString()}</span>
-          : <span style={{ color: colors.text.tertiary }}>—</span>,
+          ? <span className="font-medium text-success-text">฿{r.sellPrice.carton.toLocaleString()}</span>
+          : <span className="text-foreground-subtle">—</span>,
     },
     {
       title: 'ราคาทุน / Pack',
@@ -121,8 +121,8 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
       align: 'right',
       render: (_: unknown, r: ShopPrice) =>
         r.costPrice?.pack != null
-          ? <span style={{ color: colors.text.secondary }}>฿{r.costPrice.pack.toLocaleString()}</span>
-          : <span style={{ color: colors.text.tertiary }}>—</span>,
+          ? <span className="text-muted-foreground">฿{r.costPrice.pack.toLocaleString()}</span>
+          : <span className="text-foreground-subtle">—</span>,
     },
     {
       title: 'ราคาทุน / Carton',
@@ -131,8 +131,8 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
       align: 'right',
       render: (_: unknown, r: ShopPrice) =>
         r.costPrice?.carton != null
-          ? <span style={{ color: colors.text.secondary }}>฿{r.costPrice.carton.toLocaleString()}</span>
-          : <span style={{ color: colors.text.tertiary }}>—</span>,
+          ? <span className="text-muted-foreground">฿{r.costPrice.carton.toLocaleString()}</span>
+          : <span className="text-foreground-subtle">—</span>,
     },
     {
       title: '',

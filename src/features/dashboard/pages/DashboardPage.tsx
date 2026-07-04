@@ -12,7 +12,7 @@ import {
   Legend,
 } from 'recharts';
 import dayjs from 'dayjs';
-import { Button, PageHeader, colors, Table, Select, CodeCell, DateCell, Card, Tag, Segmented, Alert, SummaryCard, Stack, Inline, Grid, Text, AppIcons } from '@design-system';
+import { Button, PageHeader, Table, Select, CodeCell, DateCell, Card, Tag, Segmented, Alert, SummaryCard, Stack, Inline, Grid, Text, AppIcons } from '@design-system';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock, dashboardKeys } from '../react-query';
 import { useShops } from '@features/shop';
@@ -87,18 +87,21 @@ function StatCard({
       <div className="flex items-start justify-between">
         <div>
           <div className="text-sm text-muted-foreground">{title}</div>
-          <div className="mt-1 flex items-baseline gap-1 text-[28px] font-semibold" style={{ color: color ?? colors.text.primary }}>
+          <div
+            className={cn('mt-1 flex items-baseline gap-1 text-[28px] font-semibold', !color && 'text-foreground')}
+            style={color ? { color } : undefined}
+          >
             {prefix && <span>{prefix}</span>}
             <span>{loading ? '-' : value}</span>
             {suffix && <span className="text-sm font-normal text-muted-foreground">{suffix}</span>}
           </div>
         </div>
         <div
-          className="flex size-11 shrink-0 items-center justify-center rounded-[10px] text-xl"
-          style={{
-            background: color ? `${color}18` : colors.bg.hover,
-            color: color ?? colors.text.tertiary,
-          }}
+          className={cn(
+            'flex size-11 shrink-0 items-center justify-center rounded-[10px] text-xl',
+            !color && 'bg-accent text-foreground-subtle',
+          )}
+          style={color ? { background: `color-mix(in srgb, ${color} 9%, transparent)`, color } : undefined}
         >
           {icon}
         </div>
@@ -164,7 +167,7 @@ export function DashboardPage() {
       render: (_: unknown, r: LowStockProduct) => (
         <div>
           <div style={{ fontWeight: 500 }}>{r.name}</div>
-          <CodeCell style={{ fontSize: 11, color: colors.text.tertiary }}>{r.barcode}</CodeCell>
+          <CodeCell className="text-foreground-subtle" style={{ fontSize: 11 }}>{r.barcode}</CodeCell>
         </div>
       ),
     },
@@ -225,7 +228,7 @@ export function DashboardPage() {
           value={stats?.todayOrders}
           suffix="รายการ"
           icon={<AppIcons.cart />}
-          color={colors.semantic.info}
+          color="var(--color-info)"
           loading={statsLoading}
           onClick={() => navigate('/order')}
         />
@@ -234,7 +237,7 @@ export function DashboardPage() {
           value={stats?.todayRevenue?.toLocaleString()}
           prefix="฿"
           icon={<AppIcons.trendUp />}
-          color={colors.semantic.success}
+          color="var(--color-success)"
           loading={statsLoading}
         />
         <StatCard
@@ -243,7 +246,7 @@ export function DashboardPage() {
           prefix="฿"
           suffix={profitMargin > 0 ? `(${profitMargin}%)` : undefined}
           icon={<AppIcons.trendDown />}
-          color={periodProfit >= 0 ? colors.semantic.success : colors.semantic.error}
+          color={periodProfit >= 0 ? 'var(--color-success)' : 'var(--color-error)'}
           loading={statsLoading}
         />
         <StatCard
@@ -251,7 +254,7 @@ export function DashboardPage() {
           value={lowStock.length}
           suffix="รายการ"
           icon={<AppIcons.warning />}
-          color={lowStock.length > 0 ? colors.semantic.warning : colors.text.tertiary}
+          color={lowStock.length > 0 ? 'var(--color-warning)' : 'var(--color-foreground-subtle)'}
           loading={lowStockLoading}
           onClick={() => navigate('/inventory')}
         />
@@ -279,14 +282,14 @@ export function DashboardPage() {
           value={stats?.totalRevenue?.toLocaleString()}
           prefix="฿"
           icon={<AppIcons.cart />}
-          color={colors.brand.primary}
+          color="var(--color-primary)"
           loading={statsLoading}
         />
         <SummaryCard
           title="ต้นทุนรวม"
           value={stats?.totalCost?.toLocaleString() ?? '-'}
           prefix="฿"
-          color={colors.text.secondary}
+          color="var(--color-muted-foreground)"
           style={{ height: '100%' }}
         />
       </Grid>
@@ -309,15 +312,15 @@ export function DashboardPage() {
                 <AreaChart data={daily} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={colors.semantic.info} stopOpacity={0.18} />
-                      <stop offset="95%" stopColor={colors.semantic.info} stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-info)" stopOpacity={0.18} />
+                      <stop offset="95%" stopColor="var(--color-info)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gradCost" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={colors.semantic.error} stopOpacity={0.12} />
-                      <stop offset="95%" stopColor={colors.semantic.error} stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-error)" stopOpacity={0.12} />
+                      <stop offset="95%" stopColor="var(--color-error)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={colors.border.default} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `฿${(v / 1000).toFixed(0)}K`} />
                   <Tooltip
@@ -327,8 +330,8 @@ export function DashboardPage() {
                     ]}
                   />
                   <Legend formatter={(v) => (v === 'revenue' ? 'รายได้' : 'ต้นทุน')} />
-                  <Area type="monotone" dataKey="revenue" stroke={colors.semantic.info} fill="url(#gradRevenue)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="cost" stroke={colors.semantic.error} fill="url(#gradCost)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--color-info)" fill="url(#gradRevenue)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="cost" stroke="var(--color-error)" fill="url(#gradCost)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -337,7 +340,7 @@ export function DashboardPage() {
         <Card
           title={
             <Inline>
-              <AppIcons.warning style={{ color: colors.semantic.warning }} />
+              <AppIcons.warning className="text-warning" />
               สินค้าใกล้หมด
             </Inline>
           }

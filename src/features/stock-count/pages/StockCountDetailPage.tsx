@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSearchState } from '@shared';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, Input, colors, AppIcons, SummaryCard, InputNumber, Inline, Grid, Card, Alert, DeleteConfirmButton } from '@design-system';
+import { Table, Button, PageHeader, Tag, Input, AppIcons, SummaryCard, InputNumber, Inline, Grid, Card, Alert, DeleteConfirmButton } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { showError, notify } from '@shared';
 import {
@@ -131,7 +131,7 @@ export function StockCountDetailPage() {
         <div>
           <div style={{ fontWeight: 500, fontSize: 13 }}>{r.product?.name ?? '-'}</div>
           {r.product?.category && (
-            <div style={{ fontSize: 11, color: colors.text.tertiary }}>
+            <div className="text-[11px] text-foreground-subtle">
               {r.product.category.name}
               {r.product.brand ? ` · ${r.product.brand.name}` : ''}
             </div>
@@ -186,7 +186,7 @@ export function StockCountDetailPage() {
       align: 'right',
       render: (_: unknown, r: StockCountItem) => {
         const effective = getEffectiveQty(r);
-        if (effective == null) return <span style={{ color: colors.text.tertiary }}>-</span>;
+        if (effective == null) return <span className="text-foreground-subtle">-</span>;
         const diff = effective - r.systemQty;
         if (diff === 0) return <Tag color="default">0</Tag>;
         return (
@@ -202,7 +202,7 @@ export function StockCountDetailPage() {
     return (
       <div>
         <PageHeader title="นับสต็อก" />
-        <div style={{ padding: 32, textAlign: 'center', color: colors.text.tertiary }}>
+        <div className="p-8 text-center text-foreground-subtle">
           กำลังโหลด...
         </div>
       </div>
@@ -318,10 +318,10 @@ export function StockCountDetailPage() {
 
       <Grid cols={4} gap={4} className="mb-4">
         <SummaryCard title="สินค้าทั้งหมด" value={totalItems} suffix="รายการ" />
-        <SummaryCard title="นับแล้ว" value={countedItems} suffix={`/ ${totalItems}`} color={colors.semantic.successText} />
-        <SummaryCard title="ยังไม่นับ" value={totalItems - countedItems} suffix="รายการ" color={totalItems - countedItems > 0 ? colors.semantic.warningText : undefined} />
+        <SummaryCard title="นับแล้ว" value={countedItems} suffix={`/ ${totalItems}`} color="var(--color-success-text)" />
+        <SummaryCard title="ยังไม่นับ" value={totalItems - countedItems} suffix="รายการ" color={totalItems - countedItems > 0 ? 'var(--color-warning-text)' : undefined} />
         <Card size="small">
-          <div style={{ marginBottom: 4, fontSize: 12, color: colors.text.secondary }}>ความคืบหน้า</div>
+          <div className="mb-1 text-xs text-muted-foreground">ความคืบหน้า</div>
           <div className="h-2 w-full rounded-full bg-muted">
             <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
           </div>

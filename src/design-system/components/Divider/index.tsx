@@ -50,9 +50,9 @@ export function Divider({
         style={style}
         {...props}
       >
-        {orientation !== 'left' && line(orientation === 'right' ? 'w-[5%] shrink-0' : 'flex-1')}
-        <span className="shrink-0 whitespace-nowrap">{children}</span>
-        {orientation !== 'right' && line(orientation === 'left' ? 'w-[5%] shrink-0' : 'flex-1')}
+        {orientation !== 'left' && line(orientation === 'right' ? 'w-[5%] min-w-6 shrink-0' : 'flex-1')}
+        <span className="min-w-0 truncate">{children}</span>
+        {orientation !== 'right' && line(orientation === 'left' ? 'w-[5%] min-w-6 shrink-0' : 'flex-1')}
       </div>
     );
   }

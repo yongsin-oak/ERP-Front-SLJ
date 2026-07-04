@@ -1,9 +1,9 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { Input } from '../Input';
 import type { InputRef } from '../Input';
-import { colors } from '../../tokens';
 import { Text } from '../Typography';
 import { AppIcons } from '../../icons';
+import { cn } from '@/lib/utils';
 
 export interface ScanInputProps {
   onScan: (value: string) => void | Promise<void>;
@@ -31,6 +31,14 @@ export function ScanInput({
     setTimeout(() => inputRef.current?.focus(), 0);
   }, []);
 
+  // ยิงบาร์โค้ดต่อเนื่อง: พอ input หายจาก disabled/loading ต้องได้โฟกัสคืนเอง
+  const wasBlockedRef = useRef(false);
+  useEffect(() => {
+    const blocked = disabled || loading;
+    if (wasBlockedRef.current && !blocked) refocus();
+    wasBlockedRef.current = blocked;
+  }, [disabled, loading, refocus]);
+
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key !== 'Enter') return;
@@ -39,8 +47,11 @@ export function ScanInput({
       if (!value) return;
 
       el.value = '';
-      await onScan(value);
-      refocus();
+      try {
+        await onScan(value);
+      } finally {
+        refocus(); // ต้องได้โฟกัสคืนแม้ onScan จะ throw — ไม่งั้นสแกนตัวถัดไปหาย
+      }
     },
     [onScan, refocus],
   );
@@ -54,11 +65,7 @@ export function ScanInput({
       )}
       <Input
         ref={inputRef}
-        prefix={
-          <AppIcons.barcode
-            style={{ color: loading ? colors.brand.primary : colors.text.tertiary }}
-          />
-        }
+        prefix={<AppIcons.barcode className={cn(loading ? 'text-primary' : 'text-foreground-subtle')} />}
         placeholder={placeholder}
         onKeyDown={handleKeyDown}
         disabled={disabled || loading}

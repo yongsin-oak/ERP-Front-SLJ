@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Table, Button, PageHeader, colors, ActionCell, CodeCell, DateCell, SummaryCard , AppIcons, Tag, Badge, Inline, Stack } from '@design-system';
+import { Table, Button, PageHeader, ActionCell, CodeCell, DateCell, SummaryCard , AppIcons, Tag, Badge, Inline, Stack } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
 import {
@@ -63,7 +63,7 @@ export function TerminalPage() {
       render: (v: string, r: Terminal) => (
         <div>
           <div style={{ fontWeight: 500 }}>{v}</div>
-          <div style={{ fontSize: 11, color: colors.text.tertiary }}>{r.id}</div>
+          <div className="text-[11px] text-foreground-subtle">{r.id}</div>
         </div>
       ),
     },
@@ -117,9 +117,9 @@ export function TerminalPage() {
       />
 
       <Inline gap={3} wrap>
-        <SummaryCard title="Terminal ทั้งหมด" value={terminals.length} suffix="เครื่อง" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="เปิดใช้งาน" value={activeCount} suffix="เครื่อง" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ปิดใช้งาน" value={inactiveCount} suffix="เครื่อง" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="Terminal ทั้งหมด" value={terminals.length} suffix="เครื่อง" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="เปิดใช้งาน" value={activeCount} suffix="เครื่อง" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ปิดใช้งาน" value={inactiveCount} suffix="เครื่อง" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
 
       <Table<Terminal>

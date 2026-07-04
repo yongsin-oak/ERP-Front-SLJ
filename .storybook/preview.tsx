@@ -1,7 +1,17 @@
 import type { Preview } from '@storybook/react-vite'
+import { Toaster } from '../src/components/ui/sonner'
 import '../src/index.css'
 
 const preview: Preview = {
+  // mount Toaster ให้ notify.* (Sonner) ใช้งานได้ใน stories เหมือนในแอปจริง
+  decorators: [
+    (Story) => (
+      <>
+        <Story />
+        <Toaster />
+      </>
+    ),
+  ],
   parameters: {
     controls: {
       matchers: {

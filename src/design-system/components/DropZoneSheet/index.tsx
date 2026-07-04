@@ -15,6 +15,8 @@ export interface SheetData {
 
 const PREVIEW_ROWS = 5;
 const DEFAULT_WARN_ROWS = 10_000;
+/** ตรวจชนิดไฟล์เองด้วย — attribute `accept` กันแค่ file picker ไม่กันลากมาวาง */
+const ACCEPTED_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
 
 function PreviewTable({ headers, rows }: { headers: string[]; rows: Record<string, unknown>[] }) {
   return (
@@ -76,6 +78,10 @@ export function DropZoneSheet({
       setLoading(true);
       setError(null);
       try {
+        const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+        if (!ACCEPTED_EXTENSIONS.includes(ext)) {
+          throw new Error(`รองรับเฉพาะไฟล์ ${ACCEPTED_EXTENSIONS.join(', ')}`);
+        }
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
         const ws = wb.Sheets[wb.SheetNames[0]];

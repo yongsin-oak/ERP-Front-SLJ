@@ -6,7 +6,8 @@ import { Button } from '../Button';
 import { AppIcons } from '../../icons';
 
 export interface DeleteConfirmButtonProps {
-  onConfirm: () => void;
+  /** ถ้าคืน Promise ปุ่มลบจะขึ้น loading + ปิด popover เมื่อ settle */
+  onConfirm: () => void | Promise<unknown>;
   loading?: boolean;
   title?: string;
   description?: string;
@@ -29,6 +30,24 @@ export function DeleteConfirmButton({
   children,
 }: DeleteConfirmButtonProps) {
   const [open, setOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const busy = loading || submitting;
+
+  async function handleConfirm() {
+    if (busy) return;
+    const result = onConfirm();
+    if (result instanceof Promise) {
+      setSubmitting(true);
+      try {
+        await result;
+      } catch {
+        // error ถูก toast โดย handleError ของ mutation แล้ว
+      } finally {
+        setSubmitting(false);
+      }
+    }
+    setOpen(false);
+  }
 
   const trigger = children ?? (
     <Button variant="danger-ghost" size={size} icon={<AppIcons.delete />} loading={loading} disabled={disabled} />
@@ -48,18 +67,10 @@ export function DeleteConfirmButton({
           </div>
         </div>
         <div className="mt-3 flex justify-end gap-2">
-          <Button variant="ghost" size="small" onClick={() => setOpen(false)} disabled={loading}>
+          <Button variant="ghost" size="small" onClick={() => setOpen(false)} disabled={busy}>
             {cancelText}
           </Button>
-          <Button
-            variant="danger"
-            size="small"
-            loading={loading}
-            onClick={() => {
-              onConfirm();
-              setOpen(false);
-            }}
-          >
+          <Button variant="danger" size="small" loading={busy} onClick={handleConfirm}>
             {okText}
           </Button>
         </div>

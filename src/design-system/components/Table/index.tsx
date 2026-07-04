@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -86,6 +87,9 @@ export interface TableProps<T extends object = object> {
 }
 
 const CELL_PAD = { small: 'px-2 py-1.5', middle: 'px-3 py-2.5', large: 'px-4 py-3.5' } as const;
+/** ค่าประมาณความสูงแถวต่อ size สำหรับ virtualizer (วัดจริงซ้ำด้วย measureElement) */
+const ROW_EST = { small: 33, middle: 41, large: 49 } as const;
+const FOCUS_RING = 'outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20';
 
 function getValue(record: unknown, path?: string | string[]): unknown {
   if (path == null) return undefined;
@@ -133,6 +137,7 @@ function SummaryCell({
   style,
   children,
 }: {
+  /** antd compat — ตำแหน่งคอลัมน์ ไม่มีผลต่อการ render */
   index?: number;
   align?: 'left' | 'center' | 'right';
   colSpan?: number;
@@ -303,6 +308,7 @@ export function Table<T extends object = object>({
   pagination,
   rowSelection,
   scroll,
+  virtual,
   expandable,
   rowClassName,
   locale,
@@ -330,6 +336,7 @@ export function Table<T extends object = object>({
   const [filters, setFilters] = React.useState<Record<string, string>>({});
   const [colFilters, setColFilters] = React.useState<Record<string, string[]>>({});
   const [internalPage, setInternalPage] = React.useState(1);
+  const [internalPageSize, setInternalPageSize] = React.useState<number | null>(null);
   const [internalExpanded, setInternalExpanded] = React.useState<React.Key[]>(
     expandable?.defaultExpandedRowKeys ?? [],
   );
@@ -380,9 +387,12 @@ export function Table<T extends object = object>({
   // ── pagination ──
   const paged = pagination !== false ? (pagination ?? {}) : null;
   const serverSide = !!paged && paged.current != null && paged.total != null;
-  const pageSize = paged?.pageSize ?? paged?.defaultPageSize ?? 20;
-  const current = paged?.current ?? internalPage;
+  const pageSize = paged?.pageSize ?? internalPageSize ?? paged?.defaultPageSize ?? 20;
   const total = paged?.total ?? processed.length;
+  // clamp กันหน้าค้างเกินช่วงหลัง filter/ลบแถวจนจำนวนหน้าลด (เฉพาะ client-side)
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const rawCurrent = paged?.current ?? internalPage;
+  const current = serverSide ? rawCurrent : Math.min(rawCurrent, pageCount);
 
   const pageRows = React.useMemo(() => {
     if (!paged || serverSide) return processed;
@@ -392,12 +402,28 @@ export function Table<T extends object = object>({
 
   function changePage(page: number, ps: number) {
     paged?.onChange?.(page, ps);
-    if (!serverSide) setInternalPage(page);
+    if (!serverSide) {
+      setInternalPage(page);
+      setInternalPageSize(ps);
+    }
   }
+
+  // ── virtualization (เปิดเมื่อ virtual + scroll.y — ไม่รองรับ tree/expandable) ──
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const virtualEnabled = !!virtual && scroll?.y != null && !expandable;
+  const rowVirtualizer = useVirtualizer({
+    count: virtualEnabled ? pageRows.length : 0,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_EST[size],
+    overscan: 10,
+    enabled: virtualEnabled,
+  });
 
   // ── selection ──
   const selectedKeys = rowSelection?.selectedRowKeys ?? [];
   const selectedSet = React.useMemo(() => new Set(selectedKeys.map(String)), [selectedKeys]);
+  // preserveSelectedRowKeys: จำ record ที่เคยเลือกไว้ ให้ bulk action ข้ามหน้ายังได้ rows ครบ
+  const preservedRowsRef = React.useRef(new Map<string, T>());
 
   const pageKeys = pageRows.map((r, i) => getKey(r, i));
   const allSelected = pageKeys.length > 0 && pageKeys.every((k) => selectedSet.has(String(k)));
@@ -406,14 +432,21 @@ export function Table<T extends object = object>({
   function toggleAll(checked: boolean) {
     if (!rowSelection) return;
     const pageKeyStrs = new Set(pageKeys.map(String));
+    pageRows.forEach((r, i) => {
+      const k = String(getKey(r, i));
+      if (checked) preservedRowsRef.current.set(k, r);
+      else preservedRowsRef.current.delete(k);
+    });
     let keys: React.Key[];
     if (checked) keys = [...selectedKeys, ...pageKeys.filter((k) => !selectedSet.has(String(k)))];
     else keys = selectedKeys.filter((k) => !pageKeyStrs.has(String(k)));
     rowSelection.onChange?.(keys, rowsForKeys(keys));
   }
 
-  function toggleRow(key: React.Key, checked: boolean) {
+  function toggleRow(key: React.Key, checked: boolean, record: T) {
     if (!rowSelection) return;
+    if (checked) preservedRowsRef.current.set(String(key), record);
+    else preservedRowsRef.current.delete(String(key));
     const keys = checked
       ? [...selectedKeys, key]
       : selectedKeys.filter((k) => String(k) !== String(key));
@@ -422,7 +455,24 @@ export function Table<T extends object = object>({
 
   function rowsForKeys(keys: React.Key[]): T[] {
     const set = new Set(keys.map(String));
-    return dataSource.filter((r, i) => set.has(String(getKey(r, i))));
+    const found = new Map<string, T>();
+    dataSource.forEach((r, i) => {
+      const k = String(getKey(r, i));
+      if (set.has(k)) found.set(k, r);
+    });
+    if (rowSelection?.preserveSelectedRowKeys) {
+      for (const k of set) {
+        if (!found.has(k)) {
+          const cached = preservedRowsRef.current.get(k);
+          if (cached) found.set(k, cached);
+        }
+      }
+    }
+    // prune cache ไม่ให้โตเกินชุดที่ยังถูกเลือกอยู่
+    for (const k of [...preservedRowsRef.current.keys()]) {
+      if (!set.has(k)) preservedRowsRef.current.delete(k);
+    }
+    return [...found.values()];
   }
 
   function toggleExpand(key: React.Key) {
@@ -446,79 +496,98 @@ export function Table<T extends object = object>({
   const hasSelection = !!rowSelection;
   const indent = expandable?.indentSize ?? 20;
 
+  // ── render single row ──
+  function rowEl(
+    record: T,
+    i: number,
+    depth: number,
+    measureRef?: (el: HTMLTableRowElement | null) => void,
+  ): React.ReactNode {
+    const key = getKey(record, i);
+    const kids = (getValue(record, childrenKey) as T[] | undefined) ?? undefined;
+    const canExpand = expandable && (expandable.rowExpandable ? expandable.rowExpandable(record) : !!kids?.length);
+    const isExpanded = expandedKeys.some((k) => String(k) === String(key));
+    const rowProps = onRow?.(record, i);
+
+    return (
+      <tr
+        key={String(key)}
+        ref={measureRef}
+        data-index={measureRef ? i : undefined}
+        {...rowProps}
+        className={cn(
+          'border-b border-divider transition-colors hover:bg-accent/50',
+          rowClassName?.(record, i),
+          rowProps?.className,
+        )}
+      >
+        {hasSelection && (
+          <td className={cn(pad, 'w-10')}>
+            <UICheckbox
+              checked={selectedSet.has(String(key))}
+              disabled={rowSelection?.getCheckboxProps?.(record)?.disabled}
+              onCheckedChange={(c) => toggleRow(key, c === true, record)}
+            />
+          </td>
+        )}
+        {columns.map((col, ci) => {
+          const k = colKeyOf(col, ci);
+          const raw = getValue(record, col.dataIndex);
+          const content = col.render ? col.render(raw, record, i) : (raw as React.ReactNode);
+          const isFirst = ci === 0;
+          return (
+            <td
+              key={k}
+              className={cn(
+                pad,
+                'text-sm text-foreground',
+                alignClass(col.align),
+                col.ellipsis && 'max-w-0 truncate',
+                col.fixed === 'right' && 'sticky right-0 z-1 bg-background',
+                col.fixed === 'left' && 'sticky left-0 z-1 bg-background',
+                col.className,
+              )}
+              style={col.ellipsis ? { width: col.width } : undefined}
+              title={col.ellipsis && typeof content === 'string' ? content : undefined}
+            >
+              <span className={cn(isFirst && depth > 0 && 'inline-flex items-center')}>
+                {isFirst && expandable && (
+                  <span style={{ paddingLeft: depth * indent }} className="inline-flex">
+                    {canExpand ? (
+                      <button
+                        type="button"
+                        aria-label={isExpanded ? 'ย่อแถว' : 'ขยายแถว'}
+                        aria-expanded={isExpanded}
+                        onClick={() => toggleExpand(key)}
+                        className={cn(
+                          'mr-1 flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent',
+                          FOCUS_RING,
+                        )}
+                      >
+                        <IconChevronRight className={cn('size-4 transition-transform', isExpanded && 'rotate-90')} />
+                      </button>
+                    ) : (
+                      <span className="mr-1 inline-block size-5" />
+                    )}
+                  </span>
+                )}
+                {content}
+              </span>
+            </td>
+          );
+        })}
+      </tr>
+    );
+  }
+
   // ── render rows recursively (tree) ──
   function renderRows(rows: T[], depth: number): React.ReactNode[] {
     const out: React.ReactNode[] = [];
     rows.forEach((record, i) => {
+      out.push(rowEl(record, i, depth));
       const key = getKey(record, i);
       const kids = (getValue(record, childrenKey) as T[] | undefined) ?? undefined;
-      const expandable2 = expandable && (expandable.rowExpandable ? expandable.rowExpandable(record) : !!kids?.length);
       const isExpanded = expandedKeys.some((k) => String(k) === String(key));
-      const rowProps = onRow?.(record, i);
-
-      out.push(
-        <tr
-          key={String(key)}
-          {...rowProps}
-          className={cn(
-            'border-b border-divider transition-colors hover:bg-accent/50',
-            rowClassName?.(record, i),
-            rowProps?.className,
-          )}
-        >
-          {hasSelection && (
-            <td className={cn(pad, 'w-10')}>
-              <UICheckbox
-                checked={selectedSet.has(String(key))}
-                disabled={rowSelection?.getCheckboxProps?.(record)?.disabled}
-                onCheckedChange={(c) => toggleRow(key, c === true)}
-              />
-            </td>
-          )}
-          {columns.map((col, ci) => {
-            const k = colKeyOf(col, ci);
-            const raw = getValue(record, col.dataIndex);
-            const content = col.render ? col.render(raw, record, i) : (raw as React.ReactNode);
-            const isFirst = ci === 0;
-            return (
-              <td
-                key={k}
-                className={cn(
-                  pad,
-                  'text-sm text-foreground',
-                  alignClass(col.align),
-                  col.ellipsis && 'max-w-0 truncate',
-                  col.fixed === 'right' && 'sticky right-0 z-[1] bg-background',
-                  col.fixed === 'left' && 'sticky left-0 z-[1] bg-background',
-                  col.className,
-                )}
-                style={col.ellipsis ? { width: col.width } : undefined}
-                title={col.ellipsis && typeof content === 'string' ? content : undefined}
-              >
-                <span className={cn(isFirst && depth > 0 && 'inline-flex items-center')}>
-                  {isFirst && expandable && (
-                    <span style={{ paddingLeft: depth * indent }} className="inline-flex">
-                      {expandable2 ? (
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(key)}
-                          className="mr-1 flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent"
-                        >
-                          <IconChevronRight className={cn('size-4 transition-transform', isExpanded && 'rotate-90')} />
-                        </button>
-                      ) : (
-                        <span className="mr-1 inline-block size-5" />
-                      )}
-                    </span>
-                  )}
-                  {content}
-                </span>
-              </td>
-            );
-          })}
-        </tr>,
-      );
-
       if (expandable && isExpanded && kids?.length) {
         out.push(...renderRows(kids, depth + 1));
       }
@@ -531,15 +600,12 @@ export function Table<T extends object = object>({
 
   return (
     <div className={cn('w-full', className)} style={style}>
-      <div
-        className={cn('relative overflow-auto rounded-lg border border-border', bordered && 'border-border')}
-        style={{ maxHeight: scroll?.y }}
-      >
-        {loading && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
-            <Spinner />
-          </div>
-        )}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className={cn('overflow-auto rounded-lg border border-border', bordered && 'border-border')}
+          style={{ maxHeight: scroll?.y }}
+        >
         <table className="w-full border-collapse text-left" style={{ minWidth }}>
           <thead className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
             <tr className="border-b border-border">
@@ -563,8 +629,8 @@ export function Table<T extends object = object>({
                       pad,
                       'whitespace-nowrap text-xs font-semibold tracking-wide text-muted-foreground uppercase',
                       alignClass(col.align),
-                      col.fixed === 'right' && 'sticky right-0 z-[1] bg-muted',
-                      col.fixed === 'left' && 'sticky left-0 z-[1] bg-muted',
+                      col.fixed === 'right' && 'sticky right-0 z-1 bg-muted',
+                      col.fixed === 'left' && 'sticky left-0 z-1 bg-muted',
                     )}
                   >
                     <div
@@ -578,7 +644,7 @@ export function Table<T extends object = object>({
                         <button
                           type="button"
                           onClick={() => onSortClick(col, k)}
-                          className="inline-flex items-center gap-1 hover:text-foreground"
+                          className={cn('inline-flex items-center gap-1 rounded hover:text-foreground', FOCUS_RING)}
                         >
                           {col.title}
                           {sorted === 'ascend' ? (
@@ -629,12 +695,33 @@ export function Table<T extends object = object>({
                   )}
                 </td>
               </tr>
+            ) : virtualEnabled ? (
+              (() => {
+                const vItems = rowVirtualizer.getVirtualItems();
+                const padTop = vItems.length ? vItems[0].start : 0;
+                const padBottom = vItems.length
+                  ? rowVirtualizer.getTotalSize() - vItems[vItems.length - 1].end
+                  : 0;
+                return (
+                  <>
+                    {padTop > 0 && <tr aria-hidden style={{ height: padTop }} />}
+                    {vItems.map((vi) => rowEl(pageRows[vi.index], vi.index, 0, rowVirtualizer.measureElement))}
+                    {padBottom > 0 && <tr aria-hidden style={{ height: padBottom }} />}
+                  </>
+                );
+              })()
             ) : (
               renderRows(pageRows, 0)
             )}
           </tbody>
           {summary && pageRows.length > 0 && <tfoot>{summary(pageRows)}</tfoot>}
         </table>
+        </div>
+        {loading && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-[1px]">
+            <Spinner />
+          </div>
+        )}
       </div>
 
       {paged && total > 0 && (

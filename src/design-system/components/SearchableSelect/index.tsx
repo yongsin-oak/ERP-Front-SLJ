@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Select } from '../Select';
 import type { SelectOption } from '../Select';
 
@@ -28,20 +28,36 @@ export function SearchableSelect<T = string>({
   const [options, setOptions] = useState<SelectOption[]>([]);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // sequence counter — กัน response เก่าที่มาช้าทับผลลัพธ์ของคำค้นล่าสุด
+  const seqRef = useRef(0);
+
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      seqRef.current++; // ตัด response ที่ค้างอยู่หลัง unmount
+    },
+    [],
+  );
 
   const handleSearch = useCallback(
     (query: string) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (!query.trim()) {
+        seqRef.current++;
         setOptions([]);
+        setLoading(false);
         return;
       }
       timerRef.current = setTimeout(async () => {
+        const seq = ++seqRef.current;
         setLoading(true);
         try {
-          setOptions(await onSearch(query));
+          const result = await onSearch(query);
+          if (seq === seqRef.current) setOptions(result);
+        } catch {
+          // ค้นหาล้มเหลว — คงตัวเลือกเดิมไว้ ผู้เรียกจัดการ error ฝั่ง fetch เอง
         } finally {
-          setLoading(false);
+          if (seq === seqRef.current) setLoading(false);
         }
       }, DEBOUNCE_MS);
     },

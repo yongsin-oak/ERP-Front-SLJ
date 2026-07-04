@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Table, Button, PageHeader, Select, colors, AppIcons, Inline, InputNumber, Text } from '@design-system';
+import { Table, Button, PageHeader, Select, AppIcons, Inline, InputNumber, Text } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkCreateStockEntry } from '../react-query';
@@ -196,7 +196,7 @@ export function StockReceivePage() {
         </Inline>
 
         {validRows.length > 0 && (
-          <div style={{ marginTop: 16, padding: '10px 16px', background: colors.semantic.successBg, borderRadius: 6, border: `1px solid ${colors.semantic.successBorder}` }}>
+          <div className="mt-4 rounded-md border border-success-border bg-success-bg px-4 py-2.5">
             <Text type="secondary" style={{ fontSize: 13 }}>
               สรุป: {validRows.length} รายการ · รวม {totalQty.toLocaleString()} แพ็ค
               {totalCost > 0 && ` · มูลค่ารับเข้า ฿${totalCost.toLocaleString()}`}

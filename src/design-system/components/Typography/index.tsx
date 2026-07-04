@@ -49,15 +49,22 @@ export interface TextProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = React.useState(false);
+  const timerRef = React.useRef<number | undefined>(undefined);
+  React.useEffect(() => () => window.clearTimeout(timerRef.current), []);
   return (
     <button
       type="button"
       aria-label="คัดลอก"
       className="text-muted-foreground transition-colors hover:text-primary"
-      onClick={() => {
-        void navigator.clipboard?.writeText(value);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1500);
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopied(true);
+          window.clearTimeout(timerRef.current);
+          timerRef.current = window.setTimeout(() => setCopied(false), 1500);
+        } catch {
+          // clipboard unavailable (insecure context / permission denied) — keep the copy icon
+        }
       }}
     >
       {copied ? <IconCheck className="size-3.5" /> : <IconCopy className="size-3.5" />}
@@ -88,6 +95,7 @@ export function Text({
         className,
       )}
       style={size ? { fontSize: TEXT_SIZE[size], ...style } : style}
+      title={ellipsis && typeof children === 'string' ? children : undefined}
       {...props}
     >
       {children}

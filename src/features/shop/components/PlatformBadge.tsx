@@ -1,4 +1,3 @@
-import { colors } from '@design-system';
 import { PlatformHex } from '../types';
 import type { Platform } from '../types';
 
@@ -15,7 +14,7 @@ export function PlatformBadge({ platform, size = 24 }: PlatformBadgeProps) {
         height: size,
         borderRadius: size * 0.25,
         background: PlatformHex[platform],
-        color: colors.text.inverse,
+        color: 'var(--color-primary-foreground)',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
