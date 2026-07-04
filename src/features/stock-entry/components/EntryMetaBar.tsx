@@ -1,5 +1,4 @@
-import { Flex, Form } from 'antd';
-import { Select, Input } from '@design-system';
+import { Select, Input, Form, Inline } from '@design-system';
 
 interface Props {
   employeeOptions: { label: string; value: string }[];
@@ -19,7 +18,7 @@ export function EntryMetaBar({
   onNoteChange,
 }: Props) {
   return (
-    <Flex gap={12} style={{ marginBottom: 16 }}>
+    <Inline gap={3} align="end" wrap={false} className="mb-4">
       <Form.Item label="พนักงาน" style={{ marginBottom: 0 }}>
         <Select
           allowClear
@@ -38,6 +37,6 @@ export function EntryMetaBar({
           onChange={(e) => onNoteChange(e.target.value)}
         />
       </Form.Item>
-    </Flex>
+    </Inline>
   );
 }

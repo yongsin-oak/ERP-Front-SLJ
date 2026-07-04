@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { InputNumber, Space } from 'antd';
-import type { InputRef } from 'antd';
-import { Button, Input, Table, Tag, colors , AppIcons } from '@design-system';
-import type { ColumnType } from '@design-system';
+import { Button, Input, InputNumber, Table, Tag, colors , AppIcons } from '@design-system';
+import type { ColumnType, InputRef } from '@design-system';
 import { ProductDropdownSelect, inventoryService } from '@features/inventory';
 import type { ProductDropdown } from '@features/inventory';
 import { getErrorMessage, notify } from '@shared';
@@ -142,7 +140,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
           <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
             เพิ่มสินค้าด้วย Barcode
           </div>
-          <Space.Compact style={{ width: '100%' }}>
+          <div className="flex w-full gap-2">
             <Input
               ref={barcodeRef}
               prefix={<AppIcons.barcode />}
@@ -150,11 +148,12 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
               value={barcodeInput}
               onChange={(e) => setBarcodeInput(e.target.value)}
               onPressEnter={handleBarcodeSubmit}
+              className="flex-1"
             />
             <Button variant="primary" icon={<AppIcons.add />} onClick={handleBarcodeSubmit}>
               เพิ่ม
             </Button>
-          </Space.Compact>
+          </div>
         </div>
 
         <div style={{ flex: '1 1 280px' }}>

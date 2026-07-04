@@ -1,17 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Space, Modal as AntModal, Checkbox, Typography, Flex } from 'antd';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, DeleteConfirmButton, colors, SummaryCard , AppIcons } from '@design-system';
+import { Table, Button, PageHeader, Tag, DeleteConfirmButton, colors, SummaryCard, AppIcons, Modal, Checkbox, Text, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
 import type { Category, CreateCategoryDto } from '../types';
 
-const { Text } = Typography;
-
 export function CategoryPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Category | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Category | null>(null);
+  const [deleteChildren, setDeleteChildren] = useState(false);
 
   const { data, isLoading, refetch, isFetching } = useCategories({ page: 1, limit: 500 });
   const categories = useMemo(() => data?.data ?? [], [data]);
@@ -73,34 +72,22 @@ export function CategoryPage() {
   }, [categories]);
 
   function handleDeleteWithChildren(c: Category) {
-    let deleteChild = false;
     // ลบแบบ cascade: backend ลบหมวดย่อยทั้งสายลึก (descendant) — แสดงรายชื่อทั้งหมดให้ผู้ใช้เห็นก่อนยืนยัน
-    const descendantIds = Array.from(descendantsMap.get(c.id) ?? []);
-    const descendantNames = descendantIds.map((id) => nameById.get(id) ?? id);
-    AntModal.confirm({
-      title: `ลบหมวดหมู่ "${c.name}"?`,
-      content: (
-        <div>
-          <p style={{ marginBottom: 8 }}>
-            หมวดหมู่นี้มีหมวดหมู่ย่อยทั้งหมด {descendantNames.length} รายการ
-            หากเลือกลบด้วย รายการต่อไปนี้จะถูกลบทั้งหมด:
-          </p>
-          <ul style={{ margin: '0 0 8px', paddingInlineStart: 18, maxHeight: 160, overflow: 'auto' }}>
-            {descendantNames.map((name, i) => (
-              <li key={descendantIds[i]}>
-                <Text type="secondary">{name}</Text>
-              </li>
-            ))}
-          </ul>
-          <Checkbox onChange={(e) => { deleteChild = e.target.checked; }}>
-            ลบหมวดหมู่ย่อยทั้งหมดด้วย (สินค้าในหมวดจะไม่ถูกลบ)
-          </Checkbox>
-        </div>
-      ),
-      okText: 'ลบ', okType: 'danger', cancelText: 'ยกเลิก',
-      onOk: () => deleteCat.mutateAsync({ id: c.id, deleteChild }),
-    });
+    setDeleteChildren(false);
+    setConfirmTarget(c);
   }
+
+  async function handleConfirmDelete() {
+    if (!confirmTarget) return;
+    await deleteCat.mutateAsync({ id: confirmTarget.id, deleteChild: deleteChildren });
+    setConfirmTarget(null);
+  }
+
+  const confirmDescendantIds = useMemo(
+    () => (confirmTarget ? Array.from(descendantsMap.get(confirmTarget.id) ?? []) : []),
+    [confirmTarget, descendantsMap],
+  );
+  const confirmDescendantNames = confirmDescendantIds.map((id) => nameById.get(id) ?? id);
 
   type CatNode = Category & { children?: CatNode[] };
   const nestedCategories = useMemo<CatNode[]>(() => {
@@ -145,14 +132,14 @@ export function CategoryPage() {
       dataIndex: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (v: string, r: CatNode) => (
-        <Space size={6}>
+        <span className="inline-flex items-center gap-1.5">
           <Text strong>{v}</Text>
           {(r.children?.length ?? 0) > 0 && (
             <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>
               {r.children!.length} หมวดย่อย
             </Tag>
           )}
-        </Space>
+        </span>
       ),
     },
     {
@@ -180,7 +167,7 @@ export function CategoryPage() {
       width: 100,
       fixed: 'right',
       render: (_: unknown, r: CatNode) => (
-        <Space>
+        <Inline>
           <Button
             variant="ghost" size="small" icon={<AppIcons.edit />}
             onClick={() => { setSelected(r); setModalOpen(true); }}
@@ -198,7 +185,7 @@ export function CategoryPage() {
               description="ลบหมวดหมู่นี้ออกจากระบบ"
             />
           )}
-        </Space>
+        </Inline>
       ),
     },
   ];
@@ -220,11 +207,11 @@ export function CategoryPage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap className="mb-4">
         <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
       <Table<CatNode>
         rowKey="id"
@@ -248,6 +235,34 @@ export function CategoryPage() {
         onSubmit={handleSubmit}
         loading={createCat.isPending || updateCat.isPending}
       />
+
+      <Modal
+        open={!!confirmTarget}
+        title={confirmTarget ? `ลบหมวดหมู่ "${confirmTarget.name}"?` : ''}
+        onCancel={() => setConfirmTarget(null)}
+        onOk={handleConfirmDelete}
+        okText="ลบ"
+        cancelText="ยกเลิก"
+        confirmLoading={deleteCat.isPending}
+        okButtonProps={{ danger: true }}
+      >
+        <div>
+          <p style={{ marginBottom: 8 }}>
+            หมวดหมู่นี้มีหมวดหมู่ย่อยทั้งหมด {confirmDescendantNames.length} รายการ
+            หากเลือกลบด้วย รายการต่อไปนี้จะถูกลบทั้งหมด:
+          </p>
+          <ul style={{ margin: '0 0 8px', paddingInlineStart: 18, maxHeight: 160, overflow: 'auto' }}>
+            {confirmDescendantNames.map((name, i) => (
+              <li key={confirmDescendantIds[i]}>
+                <Text type="secondary">{name}</Text>
+              </li>
+            ))}
+          </ul>
+          <Checkbox checked={deleteChildren} onChange={(e) => setDeleteChildren(e.target.checked)}>
+            ลบหมวดหมู่ย่อยทั้งหมดด้วย (สินค้าในหมวดจะไม่ถูกลบ)
+          </Checkbox>
+        </div>
+      </Modal>
     </div>
   );
 }

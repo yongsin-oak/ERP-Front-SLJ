@@ -2,7 +2,17 @@ export { Button } from './components/Button';
 export type { ButtonProps, ButtonVariant } from './components/Button';
 
 export { Input, InputPassword, InputSearch, TextArea } from './components/Input';
-export type { InputProps } from './components/Input';
+export type { InputProps, InputRef, TextAreaProps } from './components/Input';
+
+// ── New form-field primitives (Stripe-style · clean-rebuild API) ──────────────
+export { Field, TextField, TextareaField } from './components/Field';
+export type { FieldProps, TextFieldProps, TextareaFieldProps } from './components/Field';
+
+// ── Layout primitives (แทน antd Flex/Space/Row/Col) ───────────────────────────
+export { Stack, Inline } from './components/Stack';
+export type { InlineProps, StackGap, StackAlign, StackJustify } from './components/Stack';
+export { Grid } from './components/Grid';
+export type { GridProps, GridCols, GridGap } from './components/Grid';
 
 export { InputNumber } from './components/InputNumber';
 export type { InputNumberProps } from './components/InputNumber';
@@ -21,6 +31,9 @@ export type { RadioProps, RadioGroupProps } from './components/Radio';
 
 export { Switch } from './components/Switch';
 export type { SwitchProps } from './components/Switch';
+
+export { Segmented } from './components/Segmented';
+export type { SegmentedProps, SegmentedOption } from './components/Segmented';
 
 export { Table } from './components/Table';
 export type { TableProps, ColumnType } from './components/Table';
@@ -53,7 +66,7 @@ export { Divider } from './components/Divider';
 export type { DividerProps } from './components/Divider';
 
 export { Form } from './components/Form';
-export type { FormItemProps } from './components/Form';
+export type { FormItemProps, FormInstance, FormRule } from './components/Form';
 
 export { Text, Title, PageTitle, TEXT_SIZE } from './components/Typography';
 export type { TextSize } from './components/Typography';

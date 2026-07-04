@@ -1,11 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSearchState } from '@shared';
-import {
-  InputNumber, Space, Flex, Progress, Row, Col, Card, Popconfirm, Alert,
-} from 'antd';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, Input, colors, AppIcons, SummaryCard } from '@design-system';
+import { Table, Button, PageHeader, Tag, Input, colors, AppIcons, SummaryCard, InputNumber, Inline, Grid, Card, Alert, DeleteConfirmButton } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { showError, notify } from '@shared';
 import {
@@ -228,7 +225,7 @@ export function StockCountDetailPage() {
       <PageHeader
         title={`นับสต็อก — ${session.id}`}
         subtitle={
-          <Space>
+          <Inline wrap={false}>
             <Tag color={StockCountStatuses[status].color as string}>
               {StockCountStatuses[status].label}
             </Tag>
@@ -236,10 +233,10 @@ export function StockCountDetailPage() {
             {session.employee && (
               <span>{session.employee.firstName} ({session.employee.nickname})</span>
             )}
-          </Space>
+          </Inline>
         }
         actions={
-          <Space wrap>
+          <Inline wrap>
             <Button
               variant="ghost"
               icon={<AppIcons.arrowLeft />}
@@ -264,12 +261,13 @@ export function StockCountDetailPage() {
               </Button>
             )}
             {status === 'Completed' && !session.adjustedAt && (
-              <Popconfirm
+              <DeleteConfirmButton
                 title="ปรับสต็อกตามผลนับ?"
                 description={`จะสร้าง stock adjustment สำหรับทุกรายการที่มีส่วนต่าง และประวัติจะปรากฏใน /stock/history`}
                 onConfirm={() => applyAdjustments.mutate(id!)}
                 okText="ปรับสต็อก"
                 cancelText="ยกเลิก"
+                loading={applyAdjustments.isPending}
               >
                 <Button
                   variant="primary"
@@ -278,7 +276,7 @@ export function StockCountDetailPage() {
                 >
                   ปรับสต็อกตามผลนับ
                 </Button>
-              </Popconfirm>
+              </DeleteConfirmButton>
             )}
             {status === 'Completed' && session.adjustedAt && (
               <Tag color="success">ปรับสต็อกแล้ว</Tag>
@@ -293,13 +291,13 @@ export function StockCountDetailPage() {
                 >
                   บันทึก ({countMap.size})
                 </Button>
-                <Popconfirm
+                <DeleteConfirmButton
                   title="สิ้นสุดการนับสต็อก?"
                   description={`นับแล้ว ${countedItems}/${totalItems} รายการ — ไม่สามารถแก้ไขได้หลังสิ้นสุด`}
                   onConfirm={handleComplete}
                   okText="สิ้นสุด"
                   cancelText="ยกเลิก"
-                  okButtonProps={{ danger: false }}
+                  loading={completeCount.isPending}
                   disabled={countedItems < totalItems}
                 >
                   <Button
@@ -311,32 +309,26 @@ export function StockCountDetailPage() {
                   >
                     สิ้นสุดการนับ
                   </Button>
-                </Popconfirm>
+                </DeleteConfirmButton>
               </>
             )}
-          </Space>
+          </Inline>
         }
       />
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}>
-          <SummaryCard title="สินค้าทั้งหมด" value={totalItems} suffix="รายการ" />
-        </Col>
-        <Col span={6}>
-          <SummaryCard title="นับแล้ว" value={countedItems} suffix={`/ ${totalItems}`} color={colors.semantic.successText} />
-        </Col>
-        <Col span={6}>
-          <SummaryCard title="ยังไม่นับ" value={totalItems - countedItems} suffix="รายการ" color={totalItems - countedItems > 0 ? colors.semantic.warningText : undefined} />
-        </Col>
-        <Col span={6}>
-          <Card size="small">
-            <div style={{ marginBottom: 4, fontSize: 12, color: colors.text.secondary }}>ความคืบหน้า</div>
-            <Progress percent={pct} size="default" />
-          </Card>
-        </Col>
-      </Row>
+      <Grid cols={4} gap={4} className="mb-4">
+        <SummaryCard title="สินค้าทั้งหมด" value={totalItems} suffix="รายการ" />
+        <SummaryCard title="นับแล้ว" value={countedItems} suffix={`/ ${totalItems}`} color={colors.semantic.successText} />
+        <SummaryCard title="ยังไม่นับ" value={totalItems - countedItems} suffix="รายการ" color={totalItems - countedItems > 0 ? colors.semantic.warningText : undefined} />
+        <Card size="small">
+          <div style={{ marginBottom: 4, fontSize: 12, color: colors.text.secondary }}>ความคืบหน้า</div>
+          <div className="h-2 w-full rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+          </div>
+        </Card>
+      </Grid>
 
-      <Flex gap={8} style={{ marginBottom: 16 }}>
+      <Inline gap={2} wrap={false} className="mb-4">
         <Input
           prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อสินค้า หรือ barcode..."
@@ -345,7 +337,7 @@ export function StockCountDetailPage() {
           value={search}
           onChange={(e) => setTableState({ ...tableState, search: e.target.value, page: 1 })}
         />
-        <Space>
+        <Inline wrap={false}>
           {filterOptions.map((opt) => (
             <Button
               key={opt.value}
@@ -356,8 +348,8 @@ export function StockCountDetailPage() {
               {opt.label}
             </Button>
           ))}
-        </Space>
-      </Flex>
+        </Inline>
+      </Inline>
 
       <Table<StockCountItem>
         rowKey="id"

@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Flex, InputNumber, Typography, Alert } from 'antd';
-import { Table, Button, PageHeader , AppIcons } from '@design-system';
+import { Table, Button, PageHeader, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkAdjustStock } from '../react-query';
@@ -87,7 +86,7 @@ export function StockAdjustPage() {
       dataIndex: 'currentRemaining',
       width: 130,
       align: 'right' as const,
-      render: (v?: number) => v != null ? <Typography.Text type="secondary">{v}</Typography.Text> : '-',
+      render: (v?: number) => v != null ? <Text type="secondary">{v}</Text> : '-',
     },
     {
       title: 'จำนวนที่นับได้จริง',
@@ -96,12 +95,11 @@ export function StockAdjustPage() {
       render: (_: number, r: AdjustRow) => (
         <InputNumber
           min={0}
-          style={{ width: '100%' }}
           value={r.actualQuantity}
           onChange={(v) => updateRow(r.key, { actualQuantity: v ?? 0 })}
-          status={
+          className={
             r.currentRemaining != null && r.actualQuantity !== r.currentRemaining
-              ? 'warning'
+              ? 'border-warning focus-within:border-warning'
               : undefined
           }
         />
@@ -115,11 +113,11 @@ export function StockAdjustPage() {
       render: (_: unknown, r: AdjustRow) => {
         if (r.currentRemaining == null) return '-';
         const diff = r.actualQuantity - r.currentRemaining;
-        if (diff === 0) return <Typography.Text type="secondary">0</Typography.Text>;
+        if (diff === 0) return <Text type="secondary">0</Text>;
         return (
-          <Typography.Text type={diff > 0 ? 'success' : 'danger'}>
+          <Text type={diff > 0 ? 'success' : 'danger'}>
             {diff > 0 ? `+${diff}` : diff}
-          </Typography.Text>
+          </Text>
         );
       },
     },
@@ -150,7 +148,7 @@ export function StockAdjustPage() {
         type="warning"
         showIcon
         message="การปรับสต็อกจะ set ค่าสต็อกเป็นตัวเลขที่กรอก ไม่ใช่บวกเพิ่ม"
-        style={{ marginBottom: 16, maxWidth: 900 }}
+        className="mb-4 max-w-225"
       />
 
       <div style={{ maxWidth: 900 }}>
@@ -172,7 +170,7 @@ export function StockAdjustPage() {
           scroll={{ x: 'max-content' }}
         />
 
-        <Flex gap={8} style={{ marginTop: 12 }}>
+        <Inline gap={2} className="mt-3">
           <Button icon={<AppIcons.add />} onClick={() => setRows((p) => [...p, newRow()])}>
             เพิ่มรายการ
           </Button>
@@ -184,7 +182,7 @@ export function StockAdjustPage() {
           >
             บันทึกการปรับสต็อก
           </Button>
-        </Flex>
+        </Inline>
       </div>
     </div>
   );

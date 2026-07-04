@@ -1,6 +1,3 @@
-import styled from '@emotion/styled';
-import { Flex } from 'antd';
-import { colors, spacing, radius } from '../../tokens';
 import { Button } from '../Button';
 import { Text } from '../Typography';
 import { DeleteConfirmButton } from '../DeleteConfirmButton';
@@ -15,16 +12,6 @@ export interface BulkSelectionBarProps {
   deleteTitle?: string;
 }
 
-const Bar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: ${spacing[2]} ${spacing[3]};
-  background: ${colors.bg.hover};
-  border-radius: ${radius.md};
-  margin-bottom: ${spacing[3]};
-`;
-
 export function BulkSelectionBar({
   count,
   onDelete,
@@ -34,11 +21,11 @@ export function BulkSelectionBar({
   deleteTitle,
 }: BulkSelectionBarProps) {
   return (
-    <Bar>
+    <div className="mb-3 flex items-center justify-between rounded-md bg-accent px-3 py-2">
       <Text size="sm" type="secondary">
         เลือก {count} {itemLabel}
       </Text>
-      <Flex gap={spacing[2]}>
+      <div className="flex gap-2">
         <DeleteConfirmButton
           onConfirm={onDelete}
           loading={isDeleting}
@@ -52,7 +39,7 @@ export function BulkSelectionBar({
         <Button variant="ghost" onClick={onClear} disabled={isDeleting}>
           ยกเลิก
         </Button>
-      </Flex>
-    </Bar>
+      </div>
+    </div>
   );
 }

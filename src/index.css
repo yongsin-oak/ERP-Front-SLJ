@@ -11,6 +11,8 @@
 body {
   margin: 0;
   font-family: 'Bai Jamjuree', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 #root {
@@ -32,27 +34,41 @@ body {
 
 /* ════════════════════════════════════════════════════════════════════════
    TIER 1 — PRIMITIVE / GLOBAL TOKENS  (raw palette — NEVER use directly in components)
-   ทุกตัวต้องถูกอ้างอิงโดย semantic อย่างน้อยหนึ่งที่ · มิเรอร์กับ colors.ts (ที่ยังป้อน antd)
+   ทุกตัวต้องถูกอ้างอิงโดย semantic อย่างน้อยหนึ่งที่
+   Stripe-grade: neutral เป็น cool-gray อมน้ำเงิน · เงาอมน้ำเงิน (rgba 50,50,93)
    ════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Neutral */
-  --neutral-0: #ffffff;
-  --neutral-50: #fafafa;
-  --neutral-100: #f5f5f5;
+  /* Neutral — Stripe cool-gray scale (อมน้ำเงินเล็กน้อย) */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #f6f9fc;   /* page canvas */
+  --neutral-100: #eef2f7;   /* subtle fill */
+  --neutral-150: #e6ebf1;   /* divider */
+  --neutral-200: #e3e8ee;   /* default border (Stripe hairline) */
+  --neutral-300: #cdd5df;
+  --neutral-400: #a5b0c0;
+  --neutral-500: #8792a2;   /* placeholder / tertiary text */
+  --neutral-600: #6b7688;   /* secondary text */
+  --neutral-700: #4f566b;
+  --neutral-800: #3c4257;
+  --neutral-900: #1a1f36;   /* primary text (navy ink) */
 
-  /* Ink (text alpha on light) */
-  --ink-88: rgba(0, 0, 0, 0.88);
-  --ink-65: rgba(0, 0, 0, 0.65);
-  --ink-45: rgba(0, 0, 0, 0.45);
-  --ink-25: rgba(0, 0, 0, 0.25);
-  --ink-04: rgba(0, 0, 0, 0.04);
-  --ink-08: rgba(0, 0, 0, 0.08);
+  /* Ink (black alpha — overlay surfaces & legacy fallbacks on light) */
+  --ink-88: rgba(26, 31, 54, 0.92);
+  --ink-65: rgba(26, 31, 54, 0.66);
+  --ink-45: rgba(26, 31, 54, 0.46);
+  --ink-25: rgba(26, 31, 54, 0.28);
+  --ink-08: rgba(26, 31, 54, 0.08);
+  --ink-04: rgba(26, 31, 54, 0.04);
+
+  /* Scrim (modal/drawer overlay) — navy-tinted */
+  --scrim: rgba(26, 31, 54, 0.5);
 
   /* Lines */
   --line-default: #e3e8ee;
-  --line-subtle: #f0f2f5;
+  --line-subtle: #eef2f7;
 
-  /* Brand (red) — 500 base / 600 hover / 700 active */
+  /* Brand (red) — 500 base / 600 hover / 700 active · light tint สำหรับพื้นอ่อน */
+  --brand-50:  #fff1f0;
   --brand-500: #e0282e;
   --brand-600: #c1252a;
   --brand-700: #a71f23;
@@ -72,6 +88,10 @@ body {
   --geekblue-50: #f0f5ff; --geekblue-200: #adc6ff; --geekblue-700: #1d39c4;
   --purple-50: #f9f0ff;   --purple-200: #d3adf7;   --purple-700: #531dab;
   --magenta-50: #fff0f6;  --magenta-200: #ffadd2;  --magenta-700: #c41d7f;
+
+  /* Shadow ingredients — Stripe ใช้เงาอมน้ำเงิน (50,50,93) ซ้อนเงาดำบาง */
+  --shadow-key:   50 50 93;   /* blue-ink */
+  --shadow-ambient: 0 0 0;    /* black */
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -79,28 +99,31 @@ body {
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   /* Surfaces */
-  --background: var(--neutral-0);
-  --foreground: var(--ink-88);
-  --foreground-subtle: var(--ink-45);          /* tertiary / placeholder */
+  --canvas: var(--neutral-50);                   /* app/page background */
+  --background: var(--neutral-0);                /* base surface */
+  --foreground: var(--neutral-900);
+  --foreground-subtle: var(--neutral-500);       /* tertiary / placeholder */
   --card: var(--neutral-0);
-  --card-foreground: var(--ink-88);
+  --card-foreground: var(--neutral-900);
   --popover: var(--neutral-0);
-  --popover-foreground: var(--ink-88);
+  --popover-foreground: var(--neutral-900);
   --muted: var(--neutral-100);
-  --muted-foreground: var(--ink-65);
+  --muted-foreground: var(--neutral-600);
   --secondary: var(--neutral-100);
-  --secondary-foreground: var(--ink-88);
+  --secondary-foreground: var(--neutral-900);
 
   /* Interaction surfaces (overlay) */
   --accent: var(--ink-04);                       /* hover bg (ghost/row) */
-  --accent-foreground: var(--ink-88);
+  --accent-foreground: var(--neutral-900);
   --accent-active: var(--ink-08);                /* pressed bg */
+  --scrim-bg: var(--scrim);                      /* modal/drawer overlay */
 
   /* Primary (interactive) */
   --primary: var(--brand-500);
   --primary-hover: var(--brand-600);
   --primary-active: var(--brand-700);
   --primary-foreground: var(--neutral-0);
+  --primary-subtle: var(--brand-50);             /* selected row / brand tint bg */
 
   /* Destructive (interactive) */
   --destructive: var(--red-500);
@@ -111,10 +134,11 @@ body {
   /* States */
   --disabled: var(--ink-25);                     /* disabled foreground */
   --disabled-bg: var(--neutral-100);
-  --control-off: var(--ink-25);                  /* switch/checkbox off track */
+  --control-off: var(--neutral-300);             /* switch/checkbox off track */
 
   /* Borders */
   --border: var(--line-default);
+  --border-strong: var(--neutral-300);
   --input: var(--line-default);
   --divider: var(--line-subtle);
   --ring: var(--brand-500);
@@ -138,7 +162,7 @@ body {
   --data-geekblue-bg: var(--geekblue-50); --data-geekblue-border: var(--geekblue-200); --data-geekblue-text: var(--geekblue-700);
   --data-purple-bg: var(--purple-50);     --data-purple-border: var(--purple-200);     --data-purple-text: var(--purple-700);
   --data-magenta-bg: var(--magenta-50);   --data-magenta-border: var(--magenta-200);   --data-magenta-text: var(--magenta-700);
-  --data-default-bg: var(--neutral-100);  --data-default-border: var(--line-default);  --data-default-text: var(--ink-65);
+  --data-default-bg: var(--neutral-100);  --data-default-border: var(--line-default);  --data-default-text: var(--neutral-600);
 
   /* charts */
   --chart-1: var(--brand-500);
@@ -147,23 +171,40 @@ body {
   --chart-4: var(--gold-500);
   --chart-5: var(--purple-700);
 
-  --radius: 0.375rem; /* 6px — ตรงกับ antd borderRadius */
+  /* Elevation — Stripe signature: เงาอมน้ำเงินซ้อนเงาดำบาง (key + ambient) */
+  --shadow-xs: 0 1px 1px 0 rgb(var(--shadow-key) / 0.04), 0 1px 2px 0 rgb(var(--shadow-ambient) / 0.04);
+  --shadow-sm: 0 1px 2px 0 rgb(var(--shadow-key) / 0.06), 0 1px 1px 0 rgb(var(--shadow-ambient) / 0.04);
+  --shadow-md: 0 2px 5px -1px rgb(var(--shadow-key) / 0.08), 0 2px 3px -2px rgb(var(--shadow-ambient) / 0.05);
+  --shadow-lg: 0 12px 24px -6px rgb(var(--shadow-key) / 0.12), 0 4px 8px -4px rgb(var(--shadow-ambient) / 0.07);
+  --shadow-xl: 0 24px 48px -12px rgb(var(--shadow-key) / 0.16), 0 8px 18px -8px rgb(var(--shadow-ambient) / 0.10);
+  --shadow-overlay: 0 16px 40px -8px rgb(var(--shadow-key) / 0.18), 0 6px 14px -6px rgb(var(--shadow-ambient) / 0.12);
+
+  /* Motion — easing + duration (Stripe: เร่ง-หน่วงนุ่ม) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 280ms;
+
+  --radius: 0.5rem; /* 8px base — Stripe-ish */
 
   /* sidebar */
   --sidebar: var(--neutral-50);
-  --sidebar-foreground: var(--ink-88);
+  --sidebar-foreground: var(--neutral-900);
   --sidebar-primary: var(--brand-500);
   --sidebar-primary-foreground: var(--neutral-0);
   --sidebar-accent: var(--ink-04);
-  --sidebar-accent-foreground: var(--ink-88);
+  --sidebar-accent-foreground: var(--neutral-900);
   --sidebar-border: var(--line-default);
   --sidebar-ring: var(--brand-500);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --canvas: oklch(0.145 0 0);
+  --background: oklch(0.175 0 0);
   --foreground: oklch(0.985 0 0);
-  --foreground-subtle: oklch(0.708 0 0);
+  --foreground-subtle: oklch(0.62 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -175,12 +216,16 @@ body {
   --accent: oklch(1 0 0 / 8%);
   --accent-foreground: oklch(0.985 0 0);
   --accent-active: oklch(1 0 0 / 12%);
+  --scrim-bg: rgba(0, 0, 0, 0.6);
   --disabled: oklch(1 0 0 / 25%);
   --disabled-bg: oklch(0.269 0 0);
   --control-off: oklch(1 0 0 / 25%);
   --border: oklch(1 0 0 / 10%);
+  --border-strong: oklch(1 0 0 / 18%);
   --input: oklch(1 0 0 / 15%);
   --divider: oklch(1 0 0 / 8%);
+  --primary-subtle: oklch(0.4 0.12 18 / 0.18);
+  --shadow-ambient: 0 0 0;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -191,6 +236,7 @@ body {
   --font-sans: 'Bai Jamjuree', -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* surfaces */
+  --color-canvas: var(--canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-foreground-subtle: var(--foreground-subtle);
@@ -205,12 +251,14 @@ body {
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-active: var(--accent-active);
+  --color-scrim: var(--scrim-bg);
 
   /* interactive */
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-active: var(--primary-active);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
   --color-destructive: var(--destructive);
   --color-destructive-hover: var(--destructive-hover);
   --color-destructive-active: var(--destructive-active);
@@ -223,6 +271,7 @@ body {
 
   /* borders */
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-divider: var(--divider);
   --color-ring: var(--ring);
@@ -277,12 +326,26 @@ body {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  /* elevation → shadow-{xs,sm,md,lg,xl,overlay} */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-overlay: var(--shadow-overlay);
+
+  /* motion → ease-{out,in-out,spring} (duration ใช้ผ่าน CSS var: duration-[var(--duration-base)]) */
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
+  --ease-spring: var(--ease-spring);
+
+  /* radius → rounded-{sm,md,lg,xl,2xl,3xl} */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 14px);
 }
 
 @layer base {
@@ -290,9 +353,27 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-canvas text-foreground;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Tailwind v4 รีเซ็ต cursor ของปุ่มเป็น default — คืน pointer ให้ทุก element ที่คลิกได้
+     (ยกเว้นตัวที่ disabled ซึ่งควรเป็น not-allowed/default) */
+  button:not(:disabled),
+  label[role='button'],
+  [role='button']:not([aria-disabled='true']),
+  [role='option'],
+  [role='switch']:not(:disabled),
+  a[href],
+  summary,
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
   }
 }

@@ -1,13 +1,11 @@
 import { useCallback, useRef } from 'react';
-import { Flex } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { Input } from '../Input';
 import { Select } from '../Select';
+import type { SelectOption } from '../Select';
 import { DateRangePresets } from '../DateRangePresets';
 import { Button } from '../Button';
 import { Text } from '../Typography';
-import { spacing } from '../../tokens';
-import type { DefaultOptionType } from 'antd/es/select';
 import { AppIcons } from '../../icons';
 
 const DEBOUNCE_MS = 300;
@@ -18,7 +16,7 @@ type FilterItemBase = { key: string; label: string; width?: number };
 
 export type FilterItem =
   | (FilterItemBase & { type: 'search'; placeholder?: string })
-  | (FilterItemBase & { type: 'select'; options: DefaultOptionType[]; placeholder?: string; mode?: 'multiple' })
+  | (FilterItemBase & { type: 'select'; options: SelectOption[]; placeholder?: string })
   | (FilterItemBase & { type: 'daterange' });
 
 export type FilterValues = Record<string, unknown>;
@@ -54,14 +52,14 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
   });
 
   return (
-    <Flex wrap gap={spacing[2]} align="center">
+    <div className="flex flex-wrap items-center gap-2">
       {items.map(item => {
         const val = values[item.key];
         const w = item.width ?? (item.type === 'daterange' ? 260 : item.type === 'search' ? 220 : 180);
 
         if (item.type === 'search') {
           return (
-            <Flex key={item.key} vertical gap={2}>
+            <div key={item.key} className="flex flex-col gap-0.5">
               {item.label && <Text size="xs" type="secondary">{item.label}</Text>}
               <Input
                 prefix={<AppIcons.search />}
@@ -71,37 +69,36 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
                 allowClear
                 style={{ width: w }}
               />
-            </Flex>
+            </div>
           );
         }
 
         if (item.type === 'select') {
           return (
-            <Flex key={item.key} vertical gap={2}>
+            <div key={item.key} className="flex flex-col gap-0.5">
               {item.label && <Text size="xs" type="secondary">{item.label}</Text>}
               <Select
                 placeholder={item.placeholder ?? `เลือก ${item.label}`}
-                value={val as string | string[] | undefined}
+                value={val as string | undefined}
                 onChange={v => set(item.key, v ?? undefined)}
                 options={item.options}
-                mode={item.mode}
                 allowClear
                 style={{ width: w }}
               />
-            </Flex>
+            </div>
           );
         }
 
         if (item.type === 'daterange') {
           return (
-            <Flex key={item.key} vertical gap={2}>
+            <div key={item.key} className="flex flex-col gap-0.5">
               {item.label && <Text size="xs" type="secondary">{item.label}</Text>}
               <DateRangePresets
                 value={val as [Dayjs | null, Dayjs | null] | null ?? undefined}
                 onChange={range => set(item.key, range ?? undefined)}
                 style={{ width: w }}
               />
-            </Flex>
+            </div>
           );
         }
 
@@ -119,6 +116,6 @@ export function FilterBar({ items, values, onChange, onClear }: FilterBarProps) 
           ล้างตัวกรอง
         </Button>
       )}
-    </Flex>
+    </div>
   );
 }

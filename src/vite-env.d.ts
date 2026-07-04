@@ -1,5 +1,4 @@
 /// <reference types="vite/client" />
-/// <reference types="@emotion/react/types/css-prop" />
 
 interface ImportMetaEnv {
   /** Base URL of the backend API — required in all environments */

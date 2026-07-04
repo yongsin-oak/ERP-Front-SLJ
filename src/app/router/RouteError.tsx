@@ -1,4 +1,3 @@
-import { Result } from 'antd';
 import { useNavigate, useRouteError, isRouteErrorResponse } from 'react-router-dom';
 import { Button } from '@design-system';
 import { getErrorMessage, getErrorStatus } from '@shared';
@@ -22,21 +21,19 @@ export function RouteError() {
   if (status === 403) title = 'ไม่มีสิทธิ์เข้าถึง';
   if (status === 401) title = 'กรุณาเข้าสู่ระบบใหม่';
 
-  const resultStatus = status === 404 || status === 403 || status === 500 ? status : 'error';
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-      <Result
-        status={resultStatus as 'error' | 404 | 403 | 500}
-        title={title}
-        subTitle={subtitle}
-        extra={
-          <>
-            <Button onClick={() => window.location.reload()}>โหลดใหม่</Button>
-            <Button variant="primary" onClick={() => navigate('/')}>กลับหน้าหลัก</Button>
-          </>
-        }
-      />
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="text-6xl font-bold text-foreground-subtle">{status || '!'}</div>
+        <div className="text-lg font-semibold text-foreground">{title}</div>
+        <div className="max-w-md text-sm text-muted-foreground">{subtitle}</div>
+        <div className="mt-2 flex gap-2">
+          <Button onClick={() => window.location.reload()}>โหลดใหม่</Button>
+          <Button variant="primary" onClick={() => navigate('/')}>
+            กลับหน้าหลัก
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

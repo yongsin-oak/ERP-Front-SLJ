@@ -1,5 +1,4 @@
-import { Empty } from 'antd';
-import { PageHeader } from '@design-system';
+import { PageHeader, Empty } from '@design-system';
 
 export function RolePage() {
   return (

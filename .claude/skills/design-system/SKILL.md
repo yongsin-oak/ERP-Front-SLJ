@@ -6,9 +6,13 @@
 
 ---
 
-## 🚧 UI Migration: Ant Design → shadcn/ui + Tailwind (in progress)
+## 🚧 UI Migration: Ant Design → Tailwind + Radix (in progress)
 
-The UI layer is being migrated off Ant Design to **shadcn/ui (Radix + Tailwind v4)** for full control + smaller bundle. Strategy = **strangler**: rewrite each `@design-system` wrapper's *internals* to Tailwind/shadcn while **keeping the same prop API**, so consumers never change.
+The UI layer is being migrated off Ant Design to **Tailwind v4 + Radix UI** (Stripe-style) for full control + smaller bundle.
+
+> **📋 Living plan + progress checklist: [`DESIGN-SYSTEM-MIGRATION.md`](../../../DESIGN-SYSTEM-MIGRATION.md) at repo root — read it before continuing this migration.**
+
+**Strategy (decided 2026-06-24): CLEAN REBUILD — new idiomatic APIs**, not strangler. Components get fresh APIs (forms → react-hook-form + zod; table → TanStack; overlays → Radix). The ~35 feature files that import antd directly get refactored in Phase 5. New + old coexist during transition (no big-bang). Toasts = **Sonner** (`notify.*` API in `notify.tsx` kept stable).
 
 - **Tailwind v4** via `@tailwindcss/vite`; styles in `src/index.css`. shadcn primitives in `src/components/ui/` (own-the-code), `cn()` in `src/lib/utils.ts`, alias `@/* → src/*`.
 - **Token architecture — 3 tiers in `src/index.css`** (this is the source for Tailwind components):
@@ -26,8 +30,9 @@ The UI layer is being migrated off Ant Design to **shadcn/ui (Radix + Tailwind v
   - ⚠️ CSS can't import `.ts` — Tier 1 hex **mirrors `colors.ts`** (still feeding antd); change both until antd is gone.
 - **Font**: Bai Jamjuree kept via `--font-sans` (not the preset's Inter).
 - **Icons**: shadcn configured with `iconLibrary: tabler` (matches `@tabler/icons-react`).
-- **Migrated so far**: `Button`, `Tag`/`StatusTag`, `Badge`, `Switch`, `Alert`, `Card` (Tailwind, no antd, API-compatible). `Button` accepts antd-style `variant`/`size`/`loading`/`icon`/`block`/`htmlType`.
-- **Still antd** (hard pieces, do with care): `Input` (+Search/Password/TextArea), `Select`, `Table` (→ TanStack Table + react-virtual), `DatePicker`, `Modal`/`Drawer`, notifications. Emotion is removed per-component as migrated; goal is to drop both antd + Emotion.
+- **Token v2 (Stripe-grade, 2026-06-24)**: neutral scale now full 0–900 cool-gray; added `--canvas` (page bg `bg-canvas`), `--scrim`/`bg-scrim` (overlay), `--border-strong`, `--primary-subtle`, a **shadow ladder** `shadow-{xs,sm,md,lg,xl,overlay}` (Stripe blue-ink shadows), and **motion tokens** `ease-{out,in-out,spring}` + `--duration-{fast,base,slow}`. `body` is now `bg-canvas`. Base `--radius` = 8px.
+- **Migrated so far**: `Button`, `Tag`/`StatusTag`, `Badge`, `Switch`, `Alert`, `Card`. **New form-field API**: `Field` / `TextField` / `TextareaField` (`@design-system`) — labeled control + `hint`/`error`/`required`/`prefix`/`suffix`, a11y-wired. Base primitives `ui/input`, `ui/textarea`, `ui/sonner`.
+- **Still antd** (next, clean-rebuild APIs): `Select`, `Table` (→ TanStack + react-virtual), `DatePicker`, `Modal`/`Drawer` (→ Radix), `Tabs`/`Tooltip`/`Checkbox`/`Radio` (→ Radix), `Form` (→ RHF+zod). Old antd `Input`/`Select`/etc. still exported for un-migrated features; remove in Phase 6. Emotion dropped per-component; goal = drop antd + Emotion.
 - **Storybook** (`bun run storybook` / `build-storybook`): stories co-located as `<Component>.stories.tsx`. Add a story when migrating a component. Tailwind CSS + Bai Jamjuree are loaded via `.storybook/preview.tsx` + `preview-head.html`.
 
 When migrating a component: keep the exported prop names, run `tsc -b` (catches consumer breakage), add/update its `.stories.tsx`, then `bun run build`.

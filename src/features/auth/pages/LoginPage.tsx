@@ -1,32 +1,19 @@
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Segmented, Typography, Space } from 'antd';
-import styled from '@emotion/styled';
 import { useAuth } from '../stores';
-import { Button, Form, Input, InputPassword, Card , AppIcons } from '@design-system';
+import { Button, Form, Input, InputPassword, Card, Segmented, Inline, Text, Title, AppIcons } from '@design-system';
 import { colors, shadow } from '@design-system';
 import { showError } from '@shared';
 
-const { Text } = Typography;
-
 type LoginMode = 'staff' | 'terminal';
 
-const TerminalCodeDisplay = styled.div`
-  background: ${colors.neutral[100]};
-  border: 1.5px solid ${colors.border.strong};
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 4px;
-  text-align: center;
-  min-height: 54px;
-  color: ${colors.text.primary};
-  font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
+function TerminalCodeDisplay({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-13.5 items-center justify-center rounded-[10px] border-[1.5px] border-border-strong bg-muted px-4 py-3 text-center text-[22px] font-bold tracking-[4px] text-foreground font-['SF_Mono','Fira_Code','Courier_New',monospace]">
+      {children}
+    </div>
+  );
+}
 
 /* ── safe redirect ─────────────────────────────────── */
 const SAFE_PATH = /^\/[A-Za-z0-9/_\-?=&%.]*$/;
@@ -52,7 +39,7 @@ function Logo() {
       }}>
         <AppIcons.lock style={{ color: colors.text.inverse, fontSize: 24 }} />
       </div>
-      <Typography.Title level={4} style={{ margin: 0, fontSize: 20 }}>SLJ ERP</Typography.Title>
+      <Title level={4} style={{ margin: 0, fontSize: 20 }}>SLJ ERP</Title>
     </div>
   );
 }
@@ -63,8 +50,8 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
-  const [staffForm] = Form.useForm();
-  const [terminalForm] = Form.useForm();
+  const [staffForm] = Form.useForm<{ username: string; password: string }>();
+  const [terminalForm] = Form.useForm<{ terminalCode: string; password: string }>();
 
   const stateFrom = (location.state as { from?: string } | null)?.from;
   const from = resolveFrom(stateFrom ?? params.get('from'));
@@ -125,8 +112,8 @@ export function LoginPage() {
             value={mode}
             onChange={(v) => handleModeChange(v as LoginMode)}
             options={[
-              { label: <Space><AppIcons.user />เจ้าหน้าที่</Space>,   value: 'staff' },
-              { label: <Space><AppIcons.desktop />Terminal</Space>, value: 'terminal' },
+              { label: <Inline><AppIcons.user />เจ้าหน้าที่</Inline>,   value: 'staff' },
+              { label: <Inline><AppIcons.desktop />Terminal</Inline>, value: 'terminal' },
             ]}
             block
           />
@@ -193,7 +180,7 @@ export function LoginPage() {
           <div style={{ marginTop: 16 }}>
             <Form.Item noStyle shouldUpdate>
               {({ getFieldValue }) => {
-                const code = getFieldValue('terminalCode');
+                const code = getFieldValue('terminalCode') as string | undefined;
                 return code ? (
                   <TerminalCodeDisplay>{code.toUpperCase()}</TerminalCodeDisplay>
                 ) : null;

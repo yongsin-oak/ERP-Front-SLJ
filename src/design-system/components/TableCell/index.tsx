@@ -1,7 +1,6 @@
 import type React from 'react';
-import styled from '@emotion/styled';
 import dayjs from 'dayjs';
-import { colors, spacing } from '../../tokens';
+import { cn } from '@/lib/utils';
 
 // ── DateCell ────────────────────────────────────────────────
 interface DateCellProps {
@@ -35,15 +34,6 @@ export function MoneyCell({ value, decimals = 2, prefix = '฿' }: MoneyCellProp
 }
 
 // ── CodeCell ────────────────────────────────────────────────
-const CodeEl = styled.code`
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 12px;
-  background: ${colors.neutral[100]};
-  padding: 1px ${spacing[1]};
-  border-radius: 3px;
-  color: ${colors.text.primary};
-`;
-
 interface CodeCellProps {
   children: string;
   style?: React.CSSProperties;
@@ -51,7 +41,14 @@ interface CodeCellProps {
 }
 
 export function CodeCell({ children, style, className }: CodeCellProps) {
-  return <CodeEl style={style} className={className}>{children}</CodeEl>;
+  return (
+    <code
+      style={style}
+      className={cn('rounded-sm bg-muted px-1 py-px font-mono text-xs text-foreground', className)}
+    >
+      {children}
+    </code>
+  );
 }
 
 // ── QuantityCell ─────────────────────────────────────────────
@@ -62,20 +59,25 @@ interface QuantityCellProps {
   criticalThreshold?: number;
 }
 
-const LOW_COLOR = colors.semantic.warning;
-const CRITICAL_COLOR = colors.semantic.error;
-const OK_COLOR = colors.semantic.success;
-
-export function QuantityCell({ value, unit, lowThreshold = 10, criticalThreshold = 3 }: QuantityCellProps) {
+export function QuantityCell({
+  value,
+  unit,
+  lowThreshold = 10,
+  criticalThreshold = 3,
+}: QuantityCellProps) {
   if (value == null) return <>—</>;
 
-  let color: string = OK_COLOR;
-  if (value <= criticalThreshold) color = CRITICAL_COLOR;
-  else if (value <= lowThreshold) color = LOW_COLOR;
+  const color =
+    value <= criticalThreshold
+      ? 'text-error-text'
+      : value <= lowThreshold
+        ? 'text-warning-text'
+        : 'text-success-text';
 
   return (
-    <span style={{ color, fontWeight: value <= lowThreshold ? 600 : 400 }}>
-      {value.toLocaleString()}{unit ? ` ${unit}` : ''}
+    <span className={cn(color, value <= lowThreshold && 'font-semibold')}>
+      {value.toLocaleString()}
+      {unit ? ` ${unit}` : ''}
     </span>
   );
 }

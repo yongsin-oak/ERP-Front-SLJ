@@ -1,23 +1,19 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Layout, Menu, Button, Drawer, Flex, Typography, Popconfirm, Avatar, Tag, App } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import type { MenuProps } from 'antd';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
 import { ActorModal } from '@features/auth';
-import { colors, AppIcons } from '@design-system';
+import { AppIcons, Button, Tag, Tooltip } from '@design-system';
 import { inventoryService } from '@features/inventory/react-query/services';
 import { productKeys } from '@features/inventory/react-query/queryKeys';
-import { STALE_TIME } from '@shared';
-
-type MenuItem = Required<MenuProps>['items'][number];
-const { Sider, Content, Header } = Layout;
+import { STALE_TIME, notify } from '@shared';
+import { canAccess } from '@config/access';
+import { cn } from '@/lib/utils';
 
 const SIDEBAR_WIDTH = 230;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
-const SIDEBAR_BG = '#ffffff';
-const SIDEBAR_BORDER = colors.border.default;
 
 const ROLE_COLOR: Record<Role, string> = {
   SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
@@ -29,7 +25,6 @@ interface NavLeaf {
   key: string;
   icon: React.ReactNode;
   label: string;
-  roles?: Role[];
 }
 
 interface NavGroup {
@@ -59,8 +54,8 @@ const NAV: NavSection[] = [
     label: 'สินค้า',
     children: [
       { key: '/inventory', icon: <AppIcons.barcode />,   label: 'คลังสินค้า' },
-      { key: '/brand',     icon: <AppIcons.tags />,      label: 'แบรนด์',    roles: ['SuperAdmin'] },
-      { key: '/category',  icon: <AppIcons.grid />,  label: 'หมวดหมู่',  roles: ['SuperAdmin'] },
+      { key: '/brand',     icon: <AppIcons.tags />,      label: 'แบรนด์' },
+      { key: '/category',  icon: <AppIcons.grid />,  label: 'หมวดหมู่' },
     ],
   },
   {
@@ -70,7 +65,7 @@ const NAV: NavSection[] = [
     children: [
       { key: '/stock/receive', icon: <AppIcons.download />,      label: 'รับสินค้าเข้า' },
       { key: '/stock/damage',  icon: <AppIcons.damage />,          label: 'บันทึกของเสีย' },
-      { key: '/stock/adjust',  icon: <AppIcons.adjust />,       label: 'ปรับสต็อก',     roles: ['SuperAdmin'] },
+      { key: '/stock/adjust',  icon: <AppIcons.adjust />,       label: 'ปรับสต็อก' },
       { key: '/stock/history', icon: <AppIcons.list />, label: 'ประวัติสต็อก' },
       { key: '/stock/count',   icon: <AppIcons.stockCount size={16} />, label: 'นับสต็อก' },
     ],
@@ -80,8 +75,8 @@ const NAV: NavSection[] = [
     icon: <AppIcons.employees />,
     label: 'จัดการ',
     children: [
-      { key: '/shop',     icon: <AppIcons.shop />,  label: 'ร้านค้า',       roles: ['SuperAdmin'] },
-      { key: '/employee', icon: <AppIcons.employees />,  label: 'พนักงาน',      roles: ['SuperAdmin'] },
+      { key: '/shop',     icon: <AppIcons.shop />,  label: 'ร้านค้า' },
+      { key: '/employee', icon: <AppIcons.employees />,  label: 'พนักงาน' },
       { key: '/supplier', icon: <AppIcons.delivery />, label: 'ซัพพลายเออร์' },
     ],
   },
@@ -90,29 +85,20 @@ const NAV: NavSection[] = [
     icon: <AppIcons.settings />,
     label: 'ระบบ',
     children: [
-      { key: '/user',     icon: <AppIcons.user />,              label: 'ผู้ใช้งาน', roles: ['SuperAdmin'] },
-      { key: '/terminal', icon: <AppIcons.desktop />,           label: 'Terminal',   roles: ['SuperAdmin'] },
-      { key: '/role',     icon: <AppIcons.roles />, label: 'บทบาท',     roles: ['SuperAdmin'] },
+      { key: '/user',     icon: <AppIcons.user />,              label: 'ผู้ใช้งาน' },
+      { key: '/terminal', icon: <AppIcons.desktop />,           label: 'Terminal' },
+      { key: '/role',     icon: <AppIcons.roles />, label: 'บทบาท' },
     ],
   },
 ];
 
-function buildMenuItems(userRole: Role | undefined): MenuItem[] {
-  return NAV.flatMap((section): MenuItem[] => {
+function visibleNav(userRole: Role | undefined): NavSection[] {
+  return NAV.flatMap((section): NavSection[] => {
     if ('groupKey' in section) {
-      const visible = section.children.filter(
-        (c) => !c.roles || (userRole && c.roles.includes(userRole)),
-      );
-      if (!visible.length) return [];
-      return [{
-        key: section.groupKey,
-        icon: section.icon,
-        label: section.label,
-        children: visible.map((c) => ({ key: c.key, icon: c.icon, label: c.label })),
-      }];
+      const children = section.children.filter((c) => canAccess(userRole, c.key));
+      return children.length ? [{ ...section, children }] : [];
     }
-    if (section.roles && (!userRole || !section.roles.includes(userRole))) return [];
-    return [{ key: section.key, icon: section.icon, label: section.label }];
+    return canAccess(userRole, section.key) ? [section] : [];
   });
 }
 
@@ -133,58 +119,127 @@ function getInitialOpenKeys(pathname: string): string[] {
   return active ? [active.groupKey] : [];
 }
 
+const LEAF_BASE =
+  'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors [&_svg]:size-4.5 [&_svg]:shrink-0';
+
 /* ── SidebarMenu ───────────────────────────────────── */
 function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const userRole = useAuth((s) => s.user?.role);
 
-  const items = useMemo(() => buildMenuItems(userRole), [userRole]);
+  const sections = useMemo(() => visibleNav(userRole), [userRole]);
   const selectedKey = useMemo(() => getActiveLeafKey(location.pathname), [location.pathname]);
-  const defaultOpenKeys = useMemo(() => getInitialOpenKeys(location.pathname), []);
+  const [open, setOpen] = useState<string[]>(() => getInitialOpenKeys(location.pathname));
+
+  function go(key: string) {
+    navigate(key);
+    onNavigate?.();
+  }
+
+  if (collapsed) {
+    const leaves = sections.flatMap((s) => ('groupKey' in s ? s.children : [s]));
+    return (
+      <div className="flex flex-col items-center gap-1 px-2">
+        {leaves.map((l) => (
+          <Tooltip key={l.key} title={l.label} placement="right">
+            <button
+              type="button"
+              onClick={() => go(l.key)}
+              className={cn(
+                'flex size-10 items-center justify-center rounded-md transition-colors [&_svg]:size-5',
+                selectedKey === l.key
+                  ? 'bg-primary-subtle text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+              )}
+            >
+              {l.icon}
+            </button>
+          </Tooltip>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <Menu
-      mode="inline"
-      selectedKeys={[selectedKey]}
-      defaultOpenKeys={defaultOpenKeys}
-      inlineCollapsed={collapsed}
-      style={{ border: 'none', background: 'transparent', flex: 1 }}
-      items={items}
-      onClick={({ key }) => {
-        if (key.startsWith('/')) {
-          navigate(key);
-          onNavigate?.();
-        }
-      }}
-    />
+    <nav className="flex flex-col gap-0.5 px-2">
+      {sections.map((s) =>
+        'groupKey' in s ? (
+          <div key={s.groupKey}>
+            <button
+              type="button"
+              onClick={() =>
+                setOpen((o) =>
+                  o.includes(s.groupKey) ? o.filter((k) => k !== s.groupKey) : [...o, s.groupKey],
+                )
+              }
+              className={cn(LEAF_BASE, 'text-muted-foreground hover:bg-accent hover:text-foreground')}
+            >
+              {s.icon}
+              <span className="flex-1 text-left">{s.label}</span>
+              <AppIcons.chevronDown
+                className={cn('size-4 transition-transform', open.includes(s.groupKey) && 'rotate-180')}
+              />
+            </button>
+            {open.includes(s.groupKey) && (
+              <div className="mt-0.5 flex flex-col gap-0.5">
+                {s.children.map((c) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => go(c.key)}
+                    className={cn(
+                      LEAF_BASE,
+                      'pl-9',
+                      selectedKey === c.key
+                        ? 'bg-primary-subtle font-medium text-primary'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                    )}
+                  >
+                    {c.icon}
+                    <span className="flex-1 text-left">{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => go(s.key)}
+            className={cn(
+              LEAF_BASE,
+              selectedKey === s.key
+                ? 'bg-primary-subtle font-medium text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+            )}
+          >
+            {s.icon}
+            <span className="flex-1 text-left">{s.label}</span>
+          </button>
+        ),
+      )}
+    </nav>
   );
 }
 
 /* ── Brand ─────────────────────────────────────────── */
 function Brand({ collapsed }: { collapsed: boolean }) {
   return (
-    <Flex align="center" gap={10} style={{ overflow: 'hidden' }}>
-      <div style={{
-        width: 32, height: 32, borderRadius: 8,
-        background: colors.brand.primary,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-        boxShadow: `0 2px 8px ${colors.brand.primary}55`,
-      }}>
-        <Typography.Text strong style={{ color: '#fff', fontSize: 15 }}>S</Typography.Text>
+    <div className="flex items-center gap-2.5 overflow-hidden">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-[0_2px_8px_rgba(224,40,46,0.33)]">
+        S
       </div>
       {!collapsed && (
-        <div style={{ overflow: 'hidden' }}>
-          <Typography.Text strong style={{ fontSize: 14, letterSpacing: 0.4, whiteSpace: 'nowrap', display: 'block', lineHeight: 1.3 }}>
+        <div className="overflow-hidden">
+          <div className="block text-sm font-semibold leading-tight tracking-wide whitespace-nowrap text-foreground">
             SLJ ERP
-          </Typography.Text>
-          <Typography.Text style={{ fontSize: 10, color: colors.text.tertiary, letterSpacing: 0.5, display: 'block' }}>
-            Management System
-          </Typography.Text>
+          </div>
+          <div className="block text-[10px] tracking-wide text-foreground-subtle">Management System</div>
         </div>
       )}
-    </Flex>
+    </div>
   );
 }
 
@@ -197,57 +252,65 @@ function UserFooter({ collapsed, user, onLogout, onProfile }: {
   onLogout: () => void;
   onProfile: () => void;
 }) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   return (
-    <div style={{ borderTop: `1px solid ${SIDEBAR_BORDER}`, padding: '10px 8px 8px' }}>
+    <div className="border-t border-border px-2 pt-2.5 pb-2">
       {!collapsed && user && (
-        <Flex align="center" gap={10} style={{ padding: '4px 8px 10px' }}>
-          <Avatar
-            size={32}
-            icon={<AppIcons.user />}
-            style={{ background: colors.brand.primary, flexShrink: 0, fontSize: 13 }}
-          />
-          <div style={{ overflow: 'hidden', flex: 1 }}>
-            <Typography.Text
-              strong
-              style={{ fontSize: 13, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}
-            >
+        <div className="flex items-center gap-2.5 px-2 pt-1 pb-2.5">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground [&_svg]:size-4">
+            <AppIcons.user />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <div className="block truncate text-sm font-semibold leading-tight text-foreground">
               {user.username ?? user.terminalCode}
-            </Typography.Text>
-            <Tag
-              color={ROLE_COLOR[user.role]}
-              style={{ margin: 0, fontSize: 10, lineHeight: '16px', padding: '0 5px', marginTop: 2 }}
-            >
+            </div>
+            <Tag color={ROLE_COLOR[user.role]} className="mt-0.5">
               {user.isTerminal ? `Terminal · ${user.role}` : user.role}
             </Tag>
           </div>
-        </Flex>
+        </div>
       )}
       <Button
-        type="text"
-        icon={<AppIcons.user />}
+        variant="ghost"
         block
+        icon={<AppIcons.user />}
         onClick={onProfile}
-        style={{ textAlign: collapsed ? 'center' : 'left', justifyContent: collapsed ? 'center' : 'flex-start', marginBottom: 2 }}
+        className={cn('mb-0.5', collapsed ? 'justify-center' : 'justify-start')}
       >
         {!collapsed && 'โปรไฟล์'}
       </Button>
-      <Popconfirm
-        title="ออกจากระบบ?"
-        onConfirm={onLogout}
-        okText="ออกจากระบบ"
-        cancelText="ยกเลิก"
-        okButtonProps={{ danger: true }}
-      >
-        <Button
-          type="text"
-          icon={<AppIcons.logout />}
-          danger
-          block
-          style={{ textAlign: collapsed ? 'center' : 'left', justifyContent: collapsed ? 'center' : 'flex-start' }}
-        >
-          {!collapsed && 'ออกจากระบบ'}
-        </Button>
-      </Popconfirm>
+
+      <Popover open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="danger-ghost"
+            block
+            icon={<AppIcons.logout />}
+            className={cn(collapsed ? 'justify-center' : 'justify-start')}
+          >
+            {!collapsed && 'ออกจากระบบ'}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-48 p-3">
+          <div className="text-sm font-medium text-foreground">ออกจากระบบ?</div>
+          <div className="mt-3 flex justify-end gap-2">
+            <Button variant="ghost" size="small" onClick={() => setConfirmOpen(false)}>
+              ยกเลิก
+            </Button>
+            <Button
+              variant="danger"
+              size="small"
+              onClick={() => {
+                setConfirmOpen(false);
+                onLogout();
+              }}
+            >
+              ออกจากระบบ
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
@@ -259,7 +322,6 @@ export function AppLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { notification } = App.useApp();
   const notifiedRef = useRef(false);
 
   const { data: lowStockProducts } = useQuery({
@@ -274,12 +336,11 @@ export function AppLayout() {
   useEffect(() => {
     if (notifiedRef.current || !lowStockProducts?.length) return;
     notifiedRef.current = true;
-    notification.warning({
-      message: 'สินค้าใกล้หมดสต็อก',
-      description: `มี ${lowStockProducts.length} รายการที่ต่ำกว่าสต็อกขั้นต่ำ — ตรวจสอบที่หน้าสินค้าคงคลัง`,
-      duration: 8,
-    });
-  }, [lowStockProducts, notification]);
+    notify.warning(
+      'สินค้าใกล้หมดสต็อก',
+      `มี ${lowStockProducts.length} รายการที่ต่ำกว่าสต็อกขั้นต่ำ — ตรวจสอบที่หน้าสินค้าคงคลัง`,
+    );
+  }, [lowStockProducts]);
 
   async function handleLogout() {
     await logout();
@@ -292,134 +353,96 @@ export function AppLayout() {
     : null;
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-
+    <div className="min-h-screen">
       {/* ── Desktop Sidebar ── */}
-      <Sider
-        width={SIDEBAR_WIDTH}
-        collapsedWidth={SIDEBAR_COLLAPSED_WIDTH}
-        collapsed={collapsed}
-        className="desktop-sidebar"
-        style={{
-          background: SIDEBAR_BG,
-          borderRight: `1px solid ${SIDEBAR_BORDER}`,
-          position: 'fixed',
-          left: 0, top: 0, bottom: 0,
-          zIndex: 100,
-          boxShadow: '2px 0 8px rgba(0,0,0,0.04)',
-        }}
+      <aside
+        className="desktop-sidebar fixed inset-y-0 left-0 z-100 flex flex-col border-r border-border bg-background shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-[width] duration-200"
+        style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
       >
-        <Flex vertical style={{ height: '100%' }}>
-          {/* header: brand + collapse toggle */}
-          <Flex
-            align="center"
-            justify={collapsed ? 'center' : 'space-between'}
-            style={{
-              padding: collapsed ? '14px 0' : '12px 10px 12px 14px',
-              borderBottom: `1px solid ${SIDEBAR_BORDER}`,
-              minHeight: 56,
-            }}
-          >
-            <Brand collapsed={collapsed} />
-            {!collapsed && (
-              <Button
-                type="text"
-                size="small"
-                icon={<AppIcons.collapseSidebar />}
-                onClick={() => setCollapsed(true)}
-                style={{ color: colors.text.tertiary, flexShrink: 0 }}
-              />
-            )}
-            {collapsed && (
-              <Button
-                type="text"
-                size="small"
-                icon={<AppIcons.expandSidebar />}
-                onClick={() => setCollapsed(false)}
-                style={{ color: colors.text.tertiary, position: 'absolute', bottom: 72, left: 0, right: 0, margin: '0 auto', width: 40 }}
-              />
-            )}
-          </Flex>
+        {/* header: brand + collapse toggle */}
+        <div
+          className={cn(
+            'flex min-h-14 items-center border-b border-border',
+            collapsed ? 'justify-center px-0 py-3.5' : 'justify-between py-3 pr-2.5 pl-3.5',
+          )}
+        >
+          <Brand collapsed={collapsed} />
+          <Button
+            variant="ghost"
+            size="small"
+            className={cn('shrink-0 text-foreground-subtle', collapsed && 'absolute bottom-18 left-0 right-0 mx-auto w-10')}
+            icon={collapsed ? <AppIcons.expandSidebar /> : <AppIcons.collapseSidebar />}
+            onClick={() => setCollapsed((c) => !c)}
+          />
+        </div>
 
-          {/* nav */}
-          <div style={{ flex: 1, overflow: 'auto', paddingTop: 8, paddingBottom: 8 }}>
-            <SidebarMenu collapsed={collapsed} />
-          </div>
+        {/* nav */}
+        <div className="flex-1 overflow-auto py-2">
+          <SidebarMenu collapsed={collapsed} />
+        </div>
 
-          <UserFooter collapsed={collapsed} user={footerUser} onLogout={handleLogout} onProfile={() => navigate('/profile')} />
-        </Flex>
-      </Sider>
+        <UserFooter
+          collapsed={collapsed}
+          user={footerUser}
+          onLogout={handleLogout}
+          onProfile={() => navigate('/profile')}
+        />
+      </aside>
 
       {/* ── Mobile Header ── */}
-      <Header
-        className="mobile-header"
-        style={{
-          background: SIDEBAR_BG,
-          borderBottom: `1px solid ${SIDEBAR_BORDER}`,
-          padding: '0 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'fixed',
-          top: 0, left: 0, right: 0,
-          zIndex: 100,
-          height: 52,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-        }}
-      >
+      <header className="mobile-header fixed inset-x-0 top-0 z-100 flex h-13 items-center justify-between border-b border-border bg-background px-4 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
         <Brand collapsed={false} />
         {user && (
-          <Flex align="center" gap={8}>
-            <Tag color={ROLE_COLOR[user.role]} style={{ margin: 0, fontSize: 11 }}>
-              {user.role}
-            </Tag>
+          <div className="flex items-center gap-2">
+            <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
             <Button
-              type="text"
+              variant="ghost"
               icon={<AppIcons.menu />}
               onClick={() => setDrawerOpen(true)}
-              style={{ color: colors.text.secondary }}
+              className="text-muted-foreground"
             />
-          </Flex>
+          </div>
         )}
-      </Header>
+      </header>
 
       {/* ── Mobile Drawer ── */}
-      <Drawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        placement="left"
-        width={248}
-        styles={{ body: { padding: 0, background: SIDEBAR_BG, display: 'flex', flexDirection: 'column', height: '100%' }, header: { display: 'none' } }}
-        closable={false}
-      >
-        <Flex align="center" gap={8} style={{ padding: '14px 16px', borderBottom: `1px solid ${SIDEBAR_BORDER}`, flexShrink: 0 }}>
-          <Brand collapsed={false} />
-        </Flex>
-        <div style={{ flex: 1, overflow: 'auto', paddingTop: 8 }}>
-          <SidebarMenu collapsed={false} onNavigate={() => setDrawerOpen(false)} />
+      {drawerOpen && (
+        <div className="fixed inset-0 z-110 md:hidden">
+          <div className="absolute inset-0 bg-scrim" onClick={() => setDrawerOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-62 flex-col bg-background shadow-overlay">
+            <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3.5">
+              <Brand collapsed={false} />
+            </div>
+            <div className="flex-1 overflow-auto py-2">
+              <SidebarMenu collapsed={false} onNavigate={() => setDrawerOpen(false)} />
+            </div>
+            <UserFooter
+              collapsed={false}
+              user={footerUser}
+              onLogout={async () => {
+                await handleLogout();
+                setDrawerOpen(false);
+              }}
+              onProfile={() => {
+                navigate('/profile');
+                setDrawerOpen(false);
+              }}
+            />
+          </div>
         </div>
-        <UserFooter
-          collapsed={false}
-          user={footerUser}
-          onLogout={async () => { await handleLogout(); setDrawerOpen(false); }}
-          onProfile={() => { navigate('/profile'); setDrawerOpen(false); }}
-        />
-      </Drawer>
+      )}
 
       {/* ── Main Content ── */}
-      <Layout
-        style={{ marginLeft: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH, transition: 'margin-left 0.2s' }}
-        className="main-content-layout"
+      <div
+        className="main-content-layout transition-[margin] duration-200"
+        style={{ marginLeft: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
       >
-        <Content
-          style={{ padding: '24px', minHeight: '100vh', background: colors.bg.layout }}
-          className="main-content"
-        >
+        <main className="main-content min-h-screen bg-canvas p-6">
           <Outlet />
-        </Content>
-      </Layout>
+        </main>
+      </div>
 
       <ActorModal />
-    </Layout>
+    </div>
   );
 }

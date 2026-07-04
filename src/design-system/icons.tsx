@@ -28,7 +28,7 @@ import {
   IconDownload, IconClearAll, IconLoader2, IconSettings, IconList, IconAdjustments,
   // layout / nav chrome
   IconMenu2, IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand, IconLayoutGrid,
-  IconDeviceDesktop,
+  IconDeviceDesktop, IconChevronDown,
   // arrows / trend
   IconArrowUp, IconArrowDown, IconArrowLeft, IconArrowRight, IconTrendingUp, IconTrendingDown,
   // status / alert
@@ -118,6 +118,7 @@ export const AppIcons = {
   menu:            make(IconMenu2),
   collapseSidebar: make(IconLayoutSidebarLeftCollapse),
   expandSidebar:   make(IconLayoutSidebarLeftExpand),
+  chevronDown:     make(IconChevronDown),
 
   // ── Arrows / trend ────────────────────────────────────
   arrowUp:      make(IconArrowUp),

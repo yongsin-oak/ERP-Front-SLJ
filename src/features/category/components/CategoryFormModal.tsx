@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Form } from 'antd';
+import { Form } from '@design-system';
 import { FormModal, Input, TextArea, Select } from '@design-system';
 import type { Category, CreateCategoryDto } from '../types';
 

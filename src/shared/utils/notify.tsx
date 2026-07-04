@@ -1,38 +1,50 @@
-import { notification } from 'antd';
-import { AppIcons } from '@design-system';
+import { toast } from 'sonner';
 
-notification.config({ maxCount: 5, placement: 'topRight' });
+/**
+ * App-wide notification API (Sonner-backed).
+ * API คงเดิมจากเวอร์ชัน antd — ผู้เรียกไม่ต้องแก้
+ * mount `<Toaster/>` (จาก @/components/ui/sonner) ที่ root หนึ่งครั้ง
+ */
 
-const DURATION = { success: 4, warning: 6, error: 0 } as const;
+// duration เป็น ms · error = ค้างไว้จนผู้ใช้ปิดเอง (เหมือน antd duration:0)
+const DURATION = { success: 4000, warning: 6000, error: Infinity } as const;
+
+type ResolveType = keyof typeof DURATION;
 
 let _seq = 0;
 
+const TOAST_FN: Record<ResolveType, typeof toast.success> = {
+  success: toast.success,
+  warning: toast.warning,
+  error: toast.error,
+};
+
 export const notify = {
   success(title: string, description?: string) {
-    notification.success({ message: title, description, duration: DURATION.success });
+    toast.success(title, { description, duration: DURATION.success });
   },
 
   warning(title: string, description?: string) {
-    notification.warning({ message: title, description, duration: DURATION.warning });
+    toast.warning(title, { description, duration: DURATION.warning });
   },
 
   error(title: string, description?: string) {
-    notification.error({ message: title, description, duration: DURATION.error });
+    toast.error(title, { description, duration: DURATION.error });
   },
 
-  /** Returns a key — pass to `resolve()` or `dismiss()` when done */
+  /** Returns an id — pass to `resolve()` or `dismiss()` when done */
   loading(title: string, description?: string): string {
-    const key = `notify-${++_seq}`;
-    notification.open({ key, message: title, description, duration: 0, icon: <AppIcons.loading spin /> });
-    return key;
+    const id = `notify-${++_seq}`;
+    toast.loading(title, { id, description, duration: Infinity });
+    return id;
   },
 
-  /** Replace a loading notification in-place with the final result */
-  resolve(key: string, type: keyof typeof DURATION, title: string, description?: string) {
-    notification[type]({ key, message: title, description, duration: DURATION[type] });
+  /** Replace a loading toast in-place with the final result */
+  resolve(id: string, type: ResolveType, title: string, description?: string) {
+    TOAST_FN[type](title, { id, description, duration: DURATION[type] });
   },
 
-  dismiss(key: string) {
-    notification.destroy(key);
+  dismiss(id: string) {
+    toast.dismiss(id);
   },
 };

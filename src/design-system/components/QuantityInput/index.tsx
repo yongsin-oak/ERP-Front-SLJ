@@ -1,11 +1,13 @@
-import { InputNumber as AntInputNumber, Select } from 'antd';
-import type { InputNumberProps as AntInputNumberProps } from 'antd';
+import { InputNumber } from '../InputNumber';
+import type { InputNumberProps } from '../InputNumber';
+import { Select } from '../Select';
+import { cn } from '@/lib/utils';
 
 export const QUANTITY_UNITS = ['ชิ้น', 'กล่อง', 'แพ็ค', 'กก.', 'ลิตร', 'เมตร', 'อื่นๆ'] as const;
 export type QuantityUnit = (typeof QUANTITY_UNITS)[number];
 
 export interface QuantityInputProps
-  extends Omit<AntInputNumberProps<number>, 'addonAfter' | 'min' | 'precision'> {
+  extends Omit<InputNumberProps, 'addonAfter' | 'addonBefore' | 'min' | 'precision'> {
   unit?: QuantityUnit | string;
   onUnitChange?: (unit: string) => void;
   units?: string[];
@@ -16,24 +18,19 @@ export function QuantityInput({
   onUnitChange,
   units = [...QUANTITY_UNITS],
   style,
+  className,
   ...props
 }: QuantityInputProps) {
   return (
-    <AntInputNumber<number>
-      min={0}
-      precision={0}
-      addonAfter={
-        <Select
-          value={unit}
-          onChange={onUnitChange}
-          style={{ width: 80 }}
-          size="small"
-          options={units.map(u => ({ value: u, label: u }))}
-          popupMatchSelectWidth={false}
-        />
-      }
-      style={{ width: '100%', ...style }}
-      {...props}
-    />
+    <div className={cn('flex w-full', className)} style={style}>
+      <InputNumber min={0} precision={0} className="w-auto flex-1 rounded-r-none" {...props} />
+      <Select
+        value={unit}
+        onChange={(v) => v && onUnitChange?.(v)}
+        options={units.map((u) => ({ value: u, label: u }))}
+        popupMatchSelectWidth={false}
+        className="w-24 shrink-0 rounded-l-none border-l-0"
+      />
+    </div>
   );
 }

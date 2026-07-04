@@ -1,111 +1,14 @@
 import { useRef } from 'react';
-import styled from '@emotion/styled';
-import { Tooltip } from 'antd';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { colors, spacing, radius } from '../../tokens';
+import { Tooltip } from '../Tooltip';
 import { Text } from '../Typography';
 import type { SheetData } from '../DropZoneSheet';
-
-// ── Constants ─────────────────────────────────────────────────────────────────
+import { cn } from '@/lib/utils';
 
 const ROW_HEIGHT = 38;
 const COL_WIDTH = 150;
 const ROW_NUM_WIDTH = 52;
 const DEFAULT_MAX_HEIGHT = 480;
-
-// ── Styled components ─────────────────────────────────────────────────────────
-
-const Container = styled.div<{ $height: number }>`
-  height: ${({ $height }) => $height}px;
-  overflow: auto;
-  border: 1px solid ${colors.border.default};
-  border-radius: ${radius.md};
-  position: relative;
-  background: ${colors.bg.base};
-`;
-
-const StickyHeader = styled.div<{ $minWidth: number }>`
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  min-width: ${({ $minWidth }) => $minWidth}px;
-  height: ${ROW_HEIGHT}px;
-  background: ${colors.bg.layout};
-  border-bottom: 2px solid ${colors.border.default};
-`;
-
-const VirtualArea = styled.div<{ $minWidth: number }>`
-  position: relative;
-  min-width: ${({ $minWidth }) => $minWidth}px;
-`;
-
-const Row = styled.div<{ $error: boolean; $minWidth: number }>`
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  height: ${ROW_HEIGHT}px;
-  min-width: ${({ $minWidth }) => $minWidth}px;
-  background: ${({ $error }) => ($error ? colors.semantic.errorBg : colors.bg.base)};
-  border-bottom: 1px solid ${colors.border.subtle};
-
-  &:hover {
-    background: ${({ $error }) => ($error ? '#ffe4e4' : '#f9fafb')};
-  }
-`;
-
-const RowNumCell = styled.div<{ $header?: boolean; $error?: boolean }>`
-  width: ${ROW_NUM_WIDTH}px;
-  min-width: ${ROW_NUM_WIDTH}px;
-  height: 100%;
-  padding: 0 ${spacing[2]};
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: 12px;
-  font-weight: ${({ $header }) => ($header ? 600 : 400)};
-  color: ${({ $error }) => ($error ? colors.semantic.errorText : colors.text.tertiary)};
-  border-right: 1px solid ${colors.border.default};
-  flex-shrink: 0;
-  background: ${({ $header }) => ($header ? colors.bg.layout : 'transparent')};
-`;
-
-const HeaderCell = styled.div`
-  width: ${COL_WIDTH}px;
-  min-width: ${COL_WIDTH}px;
-  height: 100%;
-  padding: 0 ${spacing[3]};
-  display: flex;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: ${colors.text.secondary};
-  border-right: 1px solid ${colors.border.subtle};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-`;
-
-const DataCell = styled.div<{ $error?: boolean }>`
-  width: ${COL_WIDTH}px;
-  min-width: ${COL_WIDTH}px;
-  height: 100%;
-  padding: 0 ${spacing[3]};
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  color: ${({ $error }) => ($error ? colors.semantic.errorText : colors.text.primary)};
-  border-right: 1px solid ${colors.border.subtle};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
-  cursor: default;
-`;
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export interface SheetTableProps {
   data: SheetData;
@@ -127,55 +30,84 @@ export function SheetTable({ data, errors = {}, maxHeight = DEFAULT_MAX_HEIGHT }
   });
 
   return (
-    <Container ref={containerRef} $height={maxHeight}>
+    <div
+      ref={containerRef}
+      className="relative overflow-auto rounded-md border border-border bg-background"
+      style={{ height: maxHeight }}
+    >
       {/* Sticky header */}
-      <StickyHeader $minWidth={minWidth}>
-        <RowNumCell $header>#</RowNumCell>
-        {headers.map(h => (
-          <HeaderCell key={h} title={h}>{h}</HeaderCell>
+      <div
+        className="sticky top-0 z-2 flex border-b-2 border-border bg-muted"
+        style={{ minWidth, height: ROW_HEIGHT }}
+      >
+        <div
+          className="flex h-full shrink-0 items-center justify-end border-r border-border px-2 text-xs font-semibold text-foreground-subtle"
+          style={{ width: ROW_NUM_WIDTH }}
+        >
+          #
+        </div>
+        {headers.map((h) => (
+          <div
+            key={h}
+            title={h}
+            className="flex h-full shrink-0 items-center truncate border-r border-divider px-3 text-xs font-semibold text-muted-foreground"
+            style={{ width: COL_WIDTH }}
+          >
+            {h}
+          </div>
         ))}
-      </StickyHeader>
+      </div>
 
       {/* Virtual rows */}
-      <VirtualArea
-        $minWidth={minWidth}
-        style={{ height: rowVirtualizer.getTotalSize() }}
-      >
-        {rowVirtualizer.getVirtualItems().map(vRow => {
+      <div className="relative" style={{ minWidth, height: rowVirtualizer.getTotalSize() }}>
+        {rowVirtualizer.getVirtualItems().map((vRow) => {
           const row = rows[vRow.index];
           const rowErrors = errors[vRow.index];
           const hasError = rowErrors !== undefined;
 
           return (
-            <Row
+            <div
               key={vRow.key}
-              $error={hasError}
-              $minWidth={minWidth}
-              style={{ transform: `translateY(${vRow.start}px)` }}
+              className={cn(
+                'absolute top-0 left-0 flex border-b border-divider',
+                hasError ? 'bg-error-bg hover:bg-error-border/30' : 'bg-background hover:bg-accent',
+              )}
+              style={{ minWidth, height: ROW_HEIGHT, transform: `translateY(${vRow.start}px)` }}
             >
-              <RowNumCell $error={hasError}>
+              <div
+                className={cn(
+                  'flex h-full shrink-0 items-center justify-end border-r border-border px-2 text-xs',
+                  hasError ? 'text-error-text' : 'text-foreground-subtle',
+                )}
+                style={{ width: ROW_NUM_WIDTH }}
+              >
                 {hasError ? (
                   <Tooltip title={rowErrors.join(' · ')} placement="right">
-                    <Text size="xs" style={{ color: colors.semantic.errorText, cursor: 'help' }}>
+                    <Text size="xs" className="cursor-help text-error-text">
                       {vRow.index + 1}
                     </Text>
                   </Tooltip>
                 ) : (
                   vRow.index + 1
                 )}
-              </RowNumCell>
-              {headers.map(h => {
+              </div>
+              {headers.map((h) => {
                 const cellVal = String(row[h] ?? '');
                 return (
-                  <DataCell key={h} title={cellVal}>
+                  <div
+                    key={h}
+                    title={cellVal}
+                    className="flex h-full shrink-0 items-center truncate border-r border-divider px-3 text-sm text-foreground"
+                    style={{ width: COL_WIDTH }}
+                  >
                     {cellVal}
-                  </DataCell>
+                  </div>
                 );
               })}
-            </Row>
+            </div>
           );
         })}
-      </VirtualArea>
-    </Container>
+      </div>
+    </div>
   );
 }

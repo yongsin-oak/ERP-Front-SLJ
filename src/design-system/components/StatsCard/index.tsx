@@ -1,12 +1,8 @@
 import type { ReactNode } from 'react';
-import styled from '@emotion/styled';
-import { Flex } from 'antd';
-import { Skeleton } from 'antd';
-import { colors, spacing, radius, shadow } from '../../tokens';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '../Typography';
 import { AppIcons } from '../../icons';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import { cn } from '@/lib/utils';
 
 export interface StatsCardProps {
   label: string;
@@ -21,56 +17,11 @@ export interface StatsCardProps {
   onClick?: () => void;
 }
 
-// ── Styled ────────────────────────────────────────────────────────────────────
-
-const Card = styled.div<{ $clickable: boolean }>`
-  background: ${colors.bg.base};
-  border: 1px solid ${colors.border.default};
-  border-radius: ${radius.xl};
-  box-shadow: ${shadow.sm};
-  padding: ${spacing[5]} ${spacing[6]};
-  cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
-  transition: box-shadow 0.15s, border-color 0.15s;
-
-  ${({ $clickable }) => $clickable && `
-    &:hover {
-      box-shadow: ${shadow.md};
-      border-color: ${colors.border.strong};
-    }
-  `}
-`;
-
-const ValueText = styled.div`
-  font-size: 28px;
-  font-weight: 700;
-  color: ${colors.text.primary};
-  line-height: 1.2;
-  letter-spacing: -0.5px;
-`;
-
-const DeltaBadge = styled.span<{ $dir: 'up' | 'down' | 'neutral' }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 2px 6px;
-  border-radius: ${radius.full};
-  background: ${({ $dir }) =>
-    $dir === 'up'
-      ? colors.semantic.successBg
-      : $dir === 'down'
-      ? colors.semantic.errorBg
-      : colors.neutral[100]};
-  color: ${({ $dir }) =>
-    $dir === 'up'
-      ? colors.semantic.successText
-      : $dir === 'down'
-      ? colors.semantic.errorText
-      : colors.text.tertiary};
-`;
-
-// ── Component ─────────────────────────────────────────────────────────────────
+const DELTA_CLASS = {
+  up: 'bg-success-bg text-success-text',
+  down: 'bg-error-bg text-error-text',
+  neutral: 'bg-muted text-muted-foreground',
+} as const;
 
 export function StatsCard({
   label,
@@ -84,45 +35,57 @@ export function StatsCard({
   onClick,
 }: StatsCardProps) {
   const dir = delta == null ? 'neutral' : delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
-  const DeltaIcon =
-    dir === 'up' ? AppIcons.arrowUp : dir === 'down' ? AppIcons.arrowDown : AppIcons.minus;
+  const DeltaIcon = dir === 'up' ? AppIcons.arrowUp : dir === 'down' ? AppIcons.arrowDown : AppIcons.minus;
+  const clickable = Boolean(onClick);
 
   if (loading) {
     return (
-      <Card $clickable={false}>
-        <Skeleton active paragraph={{ rows: 2 }} title={false} />
-      </Card>
+      <div className="rounded-xl border border-border bg-card px-6 py-5 shadow-sm">
+        <Skeleton className="mb-3 h-4 w-24" />
+        <Skeleton className="h-8 w-32" />
+      </div>
     );
   }
 
   return (
-    <Card $clickable={Boolean(onClick)} onClick={onClick}>
-      <Flex justify="space-between" align="flex-start">
-        <Text size="sm" type="secondary" style={{ marginBottom: spacing[2], display: 'block' }}>
+    <div
+      onClick={onClick}
+      className={cn(
+        'rounded-xl border border-border bg-card px-6 py-5 shadow-sm transition-[box-shadow,border-color] duration-150',
+        clickable && 'cursor-pointer hover:border-border-strong hover:shadow-md',
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <Text size="sm" type="secondary" className="mb-2 block">
           {label}
         </Text>
-        {icon && (
-          <span style={{ fontSize: 20, color: colors.text.tertiary }}>{icon}</span>
-        )}
-      </Flex>
+        {icon && <span className="text-xl text-foreground-subtle">{icon}</span>}
+      </div>
 
-      <ValueText>
-        {prefix && <span style={{ fontSize: 18, fontWeight: 500, marginRight: 2 }}>{prefix}</span>}
+      <div className="text-3xl font-bold leading-tight tracking-tight text-foreground">
+        {prefix && <span className="mr-0.5 text-lg font-medium">{prefix}</span>}
         {value ?? '—'}
-        {suffix && <span style={{ fontSize: 16, fontWeight: 400, marginLeft: 4, color: colors.text.secondary }}>{suffix}</span>}
-      </ValueText>
+        {suffix && <span className="ml-1 text-base font-normal text-muted-foreground">{suffix}</span>}
+      </div>
 
       {delta != null && (
-        <Flex align="center" gap={spacing[1]} style={{ marginTop: spacing[2] }}>
-          <DeltaBadge $dir={dir}>
-            <DeltaIcon />
+        <div className="mt-2 flex items-center gap-1">
+          <span
+            className={cn(
+              'inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium',
+              DELTA_CLASS[dir],
+            )}
+          >
+            <DeltaIcon className="size-3.5" />
             {Math.abs(delta).toFixed(1)}%
-          </DeltaBadge>
+          </span>
           {deltaLabel && (
-            <Text size="xs" type="secondary">{deltaLabel}</Text>
+            <Text size="xs" type="secondary">
+              {deltaLabel}
+            </Text>
           )}
-        </Flex>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

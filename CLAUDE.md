@@ -88,9 +88,9 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 | Build | Vite | 7 |
 | Package Manager | **bun** (primary) / npm | — |
 | Language | TypeScript | 5.9 (strict) |
-| UI Components | Ant Design | 6 |
+| UI Primitives | **Radix UI** (`radix-ui`) + shadcn-style own-the-code (`src/components/ui/*`) | 1.6 |
 | Icons (all) | **@tabler/icons-react** via `AppIcons` | 3 |
-| Styling | Emotion (`@emotion/styled`) | 11 |
+| Styling | **Tailwind CSS v4** + `cn()` (clsx + tailwind-merge) · tokens in `src/index.css` (3-tier) | 4 |
 | State | Zustand | 5 |
 | Data Fetching | @tanstack/react-query | 5 |
 | Routing | React Router | 7 |

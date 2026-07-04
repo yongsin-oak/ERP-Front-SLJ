@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Flex, InputNumber, Typography, Alert } from 'antd';
-import { Table, Button, PageHeader, colors , AppIcons } from '@design-system';
+import { Table, Button, PageHeader, colors, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
@@ -97,7 +96,7 @@ export function StockDamagePage() {
       width: 120,
       align: 'right' as const,
       render: (v?: number) =>
-        v != null ? <Typography.Text type="secondary">{v}</Typography.Text> : '-',
+        v != null ? <Text type="secondary">{v}</Text> : '-',
     },
     {
       title: 'จำนวนที่เสีย',
@@ -107,9 +106,8 @@ export function StockDamagePage() {
         <InputNumber
           min={1}
           max={r.currentRemaining}
-          style={{ width: '100%' }}
           value={r.quantity}
-          status={r.currentRemaining != null && r.quantity > r.currentRemaining ? 'error' : undefined}
+          className={r.currentRemaining != null && r.quantity > r.currentRemaining ? 'border-error focus-within:border-error' : undefined}
           onChange={(v) => updateRow(r.key, { quantity: v ?? 1 })}
         />
       ),
@@ -123,7 +121,6 @@ export function StockDamagePage() {
           min={0}
           precision={2}
           placeholder="0.00"
-          style={{ width: '100%' }}
           value={r.costPricePerUnit || undefined}
           onChange={(v) => updateRow(r.key, { costPricePerUnit: v ?? 0 })}
         />
@@ -138,7 +135,7 @@ export function StockDamagePage() {
         if (!r.costPricePerUnit) return '-';
         const loss = r.quantity * r.costPricePerUnit;
         return (
-          <Typography.Text type="danger">฿{loss.toLocaleString()}</Typography.Text>
+          <Text type="danger">฿{loss.toLocaleString()}</Text>
         );
       },
     },
@@ -169,7 +166,7 @@ export function StockDamagePage() {
         type="warning"
         showIcon
         message="สต็อกจะลดลงทันที — กรุณาตรวจสอบจำนวนก่อนบันทึก"
-        style={{ marginBottom: 16, maxWidth: 1000 }}
+        className="mb-4 max-w-250"
       />
 
       <div style={{ maxWidth: 1000 }}>
@@ -191,7 +188,7 @@ export function StockDamagePage() {
           scroll={{ x: 'max-content' }}
         />
 
-        <Flex gap={8} style={{ marginTop: 12 }}>
+        <Inline gap={2} className="mt-3">
           <Button icon={<AppIcons.add />} onClick={() => setRows((p) => [...p, newRow()])}>
             เพิ่มรายการ
           </Button>
@@ -203,7 +200,7 @@ export function StockDamagePage() {
           >
             บันทึกของเสีย
           </Button>
-        </Flex>
+        </Inline>
 
         {validRows.length > 0 && (
           <div
@@ -215,12 +212,12 @@ export function StockDamagePage() {
               border: `1px solid ${colors.semantic.errorBorder}`,
             }}
           >
-            <Typography.Text style={{ fontSize: 13 }}>
+            <Text style={{ fontSize: 13 }}>
               สรุป: {validRows.length} รายการ · {totalQty.toLocaleString()} แพ็ค
               {totalLoss > 0 && (
-                <Typography.Text type="danger"> · มูลค่าที่เสีย ฿{totalLoss.toLocaleString()}</Typography.Text>
+                <Text type="danger"> · มูลค่าที่เสีย ฿{totalLoss.toLocaleString()}</Text>
               )}
-            </Typography.Text>
+            </Text>
           </div>
         )}
       </div>

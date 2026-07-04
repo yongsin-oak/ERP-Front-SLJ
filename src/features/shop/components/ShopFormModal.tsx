@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { Form, Space } from 'antd';
-import { FormModal, Input, TextArea, Select } from '@design-system';
+import { FormModal, Input, TextArea, Select, Form, Inline } from '@design-system';
 import { PlatformBadge } from './PlatformBadge';
 import { PLATFORM_ORDER } from '../types';
 import type { Shop, CreateShopDto, Platform } from '../types';
@@ -29,10 +28,10 @@ export function ShopFormModal({ open, shop, onClose, onSubmit, loading }: Props)
 
   const platformOptions = PLATFORM_ORDER.map((p: Platform) => ({
     label: (
-      <Space size={8}>
+      <Inline gap={2}>
         <PlatformBadge platform={p} size={16} />
         <span>{p}</span>
-      </Space>
+      </Inline>
     ),
     value: p,
   }));

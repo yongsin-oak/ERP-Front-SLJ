@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useSearchState } from '@shared';
-import { Space, Badge, Progress, Form, Flex } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, colors, SummaryCard , AppIcons } from '@design-system';
+import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, colors, SummaryCard , AppIcons, Form, Inline, Stack, Badge } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useEmployees } from '@features/employee/react-query';
 import {
@@ -89,10 +88,12 @@ export function StockCountListPage() {
         const counted = r.countedItems ?? 0;
         const pct = tot > 0 ? Math.round((counted / tot) * 100) : 0;
         return (
-          <Space direction="vertical" size={0} style={{ width: '100%' }}>
-            <Progress percent={pct} size="small" style={{ margin: 0 }} />
-            <span style={{ fontSize: 11, color: '#888' }}>{counted}/{tot} รายการ</span>
-          </Space>
+          <Stack gap={0} className="w-full">
+            <div className="h-2 w-full rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="text-[11px] text-muted-foreground">{counted}/{tot} รายการ</span>
+          </Stack>
         );
       },
     },
@@ -121,7 +122,7 @@ export function StockCountListPage() {
       width: 90,
       fixed: 'right',
       render: (_: unknown, r: StockCount) => (
-        <Space>
+        <Inline wrap={false}>
           <Button
             variant="ghost"
             size="small"
@@ -136,7 +137,7 @@ export function StockCountListPage() {
               description="ลบได้เฉพาะรายการที่ยังไม่สิ้นสุด"
             />
           )}
-        </Space>
+        </Inline>
       ),
     },
   ];
@@ -162,15 +163,15 @@ export function StockCountListPage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap className="mb-4">
         <SummaryCard title="รอบนับทั้งหมด" value={total} suffix="รอบ" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="กำลังนับ (หน้านี้)" value={draftCount} suffix="รอบ" color={colors.semantic.warning} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="สิ้นสุดแล้ว (หน้านี้)" value={completedCount} suffix="รอบ" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
       <Card
         size="small"
-        title={<Space><AppIcons.filter /> ตัวกรอง</Space>}
+        title={<Inline wrap={false}><AppIcons.filter /> ตัวกรอง</Inline>}
         extra={
           filtersActive ? (
             <Button size="small" icon={<AppIcons.clear />} onClick={clearFilters}>

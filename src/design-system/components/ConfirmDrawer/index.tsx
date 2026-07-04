@@ -1,13 +1,10 @@
 import { useState } from 'react';
+import * as React from 'react';
 import type { ReactNode } from 'react';
-import styled from '@emotion/styled';
-import { Flex, Steps } from 'antd';
 import { Drawer } from '../Drawer';
 import { Button } from '../Button';
-import { colors, spacing } from '../../tokens';
 import { Text } from '../Typography';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+import { cn } from '@/lib/utils';
 
 export interface ConfirmDrawerProps {
   open: boolean;
@@ -23,29 +20,7 @@ export interface ConfirmDrawerProps {
   confirmLabel?: string;
   /** Shown when step is review — e.g. "ยืนยันการลบ 50 รายการ?" */
   confirmTitle?: string;
-  /** If provided, back button on step 1 will not show; use this to handle back */
-  onFormBack?: () => void;
 }
-
-// ── Styled ────────────────────────────────────────────────────────────────────
-
-const Footer = styled(Flex)`
-  padding: ${spacing[4]} ${spacing[6]};
-  border-top: 1px solid ${colors.border.default};
-  background: ${colors.bg.base};
-  position: sticky;
-  bottom: 0;
-`;
-
-const WarningBox = styled.div`
-  background: ${colors.semantic.warningBg};
-  border: 1px solid ${colors.semantic.warningBorder};
-  border-radius: 6px;
-  padding: ${spacing[3]} ${spacing[4]};
-  margin-bottom: ${spacing[4]};
-`;
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 const STEP_LABELS = ['กรอกข้อมูล', 'ยืนยัน'];
 
@@ -79,38 +54,8 @@ export function ConfirmDrawer({
       onClose={handleClose}
       title={title}
       width={width}
-      footer={null}
-    >
-      <Flex vertical style={{ height: '100%' }}>
-        {/* Step indicator */}
-        <div style={{ padding: `${spacing[2]} 0 ${spacing[5]}` }}>
-          <Steps
-            current={step}
-            size="small"
-            items={STEP_LABELS.map(label => ({ title: label }))}
-          />
-        </div>
-
-        {/* Content area */}
-        <div style={{ flex: 1, overflow: 'auto', paddingBottom: spacing[16] }}>
-          {step === 0 ? (
-            formContent
-          ) : (
-            <div>
-              {confirmTitle && (
-                <WarningBox>
-                  <Text size="sm" strong style={{ color: colors.semantic.warningText }}>
-                    {confirmTitle}
-                  </Text>
-                </WarningBox>
-              )}
-              {summary}
-            </div>
-          )}
-        </div>
-
-        {/* Sticky footer */}
-        <Footer justify="space-between" align="center">
+      footer={
+        <div className="flex items-center justify-between">
           {step === 0 ? (
             <>
               <Button variant="ghost" onClick={handleClose} disabled={loading}>
@@ -130,8 +75,50 @@ export function ConfirmDrawer({
               </Button>
             </>
           )}
-        </Footer>
-      </Flex>
+        </div>
+      }
+    >
+      {/* Step indicator */}
+      <div className="mb-5 flex items-center gap-2">
+        {STEP_LABELS.map((label, i) => (
+          <React.Fragment key={label}>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  'flex size-6 items-center justify-center rounded-full text-xs font-medium',
+                  i <= step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                )}
+              >
+                {i + 1}
+              </span>
+              <span
+                className={cn(
+                  'text-sm',
+                  i === step ? 'font-medium text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {i < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-divider" />}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {step === 0 ? (
+        formContent
+      ) : (
+        <div>
+          {confirmTitle && (
+            <div className="mb-4 rounded-md border border-warning-border bg-warning-bg px-4 py-3">
+              <Text size="sm" strong type="warning">
+                {confirmTitle}
+              </Text>
+            </div>
+          )}
+          {summary}
+        </div>
+      )}
     </Drawer>
   );
 }

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Flex, Space, Input, Typography, Badge } from 'antd';
 import {
   Table, Button, Tag, PageHeader, BulkSelectionBar, colors, AppIcons,
-  DeleteConfirmButton, Modal, InputPassword, SummaryCard, DateCell,
+  DeleteConfirmButton, Modal, Input, InputPassword, SummaryCard, DateCell,
+  Inline, Text, Badge,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, useSearchState, notify } from '@shared';
@@ -15,8 +15,6 @@ import { EmployeeImportModal } from '../components/EmployeeImportModal';
 import { Departments, type Department } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
 
-const { Search } = Input;
-
 const EMPLOYEE_LIST_DEFAULTS = { search: '', page: 1, pageSize: 20 };
 
 export function EmployeePage() {
@@ -25,6 +23,7 @@ export function EmployeePage() {
   const [selected, setSelected] = useState<Employee | null>(null);
   const [tableState, setTableState] = useSearchState('employee-list', EMPLOYEE_LIST_DEFAULTS);
   const { search, page, pageSize } = tableState;
+  const [searchInput, setSearchInput] = useState(search);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [pinEmployee, setPinEmployee] = useState<Employee | null>(null);
   const [pinValue, setPinValue] = useState('');
@@ -124,7 +123,7 @@ export function EmployeePage() {
       key: 'action',
       width: 130,
       render: (_: unknown, r: Employee) => (
-        <Space>
+        <Inline>
           <Button
             variant="ghost" size="small" icon={<AppIcons.key />}
             title="ตั้ง PIN"
@@ -139,7 +138,7 @@ export function EmployeePage() {
             loading={deleteEmployee.isPending}
             title="ลบพนักงานนี้?"
           />
-        </Space>
+        </Inline>
       ),
     },
   ];
@@ -161,21 +160,27 @@ export function EmployeePage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap className="mb-4">
         <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
-      <Flex gap={12} align="center" style={{ marginBottom: 12 }}>
-        <Search
+      <Inline gap={3} align="center" className="mb-3">
+        <Input
           prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
           allowClear
           style={{ width: 280 }}
-          onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
+          value={searchInput}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSearchInput(val);
+            if (val === '') setTableState({ ...tableState, search: '', page: 1 });
+          }}
+          onPressEnter={() => setTableState({ ...tableState, search: searchInput, page: 1 })}
         />
-      </Flex>
+      </Inline>
 
       {selectedKeys.length > 0 && (
         <BulkSelectionBar
@@ -228,9 +233,9 @@ export function EmployeePage() {
         okButtonProps={{ disabled: pinValue.length < 4 }}
       >
         <div style={{ padding: '16px 0' }}>
-          <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
             PIN ต้องเป็นตัวเลข 4–6 หลัก
-          </Typography.Text>
+          </Text>
           <InputPassword
             value={pinValue}
             onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -238,12 +243,12 @@ export function EmployeePage() {
             maxLength={6}
             style={{ width: '100%', letterSpacing: 6, fontSize: 20, textAlign: 'center' }}
           />
-          <Typography.Text
+          <Text
             type={pinValue.length >= 4 && pinValue.length <= 6 ? 'success' : 'secondary'}
             style={{ fontSize: 12, marginTop: 4, display: 'block' }}
           >
             {pinValue.length} หลัก {pinValue.length >= 4 && pinValue.length <= 6 ? '✓' : '(ต้องการ 4-6 หลัก)'}
-          </Typography.Text>
+          </Text>
         </div>
       </Modal>
     </div>

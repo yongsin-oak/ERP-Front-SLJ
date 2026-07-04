@@ -1,82 +1,13 @@
 import { useState } from "react";
-import { Modal, Space, Typography, Alert } from "antd";
-import styled from "@emotion/styled";
-import { Select, Button , AppIcons } from '@design-system';
-import { colors } from "@design-system";
+import { Modal, Select, Button, Alert, Inline, Text, AppIcons } from '@design-system';
 import { showError } from "@shared";
 import { useEmployees } from "@features/employee/react-query";
 import { authService } from "../react-query/services";
 import { useActorModal } from "../stores";
-
-const { Text } = Typography;
+import { cn } from '@/lib/utils';
 
 const PIN_MIN = 4;
 const PIN_MAX = 6;
-
-/* ── PIN dots display ─────────────────────────────── */
-const DotsRow = styled.div`
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin: 14px 0 18px;
-`;
-
-const Dot = styled.div<{ filled: boolean; active: boolean }>`
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid
-    ${({ filled, active }) =>
-      active ? colors.brand.primary
-      : filled ? colors.brand.primary
-      : colors.border.strong};
-  background: ${({ filled }) =>
-    filled ? colors.brand.primary : "transparent"};
-  transition: all 0.12s;
-  transform: ${({ filled }) => (filled ? "scale(1.15)" : "scale(1)")};
-`;
-
-/* ── keypad ───────────────────────────────────────── */
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-`;
-
-const Key = styled.button<{ variant?: "danger" | "muted" }>`
-  height: 50px;
-  border: 1.5px solid ${colors.border.strong};
-  border-radius: 10px;
-  background: ${({ variant }) =>
-    variant === "danger" ? colors.semantic.errorBg
-    : variant === "muted" ? colors.bg.hover
-    : colors.bg.base};
-  color: ${({ variant }) =>
-    variant === "danger" ? colors.semantic.error : colors.text.primary};
-  font-size: 20px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    transform 0.08s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  &:hover {
-    background: ${colors.bg.hover};
-  }
-  &:active {
-    transform: scale(0.93);
-  }
-  &:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
 
 const KEYS = [
   "1",
@@ -92,6 +23,15 @@ const KEYS = [
   "0",
   "back",
 ];
+
+const KEY_BASE =
+  'flex h-[50px] select-none items-center justify-center rounded-[10px] border-[1.5px] border-border-strong text-xl font-semibold outline-none transition-[background,transform] duration-100 [-webkit-tap-highlight-color:transparent] hover:bg-accent active:scale-[0.93] disabled:cursor-not-allowed disabled:opacity-35 disabled:transform-none';
+
+const KEY_VARIANT: Record<'danger' | 'muted' | 'default', string> = {
+  danger: 'bg-error-bg text-error',
+  muted: 'bg-accent text-foreground',
+  default: 'bg-card text-foreground',
+};
 
 /* ── main ────────────────────────────────────────── */
 export function ActorModal() {
@@ -143,10 +83,10 @@ export function ActorModal() {
     <Modal
       open={open}
       title={
-        <Space>
-          <AppIcons.lock style={{ color: colors.brand.primary }} />
+        <Inline>
+          <AppIcons.lock className="text-primary" />
           ยืนยันตัวตนพนักงาน
-        </Space>
+        </Inline>
       }
       onCancel={cancel}
       footer={null}
@@ -178,11 +118,22 @@ export function ActorModal() {
         <AppIcons.lock style={{ marginRight: 4 }} />
         PIN ({PIN_MIN}–{PIN_MAX} หลัก)
       </Text>
-      <DotsRow>
-        {Array.from({ length: PIN_MAX }).map((_, i) => (
-          <Dot key={i} filled={i < pin.length} active={i === pin.length} />
-        ))}
-      </DotsRow>
+      <div className="flex justify-center gap-2.5 mt-3.5 mb-4.5">
+        {Array.from({ length: PIN_MAX }).map((_, i) => {
+          const filled = i < pin.length;
+          const active = i === pin.length;
+          return (
+            <div
+              key={i}
+              className={cn(
+                'size-3.5 rounded-full border-2 transition-all duration-100',
+                active || filled ? 'border-primary' : 'border-border-strong',
+                filled ? 'bg-primary scale-115' : 'bg-transparent scale-100',
+              )}
+            />
+          );
+        })}
+      </div>
 
       {error && (
         <Alert
@@ -194,29 +145,28 @@ export function ActorModal() {
       )}
 
       {/* keypad */}
-      <Grid>
-        {KEYS.map((k) => (
-          <Key
-            key={k}
-            type="button"
-            disabled={loading}
-            variant={
-              k === "clear" ? "danger"
-              : k === "back" ?
-                "muted"
-              : undefined
-            }
-            onClick={() => handleKey(k)}
-            aria-label={k}
-          >
-            {k === "back" ?
-              "⌫"
-            : k === "clear" ?
-              "C"
-            : k}
-          </Key>
-        ))}
-      </Grid>
+      <div className="grid grid-cols-3 gap-2">
+        {KEYS.map((k) => {
+          const variant =
+            k === "clear" ? "danger" : k === "back" ? "muted" : "default";
+          return (
+            <button
+              key={k}
+              type="button"
+              disabled={loading}
+              className={cn(KEY_BASE, KEY_VARIANT[variant])}
+              onClick={() => handleKey(k)}
+              aria-label={k}
+            >
+              {k === "back" ?
+                "⌫"
+              : k === "clear" ?
+                "C"
+              : k}
+            </button>
+          );
+        })}
+      </div>
 
       <Button
         variant="primary"

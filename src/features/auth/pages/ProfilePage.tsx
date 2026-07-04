@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { Card, Form, Input, Tag, Flex, Typography } from 'antd';
-import { PageHeader, Button , AppIcons } from '@design-system';
+import { PageHeader, Button, AppIcons, Form, Card, InputPassword, Tag, Stack, Inline, Text } from '@design-system';
 import { colors } from '@design-system';
 import { useAuth, authService } from '@features/auth';
 import { handleError } from '@shared';
-
-const { Text } = Typography;
 
 const ROLE_COLOR: Record<string, string> = {
   SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
@@ -44,11 +41,11 @@ export function ProfilePage() {
   const displayName = user.name ?? user.username ?? user.terminalCode ?? '-';
 
   return (
-    <Flex vertical gap={20}>
+    <Stack gap={5}>
       <PageHeader title="โปรไฟล์" subtitle="ข้อมูลบัญชีและการตั้งค่าความปลอดภัย" />
 
-      <Card size="small" title={<Flex gap={8} align="center"><AppIcons.user /> ข้อมูลบัญชี</Flex>}>
-        <Flex vertical gap={12} style={{ padding: '4px 0' }}>
+      <Card size="small" title={<Inline gap={2} align="center"><AppIcons.user /> ข้อมูลบัญชี</Inline>}>
+        <Stack gap={3} style={{ padding: '4px 0' }}>
           <InfoRow label="ชื่อ" value={displayName} />
           {user.username && <InfoRow label="Username" value={<code style={{ fontSize: 13 }}>{user.username}</code>} />}
           {user.terminalCode && <InfoRow label="Terminal Code" value={<code style={{ fontSize: 13 }}>{user.terminalCode}</code>} />}
@@ -60,11 +57,11 @@ export function ProfilePage() {
               </Tag>
             }
           />
-        </Flex>
+        </Stack>
       </Card>
 
       {!user.isTerminal && (
-        <Card size="small" title={<Flex gap={8} align="center"><AppIcons.key /> เปลี่ยนรหัสผ่าน</Flex>}>
+        <Card size="small" title={<Inline gap={2} align="center"><AppIcons.key /> เปลี่ยนรหัสผ่าน</Inline>}>
           <Form
             form={form}
             layout="vertical"
@@ -77,7 +74,7 @@ export function ProfilePage() {
               label="รหัสผ่านปัจจุบัน"
               rules={[{ required: true, message: 'กรุณากรอกรหัสผ่านปัจจุบัน' }]}
             >
-              <Input.Password placeholder="รหัสผ่านปัจจุบัน" autoComplete="current-password" />
+              <InputPassword placeholder="รหัสผ่านปัจจุบัน" autoComplete="current-password" />
             </Form.Item>
             <Form.Item
               name="newPassword"
@@ -87,14 +84,14 @@ export function ProfilePage() {
                 { min: 6, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' },
               ]}
             >
-              <Input.Password placeholder="รหัสผ่านใหม่" autoComplete="new-password" />
+              <InputPassword placeholder="รหัสผ่านใหม่" autoComplete="new-password" />
             </Form.Item>
             <Form.Item
               name="confirmPassword"
               label="ยืนยันรหัสผ่านใหม่"
               rules={[{ required: true, message: 'กรุณายืนยันรหัสผ่านใหม่' }]}
             >
-              <Input.Password placeholder="ยืนยันรหัสผ่านใหม่" autoComplete="new-password" />
+              <InputPassword placeholder="ยืนยันรหัสผ่านใหม่" autoComplete="new-password" />
             </Form.Item>
             <Form.Item style={{ marginBottom: 0 }}>
               <Button variant="primary" icon={<AppIcons.key />} htmlType="submit" loading={saving}>
@@ -104,15 +101,15 @@ export function ProfilePage() {
           </Form>
         </Card>
       )}
-    </Flex>
+    </Stack>
   );
 }
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <Flex gap={12} align="center">
+    <Inline gap={3} align="center">
       <Text type="secondary" style={{ width: 120, flexShrink: 0, fontSize: 13 }}>{label}</Text>
       <div style={{ fontSize: 13, color: colors.text.primary }}>{value}</div>
-    </Flex>
+    </Inline>
   );
 }

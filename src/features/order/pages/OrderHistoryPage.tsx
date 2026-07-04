@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Row, Col, Space, DatePicker, Flex } from 'antd';
 import { useSearchState } from '@shared';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
-import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons, DeleteConfirmButton, COL_PROPS, Card, SummaryCard } from '@design-system';
+import { Table, Button, Tag, PageHeader, Input, Select, BulkSelectionBar, colors, AppIcons, DeleteConfirmButton, Card, SummaryCard, Inline, Grid, DateRangePicker } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useShops } from '@features/shop';
@@ -14,8 +13,6 @@ import {
 import { OrderDetailModal } from '../components';
 import { OrderStatuses } from '../types';
 import type { Order, OrderStatus } from '../types';
-
-const { RangePicker } = DatePicker;
 
 const ORDER_HISTORY_DEFAULTS = {
   search: '', status: '', shopId: '', employeeId: '', startDate: '', endDate: '', page: 1, pageSize: 20,
@@ -189,7 +186,7 @@ export function OrderHistoryPage() {
       width: 80,
       fixed: 'right',
       render: (_: unknown, r: Order) => (
-        <Space>
+        <Inline wrap={false}>
           <Button
             variant="ghost" size="small" icon={<AppIcons.view />}
             onClick={() => { setSelected(r); setDetailOpen(true); }}
@@ -206,7 +203,7 @@ export function OrderHistoryPage() {
             loading={deletingId === r.id}
             title="ลบ order นี้?"
           />
-        </Space>
+        </Inline>
       ),
     },
   ];
@@ -231,7 +228,7 @@ export function OrderHistoryPage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap className="mb-4">
         <SummaryCard title="ออเดอร์ทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1, minWidth: 160 }} />
         <SummaryCard
           title="ยอดรวม (หน้านี้)"
@@ -242,11 +239,11 @@ export function OrderHistoryPage() {
           style={{ flex: 1, minWidth: 160 }}
         />
         <SummaryCard title="รายการสินค้ารวม (หน้านี้)" value={orders.reduce((s, r) => s + (r.orderDetails?.length ?? 0), 0)} suffix="รายการ" style={{ flex: 1, minWidth: 160 }} />
-      </Flex>
+      </Inline>
 
       <Card
         size="small"
-        title={<Space><AppIcons.filter /> ตัวกรอง</Space>}
+        title={<Inline wrap={false}><AppIcons.filter /> ตัวกรอง</Inline>}
         extra={
           filtersActive ? (
             <Button size="small" icon={<AppIcons.clear />} onClick={clearFilters}>
@@ -256,63 +253,53 @@ export function OrderHistoryPage() {
         }
         style={{ marginBottom: 16 }}
       >
-        <Row gutter={[12, 12]}>
-          <Col {...COL_PROPS.filterItem}>
-            <Input
-              prefix={<AppIcons.search />}
-              placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
-              allowClear
-              value={search}
-              onChange={(e) => setTableState({ ...tableState, search: e.target.value, page: 1 })}
-            />
-          </Col>
-          <Col {...COL_PROPS.filterItem}>
-            <RangePicker
-              value={dateRange}
-              onChange={(v) => setTableState({
-                ...tableState,
-                startDate: v?.[0]?.toISOString() ?? '',
-                endDate: v?.[1]?.toISOString() ?? '',
-                page: 1,
-              })}
-              format="DD/MM/YYYY"
-              style={{ width: '100%' }}
-              placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
-            />
-          </Col>
-          <Col {...COL_PROPS.filterItem}>
-            <Select
-              allowClear
-              placeholder="สถานะ"
-              value={status || undefined}
-              onChange={(v) => setTableState({ ...tableState, status: v ?? '', page: 1 })}
-              options={statusOptions}
-              style={{ width: '100%' }}
-            />
-          </Col>
-          <Col {...COL_PROPS.filterItem}>
-            <Select
-              allowClear
-              placeholder="ร้านค้า"
-              value={shopId || undefined}
-              onChange={(v) => setTableState({ ...tableState, shopId: v ?? '', page: 1 })}
-              options={shopOptions}
-              style={{ width: '100%' }}
-              showSearch={{ optionFilterProp: 'label' }}
-            />
-          </Col>
-          <Col {...COL_PROPS.filterItem}>
-            <Select
-              allowClear
-              placeholder="พนักงาน"
-              value={employeeId || undefined}
-              onChange={(v) => setTableState({ ...tableState, employeeId: v ?? '', page: 1 })}
-              options={employeeOptions}
-              style={{ width: '100%' }}
-              showSearch={{ optionFilterProp: 'label' }}
-            />
-          </Col>
-        </Row>
+        <Grid cols={3} gap={3}>
+          <Input
+            prefix={<AppIcons.search />}
+            placeholder="ค้นหาเลขออเดอร์ / หมายเหตุ"
+            allowClear
+            value={search}
+            onChange={(e) => setTableState({ ...tableState, search: e.target.value, page: 1 })}
+          />
+          <DateRangePicker
+            value={dateRange}
+            onChange={(v) => setTableState({
+              ...tableState,
+              startDate: v?.[0]?.toISOString() ?? '',
+              endDate: v?.[1]?.toISOString() ?? '',
+              page: 1,
+            })}
+            format="DD/MM/YYYY"
+            style={{ width: '100%' }}
+            placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
+          />
+          <Select
+            allowClear
+            placeholder="สถานะ"
+            value={status || undefined}
+            onChange={(v) => setTableState({ ...tableState, status: v ?? '', page: 1 })}
+            options={statusOptions}
+            style={{ width: '100%' }}
+          />
+          <Select
+            allowClear
+            placeholder="ร้านค้า"
+            value={shopId || undefined}
+            onChange={(v) => setTableState({ ...tableState, shopId: v ?? '', page: 1 })}
+            options={shopOptions}
+            style={{ width: '100%' }}
+            showSearch={{ optionFilterProp: 'label' }}
+          />
+          <Select
+            allowClear
+            placeholder="พนักงาน"
+            value={employeeId || undefined}
+            onChange={(v) => setTableState({ ...tableState, employeeId: v ?? '', page: 1 })}
+            options={employeeOptions}
+            style={{ width: '100%' }}
+            showSearch={{ optionFilterProp: 'label' }}
+          />
+        </Grid>
       </Card>
 
       {selectedKeys.length > 0 && (

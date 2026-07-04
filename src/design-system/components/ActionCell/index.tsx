@@ -1,5 +1,3 @@
-import { Flex } from 'antd';
-import { spacing } from '../../tokens';
 import { Button } from '../Button';
 import { DeleteConfirmButton } from '../DeleteConfirmButton';
 import { AppIcons } from '../../icons';
@@ -20,15 +18,8 @@ export function ActionCell({
   deleteDescription,
 }: ActionCellProps) {
   return (
-    <Flex gap={spacing[1]} align="center">
-      {onEdit && (
-        <Button
-          variant="ghost"
-          size="small"
-          icon={<AppIcons.edit />}
-          onClick={onEdit}
-        />
-      )}
+    <div className="flex items-center gap-1">
+      {onEdit && <Button variant="ghost" size="small" icon={<AppIcons.edit />} onClick={onEdit} />}
       {onDelete && (
         <DeleteConfirmButton
           onConfirm={onDelete}
@@ -37,6 +28,6 @@ export function ActionCell({
           description={deleteDescription}
         />
       )}
-    </Flex>
+    </div>
   );
 }

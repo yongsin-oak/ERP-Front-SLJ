@@ -1,8 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Select, Spin } from "antd";
-import type { SelectProps } from "antd";
 import { debounce } from "lodash";
-import { colors, highlightText } from "@design-system";
+import { Select, colors, highlightText } from "@design-system";
+import type { SelectProps } from "@design-system";
+import { Spinner } from "@/components/ui/spinner";
 import { useProductDropdown } from "../react-query";
 import type { ProductDropdown } from "../types";
 
@@ -12,7 +12,7 @@ const SCAN_FAST_MS = 30;
 const SCAN_JUMP_CHARS = 3;
 
 export interface ProductDropdownSelectProps extends Omit<
-  SelectProps<string>,
+  SelectProps,
   "options" | "onSelect" | "filterOption" | "onSearch"
 > {
   onSelect?: (barcode: string, product: ProductDropdown) => void;
@@ -54,7 +54,6 @@ export function ProductDropdownSelect({
         page.data.map((product) => ({
           value: product.barcode,
           label: `[${product.barcode}] - ${product.name}`,
-          product,
         })),
       ),
     [data],
@@ -92,7 +91,7 @@ export function ProductDropdownSelect({
     }
   }
 
-  const handlePopupScroll = (e: React.UIEvent<HTMLElement>) => {
+  const handlePopupScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (isFetchingNextPage || !hasNextPage) return;
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     if (scrollHeight - scrollTop - clientHeight < SCROLL_THRESHOLD_PX) {
@@ -100,23 +99,26 @@ export function ProductDropdownSelect({
     }
   };
 
-  const handleSelect = (barcode: string) => {
-    const product = productMap.get(barcode);
-    if (product) onSelect?.(barcode, product);
+  const handleChange = (barcode: string | undefined) => {
+    onChange?.(barcode);
+    if (barcode != null) {
+      const product = productMap.get(barcode);
+      if (product) onSelect?.(barcode, product);
+    }
   };
 
   return (
-    <Select<string>
+    <Select
       showSearch={{
         onSearch: handleSearch,
         filterOption: false,
       }}
       value={value}
-      onChange={onChange}
-      onSelect={handleSelect}
+      onChange={handleChange}
       options={options}
       optionRender={(opt) => {
-        const p = (opt.data as typeof options[0]).product;
+        const p = productMap.get(opt.value);
+        if (!p) return opt.label;
         return (
           <div style={{ fontSize: 14, padding: "2px 0" }}>
             <span style={{ fontFamily: "monospace", color: colors.text.secondary }}>
@@ -135,27 +137,24 @@ export function ProductDropdownSelect({
       notFoundContent={
         isFetching ?
           <div style={{ textAlign: "center", padding: "8px 0" }}>
-            <Spin size="small" />
+            <Spinner size="sm" />
           </div>
         : "ไม่พบสินค้า"
       }
       onPopupScroll={handlePopupScroll}
-      popupRender={(menu) => (
-        <>
-          {menu}
-          {isFetchingNextPage && (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "8px 0",
-                borderTop: `1px solid ${colors.neutral[200]}`,
-              }}
-            >
-              <Spin size="small" />
-            </div>
-          )}
-        </>
-      )}
+      dropdownFooter={
+        isFetchingNextPage ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "8px 0",
+              borderTop: `1px solid ${colors.neutral[200]}`,
+            }}
+          >
+            <Spinner size="sm" />
+          </div>
+        ) : null
+      }
       {...rest}
     />
   );

@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
-import { DatePicker, Switch } from 'antd';
 import dayjs from 'dayjs';
-import { FormModal, Form, Input, Select } from '@design-system';
+import { FormModal, Form, Input, Select, DatePicker, Switch } from '@design-system';
 import { DepartmentOptions } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
 
@@ -67,7 +66,7 @@ export function EmployeeFormModal({ open, employee, onClose, onSubmit, loading }
           <Select options={DepartmentOptions} placeholder="เลือกแผนก" style={{ width: '100%' }} />
         </Form.Item>
         <Form.Item name="startDateObj" label="วันที่เริ่มงาน">
-          <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} placeholder="วัน/เดือน/ปี" />
+          <DatePicker format="DD/MM/YYYY" placeholder="วัน/เดือน/ปี" />
         </Form.Item>
         <Form.Item name="isActive" label="สถานะ" valuePropName="checked">
           <Switch checkedChildren="ใช้งาน" unCheckedChildren="ระงับ" />

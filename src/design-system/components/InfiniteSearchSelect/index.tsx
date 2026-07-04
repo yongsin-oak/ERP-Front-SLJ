@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { Select, Spin } from 'antd';
-import type { SelectProps } from 'antd';
 import { debounce } from 'lodash';
-import { colors } from '../../tokens';
+import { Select } from '../Select';
+import type { SelectProps } from '../Select';
+import { Spinner } from '@/components/ui/spinner';
 
 const SCROLL_THRESHOLD_PX = 60;
 
@@ -12,7 +12,7 @@ export interface InfiniteSearchOption {
 }
 
 export interface InfiniteSearchSelectProps
-  extends Omit<SelectProps<string>, 'options' | 'filterOption' | 'onSearch' | 'loading'> {
+  extends Omit<SelectProps, 'options' | 'loading' | 'showSearch' | 'onPopupScroll' | 'dropdownFooter' | 'notFoundContent'> {
   options: InfiniteSearchOption[];
   isLoading: boolean;
   isFetchingNextPage: boolean;
@@ -48,40 +48,27 @@ export function InfiniteSearchSelect({
   };
 
   return (
-    <Select<string>
-      showSearch={{
-        onSearch: debouncedSearch,
-        filterOption: false,
-      }}
+    <Select
+      showSearch={{ onSearch: debouncedSearch, filterOption: false }}
       options={options}
       loading={isLoading && !isFetchingNextPage}
       notFoundContent={
         isLoading ? (
-          <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <Spin size="small" />
+          <div className="py-2 text-center">
+            <Spinner size="sm" className="mx-auto" />
           </div>
         ) : (
           notFoundText
         )
       }
       onPopupScroll={handlePopupScroll}
-      popupRender={(menu) => (
-        <>
-          {menu}
-          {isFetchingNextPage && (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '8px 0',
-                borderTop: `1px solid ${colors.neutral[200]}`,
-              }}
-            >
-              <Spin size="small" />
-            </div>
-          )}
-        </>
-      )}
-      style={{ width: '100%' }}
+      dropdownFooter={
+        isFetchingNextPage ? (
+          <div className="border-t border-divider py-2 text-center">
+            <Spinner size="sm" className="mx-auto" />
+          </div>
+        ) : null
+      }
       {...rest}
     />
   );

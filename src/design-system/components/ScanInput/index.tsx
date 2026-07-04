@@ -1,12 +1,9 @@
 import { useRef, useCallback } from 'react';
-import { Flex } from 'antd';
-import type { InputRef } from 'antd';
 import { Input } from '../Input';
-import { colors, spacing } from '../../tokens';
+import type { InputRef } from '../Input';
+import { colors } from '../../tokens';
 import { Text } from '../Typography';
 import { AppIcons } from '../../icons';
-
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface ScanInputProps {
   onScan: (value: string) => void | Promise<void>;
@@ -17,13 +14,9 @@ export interface ScanInputProps {
   hint?: string;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
-//
 // Designed for barcode / QR scanner input:
 // - Auto-clears + re-focuses after each scan (scanners send Enter)
 // - Works with keyboard scanners (they type fast and press Enter)
-// - Call focus() via ref if you need to programmatically focus
-
 export function ScanInput({
   onScan,
   placeholder = 'สแกนหรือพิมพ์รหัส…',
@@ -53,8 +46,12 @@ export function ScanInput({
   );
 
   return (
-    <Flex vertical gap={spacing[1]}>
-      {label && <Text size="xs" type="secondary">{label}</Text>}
+    <div className="flex flex-col gap-1">
+      {label && (
+        <Text size="xs" type="secondary">
+          {label}
+        </Text>
+      )}
       <Input
         ref={inputRef}
         prefix={
@@ -67,9 +64,13 @@ export function ScanInput({
         disabled={disabled || loading}
         autoFocus
         autoComplete="off"
-        style={{ fontFamily: 'monospace', letterSpacing: 1 }}
+        className="font-mono tracking-wider"
       />
-      {hint && <Text size="xs" type="secondary">{hint}</Text>}
-    </Flex>
+      {hint && (
+        <Text size="xs" type="secondary">
+          {hint}
+        </Text>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { Switch, Row, Col } from 'antd';
-import { FormModal, Form, Input, InputPassword, Select } from '@design-system';
+import { FormModal, Form, Input, InputPassword, Select, Switch, Grid } from '@design-system';
 import type { Role } from '@features/auth/types';
 import type { Terminal, CreateTerminalDto, UpdateTerminalDto } from '../types';
 
@@ -63,29 +62,25 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
       width={480}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 8 }}>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name="terminalCode"
-              label="Terminal Code"
-              rules={[
-                { required: true, message: 'กรุณากรอก Terminal Code' },
-                { pattern: /^[A-Za-z0-9_-]+$/, message: 'อนุญาต A-Z, 0-9, -, _ เท่านั้น' },
-              ]}
-            >
-              <Input placeholder="เช่น POS-01" autoComplete="off" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="name"
-              label="ชื่อ Terminal"
-              rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}
-            >
-              <Input placeholder="เช่น POS หน้าร้าน 1" />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={2} gap={4}>
+          <Form.Item
+            name="terminalCode"
+            label="Terminal Code"
+            rules={[
+              { required: true, message: 'กรุณากรอก Terminal Code' },
+              { pattern: /^[A-Za-z0-9_-]+$/, message: 'อนุญาต A-Z, 0-9, -, _ เท่านั้น' },
+            ]}
+          >
+            <Input placeholder="เช่น POS-01" autoComplete="off" />
+          </Form.Item>
+          <Form.Item
+            name="name"
+            label="ชื่อ Terminal"
+            rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}
+          >
+            <Input placeholder="เช่น POS หน้าร้าน 1" />
+          </Form.Item>
+        </Grid>
 
         <Form.Item
           name="role"

@@ -1,8 +1,8 @@
-import { Descriptions, Divider, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Modal, Table, Tag, Button, colors , AppIcons } from '@design-system';
+import { Modal, Table, Tag, Button, Divider, colors , AppIcons } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { Spinner } from '@/components/ui/spinner';
 import { useOrderDetail } from '../react-query';
 import { OrderStatuses } from '../types';
 import type { Order, OrderDetail } from '../types';
@@ -103,37 +103,48 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
     >
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
-          <Spin />
+          <Spinner size="sm" className="mx-auto" />
         </div>
       ) : displayOrder ? (
         <>
-          <Descriptions size="small" column={2} style={{ marginBottom: 16 }}>
-            <Descriptions.Item label="สถานะ">
+          <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm" style={{ marginBottom: 16 }}>
+            <dt className="text-muted-foreground">สถานะ</dt>
+            <dd className="text-foreground">
               <Tag color={OrderStatuses[displayOrder.status]?.color}>
                 {OrderStatuses[displayOrder.status]?.label ?? displayOrder.status}
               </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="วันที่บันทึก">
+            </dd>
+            <dt className="text-muted-foreground">วันที่บันทึก</dt>
+            <dd className="text-foreground">
               {displayOrder.startRecordAt
                 ? dayjs(displayOrder.startRecordAt).format('DD/MM/YYYY HH:mm')
                 : displayOrder.createdAt
                   ? dayjs(displayOrder.createdAt).format('DD/MM/YYYY HH:mm')
                   : '-'}
-            </Descriptions.Item>
+            </dd>
             {displayOrder.shop && (
-              <Descriptions.Item label="ร้านค้า">
-                {displayOrder.shop.name} ({displayOrder.shop.platform})
-              </Descriptions.Item>
+              <>
+                <dt className="text-muted-foreground">ร้านค้า</dt>
+                <dd className="text-foreground">
+                  {displayOrder.shop.name} ({displayOrder.shop.platform})
+                </dd>
+              </>
             )}
             {displayOrder.recordBy && (
-              <Descriptions.Item label="ผู้บันทึก">
-                {displayOrder.recordBy.firstName} {displayOrder.recordBy.lastName} ({displayOrder.recordBy.nickname})
-              </Descriptions.Item>
+              <>
+                <dt className="text-muted-foreground">ผู้บันทึก</dt>
+                <dd className="text-foreground">
+                  {displayOrder.recordBy.firstName} {displayOrder.recordBy.lastName} ({displayOrder.recordBy.nickname})
+                </dd>
+              </>
             )}
             {displayOrder.note && (
-              <Descriptions.Item label="หมายเหตุ" span={2}>{displayOrder.note}</Descriptions.Item>
+              <>
+                <dt className="text-muted-foreground">หมายเหตุ</dt>
+                <dd className="text-foreground">{displayOrder.note}</dd>
+              </>
             )}
-          </Descriptions>
+          </dl>
 
           <Divider style={{ margin: '8px 0' }} />
 

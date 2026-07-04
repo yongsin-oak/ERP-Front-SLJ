@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Flex, Space } from 'antd';
 import {
   Table, Button, PageHeader, Select, FormModal, Form, Tag, colors,
-  ActionCell, CodeCell, SummaryCard, AppIcons,
+  ActionCell, CodeCell, SummaryCard, AppIcons, Inline, Stack,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
@@ -41,10 +40,10 @@ export function UserPage() {
       title: 'Username',
       dataIndex: 'username',
       render: (v: string) => (
-        <Space>
+        <Inline>
           <AppIcons.user style={{ color: colors.text.tertiary }} />
           <span style={{ fontWeight: 500 }}>{v}</span>
-        </Space>
+        </Inline>
       ),
     },
     {
@@ -77,7 +76,7 @@ export function UserPage() {
   ];
 
   return (
-    <Flex vertical gap={16}>
+    <Stack gap={4}>
       <PageHeader
         title="ผู้ใช้งาน"
         subtitle={`${users.length} บัญชีในระบบ`}
@@ -88,11 +87,11 @@ export function UserPage() {
         }
       />
 
-      <Flex gap={12} wrap>
+      <Inline gap={3} wrap>
         <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color={colors.semantic.error} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
       <Table<User>
         rowKey="id"
@@ -141,6 +140,6 @@ export function UserPage() {
           </Form.Item>
         </Form>
       </FormModal>
-    </Flex>
+    </Stack>
   );
 }

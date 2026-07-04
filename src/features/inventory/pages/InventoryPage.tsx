@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useSearchState, showError, notify } from '@shared';
-import { Flex, Input, Space, Badge, Tabs, Tooltip } from 'antd';
 import {
   Table, Button, Tag, PageHeader, Select, BulkSelectionBar,
   colors, AppIcons, DeleteConfirmButton, CodeCell,
+  Inline, Input, Badge, Tabs, Tooltip,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
@@ -20,8 +20,6 @@ import { ShopPriceModal } from '../components/ShopPriceModal';
 import { StockHistoryTab } from '../components/StockHistoryTab';
 import type { Product, CreateProductDto, UpdateProductDto } from '../types';
 
-const { Search } = Input;
-
 type ActiveTab = 'products' | 'history';
 
 export function InventoryPage() {
@@ -37,6 +35,7 @@ export function InventoryPage() {
     search: '', brandId: '', categoryId: '', isActive: '', lowStock: false, page: 1, pageSize: 20,
   });
   const { search, brandId, categoryId, isActive, lowStock, page, pageSize } = tableState;
+  const [searchText, setSearchText] = useState(search);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [exporting, setExporting] = useState(false);
   const [shopPriceBarcode, setShopPriceBarcode] = useState<string | null>(null);
@@ -141,14 +140,14 @@ export function InventoryPage() {
         const carton = r.sellPrice?.carton;
         const noPrice = !pack && !carton;
         return (
-          <Space size={4}>
+          <Inline gap={1}>
             {noPrice && (
               <Tooltip title="ยังไม่ตั้งราคาขาย">
                 <AppIcons.warningFilled style={{ color: colors.semantic.warning, fontSize: 13 }} />
               </Tooltip>
             )}
             <span>{pack != null ? `฿${pack.toLocaleString()}` : '-'}</span>
-          </Space>
+          </Inline>
         );
       },
     },
@@ -176,7 +175,7 @@ export function InventoryPage() {
       key: 'action',
       width: 160,
       render: (_: unknown, r: Product) => (
-        <Space>
+        <Inline>
           <Tooltip title="รับสินค้าเข้า">
             <Button
               variant="ghost" size="small" icon={<AppIcons.inbox />}
@@ -205,20 +204,26 @@ export function InventoryPage() {
             loading={deletingBarcode === r.barcode}
             title="ลบสินค้านี้?"
           />
-        </Space>
+        </Inline>
       ),
     },
   ];
 
   const productTabContent = (
     <div>
-      <Flex gap={8} wrap style={{ marginBottom: 12 }}>
-        <Search
+      <Inline gap={2} className="mb-3">
+        <Input
           prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อ, barcode..."
           allowClear
           style={{ width: 260 }}
-          onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
+          value={searchText}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSearchText(val);
+            if (val === '') setTableState({ ...tableState, search: '', page: 1 });
+          }}
+          onPressEnter={() => setTableState({ ...tableState, search: searchText, page: 1 })}
         />
         <Select
           allowClear
@@ -255,7 +260,7 @@ export function InventoryPage() {
         >
           สต็อกต่ำ
         </Button>
-      </Flex>
+      </Inline>
 
       {selectedKeys.length > 0 && (
         <BulkSelectionBar

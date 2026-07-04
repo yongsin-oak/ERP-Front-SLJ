@@ -1,12 +1,21 @@
 import { useState } from 'react';
-import { Button, Select, Space, Tag, Tooltip, Drawer, Divider, Typography, Switch } from 'antd';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useAuth, DEV_USER } from '@features/auth';
 import type { Role, AuthUser } from '@features/auth/types';
 import { ENV } from '@config/env';
-import { AppIcons } from '@design-system';
-
-const { Text } = Typography;
+import {
+  AppIcons,
+  Button,
+  Select,
+  Tag,
+  Tooltip,
+  Drawer,
+  Divider,
+  Text,
+  Switch,
+  Stack,
+  Inline,
+} from '@design-system';
 
 const ALL_ROLES: Role[] = [
   'SuperAdmin', 'Admin', 'Operator', 'Warehouse',
@@ -60,38 +69,29 @@ export function DevTools() {
 
       <Tooltip title="Dev Tools" placement="left">
         <Button
-          type="primary"
-          shape="circle"
+          variant="primary"
           size="large"
           icon={<AppIcons.debug />}
           onClick={() => setOpen(true)}
-          style={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            zIndex: 9999,
-            background: '#722ed1',
-            borderColor: '#722ed1',
-            boxShadow: '0 4px 12px rgba(114,46,209,0.4)',
-          }}
+          className="fixed right-6 bottom-6 z-9999 size-12 rounded-full shadow-[0_4px_12px_rgba(114,46,209,0.4)]"
+          style={{ background: '#722ed1', borderColor: '#722ed1' }}
         />
       </Tooltip>
 
       <Drawer
         title={
-          <Space>
+          <Inline gap={2}>
             <AppIcons.debug style={{ color: '#722ed1' }} />
             <span>Dev Tools</span>
             <Tag color="purple">DEV MODE</Tag>
-          </Space>
+          </Inline>
         }
         open={open}
         onClose={() => setOpen(false)}
         width={320}
-        styles={{ body: { padding: '16px' } }}
+        styles={{ body: { padding: 16 } }}
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-
+        <Stack gap={4} className="w-full">
           {/* Auth bypass */}
           <div>
             <Label>Auth</Label>
@@ -101,84 +101,85 @@ export function DevTools() {
             </Row>
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="my-0" />
 
           {/* Login as — bypass ครบทุก account + POS */}
           <div>
             <Label>Login as (bypass)</Label>
-            <Space wrap size={[6, 6]} style={{ marginTop: 8 }}>
+            <Inline wrap gap={2} className="mt-2">
               {DEV_USER_ACCOUNTS.map((acc) => {
                 const active = !!user && accountId(user) === accountId(acc);
                 return (
                   <Button
                     key={acc.sub}
                     size="small"
-                    type={active ? 'primary' : 'default'}
+                    variant={active ? 'primary' : 'secondary'}
                     onClick={() => setUser(acc)}
                   >
-                    <Tag color={ROLE_COLOR[acc.role]} style={{ margin: 0 }}>{acc.role}</Tag>
+                    <Tag color={ROLE_COLOR[acc.role]}>{acc.role}</Tag>
                   </Button>
                 );
               })}
-            </Space>
+            </Inline>
             <Button
               icon={<AppIcons.desktop />}
               block
-              style={{ marginTop: 8 }}
-              type={user && user.type === 'terminal' ? 'primary' : 'default'}
+              className="mt-2"
+              variant={user && user.type === 'terminal' ? 'primary' : 'secondary'}
               onClick={() => setUser(DEV_POS_ACCOUNT)}
             >
               POS / Terminal ({DEV_POS_ACCOUNT.terminalCode})
             </Button>
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="my-0" />
 
           {/* Current user */}
           <div>
             <Label>Current User</Label>
-            <div style={{ marginTop: 8 }}>
+            <div className="mt-2">
               {user ? (
-                <Space direction="vertical" size={4}>
-                  <Space>
+                <Stack gap={1}>
+                  <Inline gap={2}>
                     {user.type === 'terminal' ? <AppIcons.desktop /> : <AppIcons.user />}
                     <Text strong>{user.type === 'terminal' ? user.name : user.username}</Text>
                     <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
                     {user.type === 'terminal' && <Tag color="volcano">POS</Tag>}
-                  </Space>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
+                  </Inline>
+                  <Text type="secondary" size="sm">
                     {user.type === 'terminal' ? `Terminal: ${user.terminalCode}` : `ID: ${user.sub}`}
                   </Text>
-                </Space>
+                </Stack>
               ) : (
                 <Text type="secondary">— ไม่ได้ login —</Text>
               )}
             </div>
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="my-0" />
 
           {/* Switch role */}
           <div>
             <Label>Switch Role</Label>
             <Select
-              style={{ width: '100%', marginTop: 8 }}
+              className="mt-2"
+              style={{ width: '100%' }}
               value={user?.role}
               disabled={!isAuth}
-              onChange={handleRoleChange}
+              onChange={(v) => v && handleRoleChange(v as Role)}
               options={ALL_ROLES.map((r) => ({
-                label: <Tag color={ROLE_COLOR[r]} style={{ margin: 0 }}>{r}</Tag>,
+                label: <Tag color={ROLE_COLOR[r]}>{r}</Tag>,
                 value: r,
               }))}
             />
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="my-0" />
 
           {/* Quick actions */}
           <div>
             <Label>Quick Actions</Label>
-            <Space style={{ marginTop: 8, width: '100%' }} direction="vertical">
+            <Stack gap={2} className="mt-2 w-full">
               <Button icon={<AppIcons.user />} block onClick={() => setUser(DEV_USER)}>
                 Reset to Dev User
               </Button>
@@ -200,33 +201,34 @@ export function DevTools() {
               >
                 Log Auth Store
               </Button>
-            </Space>
+            </Stack>
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="my-0" />
 
           {/* Env info */}
           <div>
             <Label>Environment</Label>
-            <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 12 }}>
+            <div className="mt-2 font-mono text-xs">
               <div>
                 <Text type="secondary">VITE_ENV_MODE: </Text>
                 <Tag color="purple">{ENV.MODE}</Tag>
               </div>
-              <div style={{ marginTop: 4 }}>
+              <div className="mt-1">
                 <Text type="secondary">API: </Text>
-                <Text copyable style={{ fontSize: 11 }}>{ENV.API_URL}</Text>
+                <Text copyable className="text-[11px]">
+                  {ENV.API_URL}
+                </Text>
               </div>
             </div>
           </div>
 
-          <Divider style={{ margin: 0 }} />
+          <Divider className="my-0" />
 
-          <Text type="secondary" style={{ fontSize: 11 }}>
+          <Text type="secondary" className="text-[11px]">
             React Query inspector อยู่มุมล่างซ้าย (ไอคอน 🌸)
           </Text>
-
-        </Space>
+        </Stack>
       </Drawer>
     </>
   );
@@ -234,16 +236,12 @@ export function DevTools() {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <Text type="secondary" style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+    <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
       {children}
-    </Text>
+    </span>
   );
 }
 
 function Row({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-      {children}
-    </div>
-  );
+  return <div className="mt-2 flex items-center justify-between">{children}</div>;
 }

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Flex, Card, Tag, Tabs, Space, DatePicker } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { PageHeader, MoneyCell, Button, AppIcons, colors, Table, Select, CodeCell } from '@design-system';
+import { PageHeader, MoneyCell, Button, AppIcons, colors, Table, Select, CodeCell, Stack, Inline, Card, Tag, Tabs, DateRangePicker } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useSalesSummary, useSalesByShop, useSalesByProduct, useManHour, reportService } from '../react-query';
 import { useShops } from '@features/shop';
@@ -12,8 +11,6 @@ import { useBrands } from '@features/brand';
 import { REPORT_GROUP_BY } from '../types';
 import type { ReportGroupBy, SalesSummaryItem, SalesByShopItem, SalesByProductItem, ManHourItem } from '../types';
 import type { ColumnType } from '@design-system';
-
-const { RangePicker } = DatePicker;
 
 const DEFAULT_DATE_FROM = dayjs().subtract(29, 'day').format('YYYY-MM-DD');
 const DEFAULT_DATE_TO = dayjs().format('YYYY-MM-DD');
@@ -71,7 +68,7 @@ function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: strin
 
   return (
     <>
-      <Space wrap style={{ marginBottom: 16 }}>
+      <Inline wrap style={{ marginBottom: 16 }}>
         <Select
           placeholder="ทุกร้าน"
           allowClear
@@ -84,11 +81,11 @@ function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: strin
         <Select
           style={{ width: 140 }}
           value={groupBy}
-          onChange={(v) => setGroupBy(v)}
+          onChange={(v) => v && setGroupBy(v as ReportGroupBy)}
           options={GROUP_BY_OPTIONS}
         />
         <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
-      </Space>
+      </Inline>
       <Table<SalesSummaryItem>
         rowKey="date"
         columns={columns}
@@ -244,7 +241,7 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
 
   return (
     <>
-      <Space wrap style={{ marginBottom: 16 }}>
+      <Inline wrap style={{ marginBottom: 16 }}>
         <Select
           placeholder="ทุกร้าน"
           allowClear
@@ -273,7 +270,7 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
           options={brandsPage?.data?.map((b) => ({ label: b.name, value: b.id }))}
         />
         <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
-      </Space>
+      </Inline>
       <Table<SalesByProductItem>
         rowKey="barcode"
         columns={columns}
@@ -324,7 +321,7 @@ function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
 
   return (
     <>
-      <Space wrap style={{ marginBottom: 16 }}>
+      <Inline wrap style={{ marginBottom: 16 }}>
         <Select
           placeholder="ทุกพนักงาน"
           allowClear
@@ -338,7 +335,7 @@ function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
           }))}
         />
         <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
-      </Space>
+      </Inline>
       <Table<ManHourItem>
         rowKey="employeeId"
         columns={columns}
@@ -378,12 +375,12 @@ export function ReportPage() {
   const dateTo = dateRange[1].format('YYYY-MM-DD');
 
   return (
-    <Flex vertical gap={20}>
+    <Stack gap={5}>
       <PageHeader
         title="รายงาน"
         subtitle={`${dateFrom} — ${dateTo}`}
         actions={
-          <RangePicker
+          <DateRangePicker
             value={dateRange}
             onChange={(v) => { if (v?.[0] && v[1]) setDateRange([v[0], v[1]]); }}
             presets={rangePresets}
@@ -406,6 +403,6 @@ export function ReportPage() {
           {activeTab === 'man-hour' && <ManHourTab dateFrom={dateFrom} dateTo={dateTo} />}
         </div>
       </Card>
-    </Flex>
+    </Stack>
   );
 }

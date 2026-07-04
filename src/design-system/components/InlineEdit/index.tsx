@@ -1,68 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import styled from '@emotion/styled';
-import { Flex } from 'antd';
-import { colors, spacing, radius } from '../../tokens';
+import { cn } from '@/lib/utils';
 import { AppIcons } from '../../icons';
-
-// ── Styled ────────────────────────────────────────────────────────────────────
-
-const DisplayWrap = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: ${spacing[1]};
-  cursor: pointer;
-  border-radius: ${radius.sm};
-  padding: 2px ${spacing[1]};
-  min-width: 40px;
-
-  .edit-icon {
-    opacity: 0;
-    font-size: 12px;
-    color: ${colors.text.tertiary};
-    transition: opacity 0.1s;
-  }
-
-  &:hover .edit-icon {
-    opacity: 1;
-  }
-
-  &:hover {
-    background: ${colors.bg.hover};
-  }
-`;
-
-const StyledInput = styled.input`
-  border: 1px solid ${colors.brand.primary};
-  border-radius: ${radius.sm};
-  padding: 2px ${spacing[2]};
-  font-size: inherit;
-  font-family: inherit;
-  color: ${colors.text.primary};
-  background: ${colors.bg.base};
-  outline: none;
-  box-shadow: 0 0 0 3px ${colors.brand.primary}22;
-  min-width: 80px;
-`;
-
-const ActionBtn = styled.button<{ $confirm?: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: ${radius.sm};
-  cursor: pointer;
-  font-size: 11px;
-  background: ${({ $confirm }) => ($confirm ? colors.semantic.successBg : colors.semantic.errorBg)};
-  color: ${({ $confirm }) => ($confirm ? colors.semantic.successText : colors.semantic.errorText)};
-
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export interface InlineEditProps {
   value: string;
@@ -99,7 +37,10 @@ export function InlineEdit({
 
   const confirm = useCallback(async () => {
     const trimmed = draft.trim();
-    if (trimmed === value) { cancel(); return; }
+    if (trimmed === value) {
+      cancel();
+      return;
+    }
     setSaving(true);
     try {
       await onSave(trimmed);
@@ -111,7 +52,10 @@ export function InlineEdit({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') { e.preventDefault(); confirm(); }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        confirm();
+      }
       if (e.key === 'Escape') cancel();
     },
     [confirm, cancel],
@@ -119,32 +63,60 @@ export function InlineEdit({
 
   if (editing) {
     return (
-      <Flex align="center" gap={spacing[1]}>
-        <StyledInput
+      <div className="inline-flex items-center gap-1">
+        <input
           ref={inputRef}
           value={draft}
-          onChange={e => setDraft(e.target.value)}
+          onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={() => { if (!saving) cancel(); }}
+          onBlur={() => {
+            if (!saving) cancel();
+          }}
           disabled={saving}
           autoFocus
+          className="min-w-20 rounded-sm border border-primary bg-background px-2 py-0.5 font-[inherit] text-[length:inherit] text-foreground outline-none ring-[3px] ring-ring/20"
         />
-        <ActionBtn $confirm onMouseDown={e => { e.preventDefault(); confirm(); }}>
-          <AppIcons.check />
-        </ActionBtn>
-        <ActionBtn onMouseDown={e => { e.preventDefault(); cancel(); }}>
-          <AppIcons.close />
-        </ActionBtn>
-      </Flex>
+        <button
+          type="button"
+          aria-label="บันทึก"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            confirm();
+          }}
+          className="inline-flex size-5.5 items-center justify-center rounded-sm bg-success-bg text-success-text transition-opacity hover:opacity-80"
+        >
+          <AppIcons.check className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          aria-label="ยกเลิก"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            cancel();
+          }}
+          className="inline-flex size-5.5 items-center justify-center rounded-sm bg-error-bg text-error-text transition-opacity hover:opacity-80"
+        >
+          <AppIcons.close className="size-3.5" />
+        </button>
+      </div>
     );
   }
 
   return (
-    <DisplayWrap onClick={startEdit} title={disabled ? undefined : 'คลิกเพื่อแก้ไข'}>
-      <span style={{ color: value ? colors.text.primary : colors.text.tertiary }}>
-        {renderDisplay ? renderDisplay(value) : (value || placeholder)}
+    <div
+      onClick={startEdit}
+      title={disabled ? undefined : 'คลิกเพื่อแก้ไข'}
+      className={cn(
+        'group inline-flex min-w-10 items-center gap-1 rounded-sm px-1 py-0.5',
+        !disabled && 'cursor-pointer hover:bg-accent',
+      )}
+    >
+      <span className={cn(value ? 'text-foreground' : 'text-foreground-subtle')}>
+        {renderDisplay ? renderDisplay(value) : value || placeholder}
       </span>
-      {!disabled && <AppIcons.edit className="edit-icon" />}
-    </DisplayWrap>
+      {!disabled && (
+        <AppIcons.edit className="size-3.5 text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100" />
+      )}
+    </div>
   );
 }

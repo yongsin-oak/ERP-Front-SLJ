@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Form, InputNumber, Space } from 'antd';
-import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, colors , AppIcons } from '@design-system';
+import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, colors, AppIcons, Form, InputNumber, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useShops } from '@features/shop';
 import { PlatformBadge } from '@features/shop';
@@ -79,10 +78,10 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
       render: (_: unknown, r: ShopPrice) => {
         const shop = shopMap.get(r.shopId);
         return shop ? (
-          <Space size={6}>
+          <Inline gap={2}>
             <PlatformBadge platform={shop.platform} size={16} />
             <span>{shop.name}</span>
-          </Space>
+          </Inline>
         ) : r.shopId;
       },
     },
@@ -140,10 +139,10 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
       key: 'action',
       width: 90,
       render: (_: unknown, r: ShopPrice) => (
-        <Space>
+        <Inline>
           <Button variant="ghost" size="small" onClick={() => openEdit(r)}>แก้ไข</Button>
           <DeleteConfirmButton onConfirm={() => remove.mutate(r.shopId)} size="small" />
-        </Space>
+        </Inline>
       ),
     },
   ];

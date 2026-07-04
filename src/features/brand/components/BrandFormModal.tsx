@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { Form } from 'antd';
-import { FormModal, Input, TextArea } from '@design-system';
+import { FormModal, Input, TextArea, Form } from '@design-system';
 import type { Brand, CreateBrandDto } from '../types';
 
 interface Props {

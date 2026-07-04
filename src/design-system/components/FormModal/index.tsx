@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { Space } from 'antd';
-import type { FormInstance } from 'antd';
+import type { FieldValues } from 'react-hook-form';
 import { Modal } from '../Modal';
 import { Button } from '../Button';
+import type { FormInstance } from '../Form';
 
-export interface FormModalProps {
+export interface FormModalProps<T extends FieldValues = FieldValues> {
   open: boolean;
   onClose: () => void;
   title: string;
-  form: FormInstance;
-  onFinish: (values: unknown) => void | Promise<void>;
+  form: FormInstance<T>;
+  onFinish: (values: T) => void | Promise<void>;
   loading?: boolean;
   width?: number;
   submitLabel?: string;
@@ -18,7 +18,7 @@ export interface FormModalProps {
   children: ReactNode;
 }
 
-export function FormModal({
+export function FormModal<T extends FieldValues = FieldValues>({
   open,
   onClose,
   title,
@@ -29,7 +29,7 @@ export function FormModal({
   submitLabel = 'บันทึก',
   cancelLabel = 'ยกเลิก',
   children,
-}: FormModalProps) {
+}: FormModalProps<T>) {
   useEffect(() => {
     if (!open) form.resetFields();
   }, [open, form]);
@@ -39,7 +39,7 @@ export function FormModal({
       const values = await form.validateFields();
       await onFinish(values);
     } catch {
-      // antd shows inline field errors — no additional handling needed
+      // RHF shows inline field errors — no additional handling needed
     }
   }
 
@@ -50,14 +50,14 @@ export function FormModal({
       title={title}
       width={width}
       footer={
-        <Space>
+        <>
           <Button variant="ghost" onClick={onClose} disabled={loading}>
             {cancelLabel}
           </Button>
           <Button variant="primary" onClick={handleSubmit} loading={loading}>
             {submitLabel}
           </Button>
-        </Space>
+        </>
       }
     >
       {children}

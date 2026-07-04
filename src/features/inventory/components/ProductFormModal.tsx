@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { InputNumber, Row, Col, Switch, Form as AntForm } from 'antd';
-import { FormModal, Form, Input } from '@design-system';
+import { FormModal, Form, Input, InputNumber, Switch, Grid } from '@design-system';
 import { BrandSearchSelect } from '@features/brand/components';
 import { CategorySearchSelect } from '@features/category/components';
 import type { Product, CreateProductDto, UpdateProductDto } from '../types';
@@ -59,97 +58,71 @@ export function ProductFormModal({ open, product, onClose, onSubmit, loading = f
       submitLabel={isEdit ? 'บันทึก' : 'เพิ่มสินค้า'}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="barcode" label="Barcode" rules={[{ required: true, message: 'กรุณากรอก barcode' }]}>
-              <Input placeholder="8850999xxxxxx" disabled={isEdit} />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="sku" label="SKU (รหัสภายใน)">
-              <Input placeholder="COKE-CAN-325" />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={2} gap={4}>
+          <Form.Item name="barcode" label="Barcode" rules={[{ required: true, message: 'กรุณากรอก barcode' }]}>
+            <Input placeholder="8850999xxxxxx" disabled={isEdit} />
+          </Form.Item>
+          <Form.Item name="sku" label="SKU (รหัสภายใน)">
+            <Input placeholder="COKE-CAN-325" />
+          </Form.Item>
+        </Grid>
 
         <Form.Item name="name" label="ชื่อสินค้า" rules={[{ required: true, message: 'กรุณากรอกชื่อสินค้า' }]}>
           <Input placeholder="ชื่อสินค้า" />
         </Form.Item>
 
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="brandId" label="แบรนด์">
-              <BrandSearchSelect allowClear />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="categoryId" label="หมวดหมู่">
-              <CategorySearchSelect allowClear />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={2} gap={4}>
+          <Form.Item name="brandId" label="แบรนด์">
+            <BrandSearchSelect allowClear />
+          </Form.Item>
+          <Form.Item name="categoryId" label="หมวดหมู่">
+            <CategorySearchSelect allowClear />
+          </Form.Item>
+        </Grid>
 
-        <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name={['costPrice', 'pack']} label="ราคาทุน/แพ็ค">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" addonAfter="฿" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name={['costPrice', 'carton']} label="ราคาทุน/ลัง">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" addonAfter="฿" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="remaining" label="จำนวนเริ่มต้น">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" disabled={isEdit} />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={3} gap={4}>
+          <Form.Item name={['costPrice', 'pack']} label="ราคาทุน/แพ็ค">
+            <InputNumber min={0} placeholder="0" addonAfter="฿" />
+          </Form.Item>
+          <Form.Item name={['costPrice', 'carton']} label="ราคาทุน/ลัง">
+            <InputNumber min={0} placeholder="0" addonAfter="฿" />
+          </Form.Item>
+          <Form.Item name="remaining" label="จำนวนเริ่มต้น">
+            <InputNumber min={0} placeholder="0" disabled={isEdit} />
+          </Form.Item>
+        </Grid>
 
-        <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name={['sellPrice', 'pack']} label="ราคาขาย/แพ็ค">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" addonAfter="฿" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name={['sellPrice', 'carton']} label="ราคาขาย/ลัง">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="0" addonAfter="฿" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="minStock" label="stock ขั้นต่ำ">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="50" />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={3} gap={4}>
+          <Form.Item name={['sellPrice', 'pack']} label="ราคาขาย/แพ็ค">
+            <InputNumber min={0} placeholder="0" addonAfter="฿" />
+          </Form.Item>
+          <Form.Item name={['sellPrice', 'carton']} label="ราคาขาย/ลัง">
+            <InputNumber min={0} placeholder="0" addonAfter="฿" />
+          </Form.Item>
+          <Form.Item name="minStock" label="stock ขั้นต่ำ">
+            <InputNumber min={0} placeholder="50" />
+          </Form.Item>
+        </Grid>
 
-        <Row gutter={16}>
-          <Col span={8}>
-            <Form.Item name="piecesPerPack" label="ชิ้น/แพ็ค">
-              <InputNumber min={1} style={{ width: '100%' }} placeholder="12" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="packPerCarton" label="แพ็ค/ลัง">
-              <InputNumber min={1} style={{ width: '100%' }} placeholder="10" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item name="maxStock" label="stock สูงสุด">
-              <InputNumber min={0} style={{ width: '100%' }} placeholder="2000" />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={3} gap={4}>
+          <Form.Item name="piecesPerPack" label="ชิ้น/แพ็ค">
+            <InputNumber min={1} placeholder="12" />
+          </Form.Item>
+          <Form.Item name="packPerCarton" label="แพ็ค/ลัง">
+            <InputNumber min={1} placeholder="10" />
+          </Form.Item>
+          <Form.Item name="maxStock" label="stock สูงสุด">
+            <InputNumber min={0} placeholder="2000" />
+          </Form.Item>
+        </Grid>
 
         <Form.Item name="imageUrl" label="URL รูปภาพ">
           <Input placeholder="https://..." />
         </Form.Item>
 
-        <AntForm.Item name="isActive" label="สถานะ" valuePropName="checked">
+        <Form.Item name="isActive" label="สถานะ" valuePropName="checked">
           <Switch checkedChildren="ใช้งาน" unCheckedChildren="ปิด" />
-        </AntForm.Item>
+        </Form.Item>
       </Form>
     </FormModal>
   );

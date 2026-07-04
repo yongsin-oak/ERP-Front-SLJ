@@ -1,13 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Input, Badge, Flex } from 'antd';
-import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, colors } from '@design-system';
+import { Table, Button, PageHeader, AppIcons, ActionCell, SummaryCard, DateCell, CodeCell, colors, Input, Badge, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, useSearchState, notify } from '@shared';
 import { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, supplierService } from '../react-query';
 import { SupplierFormModal } from '../components/SupplierFormModal';
 import type { Supplier, CreateSupplierDto } from '../types';
-
-const { Search } = Input;
 
 const SUPPLIER_LIST_DEFAULTS = { search: '', page: 1, pageSize: 20 };
 
@@ -16,7 +13,12 @@ export function SupplierPage() {
   const [selected, setSelected] = useState<Supplier | null>(null);
   const [tableState, setTableState] = useSearchState('supplier-list', SUPPLIER_LIST_DEFAULTS);
   const { search, page, pageSize } = tableState;
+  const [searchInput, setSearchInput] = useState(search);
   const [exporting, setExporting] = useState(false);
+
+  function commitSearch(val: string) {
+    setTableState({ ...tableState, search: val, page: 1 });
+  }
 
   const params = { page, limit: pageSize, search: search || undefined };
   const { data, isLoading, refetch, isFetching } = useSuppliers(params);
@@ -139,20 +141,25 @@ export function SupplierPage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap style={{ marginBottom: 16 }}>
         <SummaryCard title="ทั้งหมด" value={total} suffix="ราย" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ใช้งาน (หน้านี้)" value={activeCount} suffix="ราย" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ปิดใช้งาน (หน้านี้)" value={inactiveCount} suffix="ราย" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
       <div style={{ marginBottom: 16 }}>
-        <Search
+        <Input
           prefix={<AppIcons.search />}
           placeholder="ค้นหาชื่อ..."
           allowClear
           style={{ width: 280 }}
-          defaultValue={search}
-          onSearch={(val) => setTableState({ ...tableState, search: val, page: 1 })}
+          value={searchInput}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSearchInput(val);
+            if (val === '') commitSearch('');
+          }}
+          onPressEnter={() => commitSearch(searchInput)}
         />
       </div>
 

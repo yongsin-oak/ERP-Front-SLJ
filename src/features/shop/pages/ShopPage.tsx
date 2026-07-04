@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Flex, Space } from 'antd';
 import {
   Table, Button, Tag, PageHeader, BulkSelectionBar, ActionCell,
-  SummaryCard, DateCell, CodeCell, colors, AppIcons,
+  SummaryCard, DateCell, CodeCell, colors, AppIcons, Inline,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { ShopFormModal } from '../components/ShopFormModal';
@@ -63,10 +62,10 @@ export function ShopPage() {
       filters: PLATFORM_ORDER.map((p) => ({ text: p, value: p })),
       onFilter: (value, r) => r.platform === value,
       render: (v: Platform) => (
-        <Space size={6}>
+        <Inline gap={2} wrap={false}>
           <PlatformBadge platform={v} size={18} />
           <Tag color={PlatformColor[v]} style={{ margin: 0 }}>{v}</Tag>
-        </Space>
+        </Inline>
       ),
     },
     {
@@ -118,15 +117,15 @@ export function ShopPage() {
       <PageHeader
         title="จัดการร้านค้า"
         subtitle={
-          <Space size={10}>
+          <Inline gap={3} wrap={false}>
             <span>ทั้งหมด {shops.length} ร้าน</span>
             {PLATFORM_ORDER.map((p) => (
-              <Space key={p} size={4}>
+              <Inline key={p} gap={1} wrap={false}>
                 <PlatformBadge platform={p} size={14} />
                 <span style={{ fontSize: 12 }}>{platformCounts.get(p) ?? 0}</span>
-              </Space>
+              </Inline>
             ))}
-          </Space>
+          </Inline>
         }
         actions={
           <>
@@ -140,11 +139,11 @@ export function ShopPage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap style={{ marginBottom: 16 }}>
         <SummaryCard title="ร้านทั้งหมด" value={shops.length} suffix="ร้าน" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ออนไลน์" value={onlineCount} suffix="ร้าน" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ออฟไลน์" value={offlineCount} suffix="ร้าน" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
       {selectedKeys.length > 0 && (
         <BulkSelectionBar

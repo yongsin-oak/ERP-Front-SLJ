@@ -9,10 +9,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      react({
-        // Explicitly include JSX runtime for Emotion
-        jsxImportSource: "@emotion/react",
-      }),
+      react(),
       tailwindcss(),
     ],
     define: {
@@ -44,7 +41,6 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            if (id.includes("node_modules/antd") || id.includes("node_modules/@ant-design") || id.includes("node_modules/rc-")) return "antd";
             if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) return "vendor";
             if (id.includes("node_modules/lodash") || id.includes("node_modules/dayjs")) return "utils";
           },

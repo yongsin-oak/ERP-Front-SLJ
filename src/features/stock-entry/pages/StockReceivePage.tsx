@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Flex, InputNumber, Typography } from 'antd';
-import { Table, Button, PageHeader, Select, colors , AppIcons } from '@design-system';
+import { Table, Button, PageHeader, Select, colors, AppIcons, Inline, InputNumber, Text } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkCreateStockEntry } from '../react-query';
@@ -96,7 +95,7 @@ export function StockReceivePage() {
             { label: 'รับสินค้าเข้า', value: 'in' },
             { label: 'รับคืน', value: 'return' },
           ]}
-          onChange={(v) => updateRow(r.key, { type: v })}
+          onChange={(v) => updateRow(r.key, { type: v as 'in' | 'return' })}
         />
       ),
     },
@@ -107,7 +106,6 @@ export function StockReceivePage() {
       render: (_: number, r: ReceiveRow) => (
         <InputNumber
           min={1}
-          style={{ width: '100%' }}
           value={r.quantity}
           onChange={(v) => updateRow(r.key, { quantity: v ?? 1 })}
         />
@@ -123,12 +121,11 @@ export function StockReceivePage() {
             min={0}
             precision={2}
             placeholder="0.00"
-            style={{ width: '100%' }}
             value={r.costPricePerUnit}
             onChange={(v) => updateRow(r.key, { costPricePerUnit: v ?? undefined })}
           />
         ) : (
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>—</Typography.Text>
+          <Text type="secondary" size="sm">—</Text>
         ),
     },
     {
@@ -139,7 +136,7 @@ export function StockReceivePage() {
       render: (_: unknown, r: ReceiveRow) => {
         if (r.type !== 'in' || !r.costPricePerUnit) return '-';
         return (
-          <Typography.Text>฿{(r.quantity * r.costPricePerUnit).toLocaleString()}</Typography.Text>
+          <Text>฿{(r.quantity * r.costPricePerUnit).toLocaleString()}</Text>
         );
       },
     },
@@ -184,7 +181,7 @@ export function StockReceivePage() {
           scroll={{ x: 'max-content' }}
         />
 
-        <Flex gap={8} style={{ marginTop: 12 }}>
+        <Inline gap={2} className="mt-3">
           <Button icon={<AppIcons.add />} onClick={() => setRows((p) => [...p, newRow()])}>
             เพิ่มรายการ
           </Button>
@@ -196,14 +193,14 @@ export function StockReceivePage() {
           >
             บันทึกการรับสินค้า
           </Button>
-        </Flex>
+        </Inline>
 
         {validRows.length > 0 && (
           <div style={{ marginTop: 16, padding: '10px 16px', background: colors.semantic.successBg, borderRadius: 6, border: `1px solid ${colors.semantic.successBorder}` }}>
-            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+            <Text type="secondary" style={{ fontSize: 13 }}>
               สรุป: {validRows.length} รายการ · รวม {totalQty.toLocaleString()} แพ็ค
               {totalCost > 0 && ` · มูลค่ารับเข้า ฿${totalCost.toLocaleString()}`}
-            </Typography.Text>
+            </Text>
           </div>
         )}
       </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Flex, DatePicker } from 'antd';
 import type { Dayjs } from 'dayjs';
-import { Table, Button, Tag, Select, Input, colors, AppIcons } from '@design-system';
+import { Table, Button, Tag, Select, Input, colors, AppIcons, Inline, DateRangePicker } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, inventoryExportService } from '../react-query';
@@ -133,8 +132,8 @@ export function StockHistoryTab({ active }: Props) {
 
   return (
     <div>
-      <Flex gap={8} wrap style={{ marginBottom: 12 }} justify="space-between">
-        <Flex gap={8} wrap>
+      <Inline gap={2} justify="between" className="mb-3">
+        <Inline gap={2}>
           <Input
             prefix={<AppIcons.search />}
             placeholder="barcode สินค้า..."
@@ -149,13 +148,13 @@ export function StockHistoryTab({ active }: Props) {
             options={TYPE_OPTIONS}
             style={{ width: 140 }}
           />
-          <DatePicker.RangePicker
+          <DateRangePicker
             onChange={(val) => { setDateRange(val); setPage(1); }}
             style={{ width: 240 }}
             placeholder={['วันเริ่มต้น', 'วันสิ้นสุด']}
           />
           <Button icon={<AppIcons.refresh />} onClick={() => refetch()} />
-        </Flex>
+        </Inline>
         <Button
           icon={<AppIcons.exportFile size={16} />}
           onClick={handleExport}
@@ -163,7 +162,7 @@ export function StockHistoryTab({ active }: Props) {
         >
           Export Excel
         </Button>
-      </Flex>
+      </Inline>
 
       <Table<StockEntry>
         rowKey="id"

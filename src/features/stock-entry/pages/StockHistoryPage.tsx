@@ -1,9 +1,8 @@
 import { useState, useMemo } from 'react';
-import { DatePicker, Flex, Space } from 'antd';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useSearchState } from '@shared';
-import { Table, Button, PageHeader, Tag, Select, colors, AppIcons, SummaryCard, Card } from '@design-system';
+import { Table, Button, PageHeader, Tag, Select, colors, AppIcons, SummaryCard, Card, DateRangePicker, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, stockEntryService } from '../react-query';
@@ -11,8 +10,6 @@ import { StockEntryTypes } from '../types';
 import type { StockEntry, StockEntryType } from '../types';
 import { useEmployeeList } from '@features/employee/react-query';
 import { ProductDropdownSelect } from '@features/inventory';
-
-const { RangePicker } = DatePicker;
 
 const DECREASE_TYPES: StockEntryType[] = ['damage'];
 
@@ -204,15 +201,15 @@ export function StockHistoryPage() {
         }
       />
 
-      <Flex gap={12} wrap style={{ marginBottom: 16 }}>
+      <Inline gap={3} wrap className="mb-4">
         <SummaryCard title="รายการทั้งหมด" value={total} suffix="รายการ" color={colors.brand.primary} style={{ flex: 1, minWidth: 160 }} />
         <SummaryCard title="มูลค่ารับเข้า (หน้านี้)" value={receiveValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.success} style={{ flex: 1, minWidth: 160 }} />
         <SummaryCard title="มูลค่าของเสีย (หน้านี้)" value={damageValue} prefix="฿" formatter={(v) => Number(v).toLocaleString()} color={colors.semantic.error} style={{ flex: 1, minWidth: 160 }} />
-      </Flex>
+      </Inline>
 
       <Card
         size="small"
-        title={<Space><AppIcons.filter /> ตัวกรอง</Space>}
+        title={<Inline><AppIcons.filter /> ตัวกรอง</Inline>}
         extra={
           filtersActive ? (
             <Button size="small" icon={<AppIcons.clear />} onClick={clearFilters}>
@@ -222,7 +219,7 @@ export function StockHistoryPage() {
         }
         style={{ marginBottom: 16 }}
       >
-        <Flex gap={8} wrap>
+        <Inline gap={2} wrap>
           <ProductDropdownSelect
             allowClear
             placeholder="สินค้า"
@@ -247,7 +244,7 @@ export function StockHistoryPage() {
             value={employeeId || undefined}
             onChange={(v) => setTableState({ ...tableState, employeeId: v ?? '', page: 1 })}
           />
-          <RangePicker
+          <DateRangePicker
             style={{ width: 240 }}
             value={dateRange}
             onChange={(dates) => setTableState({
@@ -259,7 +256,7 @@ export function StockHistoryPage() {
             format="DD/MM/YYYY"
             placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
           />
-        </Flex>
+        </Inline>
       </Card>
 
       <Table<StockEntry>

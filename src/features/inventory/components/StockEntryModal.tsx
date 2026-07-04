@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Form, InputNumber, Space, Alert, Tag, Divider, Row, Col } from 'antd';
-import type { InputRef } from 'antd';
-import { Modal, Input, Select, Button, colors , AppIcons } from '@design-system';
+import {
+  Modal, Input, Select, Button, colors, AppIcons, Form,
+  InputNumber, Inline, Alert, Tag, Divider, Grid,
+} from '@design-system';
+import type { InputRef } from '@design-system';
 import { EmployeeSearchSelect } from '@features/employee/components';
 import { inventoryService, useCreateStockEntry } from '../react-query';
 import { notify } from '@shared';
@@ -72,10 +74,10 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
     <Modal
       open={open}
       title={
-        <Space>
+        <Inline>
           <AppIcons.inbox style={{ color: colors.semantic.success }} />
           บันทึกรับสินค้าเข้าสต้อค
-        </Space>
+        </Inline>
       }
       onCancel={handleClose}
       width={520}
@@ -95,9 +97,10 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
     >
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>สแกน Barcode สินค้า</div>
-        <Space.Compact style={{ width: '100%' }}>
+        <Inline gap={2} wrap={false} className="w-full">
           <Input
             ref={barcodeRef}
+            className="flex-1"
             prefix={<AppIcons.barcode />}
             placeholder="สแกนหรือพิมพ์ barcode แล้วกด Enter"
             value={barcodeInput}
@@ -105,24 +108,24 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
             onPressEnter={handleBarcodeSubmit}
           />
           <Button onClick={handleBarcodeSubmit} loading={lookingUp}>ค้นหา</Button>
-        </Space.Compact>
+        </Inline>
       </div>
 
       {product && (
         <Alert
           type="success"
           showIcon
-          style={{ marginBottom: 16 }}
+          className="mb-4"
           message={
             <div>
               <span style={{ fontWeight: 600 }}>{product.name}</span>
               <br />
-              <Space size={4} style={{ marginTop: 4 }}>
+              <Inline gap={1} style={{ marginTop: 4 }}>
                 <Tag>{product.barcode}</Tag>
                 <span style={{ fontSize: 12, color: colors.text.tertiary }}>
                   สต้อคปัจจุบัน: <strong>{product.remaining} ชิ้น</strong>
                 </span>
-              </Space>
+              </Inline>
             </div>
           }
         />
@@ -131,24 +134,20 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
       <Divider style={{ margin: '8px 0 16px' }} />
 
       <Form form={form} layout="vertical" initialValues={{ type: 'in', quantity: 1 }}>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="type" label="ประเภท" rules={[{ required: true }]}>
-              <Select
-                style={{ width: '100%' }}
-                options={TYPE_OPTIONS.map((t) => ({
-                  label: <Tag color={StockEntryTypes[t.value].color} style={{ margin: 0 }}>{t.label}</Tag>,
-                  value: t.value,
-                }))}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="quantity" label="จำนวน (ชิ้น)" rules={[{ required: true }]}>
-              <InputNumber min={1} style={{ width: '100%' }} />
-            </Form.Item>
-          </Col>
-        </Row>
+        <Grid cols={2} gap={4}>
+          <Form.Item name="type" label="ประเภท" rules={[{ required: true }]}>
+            <Select
+              style={{ width: '100%' }}
+              options={TYPE_OPTIONS.map((t) => ({
+                label: <Tag color={StockEntryTypes[t.value].color} style={{ margin: 0 }}>{t.label}</Tag>,
+                value: t.value,
+              }))}
+            />
+          </Form.Item>
+          <Form.Item name="quantity" label="จำนวน (ชิ้น)" rules={[{ required: true }]}>
+            <InputNumber min={1} style={{ width: '100%' }} />
+          </Form.Item>
+        </Grid>
 
         <Form.Item
           name="employeeId"

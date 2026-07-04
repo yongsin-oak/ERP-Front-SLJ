@@ -6,7 +6,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import { RoleGuard } from "./RoleGuard";
 import { RouteError } from "./RouteError";
 import { LoginPage } from "@features/auth";
-import type { Role } from "@features/auth/types";
+import { ROUTE_ROLES } from "@config/access";
 
 function Page({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<Spinner fullPage />}>{children}</Suspense>;
@@ -73,14 +73,10 @@ const ProfilePage = lazy(() =>
   import("@features/auth/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })),
 );
 
-function Guarded({
-  children,
-  roles,
-}: {
-  children: React.ReactNode;
-  roles: Role[];
-}) {
-  return <RoleGuard roles={roles}>{children}</RoleGuard>;
+/** อ่าน role ที่ต้องการจาก ROUTE_ROLES (single source) — path ที่ไม่ถูก gate = ผ่านเลย */
+function Guarded({ children, path }: { children: React.ReactNode; path: string }) {
+  const roles = ROUTE_ROLES[path];
+  return roles?.length ? <RoleGuard roles={roles}>{children}</RoleGuard> : <>{children}</>;
 }
 
 export const router = createBrowserRouter([
@@ -135,7 +131,7 @@ export const router = createBrowserRouter([
         path: "brand",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/brand">
               <BrandPage />
             </Guarded>
           </Page>
@@ -145,7 +141,7 @@ export const router = createBrowserRouter([
         path: "category",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/category">
               <CategoryPage />
             </Guarded>
           </Page>
@@ -155,7 +151,7 @@ export const router = createBrowserRouter([
         path: "shop",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/shop">
               <ShopPage />
             </Guarded>
           </Page>
@@ -165,7 +161,7 @@ export const router = createBrowserRouter([
         path: "employee",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/employee">
               <EmployeePage />
             </Guarded>
           </Page>
@@ -175,7 +171,7 @@ export const router = createBrowserRouter([
         path: "role",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/role">
               <RolePage />
             </Guarded>
           </Page>
@@ -185,7 +181,7 @@ export const router = createBrowserRouter([
         path: "user",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/user">
               <UserPage />
             </Guarded>
           </Page>
@@ -195,7 +191,7 @@ export const router = createBrowserRouter([
         path: "terminal",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/terminal">
               <TerminalPage />
             </Guarded>
           </Page>
@@ -229,7 +225,7 @@ export const router = createBrowserRouter([
         path: "stock/adjust",
         element: (
           <Page>
-            <Guarded roles={["SuperAdmin"]}>
+            <Guarded path="/stock/adjust">
               <StockAdjustPage />
             </Guarded>
           </Page>

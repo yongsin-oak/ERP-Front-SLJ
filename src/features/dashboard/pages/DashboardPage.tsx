@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Card, Row, Col, Statistic, Tag, Typography, Space, Skeleton, Alert, Segmented } from 'antd';
 import {
   AreaChart,
   Area,
@@ -12,15 +11,14 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Flex } from 'antd';
 import dayjs from 'dayjs';
-import { Button, PageHeader, COL_PROPS, colors, Table, Select, CodeCell, DateCell , AppIcons } from '@design-system';
+import { Button, PageHeader, colors, Table, Select, CodeCell, DateCell, Card, Tag, Segmented, Alert, SummaryCard, Stack, Inline, Grid, Text, AppIcons } from '@design-system';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock, dashboardKeys } from '../react-query';
 import { useShops } from '@features/shop';
 import type { ColumnType } from '@design-system';
 import type { RecentOrder, LowStockProduct } from '../types';
-
-const { Text } = Typography;
+import { cn } from '@/lib/utils';
 
 type Period = 'today' | '7d' | '14d' | '30d' | 'month';
 
@@ -79,31 +77,33 @@ function StatCard({
   onClick?: () => void;
 }) {
   return (
-    <Card
-      hoverable={!!onClick}
+    <div
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default', height: '100%' }}
+      className={cn(
+        'h-full rounded-lg border border-border bg-card p-6 text-card-foreground transition-shadow',
+        onClick ? 'cursor-pointer hover:shadow-md' : 'cursor-default',
+      )}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <Statistic
-          title={title}
-          value={loading ? '-' : value}
-          prefix={prefix}
-          suffix={suffix}
-          valueStyle={{ color: color ?? colors.text.primary, fontSize: 28 }}
-          loading={loading}
-        />
-        <div style={{
-          width: 44, height: 44, borderRadius: 10,
-          background: color ? `${color}18` : colors.bg.hover,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 20, color: color ?? colors.text.tertiary,
-          flexShrink: 0,
-        }}>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-sm text-muted-foreground">{title}</div>
+          <div className="mt-1 flex items-baseline gap-1 text-[28px] font-semibold" style={{ color: color ?? colors.text.primary }}>
+            {prefix && <span>{prefix}</span>}
+            <span>{loading ? '-' : value}</span>
+            {suffix && <span className="text-sm font-normal text-muted-foreground">{suffix}</span>}
+          </div>
+        </div>
+        <div
+          className="flex size-11 shrink-0 items-center justify-center rounded-[10px] text-xl"
+          style={{
+            background: color ? `${color}18` : colors.bg.hover,
+            color: color ?? colors.text.tertiary,
+          }}
+        >
           {icon}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -187,7 +187,7 @@ export function DashboardPage() {
     : 0;
 
   return (
-    <Flex vertical gap={20}>
+    <Stack gap={5}>
       <PageHeader
         title="แดชบอร์ด"
         subtitle={`อัพเดตล่าสุด: ${dayjs().format('DD/MM/YYYY HH:mm')}`}
@@ -199,7 +199,7 @@ export function DashboardPage() {
       />
 
       <Card size="small">
-        <Space wrap>
+        <Inline wrap>
           <Text type="secondary" style={{ fontSize: 13 }}>ช่วงเวลา:</Text>
           <Segmented
             options={PERIOD_OPTIONS}
@@ -216,104 +216,92 @@ export function DashboardPage() {
             loading={shopsLoading}
             options={shops?.map((s) => ({ label: s.name, value: s.id }))}
           />
-        </Space>
+        </Inline>
       </Card>
 
-      <Row gutter={[16, 16]}>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title={`Order ${periodLabel}`}
-            value={stats?.todayOrders}
-            suffix="รายการ"
-            icon={<AppIcons.cart />}
-            color={colors.semantic.info}
-            loading={statsLoading}
-            onClick={() => navigate('/order')}
-          />
-        </Col>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title={`ยอดขาย${periodLabel}`}
-            value={stats?.todayRevenue?.toLocaleString()}
-            prefix="฿"
-            icon={<AppIcons.trendUp />}
-            color={colors.semantic.success}
-            loading={statsLoading}
-          />
-        </Col>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title={`กำไร${periodLabel}`}
-            value={periodProfit.toLocaleString()}
-            prefix="฿"
-            suffix={profitMargin > 0 ? `(${profitMargin}%)` : undefined}
-            icon={<AppIcons.trendDown />}
-            color={periodProfit >= 0 ? colors.semantic.success : colors.semantic.error}
-            loading={statsLoading}
-          />
-        </Col>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title="สินค้าใกล้หมด"
-            value={lowStock.length}
-            suffix="รายการ"
-            icon={<AppIcons.warning />}
-            color={lowStock.length > 0 ? colors.semantic.warning : colors.text.tertiary}
-            loading={lowStockLoading}
-            onClick={() => navigate('/inventory')}
-          />
-        </Col>
-      </Row>
+      <Grid cols={4} gap={4}>
+        <StatCard
+          title={`Order ${periodLabel}`}
+          value={stats?.todayOrders}
+          suffix="รายการ"
+          icon={<AppIcons.cart />}
+          color={colors.semantic.info}
+          loading={statsLoading}
+          onClick={() => navigate('/order')}
+        />
+        <StatCard
+          title={`ยอดขาย${periodLabel}`}
+          value={stats?.todayRevenue?.toLocaleString()}
+          prefix="฿"
+          icon={<AppIcons.trendUp />}
+          color={colors.semantic.success}
+          loading={statsLoading}
+        />
+        <StatCard
+          title={`กำไร${periodLabel}`}
+          value={periodProfit.toLocaleString()}
+          prefix="฿"
+          suffix={profitMargin > 0 ? `(${profitMargin}%)` : undefined}
+          icon={<AppIcons.trendDown />}
+          color={periodProfit >= 0 ? colors.semantic.success : colors.semantic.error}
+          loading={statsLoading}
+        />
+        <StatCard
+          title="สินค้าใกล้หมด"
+          value={lowStock.length}
+          suffix="รายการ"
+          icon={<AppIcons.warning />}
+          color={lowStock.length > 0 ? colors.semantic.warning : colors.text.tertiary}
+          loading={lowStockLoading}
+          onClick={() => navigate('/inventory')}
+        />
+      </Grid>
 
-      <Row gutter={[16, 16]}>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title="สินค้าทั้งหมด"
-            value={stats?.totalProducts}
-            suffix="รายการ"
-            icon={<AppIcons.inbox />}
-            loading={statsLoading}
-            onClick={() => navigate('/inventory')}
-          />
-        </Col>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title="พนักงาน"
-            value={stats?.totalEmployees}
-            suffix="คน"
-            icon={<AppIcons.employees />}
-            loading={statsLoading}
-            onClick={() => navigate('/employee')}
-          />
-        </Col>
-        <Col {...COL_PROPS.statsCard}>
-          <StatCard
-            title="ยอดขายรวม"
-            value={stats?.totalRevenue?.toLocaleString()}
-            prefix="฿"
-            icon={<AppIcons.cart />}
-            color={colors.brand.primary}
-            loading={statsLoading}
-          />
-        </Col>
-        <Col {...COL_PROPS.statsCard}>
-          <Card style={{ height: '100%' }}>
-            <Statistic
-              title="ต้นทุนรวม"
-              value={stats?.totalCost?.toLocaleString() ?? '-'}
-              prefix="฿"
-              loading={statsLoading}
-              valueStyle={{ color: colors.text.secondary, fontSize: 28 }}
-            />
-          </Card>
-        </Col>
-      </Row>
+      <Grid cols={4} gap={4}>
+        <StatCard
+          title="สินค้าทั้งหมด"
+          value={stats?.totalProducts}
+          suffix="รายการ"
+          icon={<AppIcons.inbox />}
+          loading={statsLoading}
+          onClick={() => navigate('/inventory')}
+        />
+        <StatCard
+          title="พนักงาน"
+          value={stats?.totalEmployees}
+          suffix="คน"
+          icon={<AppIcons.employees />}
+          loading={statsLoading}
+          onClick={() => navigate('/employee')}
+        />
+        <StatCard
+          title="ยอดขายรวม"
+          value={stats?.totalRevenue?.toLocaleString()}
+          prefix="฿"
+          icon={<AppIcons.cart />}
+          color={colors.brand.primary}
+          loading={statsLoading}
+        />
+        <SummaryCard
+          title="ต้นทุนรวม"
+          value={stats?.totalCost?.toLocaleString() ?? '-'}
+          prefix="฿"
+          color={colors.text.secondary}
+          style={{ height: '100%' }}
+        />
+      </Grid>
 
-      <Row gutter={[16, 16]}>
-        <Col {...COL_PROPS.chartMain}>
-          <Card title={`รายได้ ${periodLabel}`}>
+      <Grid cols={3} gap={4}>
+        <Card title={`รายได้ ${periodLabel}`} className="lg:col-span-2">
             {dailyLoading ? (
-              <Skeleton active paragraph={{ rows: 6 }} />
+              <Stack gap={2}>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </Stack>
             ) : daily.length === 0 ? (
               <Alert type="info" message="ยังไม่มีข้อมูล" showIcon />
             ) : (
@@ -344,38 +332,41 @@ export function DashboardPage() {
                 </AreaChart>
               </ResponsiveContainer>
             )}
-          </Card>
-        </Col>
+        </Card>
 
-        <Col {...COL_PROPS.chartSide}>
-          <Card
-            title={
-              <Space>
-                <AppIcons.warning style={{ color: colors.semantic.warning }} />
-                สินค้าใกล้หมด
-              </Space>
-            }
-            extra={
-              <Button size="small" onClick={() => navigate('/inventory')}>ดูทั้งหมด</Button>
-            }
-            style={{ height: '100%' }}
-          >
-            {lowStockLoading ? (
-              <Skeleton active paragraph={{ rows: 5 }} />
-            ) : lowStock.length === 0 ? (
-              <Alert type="success" title="สินค้าทุกรายการมีเพียงพอ" showIcon />
-            ) : (
-              <Table<LowStockProduct>
-                rowKey="barcode"
-                columns={lowStockColumns}
-                dataSource={lowStock}
-                pagination={false}
-                size="small"
-              />
-            )}
-          </Card>
-        </Col>
-      </Row>
+        <Card
+          title={
+            <Inline>
+              <AppIcons.warning style={{ color: colors.semantic.warning }} />
+              สินค้าใกล้หมด
+            </Inline>
+          }
+          extra={
+            <Button size="small" onClick={() => navigate('/inventory')}>ดูทั้งหมด</Button>
+          }
+          style={{ height: '100%' }}
+        >
+          {lowStockLoading ? (
+            <Stack gap={2}>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </Stack>
+          ) : lowStock.length === 0 ? (
+            <Alert type="success" title="สินค้าทุกรายการมีเพียงพอ" showIcon />
+          ) : (
+            <Table<LowStockProduct>
+              rowKey="barcode"
+              columns={lowStockColumns}
+              dataSource={lowStock}
+              pagination={false}
+              size="small"
+            />
+          )}
+        </Card>
+      </Grid>
 
       <Card
         title="Order ล่าสุด"
@@ -386,7 +377,13 @@ export function DashboardPage() {
         }
       >
         {recentLoading ? (
-          <Skeleton active paragraph={{ rows: 5 }} />
+          <Stack gap={2}>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </Stack>
         ) : (
           <Table<RecentOrder>
             rowKey="id"
@@ -398,6 +395,6 @@ export function DashboardPage() {
           />
         )}
       </Card>
-    </Flex>
+    </Stack>
   );
 }

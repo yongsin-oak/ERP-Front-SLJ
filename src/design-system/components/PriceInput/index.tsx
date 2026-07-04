@@ -1,27 +1,16 @@
-import { InputNumber as AntInputNumber } from 'antd';
-import type { InputNumberProps as AntInputNumberProps } from 'antd';
+import { InputNumber } from '../InputNumber';
+import type { InputNumberProps } from '../InputNumber';
 
 export interface PriceInputProps
-  extends Omit<AntInputNumberProps<number>, 'prefix' | 'min' | 'precision' | 'formatter' | 'parser'> {
+  extends Omit<InputNumberProps, 'prefix' | 'min' | 'precision' | 'formatter' | 'parser'> {
   currency?: string;
 }
 
 const formatter = (value: number | undefined) =>
-  value != null ? value.toLocaleString('th-TH') : '';
+  value != null
+    ? value.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '';
 
-const parser = (value: string | undefined) =>
-  parseFloat((value ?? '').replace(/,/g, '')) || 0;
-
-export function PriceInput({ currency = '฿', style, ...props }: PriceInputProps) {
-  return (
-    <AntInputNumber<number>
-      prefix={currency}
-      min={0}
-      precision={2}
-      formatter={formatter}
-      parser={parser}
-      style={{ width: '100%', ...style }}
-      {...props}
-    />
-  );
+export function PriceInput({ currency = '฿', ...props }: PriceInputProps) {
+  return <InputNumber prefix={currency} min={0} precision={2} formatter={formatter} {...props} />;
 }

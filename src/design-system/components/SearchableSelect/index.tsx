@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
-import { Select } from 'antd';
-import type { DefaultOptionType } from 'antd/es/select';
+import { Select } from '../Select';
+import type { SelectOption } from '../Select';
 
 const DEBOUNCE_MS = 300;
 
@@ -8,7 +8,7 @@ export interface SearchableSelectProps<T = string> {
   value?: T | null;
   onChange?: (value: T | null) => void;
   /** Called with current search text; must return options */
-  onSearch: (query: string) => Promise<DefaultOptionType[]> | DefaultOptionType[];
+  onSearch: (query: string) => Promise<SelectOption[]> | SelectOption[];
   placeholder?: string;
   disabled?: boolean;
   style?: React.CSSProperties;
@@ -25,20 +25,21 @@ export function SearchableSelect<T = string>({
   style,
   initialLabel,
 }: SearchableSelectProps<T>) {
-  const [options, setOptions] = useState<DefaultOptionType[]>([]);
+  const [options, setOptions] = useState<SelectOption[]>([]);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleSearch = useCallback(
     (query: string) => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      if (!query.trim()) { setOptions([]); return; }
-
+      if (!query.trim()) {
+        setOptions([]);
+        return;
+      }
       timerRef.current = setTimeout(async () => {
         setLoading(true);
         try {
-          const result = await onSearch(query);
-          setOptions(result);
+          setOptions(await onSearch(query));
         } finally {
           setLoading(false);
         }
@@ -47,31 +48,24 @@ export function SearchableSelect<T = string>({
     [onSearch],
   );
 
-  const handleChange = (val: unknown) => {
-    onChange?.((val as T) ?? null);
-  };
-
   // Build initial options if a value is pre-selected but options are empty
   const displayOptions =
     value != null && options.length === 0 && initialLabel
-      ? [{ value: value as unknown as string, label: initialLabel }]
+      ? [{ value: String(value), label: initialLabel }]
       : options;
 
   return (
     <Select
-      showSearch
-      filterOption={false}
+      showSearch={{ filterOption: false, onSearch: handleSearch }}
       loading={loading}
-      value={value ?? undefined}
-      onChange={handleChange}
-      onSearch={handleSearch}
-      onClear={() => onChange?.(null)}
+      value={value != null ? String(value) : undefined}
+      onChange={(v) => onChange?.((v as T) ?? null)}
       allowClear
       placeholder={placeholder}
       options={displayOptions}
       disabled={disabled}
-      notFoundContent={loading ? null : '—'}
-      style={{ width: '100%', ...style }}
+      notFoundContent={loading ? 'กำลังค้นหา…' : '—'}
+      style={style}
     />
   );
 }

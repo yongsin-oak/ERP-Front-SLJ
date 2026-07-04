@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Flex, Tag, Badge } from 'antd';
-import { Table, Button, PageHeader, colors, ActionCell, CodeCell, DateCell, SummaryCard , AppIcons } from '@design-system';
+import { Table, Button, PageHeader, colors, ActionCell, CodeCell, DateCell, SummaryCard , AppIcons, Tag, Badge, Inline, Stack } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
 import {
@@ -106,7 +105,7 @@ export function TerminalPage() {
   ];
 
   return (
-    <Flex vertical gap={16}>
+    <Stack gap={4}>
       <PageHeader
         title="Terminal"
         subtitle={`${terminals.length} เครื่องในระบบ`}
@@ -117,11 +116,11 @@ export function TerminalPage() {
         }
       />
 
-      <Flex gap={12} wrap>
+      <Inline gap={3} wrap>
         <SummaryCard title="Terminal ทั้งหมด" value={terminals.length} suffix="เครื่อง" color={colors.brand.primary} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="เปิดใช้งาน" value={activeCount} suffix="เครื่อง" color={colors.semantic.success} style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ปิดใช้งาน" value={inactiveCount} suffix="เครื่อง" color={colors.text.secondary} style={{ flex: 1, minWidth: 140 }} />
-      </Flex>
+      </Inline>
 
       <Table<Terminal>
         rowKey="id"
@@ -140,6 +139,6 @@ export function TerminalPage() {
         onSubmit={handleSubmit}
         loading={createTerminal.isPending || updateTerminal.isPending}
       />
-    </Flex>
+    </Stack>
   );
 }

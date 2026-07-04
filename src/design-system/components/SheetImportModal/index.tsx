@@ -1,12 +1,15 @@
+import * as React from 'react';
 import { useState } from 'react';
-import { Steps, Alert, Typography, Flex } from 'antd';
 import { Modal } from '../Modal';
 import { Button } from '../Button';
+import { Alert } from '../Alert';
+import { Text } from '../Typography';
 import { DropZoneSheet } from '../DropZoneSheet';
 import { SheetColumnMapper, buildDefaultMappings } from '../SheetColumnMapper';
 import { SheetTable } from '../SheetTable';
 import type { SheetData } from '../DropZoneSheet';
 import type { DbFieldDef, ColumnMapping } from '../SheetColumnMapper';
+import { cn } from '@/lib/utils';
 
 export type { DbFieldDef, ColumnMapping };
 
@@ -27,11 +30,32 @@ interface ReviewState {
   errors: Record<number, string[]>;
 }
 
-const STEP_ITEMS = [
-  { title: 'อัพโหลด' },
-  { title: 'จับคู่คอลัมน์' },
-  { title: 'ตรวจสอบ' },
-];
+const STEP_LABELS = ['อัพโหลด', 'จับคู่คอลัมน์', 'ตรวจสอบ'];
+
+function Steps({ current }: { current: number }) {
+  return (
+    <div className="flex items-center gap-2">
+      {STEP_LABELS.map((label, i) => (
+        <React.Fragment key={label}>
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                'flex size-6 items-center justify-center rounded-full text-xs font-medium',
+                i <= current ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+              )}
+            >
+              {i + 1}
+            </span>
+            <span className={cn('text-sm', i === current ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+              {label}
+            </span>
+          </div>
+          {i < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-divider" />}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
 
 export function SheetImportModal<T extends object>({
   open,
@@ -72,9 +96,7 @@ export function SheetImportModal<T extends object>({
     const internalRows: Record<string, unknown>[] = sheetData.rows.map((row) => {
       const mapped: Record<string, unknown> = {};
       for (const m of mappings) {
-        if (m.dbField) {
-          mapped[m.dbField] = row[m.sheetColumn];
-        }
+        if (m.dbField) mapped[m.dbField] = row[m.sheetColumn];
       }
       return mapped;
     });
@@ -85,15 +107,11 @@ export function SheetImportModal<T extends object>({
       if (errs.length) errors[i] = errs;
     });
 
-    const mappedFields = dbFields.filter((f) =>
-      mappings.some((m) => m.dbField === f.key),
-    );
+    const mappedFields = dbFields.filter((f) => mappings.some((m) => m.dbField === f.key));
     const displayHeaders = mappedFields.map((f) => f.label);
     const displayRows = internalRows.map((row) => {
       const dr: Record<string, unknown> = {};
-      for (const f of mappedFields) {
-        dr[f.label] = row[f.key];
-      }
+      for (const f of mappedFields) dr[f.label] = row[f.key];
       return dr;
     });
 
@@ -126,20 +144,12 @@ export function SheetImportModal<T extends object>({
   const validCount = review ? review.internalRows.length - errorCount : 0;
 
   return (
-    <Modal
-      open={open}
-      onCancel={handleClose}
-      title={title}
-      footer={null}
-      width={step === 2 ? 900 : 640}
-    >
-      <div style={{ marginBottom: 24 }}>
-        <Steps current={step} size="small" items={STEP_ITEMS} />
+    <Modal open={open} onCancel={handleClose} title={title} footer={null} width={step === 2 ? 900 : 640}>
+      <div className="mb-6">
+        <Steps current={step} />
       </div>
 
-      {step === 0 && (
-        <DropZoneSheet onParsed={handleParsed} onClear={reset} />
-      )}
+      {step === 0 && <DropZoneSheet onParsed={handleParsed} onClear={reset} />}
 
       {step === 1 && sheetData && (
         <>
@@ -149,12 +159,12 @@ export function SheetImportModal<T extends object>({
             dbFields={dbFields}
             onChange={setMappings}
           />
-          <Flex justify="flex-end" gap={8} style={{ marginTop: 16 }}>
+          <div className="mt-4 flex justify-end gap-2">
             <Button onClick={reset}>เริ่มใหม่</Button>
             <Button variant="primary" onClick={buildReview}>
               ถัดไป — ตรวจสอบ
             </Button>
-          </Flex>
+          </div>
         </>
       )}
 
@@ -165,27 +175,22 @@ export function SheetImportModal<T extends object>({
               type="warning"
               showIcon
               message={`พบ ${errorCount} แถวที่มีข้อผิดพลาด — แถวเหล่านั้นจะถูกข้ามไป`}
-              style={{ marginBottom: 12 }}
+              className="mb-3"
             />
           )}
           <SheetTable data={review.displayData} errors={review.errors} />
-          <Flex justify="space-between" align="center" style={{ marginTop: 16 }}>
-            <Typography.Text type="secondary">
+          <div className="mt-4 flex items-center justify-between">
+            <Text type="secondary">
               {validCount} แถวพร้อมนำเข้า
               {errorCount > 0 && ` · ${errorCount} แถวมีข้อผิดพลาด (ข้าม)`}
-            </Typography.Text>
-            <Flex gap={8}>
+            </Text>
+            <div className="flex gap-2">
               <Button onClick={() => setStep(1)}>ย้อนกลับ</Button>
-              <Button
-                variant="primary"
-                loading={loading}
-                disabled={validCount === 0}
-                onClick={handleImport}
-              >
+              <Button variant="primary" loading={loading} disabled={validCount === 0} onClick={handleImport}>
                 นำเข้า {validCount} รายการ
               </Button>
-            </Flex>
-          </Flex>
+            </div>
+          </div>
         </>
       )}
     </Modal>
