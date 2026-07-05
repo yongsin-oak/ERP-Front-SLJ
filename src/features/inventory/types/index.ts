@@ -48,6 +48,10 @@ export interface CreateProductDto {
   sku?: string;
   brandId?: string;
   categoryId?: string;
+  /** ชื่อแบรนด์ (import) — backend จะ find-or-create ให้ */
+  brandName?: string;
+  /** ชื่อหมวดหมู่ (import) — backend จะ find-or-create ให้ */
+  categoryName?: string;
   costPrice?: PriceSet;
   sellPrice?: PriceSet;
   remaining?: number;

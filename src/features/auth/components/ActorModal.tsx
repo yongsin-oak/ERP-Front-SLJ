@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, Select, Button, Alert, Inline, Text, AppIcons } from '@design-system';
 import { showError } from "@shared";
 import { useEmployees } from "@features/employee/react-query";
 import { authService } from "../react-query/services";
-import { useActorModal } from "../stores";
+import { useActorModal, useActor } from "../stores";
 import { cn } from '@/lib/utils';
 
 const PIN_MIN = 4;
@@ -63,7 +63,8 @@ export function ActorModal() {
     setLoading(true);
     try {
       const res = await authService.verifyPin(employeeId, pin);
-      confirm(res.data.data.actorToken);
+      useActor.getState().setActor(res.data.data);
+      confirm();
     } catch (err) {
       setPin("");
       showError(err, "ยืนยันตัวตน");
@@ -78,6 +79,35 @@ export function ActorModal() {
   }));
 
   const canConfirm = !!employeeId && pin.length >= PIN_MIN;
+
+  // รองรับการพิมพ์ PIN ด้วยคีย์บอร์ดจริง (นอกจากกดปุ่มบนจอ):
+  // เลข 0-9 = เพิ่มหลัก · Backspace = ลบ · Enter = ยืนยัน
+  // ข้ามเมื่อ focus อยู่ในช่องพิมพ์ (เช่น ค้นหาพนักงาน) เพื่อไม่ชนกัน
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      const el = document.activeElement as HTMLElement | null;
+      const inField = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
+      if (e.key === "Enter") {
+        if (!inField && canConfirm && !loading) {
+          e.preventDefault();
+          void handleConfirm();
+        }
+        return;
+      }
+      if (inField) return;
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        handleKey("back");
+      } else if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        handleKey(e.key);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, canConfirm, loading, employeeId, pin]);
 
   return (
     <Modal
@@ -109,6 +139,8 @@ export function ActorModal() {
           onChange={(v) => {
             setEmployeeId(v as string);
             setError("");
+            // ปล่อย focus ออกจาก select เพื่อให้พิมพ์ PIN ด้วยคีย์บอร์ดได้ทันที
+            requestAnimationFrame(() => (document.activeElement as HTMLElement | null)?.blur());
           }}
         />
       </div>
@@ -116,7 +148,7 @@ export function ActorModal() {
       {/* PIN dots (show up to PIN_MAX slots, filled = entered digits) */}
       <Text type="secondary" style={{ fontSize: 12 }}>
         <AppIcons.lock style={{ marginRight: 4 }} />
-        PIN ({PIN_MIN}–{PIN_MAX} หลัก)
+        PIN ({PIN_MIN}–{PIN_MAX} หลัก) · พิมพ์ด้วยคีย์บอร์ดได้
       </Text>
       <div className="flex justify-center gap-2.5 mt-3.5 mb-4.5">
         {Array.from({ length: PIN_MAX }).map((_, i) => {

@@ -5,13 +5,12 @@ import { Select, Input, Button, PageHeader, AppIcons, Form, Card, Tag, Alert, Di
 import type { InputRef } from '@design-system';
 import { useShops, PlatformBadge, PLATFORM_ORDER, PlatformHex } from '@features/shop';
 import type { Shop, Platform } from '@features/shop';
-import { useEmployees } from '@features/employee/react-query';
+import { useActor, useActorModal } from '@features/auth';
 import { OrderItemsEditor } from '../components';
 import { useCreateOrder } from '../react-query';
 import type { OrderItem } from '../types';
 
 interface HeaderForm {
-  employeeId?: string;
   shopId?: string;
   orderNumber?: string;
   note?: string;
@@ -28,22 +27,46 @@ export function OrderEntryPage() {
   const orderNumberRef = useRef<InputRef>(null);
 
   const { data: shops = [], isLoading: shopsLoading } = useShops();
-  const { data: employees = [], isLoading: employeesLoading } = useEmployees();
   const createOrder = useCreateOrder();
+  // ผู้บันทึกปัจจุบัน = พนักงานที่ยืนยัน PIN (actor). presence = มีสิทธิ์ใช้หน้านี้
+  // (token หมดอายุจะถูก auto-clear ด้านล่าง → actorEmployee = null → กลับไปหน้าล็อก PIN)
+  const actorEmployee = useActor((s) => s.employee);
+  const actorExpiresAt = useActor((s) => s.expiresAt);
+  const clearActor = useActor((s) => s.clear);
 
-  const employeeReady = !!headerValues.employeeId;
   const shopReady = !!headerValues.shopId;
   const orderNumberReady = !!headerValues.orderNumber?.trim();
-  const headerReady = employeeReady && shopReady && orderNumberReady;
-  const canSave = headerReady && items.length > 0;
+  // เปิดบิล/เริ่มเพิ่มสินค้าได้เมื่อเลือกร้านแล้ว — ไม่ผูกกับการพิมพ์เลขคำสั่งซื้อทีละตัว
+  const showBill = shopReady;
+  const canSave = shopReady && orderNumberReady && items.length > 0;
+
+  // auto-clear actor เมื่อ token ใกล้หมดอายุ (เผื่อ buffer 60s ให้ตรงกับ getValidToken)
+  // → actorEmployee = null → หน้าถูกล็อกให้ยืนยัน PIN ใหม่
+  useEffect(() => {
+    if (!actorExpiresAt) return;
+    const ms = actorExpiresAt - 60_000 - Date.now();
+    if (ms <= 0) {
+      clearActor();
+      return;
+    }
+    const t = setTimeout(clearActor, ms);
+    return () => clearTimeout(t);
+  }, [actorExpiresAt, clearActor]);
+
+  // หน้านี้ต้องยืนยัน PIN ก่อนใช้งาน — ถ้ายังไม่มี actor เปิด PIN ให้อัตโนมัติ
+  // deps = [actorEmployee] → ทำงานตอน mount และตอน actor หลุด (หมดอายุ/ออก) เท่านั้น
+  // (กดยกเลิกจะไม่เด้งซ้ำเพราะ actorEmployee ไม่เปลี่ยน)
+  useEffect(() => {
+    if (!actorEmployee && !useActorModal.getState().open) {
+      useActorModal.getState().request().catch(() => {
+        /* ผู้ใช้กดยกเลิก — กดปุ่มยืนยันบนหน้าล็อกได้ */
+      });
+    }
+  }, [actorEmployee]);
 
   const selectedShop = useMemo<Shop | undefined>(
     () => shops.find((s) => s.id === headerValues.shopId),
     [shops, headerValues.shopId],
-  );
-  const selectedEmployee = useMemo(
-    () => employees.find((e) => e.id === headerValues.employeeId),
-    [employees, headerValues.employeeId],
   );
 
   // group shops ตาม platform
@@ -74,43 +97,50 @@ export function OrderEntryPage() {
       }));
   }, [shops]);
 
-  const employeeOptions = employees.map((e) => ({
-    label: `${e.firstName} ${e.lastName} (${e.nickname})`,
-    value: e.id,
-    searchText: `${e.firstName} ${e.lastName} ${e.nickname}`,
-  }));
-
-  // เมื่อพร้อมกรอกเลขออเดอร์ → focus
-  useEffect(() => {
-    if (employeeReady && shopReady && !orderNumberReady) {
-      orderNumberRef.current?.focus();
-    }
-  }, [employeeReady, shopReady, orderNumberReady]);
-
   const totals = useMemo(() => {
-    const qty = items.reduce((s, i) => s + i.quantity, 0);
-    const price = items.reduce((s, i) => s + i.sellingPrice * i.quantity, 0);
+    const qty = items.reduce((s, i) => s + i.quantity + (i.quantityCarton ?? 0), 0);
+    const price = items.reduce(
+      (s, i) => s + i.sellingPrice * i.quantity + (i.sellPriceCarton ?? 0) * (i.quantityCarton ?? 0),
+      0,
+    );
     return { qty, price };
   }, [items]);
+
+  /** เปิด PIN modal ยืนยันผู้บันทึก — คืน true ถ้ามี actor ใช้ได้, false ถ้ายกเลิก */
+  async function ensureActor() {
+    if (useActor.getState().getValidToken()) return true;
+    try {
+      await useActorModal.getState().request();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function handleVerifyActor() {
+    useActorModal.getState().request().catch(() => {
+      /* ผู้ใช้กดยกเลิก — ไม่ต้องทำอะไร */
+    });
+  }
 
   async function handleSave() {
     if (!canSave) return;
     const values = await form.validateFields();
-    const noteParts = [values.orderNumber?.trim(), values.note?.trim()].filter(Boolean);
+    // ต้องยืนยันผู้บันทึก (PIN) ก่อนเสมอ — ถ้าไม่มี/หมดอายุ เปิด PIN ให้ยืนยันก่อน
+    if (!(await ensureActor())) return;
     await createOrder.mutateAsync({
-      recordBy: values.employeeId!,
       shopId: values.shopId!,
+      orderNumber: values.orderNumber?.trim() || undefined,
+      note: values.note?.trim() || undefined,
       details: items.map((i) => ({
         productBarcode: i.barcode,
         quantityPack: i.quantity,
-        quantityCarton: 0,
+        quantityCarton: i.quantityCarton ?? 0,
       })),
-      note: noteParts.length ? noteParts.join(' | ') : undefined,
     });
     form.setFieldsValue({ orderNumber: '', note: '' });
     setItems([]);
     setResetTick((t) => t + 1);
-    requestAnimationFrame(() => orderNumberRef.current?.focus());
   }
 
   function handleClear() {
@@ -119,11 +149,16 @@ export function OrderEntryPage() {
     setResetTick((t) => t + 1);
   }
 
+  // Hard gate — ต้องยืนยัน PIN ก่อนถึงจะเข้าใช้งานหน้าบันทึกออเดอร์ได้
+  if (!actorEmployee) {
+    return <ActorGate onVerify={handleVerifyActor} onBack={() => navigate('/dashboard')} />;
+  }
+
   return (
     <Stack gap={3} style={{ paddingBottom: 80 }}>
       <PageHeader
         title="บันทึก Order"
-        subtitle="เลือกพนักงาน → ร้านค้า → กรอกเลขคำสั่งซื้อ → สแกนสินค้า"
+        subtitle="เลือกร้านค้า → กรอกเลขคำสั่งซื้อ → สแกนสินค้า"
         actions={
           <>
             <Button icon={<AppIcons.history />} onClick={() => navigate('/order/history')}>
@@ -136,22 +171,15 @@ export function OrderEntryPage() {
         }
       />
 
+      <OperatorBar
+        operatorName={actorEmployee?.name}
+        onVerify={handleVerifyActor}
+        onClear={clearActor}
+      />
+
       <Form form={form} layout="vertical" requiredMark="optional">
         <Card size="small">
-          <Grid cols={3} gap={4}>
-            <Form.Item
-              name="employeeId"
-              label={<span className="inline-flex items-center gap-1.5"><AppIcons.user /> พนักงานผู้บันทึก</span>}
-              rules={[{ required: true, message: 'กรุณาเลือกพนักงาน' }]}
-            >
-              <Select
-                options={employeeOptions}
-                placeholder="เลือกพนักงาน"
-                style={{ width: '100%' }}
-                loading={employeesLoading}
-                showSearch={{ optionFilterProp: 'searchText' }}
-              />
-            </Form.Item>
+          <Grid cols={2} gap={4}>
             <Form.Item
               name="shopId"
               label={<span className="inline-flex items-center gap-1.5"><AppIcons.shop /> ร้านค้า / แพลตฟอร์ม</span>}
@@ -173,7 +201,7 @@ export function OrderEntryPage() {
               <Input
                 ref={orderNumberRef}
                 placeholder="ยิง / กรอกเลขคำสั่งซื้อจากแพลตฟอร์ม"
-                disabled={!employeeReady || !shopReady}
+                disabled={!shopReady}
                 autoComplete="off"
                 onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
               />
@@ -181,18 +209,18 @@ export function OrderEntryPage() {
           </Grid>
         </Card>
 
-        {!headerReady ? (
+        {!showBill ? (
           <Alert
             type="info"
             showIcon
-            message="กรอกข้อมูลด้านบนให้ครบเพื่อเริ่มเพิ่มสินค้า"
+            message="เลือกร้านค้าเพื่อเริ่มเพิ่มสินค้า"
             style={{ marginTop: 4 }}
           />
         ) : (
           <PaperOrderCard
-            orderNumber={headerValues.orderNumber!.trim()}
+            orderNumber={headerValues.orderNumber?.trim() ?? ''}
             shop={selectedShop}
-            employee={selectedEmployee}
+            operatorName={actorEmployee?.name}
             items={items}
             onItemsChange={setItems}
             resetSignal={resetTick}
@@ -216,10 +244,73 @@ export function OrderEntryPage() {
   );
 }
 
+function ActorGate({ onVerify, onBack }: { onVerify: () => void; onBack: () => void }) {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center px-4">
+      <Card size="small" style={{ maxWidth: 440, width: '100%' }}>
+        <Stack gap={4} align="center" style={{ textAlign: 'center', padding: '12px 8px' }}>
+          <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
+            <AppIcons.lock size={28} className="text-primary" />
+          </div>
+          <div>
+            <Text strong style={{ fontSize: 16 }}>ต้องยืนยันตัวตนก่อนบันทึกออเดอร์</Text>
+            <div style={{ marginTop: 4 }}>
+              <Text type="secondary">กดรหัส PIN พนักงานเพื่อเข้าใช้งานหน้านี้</Text>
+            </div>
+          </div>
+          <Inline gap={2} wrap={false}>
+            <Button onClick={onBack}>ย้อนกลับ</Button>
+            <Button variant="primary" icon={<AppIcons.lock />} onClick={onVerify}>
+              ยืนยันตัวตน (PIN)
+            </Button>
+          </Inline>
+        </Stack>
+      </Card>
+    </div>
+  );
+}
+
+function OperatorBar({
+  operatorName,
+  onVerify,
+  onClear,
+}: {
+  operatorName?: string;
+  onVerify: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <Card size="small">
+      <Inline justify="between" align="center" gap={3} wrap>
+        <Inline gap={2} align="center" wrap={false}>
+          <AppIcons.user className={operatorName ? 'text-success' : 'text-muted-foreground'} />
+          {operatorName ? (
+            <Text>
+              กำลังบันทึกโดย <Text strong>{operatorName}</Text>
+            </Text>
+          ) : (
+            <Text type="secondary">ยังไม่ได้ยืนยันผู้บันทึก — ต้องกด PIN ก่อนบันทึกออเดอร์</Text>
+          )}
+        </Inline>
+        <Inline gap={2} wrap={false}>
+          <Button icon={<AppIcons.lock />} onClick={onVerify}>
+            {operatorName ? 'เปลี่ยนผู้บันทึก' : 'ยืนยันตัวตน (PIN)'}
+          </Button>
+          {operatorName && (
+            <Button variant="ghost" onClick={onClear}>
+              ออก
+            </Button>
+          )}
+        </Inline>
+      </Inline>
+    </Card>
+  );
+}
+
 interface PaperOrderCardProps {
   orderNumber: string;
   shop?: Shop;
-  employee?: { firstName: string; lastName: string; nickname: string };
+  operatorName?: string;
   items: OrderItem[];
   onItemsChange: (items: OrderItem[]) => void;
   resetSignal: number;
@@ -229,7 +320,7 @@ interface PaperOrderCardProps {
 function PaperOrderCard({
   orderNumber,
   shop,
-  employee,
+  operatorName,
   items,
   onItemsChange,
   resetSignal,
@@ -248,7 +339,7 @@ function PaperOrderCard({
               ORDER NUMBER
             </Text>
             <div className="mt-0.5 text-base leading-[1.3] font-semibold break-all text-foreground">
-              {orderNumber}
+              {orderNumber || '—'}
             </div>
           </div>
 
@@ -266,10 +357,7 @@ function PaperOrderCard({
         <Divider style={{ margin: '12px 0 10px' }} />
 
         <Grid cols={3} gap={5}>
-          <InfoLine
-            label="พนักงาน"
-            value={employee ? `${employee.firstName} (${employee.nickname})` : '-'}
-          />
+          <InfoLine label="ผู้บันทึก" value={operatorName ?? '— ยังไม่ยืนยัน PIN'} />
           <InfoLine label="วันที่บันทึก" value={dayjs().format('DD/MM/YYYY HH:mm')} />
           <div>{noteField}</div>
         </Grid>

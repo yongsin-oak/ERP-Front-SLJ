@@ -63,13 +63,13 @@ export function Drawer({
       }}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim backdrop-blur-[1px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-(--z-overlay) bg-scrim backdrop-blur-[1px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           onInteractOutside={(e) => {
             if (maskClosable === false) e.preventDefault();
           }}
           className={cn(
-            'fixed z-50 flex flex-col border-border bg-background shadow-overlay outline-none ease-out',
+            'fixed z-(--z-overlay) flex flex-col border-border bg-background shadow-overlay outline-none ease-out',
             'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-300 data-[state=closed]:duration-200',
             PLACEMENT[placement],
             className,

@@ -165,17 +165,14 @@ export function OrderHistoryPage() {
         r.recordBy ? `${r.recordBy.firstName} (${r.recordBy.nickname})` : '-',
     },
     {
-      title: 'เลขออเดอร์ / หมายเหตุ',
-      dataIndex: 'note',
-      render: (v?: string | null) => {
-        if (!v) return '-';
-        const parts = v.split(' | ');
-        const orderNum = parts[0];
-        const note = parts.slice(1).join(' | ');
+      title: 'เลขคำสั่งซื้อ / หมายเหตุ',
+      key: 'orderNumber',
+      render: (_: unknown, r: Order) => {
+        if (!r.orderNumber && !r.note) return '-';
         return (
           <div>
-            <code style={{ fontSize: 11, fontWeight: 600 }}>{orderNum}</code>
-            {note && <div className="text-xs text-foreground-subtle">{note}</div>}
+            {r.orderNumber && <code style={{ fontSize: 11, fontWeight: 600 }}>{r.orderNumber}</code>}
+            {r.note && <div className="text-xs text-foreground-subtle">{r.note}</div>}
           </div>
         );
       },

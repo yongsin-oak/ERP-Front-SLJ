@@ -1,5 +1,5 @@
 // ── API / HTTP ────────────────────────────────────────────────────────────────
-export { req } from './api';
+export { req, registerActorTokenGetter } from './api';
 export { queryClient } from './api';
 export { getErrorMessage, getErrorStatus, showError, handleError } from './api';
 export type { ApiErrorBody } from './api';

@@ -5,8 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_BACKEND_API_URL: string;
   /** Runtime environment: 'development' | 'production' | 'test' */
   readonly VITE_ENV_MODE: 'development' | 'production' | 'test';
-  /** Skip PIN/auth gates in dev — set to 'true' to enable bypass */
-  readonly VITE_BYPASS_AUTH: boolean | undefined;
+  /** Skip PIN/auth gates in dev — set to the string 'true' to enable bypass */
+  readonly VITE_BYPASS_AUTH: string | undefined;
 }
 
 interface ImportMeta {

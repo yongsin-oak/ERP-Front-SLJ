@@ -6,12 +6,16 @@ import type { CreateProductDto } from '../types';
 const DB_FIELDS: DbFieldDef[] = [
   { key: 'barcode',         label: 'บาร์โค้ด',      required: true, type: 'text' },
   { key: 'name',            label: 'ชื่อสินค้า',     required: true, type: 'text' },
+  { key: 'sku',             label: 'SKU',            type: 'text' },
+  { key: 'brandName',       label: 'แบรนด์',         type: 'text' },
+  { key: 'categoryName',    label: 'หมวดหมู่',        type: 'text' },
   { key: 'remaining',       label: 'สต็อก',          required: true, type: 'number' },
   { key: 'costPricePack',   label: 'ราคาทุน/แพ็ค',  type: 'number' },
   { key: 'costPriceCarton', label: 'ราคาทุน/ลัง',   type: 'number' },
   { key: 'sellPricePack',   label: 'ราคาขาย/แพ็ค', type: 'number' },
   { key: 'sellPriceCarton', label: 'ราคาขาย/ลัง',  type: 'number' },
   { key: 'minStock',        label: 'สต็อกขั้นต่ำ',  type: 'number' },
+  { key: 'maxStock',        label: 'สต็อกสูงสุด',   type: 'number' },
   { key: 'piecesPerPack',   label: 'ชิ้น/แพ็ค',    type: 'number' },
   { key: 'packPerCarton',   label: 'แพ็ค/ลัง',     type: 'number' },
 ];
@@ -51,10 +55,18 @@ function transformRow(row: Record<string, unknown>): CreateProductDto {
   const sellPack = toNum(row['sellPricePack']);
   const sellCarton = toNum(row['sellPriceCarton']);
 
+  const str = (v: unknown): string | undefined => {
+    const s = v == null ? '' : String(v).trim();
+    return s === '' ? undefined : s;
+  };
+
   return {
     barcode: String(row['barcode'] ?? '').trim(),
     name: String(row['name'] ?? '').trim(),
     remaining: toInt(row['remaining']) ?? 0,
+    ...(str(row['sku']) ? { sku: str(row['sku']) } : {}),
+    ...(str(row['brandName']) ? { brandName: str(row['brandName']) } : {}),
+    ...(str(row['categoryName']) ? { categoryName: str(row['categoryName']) } : {}),
     ...(costPack != null || costCarton != null
       ? { costPrice: { pack: costPack ?? costCarton ?? 0, carton: costCarton ?? costPack ?? 0 } }
       : {}),
@@ -62,6 +74,7 @@ function transformRow(row: Record<string, unknown>): CreateProductDto {
       ? { sellPrice: { pack: sellPack ?? sellCarton ?? 0, carton: sellCarton ?? sellPack ?? 0 } }
       : {}),
     ...(toInt(row['minStock']) !== undefined ? { minStock: toInt(row['minStock'])! } : {}),
+    ...(toInt(row['maxStock']) !== undefined ? { maxStock: toInt(row['maxStock'])! } : {}),
     ...(toInt(row['piecesPerPack']) !== undefined ? { piecesPerPack: toInt(row['piecesPerPack'])! } : {}),
     ...(toInt(row['packPerCarton']) !== undefined ? { packPerCarton: toInt(row['packPerCarton'])! } : {}),
   };

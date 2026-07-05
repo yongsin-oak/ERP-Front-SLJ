@@ -24,8 +24,10 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
       barcode: d.product.barcode,
       name: d.product.name,
       sellingPrice: d.product.sellPrice?.pack ?? d.product.sellPrice?.carton ?? 0,
+      sellPriceCarton: d.product.sellPrice?.carton ?? 0,
       costPrice: d.product.costPrice?.pack ?? d.product.costPrice?.carton ?? 0,
-      quantity: d.quantityPack + d.quantityCarton,
+      quantity: d.quantityPack,
+      quantityCarton: d.quantityCarton,
     }));
     onClose();
     navigate('/order', { state: { items } });
@@ -114,6 +116,12 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
                 {OrderStatuses[displayOrder.status]?.label ?? displayOrder.status}
               </Tag>
             </dd>
+            {displayOrder.orderNumber && (
+              <>
+                <dt className="text-muted-foreground">เลขคำสั่งซื้อ</dt>
+                <dd className="text-foreground"><code>{displayOrder.orderNumber}</code></dd>
+              </>
+            )}
             <dt className="text-muted-foreground">วันที่บันทึก</dt>
             <dd className="text-foreground">
               {displayOrder.startRecordAt
@@ -135,6 +143,14 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
                 <dt className="text-muted-foreground">ผู้บันทึก</dt>
                 <dd className="text-foreground">
                   {displayOrder.recordBy.firstName} {displayOrder.recordBy.lastName} ({displayOrder.recordBy.nickname})
+                </dd>
+              </>
+            )}
+            {displayOrder.terminal && (
+              <>
+                <dt className="text-muted-foreground">เครื่อง (Terminal)</dt>
+                <dd className="text-foreground">
+                  {displayOrder.terminal.name} ({displayOrder.terminal.terminalCode})
                 </dd>
               </>
             )}

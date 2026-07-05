@@ -12,6 +12,14 @@ const req = axios.create({
   timeout: 30000, // 30s — รองรับ bulk operation / network ช้า
 });
 
+// ── Actor token (PIN) ──────────────────────────────────────────────────────
+// layer auth ลงทะเบียน getter ไว้ตอน init (useActor.ts) เพื่อกัน shared → features
+// circular dependency. ถ้ามี actor token ที่ยังไม่หมดอายุ จะถูกแนบเป็น X-Actor-Token
+let getActorToken: () => string | null = () => null;
+export function registerActorTokenGetter(fn: () => string | null) {
+  getActorToken = fn;
+}
+
 let isRefreshing = false;
 let pendingQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -28,6 +36,8 @@ function flushQueue(error?: unknown) {
 
 req.interceptors.request.use(
   function (config: InternalAxiosRequestConfig) {
+    const actorToken = getActorToken();
+    if (actorToken) config.headers.set("X-Actor-Token", actorToken);
     return config;
   },
   function (error) {

@@ -57,7 +57,7 @@ export const inventoryService = {
     ),
 
   bulkCreate: (dtos: CreateProductDto[]) =>
-    req.post<ApiData<Product[]>>(`${BASE}/bulk`, dtos),
+    req.post<ApiData<{ created: Product[]; errors: string[] }>>(`${BASE}/bulk`, dtos),
 };
 
 export interface BulkStockEntryDto {

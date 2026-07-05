@@ -2,11 +2,14 @@ import { create } from 'zustand';
 
 interface ActorModalStore {
   open: boolean;
-  _resolve: ((token: string) => void) | null;
+  _resolve: (() => void) | null;
   _reject: ((err: Error) => void) | null;
-  /** เปิด modal แล้วรอ actor_token — ใช้ await request() ก่อน call API ที่ต้องการ actor */
-  request: () => Promise<string>;
-  confirm: (token: string) => void;
+  /**
+   * เปิด modal ให้พนักงานยืนยัน PIN — resolve เมื่อยืนยันสำเร็จ (actor ถูกเก็บใน useActor แล้ว),
+   * reject เมื่อผู้ใช้กดยกเลิก. ใช้ `await request()` ก่อนดำเนินการที่ต้องระบุผู้บันทึก
+   */
+  request: () => Promise<void>;
+  confirm: () => void;
   cancel: () => void;
 }
 
@@ -16,17 +19,17 @@ export const useActorModal = create<ActorModalStore>((set, get) => ({
   _reject: null,
 
   request: () =>
-    new Promise<string>((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       set({ open: true, _resolve: resolve, _reject: reject });
     }),
 
-  confirm: (token) => {
-    get()._resolve?.(token);
+  confirm: () => {
+    get()._resolve?.();
     set({ open: false, _resolve: null, _reject: null });
   },
 
   cancel: () => {
-    get()._reject?.(new Error('ยกเลิก'));
+    get()._reject?.(new Error('ยกเลิกการยืนยันตัวตน'));
     set({ open: false, _resolve: null, _reject: null });
   },
 }));

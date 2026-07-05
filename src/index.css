@@ -38,6 +38,14 @@ body {
    Stripe-grade: neutral เป็น cool-gray อมน้ำเงิน · เงาอมน้ำเงิน (rgba 50,50,93)
    ════════════════════════════════════════════════════════════════════════ */
 :root {
+  /* ── z-index layer (ค่ากลาง — แก้ที่เดียว) ─────────────────────────────────
+     overlay ทุกชนิด (modal / drawer / dropdown / popover / tooltip) ใช้ค่าเดียวกัน
+     เพื่อให้ "ลำดับ portal (DOM)" เป็นตัวตัดสินการซ้อน ไม่ใช่ตัวเลข z ที่ต่างกัน:
+       • dropdown ที่เปิดในโมดัล → portal มาทีหลัง → อยู่เหนือโมดัล ✓
+       • โมดัลที่เปิดทีหลัง dropdown หน้าเพจ → portal มาทีหลัง → อยู่เหนือ dropdown ✓
+     ค่านี้ต้องสูงกว่า app chrome (sidebar/header = z-100, mobile drawer = z-110) เสมอ */
+  --z-overlay: 1000;
+
   /* Neutral — Stripe cool-gray scale (อมน้ำเงินเล็กน้อย) */
   --neutral-0:   #ffffff;
   --neutral-50:  #f6f9fc;   /* page canvas */

@@ -12,8 +12,14 @@ export interface OrderItem {
   barcode: string;
   name: string;
   costPrice: number;
+  /** ราคาขาย/แพ็ค */
   sellingPrice: number;
+  /** ราคาขาย/ลัง — ใช้คำนวณยอดรวมเมื่อกรอกจำนวนลัง */
+  sellPriceCarton?: number;
+  /** จำนวนแพ็ค (default จากการสแกน) */
   quantity: number;
+  /** จำนวนลัง */
+  quantityCarton?: number;
 }
 
 /** API order detail (response) */
@@ -49,16 +55,19 @@ export interface Order {
   startRecordAt?: string | null;
   completedRecordAt?: string | null;
   note?: string | null;
+  orderNumber?: string | null;
   orderDetails?: OrderDetail[];
   createdAt?: string;
   updatedAt?: string;
 }
 
-/** API POST body */
+/**
+ * API POST body — `recordBy` (ผู้บันทึก) และ `terminalId` ถูก derive จาก actor token
+ * (X-Actor-Token) ฝั่ง server เท่านั้น จึงไม่อยู่ใน payload
+ */
 export interface CreateOrderDto {
-  recordBy: string;
   shopId: string;
-  terminalId?: string;
+  orderNumber?: string;
   status?: OrderStatus;
   startRecordAt?: string;
   completedRecordAt?: string;
@@ -66,4 +75,4 @@ export interface CreateOrderDto {
   details: { productBarcode: string; quantityPack: number; quantityCarton: number }[];
 }
 
-export type UpdateOrderDto = Partial<Omit<CreateOrderDto, 'recordBy'>>;
+export type UpdateOrderDto = Partial<CreateOrderDto>;

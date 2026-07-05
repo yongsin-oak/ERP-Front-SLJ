@@ -9,9 +9,18 @@ export function useBulkCreateProducts() {
   return useMutation({
     mutationFn: (dtos: CreateProductDto[]) =>
       inventoryService.bulkCreate(dtos).then((r) => r.data.data),
-    onSuccess: (products) => {
+    onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: productKeys.lists() });
-      notify.success('นำเข้าสินค้าสำเร็จ', `${products.length} รายการ`);
+      const created = result.created?.length ?? 0;
+      const failed = result.errors?.length ?? 0;
+      if (failed > 0) {
+        notify.warning(
+          'นำเข้าสินค้าสำเร็จบางส่วน',
+          `สำเร็จ ${created} รายการ, ข้าม/ผิดพลาด ${failed} รายการ`,
+        );
+      } else {
+        notify.success('นำเข้าสินค้าสำเร็จ', `${created} รายการ`);
+      }
     },
     onError: handleError('นำเข้าสินค้า'),
   });
