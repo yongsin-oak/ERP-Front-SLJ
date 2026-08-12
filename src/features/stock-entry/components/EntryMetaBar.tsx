@@ -1,7 +1,7 @@
-import { Select, Input, Form, Inline } from '@design-system';
+import { Input, Form, Inline } from '@design-system';
+import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
 
 interface Props {
-  employeeOptions: { label: string; value: string }[];
   employeeId: string | undefined;
   note: string;
   notePlaceholder?: string;
@@ -10,7 +10,6 @@ interface Props {
 }
 
 export function EntryMetaBar({
-  employeeOptions,
   employeeId,
   note,
   notePlaceholder = 'หมายเหตุ (ถ้ามี)',
@@ -20,12 +19,11 @@ export function EntryMetaBar({
   return (
     <Inline gap={3} align="end" wrap={false} className="mb-4">
       <Form.Item label="พนักงาน" style={{ marginBottom: 0 }}>
-        <Select
+        {/* ค้นหาฝั่ง server + โหลดทีละหน้า — ไม่ดึงพนักงานทั้งองค์กรมาไว้ในหน่วยความจำ */}
+        <EmployeeSearchSelect
           allowClear
-          showSearch={{ optionFilterProp: 'label' }}
           placeholder="เลือกพนักงาน (ถ้ามี)"
           style={{ width: 200 }}
-          options={employeeOptions}
           value={employeeId}
           onChange={onEmployeeChange}
         />

@@ -12,7 +12,7 @@ const Box = ({ children }: { children: ReactNode }) => (
 );
 
 const meta = {
-  title: 'Design System/Grid',
+  title: 'Design System/Layout/Grid',
   component: Grid,
   tags: ['autodocs'],
   argTypes: {

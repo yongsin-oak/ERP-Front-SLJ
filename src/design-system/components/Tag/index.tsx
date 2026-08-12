@@ -12,7 +12,7 @@ const STATUS_CLASS: Record<StatusType, string> = {
   warning: 'bg-warning-bg border-warning-border text-warning-text',
   error:   'bg-error-bg border-error-border text-error-text',
   info:    'bg-info-bg border-info-border text-info-text',
-  default: 'bg-muted border-border text-muted-foreground',
+  default: 'bg-surface-200 border-border text-foreground-lighter',
 };
 
 // Categorical "data" palette (antd preset color names) → data tokens (index.css tier 3).

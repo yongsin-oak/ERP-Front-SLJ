@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, DeleteConfirmButton, SummaryCard, AppIcons, Modal, Checkbox, Text, Inline } from '@design-system';
+import { Table, Button, PageHeader, Tag, ActionCell, SummaryCard, AppIcons, Modal, Checkbox, Text, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
@@ -12,7 +12,9 @@ export function CategoryPage() {
   const [confirmTarget, setConfirmTarget] = useState<Category | null>(null);
   const [deleteChildren, setDeleteChildren] = useState(false);
 
-  const { data, isLoading, refetch, isFetching } = useCategories({ page: 1, limit: 500 });
+  // limit ต้องไม่เกิน PAGINATION.MAX_LIMIT (=200) ซึ่งตรงกับ MAX_PAGE_LIMIT ของ backend
+  // ไม่ส่ง params เลย → useCategories ใช้ค่า default ที่เป็น MAX_LIMIT อยู่แล้ว
+  const { data, isLoading, refetch, isFetching } = useCategories();
   const categories = useMemo(() => data?.data ?? [], [data]);
   const total = data?.pagination?.total ?? categories.length;
 
@@ -164,29 +166,27 @@ export function CategoryPage() {
     {
       title: '',
       key: 'action',
-      width: 100,
+      width: 56,
+      align: 'center' as const,
       fixed: 'right',
-      render: (_: unknown, r: CatNode) => (
-        <Inline>
-          <Button
-            variant="ghost" size="small" icon={<AppIcons.edit />}
-            onClick={() => { setSelected(r); setModalOpen(true); }}
+      render: (_: unknown, r: CatNode) => {
+        const hasChildren = (r.children?.length ?? 0) > 0;
+        return (
+          <ActionCell
+            onEdit={() => { setSelected(r); setModalOpen(true); }}
+            // มีหมวดย่อย → handleDeleteWithChildren ถามยืนยันเองอยู่แล้ว (ต้องบอกจำนวนลูกที่จะโดนลบด้วย)
+            // จึงส่งเป็น action ตรงๆ ไม่ผ่าน confirm ของ ActionCell เพื่อไม่ให้ถามซ้ำสองชั้น
+            actions={hasChildren
+              ? [{ key: 'delete-tree', label: 'ลบ', danger: true,
+                   onSelect: () => handleDeleteWithChildren(r) }]
+              : undefined}
+            onDelete={hasChildren ? undefined : () => deleteCat.mutateAsync({ id: r.id })}
+            isDeleting={deleteCat.isPending}
+            deleteTitle={`ลบหมวดหมู่ "${r.name}"?`}
+            deleteDescription="ลบหมวดหมู่นี้ออกจากระบบ"
           />
-          {(r.children?.length ?? 0) > 0 ? (
-            <Button
-              variant="danger-ghost" size="small" icon={<AppIcons.delete />}
-              onClick={() => handleDeleteWithChildren(r)}
-            />
-          ) : (
-            <DeleteConfirmButton
-              onConfirm={() => deleteCat.mutateAsync({ id: r.id })}
-              loading={deleteCat.isPending}
-              title={`ลบหมวดหมู่ "${r.name}"?`}
-              description="ลบหมวดหมู่นี้ออกจากระบบ"
-            />
-          )}
-        </Inline>
-      ),
+        );
+      },
     },
   ];
 

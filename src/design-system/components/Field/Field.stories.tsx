@@ -3,7 +3,7 @@ import { AppIcons } from '../../icons';
 import { TextField, TextareaField } from './index';
 
 const meta = {
-  title: 'Design System/TextField',
+  title: 'Design System/Inputs/TextField',
   component: TextField,
   tags: ['autodocs'],
   args: { label: 'ชื่อสินค้า', placeholder: 'เช่น กล่องไปรษณีย์ เบอร์ 0' },

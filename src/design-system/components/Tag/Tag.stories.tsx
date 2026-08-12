@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Tag, StatusTag } from './index';
 
 const meta = {
-  title: 'Design System/Tag',
+  title: 'Design System/Display/Tag',
   component: Tag,
   tags: ['autodocs'],
   args: { children: 'ป้ายกำกับ' },
@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 export const Blue: Story = { args: { color: 'blue', children: 'Shopee' } };
-export const CustomHex: Story = { args: { color: '#e0282e', children: 'Brand' } };
+export const CustomHex: Story = { args: { color: 'var(--primary)', children: 'Brand' } };
 
 export const PresetColors: Story = {
   render: () => (

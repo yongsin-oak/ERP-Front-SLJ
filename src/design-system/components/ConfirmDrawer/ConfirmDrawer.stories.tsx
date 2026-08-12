@@ -5,7 +5,7 @@ import { Text } from '../Typography';
 import { ConfirmDrawer } from './index';
 
 const meta = {
-  title: 'Design System/ConfirmDrawer',
+  title: 'Design System/Overlay/ConfirmDrawer',
   component: ConfirmDrawer,
   tags: ['autodocs'],
   args: {

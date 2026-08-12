@@ -4,7 +4,7 @@ import { AppIcons } from '../../icons';
 import { PageHeader } from './index';
 
 const meta = {
-  title: 'Design System/PageHeader',
+  title: 'Design System/Layout/PageHeader',
   component: PageHeader,
   tags: ['autodocs'],
   args: { title: 'สินค้า' },

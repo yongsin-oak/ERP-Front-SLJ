@@ -1,5 +1,6 @@
 import { PlatformHex } from '../types';
 import type { Platform } from '../types';
+import { PlatformIcon, hasPlatformIcon } from './PlatformIcon';
 
 interface PlatformBadgeProps {
   platform: Platform;
@@ -14,7 +15,7 @@ export function PlatformBadge({ platform, size = 24 }: PlatformBadgeProps) {
         height: size,
         borderRadius: size * 0.25,
         background: PlatformHex[platform],
-        color: 'var(--color-primary-foreground)',
+        color: 'var(--white)',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -26,7 +27,7 @@ export function PlatformBadge({ platform, size = 24 }: PlatformBadgeProps) {
       aria-label={platform}
       title={platform}
     >
-      {platform[0]}
+      {hasPlatformIcon(platform) ? <PlatformIcon platform={platform} size={size * 0.62} /> : platform[0]}
     </div>
   );
 }

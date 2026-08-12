@@ -59,6 +59,9 @@ export type { TagProps, StatusType, StatusTagProps } from './components/Tag';
 export { Alert } from './components/Alert';
 export type { AlertProps } from './components/Alert';
 
+export { Banner } from './components/Banner';
+export type { BannerProps } from './components/Banner';
+
 export { Tooltip } from './components/Tooltip';
 export type { TooltipProps } from './components/Tooltip';
 
@@ -87,6 +90,9 @@ export type { BulkSelectionBarProps } from './components/BulkSelectionBar';
 export { ActionCell } from './components/ActionCell';
 export type { ActionCellProps } from './components/ActionCell';
 
+export { ActionMenu } from './components/ActionMenu';
+export type { ActionMenuProps, ActionMenuItem } from './components/ActionMenu';
+
 export { FormModal } from './components/FormModal';
 export type { FormModalProps } from './components/FormModal';
 
@@ -101,6 +107,9 @@ export type { PriceInputProps } from './components/PriceInput';
 
 export { QuantityInput, QUANTITY_UNITS } from './components/QuantityInput';
 export type { QuantityInputProps, QuantityUnit } from './components/QuantityInput';
+
+export { QuantityStepper } from './components/QuantityStepper';
+export type { QuantityStepperProps } from './components/QuantityStepper';
 
 export { SearchableSelect } from './components/SearchableSelect';
 export type { SearchableSelectProps } from './components/SearchableSelect';
@@ -149,8 +158,6 @@ export type { SheetImportModalProps } from './components/SheetImportModal';
 
 export { AppIcons } from './icons';
 export type { AppIconKey } from './icons';
-
-export * from './tokens';
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 export { highlightText } from './utils/highlightText';

@@ -74,7 +74,8 @@ interface ApiErrorBody {
   success: false;
   statusCode: number;
   message: string | string[];  // human-readable, can be validation array
-  error: string;               // HTTP error type
+  error: string;               // HTTP error type — "Unauthorized", "Conflict", …
+  code?: ErrorCode;            // optional, machine-readable — only when the client must branch
   timestamp: string;
   path: string;
 }
@@ -82,10 +83,20 @@ interface ApiErrorBody {
 
 **Rule:** Always surface `data.message` to the user. Use `getErrorMessage(err)` from `@lib` — it handles array join, network errors, and status fallbacks. Use `handleError('context')` as `onError` in every mutation.
 
+### `code` — branch on this, never on `message`
+
+`code` exists for errors needing a **different action**, not different text. Read it with `getErrorCode(err)`; never string-match `message` (wording changes are not breaking changes, so a match would break silently).
+
+```ts
+if (getErrorCode(err) === ERROR_CODE.ACTOR_TOKEN_INVALID) { /* re-prompt PIN */ }
+```
+
+**Two identities, both 401.** `POST /order` is guarded by `JwtAuthGuard` (session) *and* `ActorGuard` (PIN). A PIN 401 carries `code: 'ACTOR_TOKEN_INVALID'`; a session 401 carries no code. The axios interceptor uses this to skip the refresh→redirect path for PIN failures — otherwise an expired PIN reloads the whole app and destroys the operator's in-progress order.
+
 ```ts
 // Every mutation must have:
 onError: handleError('Create product'),   // "Create product failed — <backend message>"
-onSuccess: () => message.success('Product created'),
+onSuccess: () => notify.success('Product created'),
 ```
 
 ---
@@ -93,8 +104,8 @@ onSuccess: () => message.success('Product created'),
 ## 5. UX Bar — Non-Negotiable for Every Screen
 
 1. **Always three states**: loading skeleton / empty state with CTA / error with retry
-2. **Feedback on every action**: `loading` prop on submit button, `message.success` on success, `handleError` on failure
-3. **Confirm before destructive**: `DeleteConfirmButton` or `Modal.confirm` before any delete
+2. **Feedback on every action**: `loading` prop on submit button, `notify.success` on success, `handleError` on failure
+3. **Confirm before destructive**: `DeleteConfirmButton` (inline/table) or `ConfirmDrawer` (multi-item) before any delete — there is no `Modal.confirm` imperative API post-antd-migration
 4. **Specific error messages**: Surface backend `message` field — never show "An error occurred"
 5. **Touch targets ≥ 44px** on Operator/Warehouse-facing screens
 6. **Max 400ms interaction latency** — use optimistic updates or loading state
@@ -139,5 +150,5 @@ Backend error shape → ApiErrorBody.message (string | string[])
 Error utility → getErrorMessage(err), handleError('context') from @lib
 All mutations → onError: handleError('Action name')
 All pages → loading / empty (with CTA) / error state
-All deletes → DeleteConfirmButton or Modal.confirm
+All deletes → DeleteConfirmButton or ConfirmDrawer
 ```

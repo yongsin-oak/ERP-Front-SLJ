@@ -23,8 +23,13 @@ export function OrderEntryPage() {
   const locationItems = (location.state as { items?: OrderItem[] } | null)?.items;
   const [items, setItems] = useState<OrderItem[]>(locationItems ?? []);
   const [resetTick, setResetTick] = useState(0);
+  // หัวบิลถูกยืนยันแล้วหรือยัง — true = เปิดบิลแล้ว (ล็อกร้านค้า/เลขคำสั่งซื้อ + เริ่มสแกนสินค้าได้)
+  const [headerLocked, setHeaderLocked] = useState(false);
   const headerValues = Form.useWatch([], form) ?? {};
   const orderNumberRef = useRef<InputRef>(null);
+  // เวลาเริ่มบันทึกบิลนี้ — ตั้งตอนกดยืนยันหัวบิลครั้งแรก, ส่งขึ้น API ตอนบันทึก
+  // (completedRecordAt = เวลาที่กดบันทึก) → backend เก็บลง column startRecordAt / completedRecordAt
+  const startRecordAtRef = useRef<string | null>(null);
 
   const { data: shops = [], isLoading: shopsLoading } = useShops();
   const createOrder = useCreateOrder();
@@ -36,9 +41,11 @@ export function OrderEntryPage() {
 
   const shopReady = !!headerValues.shopId;
   const orderNumberReady = !!headerValues.orderNumber?.trim();
-  // เปิดบิล/เริ่มเพิ่มสินค้าได้เมื่อเลือกร้านแล้ว — ไม่ผูกกับการพิมพ์เลขคำสั่งซื้อทีละตัว
-  const showBill = shopReady;
-  const canSave = shopReady && orderNumberReady && items.length > 0;
+  // ยืนยันหัวบิลได้เมื่อกรอกร้านค้า + เลขคำสั่งซื้อครบ
+  const canConfirmHeader = shopReady && orderNumberReady;
+  // เปิดบิลหลังกดยืนยันหัวบิลเท่านั้น — กันบันทึกผิดร้าน/ผิดเลขคำสั่งซื้อ
+  const showBill = headerLocked;
+  const canSave = headerLocked && items.length > 0;
 
   // auto-clear actor เมื่อ token ใกล้หมดอายุ (เผื่อ buffer 60s ให้ตรงกับ getValidToken)
   // → actorEmployee = null → หน้าถูกล็อกให้ยืนยัน PIN ใหม่
@@ -97,14 +104,10 @@ export function OrderEntryPage() {
       }));
   }, [shops]);
 
-  const totals = useMemo(() => {
-    const qty = items.reduce((s, i) => s + i.quantity + (i.quantityCarton ?? 0), 0);
-    const price = items.reduce(
-      (s, i) => s + i.sellingPrice * i.quantity + (i.sellPriceCarton ?? 0) * (i.quantityCarton ?? 0),
-      0,
-    );
-    return { qty, price };
-  }, [items]);
+  const totalQty = useMemo(
+    () => items.reduce((s, i) => s + i.quantity + (i.quantityCarton ?? 0), 0),
+    [items],
+  );
 
   /** เปิด PIN modal ยืนยันผู้บันทึก — คืน true ถ้ามี actor ใช้ได้, false ถ้ายกเลิก */
   async function ensureActor() {
@@ -123,6 +126,23 @@ export function OrderEntryPage() {
     });
   }
 
+  /** ยืนยันหัวบิล — ผ่าน validate แล้วจึงเปิดบิลและล็อกร้านค้า/เลขคำสั่งซื้อ */
+  async function handleConfirmHeader() {
+    try {
+      await form.validateFields();
+    } catch {
+      return; // validateFields โยน error เมื่อฟิลด์ไม่ผ่าน — ข้อความขึ้นใต้ฟิลด์แล้ว
+    }
+    // เริ่มจับเวลาบันทึกครั้งแรกที่เปิดบิล — reconfirm หลังแก้หัวบิลไม่รีเซ็ต (คงเวลาเริ่มเดิม)
+    if (!startRecordAtRef.current) startRecordAtRef.current = dayjs().toISOString();
+    setHeaderLocked(true);
+  }
+
+  /** ปลดล็อกหัวบิลเพื่อแก้ร้านค้า/เลขคำสั่งซื้อ — รายการสินค้าที่สแกนไว้ยังอยู่ */
+  function handleEditHeader() {
+    setHeaderLocked(false);
+  }
+
   async function handleSave() {
     if (!canSave) return;
     const values = await form.validateFields();
@@ -130,8 +150,10 @@ export function OrderEntryPage() {
     if (!(await ensureActor())) return;
     await createOrder.mutateAsync({
       shopId: values.shopId!,
-      orderNumber: values.orderNumber?.trim() || undefined,
+      orderNumber: values.orderNumber!.trim(),
       note: values.note?.trim() || undefined,
+      startRecordAt: startRecordAtRef.current ?? undefined,
+      completedRecordAt: dayjs().toISOString(),
       details: items.map((i) => ({
         productBarcode: i.barcode,
         quantityPack: i.quantity,
@@ -141,12 +163,17 @@ export function OrderEntryPage() {
     form.setFieldsValue({ orderNumber: '', note: '' });
     setItems([]);
     setResetTick((t) => t + 1);
+    startRecordAtRef.current = null;
+    // บิลถัดไปต้องกรอกเลขคำสั่งซื้อ + ยืนยันหัวบิลใหม่ (ร้านค้าเดิมยังถูกเลือกไว้)
+    setHeaderLocked(false);
   }
 
   function handleClear() {
     form.resetFields();
     setItems([]);
     setResetTick((t) => t + 1);
+    startRecordAtRef.current = null;
+    setHeaderLocked(false);
   }
 
   // Hard gate — ต้องยืนยัน PIN ก่อนถึงจะเข้าใช้งานหน้าบันทึกออเดอร์ได้
@@ -158,7 +185,7 @@ export function OrderEntryPage() {
     <Stack gap={3} style={{ paddingBottom: 80 }}>
       <PageHeader
         title="บันทึก Order"
-        subtitle="เลือกร้านค้า → กรอกเลขคำสั่งซื้อ → สแกนสินค้า"
+        subtitle="เลือกร้านค้า → กรอกเลขคำสั่งซื้อ → ยืนยันหัวบิล → สแกนสินค้า"
         actions={
           <>
             <Button icon={<AppIcons.history />} onClick={() => navigate('/order/history')}>
@@ -190,6 +217,7 @@ export function OrderEntryPage() {
                 placeholder="เลือกร้านค้า"
                 style={{ width: '100%' }}
                 loading={shopsLoading}
+                disabled={headerLocked}
                 showSearch={{ optionFilterProp: 'searchText' }}
               />
             </Form.Item>
@@ -201,19 +229,47 @@ export function OrderEntryPage() {
               <Input
                 ref={orderNumberRef}
                 placeholder="ยิง / กรอกเลขคำสั่งซื้อจากแพลตฟอร์ม"
-                disabled={!shopReady}
+                disabled={!shopReady || headerLocked}
                 autoComplete="off"
-                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                // ยิงบาร์โค้ดจบด้วย Enter → ยืนยันหัวบิลทันที (validateFields อ่านค่าล่าสุดเสมอ ไม่ค้าง)
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return;
+                  e.preventDefault();
+                  void handleConfirmHeader();
+                }}
               />
             </Form.Item>
           </Grid>
+
+          <Inline justify="end" align="center" gap={3} wrap className="mt-4">
+            {headerLocked ? (
+              <>
+                <Inline gap={2} align="center" wrap={false}>
+                  <AppIcons.success size={16} className="text-success" />
+                  <Text type="secondary" style={{ fontSize: 12 }}>เปิดบิลแล้ว — สแกนสินค้าได้เลย</Text>
+                </Inline>
+                <Button icon={<AppIcons.edit />} onClick={handleEditHeader}>
+                  แก้ไขหัวบิล
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="primary"
+                icon={<AppIcons.check />}
+                disabled={!canConfirmHeader}
+                onClick={handleConfirmHeader}
+              >
+                ยืนยันหัวบิล
+              </Button>
+            )}
+          </Inline>
         </Card>
 
         {!showBill ? (
           <Alert
             type="info"
             showIcon
-            message="เลือกร้านค้าเพื่อเริ่มเพิ่มสินค้า"
+            message="กรอกร้านค้าและเลขคำสั่งซื้อ แล้วกด “ยืนยันหัวบิล” เพื่อเปิดบิลและเริ่มสแกนสินค้า"
             style={{ marginTop: 4 }}
           />
         ) : (
@@ -236,8 +292,7 @@ export function OrderEntryPage() {
       <SaveBar
         ready={canSave}
         loading={createOrder.isPending}
-        qty={totals.qty}
-        price={totals.price}
+        qty={totalQty}
         onSave={handleSave}
       />
     </Stack>
@@ -392,13 +447,11 @@ function SaveBar({
   ready,
   loading,
   qty,
-  price,
   onSave,
 }: {
   ready: boolean;
   loading: boolean;
   qty: number;
-  price: number;
   onSave: () => void;
 }) {
   return (
@@ -409,17 +462,9 @@ function SaveBar({
       wrap={false}
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background px-5 py-2.5 shadow-sm"
     >
-      <Inline gap={5} wrap={false}>
-        <span style={{ fontSize: 13 }}>
-          จำนวนรวม: <Text strong>{qty.toLocaleString()} ชิ้น</Text>
-        </span>
-        <span style={{ fontSize: 13 }}>
-          ยอดรวม:{' '}
-          <Text strong className="text-[15px] text-primary">
-            ฿{price.toLocaleString()}
-          </Text>
-        </span>
-      </Inline>
+      <span style={{ fontSize: 13 }}>
+        จำนวนรวม: <Text strong>{qty.toLocaleString()} ชิ้น</Text>
+      </span>
       <Button
         variant="primary"
         icon={<AppIcons.save />}

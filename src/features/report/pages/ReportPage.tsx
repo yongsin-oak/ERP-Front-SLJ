@@ -5,10 +5,10 @@ import { PageHeader, MoneyCell, Button, AppIcons, Table, Select, CodeCell, Stack
 import { cn } from '@/lib/utils';
 import { downloadFile, showError, notify } from '@shared';
 import { useSalesSummary, useSalesByShop, useSalesByProduct, useManHour, reportService } from '../react-query';
-import { useShops } from '@features/shop';
-import { useEmployees } from '@features/employee/react-query';
-import { useCategories } from '@features/category';
-import { useBrands } from '@features/brand';
+import { ShopSearchSelect } from '@features/shop/components/ShopSearchSelect';
+import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
+import { CategorySearchSelect } from '@features/category/components/CategorySearchSelect';
+import { BrandSearchSelect } from '@features/brand/components/BrandSearchSelect';
 import { REPORT_GROUP_BY } from '../types';
 import type { ReportGroupBy, SalesSummaryItem, SalesByShopItem, SalesByProductItem, ManHourItem } from '../types';
 import type { ColumnType } from '@design-system';
@@ -30,7 +30,6 @@ function ProfitCell({ value }: { value: number }) {
 function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const [shopId, setShopId] = useState<string | undefined>();
   const [groupBy, setGroupBy] = useState<ReportGroupBy>(REPORT_GROUP_BY.DAY);
-  const { data: shops, isLoading: shopsLoading } = useShops();
   const { data = [], isFetching } = useSalesSummary({ dateFrom, dateTo, shopId, groupBy });
   const [exporting, setExporting] = useState(false);
 
@@ -70,14 +69,12 @@ function SalesSummaryTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: strin
   return (
     <>
       <Inline wrap style={{ marginBottom: 16 }}>
-        <Select
+        <ShopSearchSelect
           placeholder="ทุกร้าน"
           allowClear
           style={{ minWidth: 180 }}
           value={shopId}
           onChange={(v: string | undefined) => setShopId(v)}
-          loading={shopsLoading}
-          options={shops?.map((s) => ({ label: s.name, value: s.id }))}
         />
         <Select
           style={{ width: 140 }}
@@ -189,9 +186,6 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
   const [shopId, setShopId] = useState<string | undefined>();
   const [categoryId, setCategoryId] = useState<string | undefined>();
   const [brandId, setBrandId] = useState<string | undefined>();
-  const { data: shops, isLoading: shopsLoading } = useShops();
-  const { data: categoriesPage, isLoading: catsLoading } = useCategories();
-  const { data: brandsPage, isLoading: brandsLoading } = useBrands();
   const { data = [], isFetching } = useSalesByProduct({ dateFrom, dateTo, shopId, categoryId, brandId });
   const [exporting, setExporting] = useState(false);
 
@@ -243,32 +237,26 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
   return (
     <>
       <Inline wrap style={{ marginBottom: 16 }}>
-        <Select
+        <ShopSearchSelect
           placeholder="ทุกร้าน"
           allowClear
           style={{ minWidth: 160 }}
           value={shopId}
           onChange={(v: string | undefined) => setShopId(v)}
-          loading={shopsLoading}
-          options={shops?.map((s) => ({ label: s.name, value: s.id }))}
         />
-        <Select
+        <CategorySearchSelect
           placeholder="ทุกหมวดหมู่"
           allowClear
           style={{ minWidth: 160 }}
           value={categoryId}
           onChange={(v: string | undefined) => setCategoryId(v)}
-          loading={catsLoading}
-          options={categoriesPage?.data?.map((c) => ({ label: c.name, value: c.id }))}
         />
-        <Select
+        <BrandSearchSelect
           placeholder="ทุกแบรนด์"
           allowClear
           style={{ minWidth: 160 }}
           value={brandId}
           onChange={(v: string | undefined) => setBrandId(v)}
-          loading={brandsLoading}
-          options={brandsPage?.data?.map((b) => ({ label: b.name, value: b.id }))}
         />
         <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
       </Inline>
@@ -288,7 +276,6 @@ function SalesByProductTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: str
 
 function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) {
   const [employeeId, setEmployeeId] = useState<string | undefined>();
-  const { data: employees, isLoading: empLoading } = useEmployees();
   const { data = [], isFetching } = useManHour({ dateFrom, dateTo, employeeId });
   const [exporting, setExporting] = useState(false);
 
@@ -323,17 +310,12 @@ function ManHourTab({ dateFrom, dateTo }: { dateFrom: string; dateTo: string }) 
   return (
     <>
       <Inline wrap style={{ marginBottom: 16 }}>
-        <Select
+        <EmployeeSearchSelect
           placeholder="ทุกพนักงาน"
           allowClear
           style={{ minWidth: 200 }}
           value={employeeId}
           onChange={(v: string | undefined) => setEmployeeId(v)}
-          loading={empLoading}
-          options={employees?.map((e) => ({
-            label: `${e.firstName} ${e.lastName}`.trim(),
-            value: e.id,
-          }))}
         />
         <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
       </Inline>

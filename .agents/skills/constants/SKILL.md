@@ -55,38 +55,54 @@ req.get(ORDER_ENDPOINTS.EXPORT);
 
 ---
 
-## Status Constants — Pattern
+## Status / Enum Constants — Pattern
+
+Merge label + color (and any other display props) into a **single map object**. Derive the type
+and option arrays from it — never declare them separately.
 
 ```ts
 // features/order/types/index.ts
 
-// 1. type union (no enum — use string literal union)
-export type OrderStatus = 'pending' | 'approved' | 'shipped' | 'cancelled';
-
-// 2. value constant (avoids raw strings everywhere)
-export const ORDER_STATUS = {
-  PENDING:   'pending',
-  APPROVED:  'approved',
-  SHIPPED:   'shipped',
-  CANCELLED: 'cancelled',
+// 1. single map — add any per-value display fields here
+export const OrderStatuses = {
+  completed: { label: 'สำเร็จ',  color: 'green' },
+  cancelled: { label: 'ยกเลิก', color: 'red' },
 } as const;
 
-// 3. display label map
-export const OrderStatusLabel: Record<OrderStatus, string> = {
-  pending:   'Pending',
-  approved:  'Approved',
-  shipped:   'Shipped',
-  cancelled: 'Cancelled',
-};
+// 2. type derived automatically — stays in sync with the map
+export type OrderStatus = keyof typeof OrderStatuses;
 
-// 4. semantic color map (use design-system StatusType)
-export const OrderStatusColor: Record<OrderStatus, StatusType> = {
-  pending:   'warning',
-  approved:  'success',
-  shipped:   'info',
-  cancelled: 'error',
-};
+// 3. options array derived automatically (for <Select> etc.)
+export const OrderStatusOptions = Object.entries(OrderStatuses).map(([value, cfg]) => ({
+  value: value as OrderStatus,
+  label: cfg.label,
+}));
 ```
+
+Usage:
+```tsx
+import { OrderStatuses } from '../types';
+import type { OrderStatus } from '../types';
+
+// render
+<Tag color={OrderStatuses[order.status].color}>{OrderStatuses[order.status].label}</Tag>
+
+// filter options
+const opts = Object.entries(OrderStatuses).map(([value, cfg]) => ({ value, label: cfg.label }));
+```
+
+**Why this wins over separate `XxxLabel` / `XxxColor` maps:**
+
+- One update point when adding a value (no 3 places to update)
+- Type is auto-derived — can't go out of sync
+- Options array is auto-derived — same
+
+**Real examples in this codebase:**
+
+- `Departments` in `employee/types/index.ts`
+- `StockEntryTypes` in `stock-entry/types/index.ts`
+- `OrderStatuses` in `order/types/index.ts`
+- `StockCountStatuses` in `stock-count/types/index.ts`
 
 Usage:
 ```tsx

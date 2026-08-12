@@ -71,17 +71,17 @@ export function DevTools() {
         <Button
           variant="primary"
           size="large"
+          aria-label="เปิด Dev Tools"
           icon={<AppIcons.debug />}
           onClick={() => setOpen(true)}
-          className="fixed right-6 bottom-6 z-9999 size-12 rounded-full shadow-[0_4px_12px_rgba(114,46,209,0.4)]"
-          style={{ background: '#722ed1', borderColor: '#722ed1' }}
+          className="fixed right-6 bottom-6 z-9999 size-12 rounded-full border-purple-700 bg-purple-700 shadow-overlay"
         />
       </Tooltip>
 
       <Drawer
         title={
           <Inline gap={2}>
-            <AppIcons.debug style={{ color: '#722ed1' }} />
+            <AppIcons.debug className="text-purple-700" />
             <span>Dev Tools</span>
             <Tag color="purple">DEV MODE</Tag>
           </Inline>

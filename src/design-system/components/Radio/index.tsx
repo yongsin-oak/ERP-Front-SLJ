@@ -34,7 +34,7 @@ function RadioBase({ value, disabled, children, className }: RadioProps) {
   return (
     <label
       className={cn(
-        'inline-flex cursor-pointer select-none items-center gap-2 text-sm text-foreground',
+        'inline-flex w-fit cursor-pointer select-none items-center gap-2 text-sm text-foreground',
         disabled && 'cursor-not-allowed opacity-60',
         className,
       )}

@@ -45,7 +45,8 @@ export function useUpdateProduct() {
     mutationFn: ({ barcode, data }: { barcode: string; data: UpdateProductDto }) =>
       inventoryService.update(barcode, data).then((r) => r.data.data),
     onSuccess: (updated) => {
-      qc.invalidateQueries({ queryKey: productKeys.lists() });
+      // .all ครอบ list + dropdown + scan + detail — แก้ชื่อสินค้าแล้วต้องไม่เหลือชื่อเก่าค้างที่ไหน
+      qc.invalidateQueries({ queryKey: productKeys.all });
       qc.setQueryData(productKeys.detail(updated.barcode), updated);
       notify.success('แก้ไขสินค้าสำเร็จ');
     },

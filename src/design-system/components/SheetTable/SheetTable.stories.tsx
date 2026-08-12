@@ -34,7 +34,7 @@ const IMPORT_ERRORS: Record<number, string[]> = {
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 const meta = {
-  title: 'Design System/SheetTable',
+  title: 'Design System/Data Import/SheetTable',
   component: SheetTable,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

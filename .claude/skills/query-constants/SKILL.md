@@ -145,6 +145,101 @@ export function useBrands(
 const { page = PAGINATION.DEFAULT_PAGE, limit = PAGINATION.DEFAULT_LIMIT } = params;
 ```
 
+### `MAX_LIMIT` เป็นสัญญาร่วมกับ backend — ห้ามเกิน
+
+`PAGINATION.MAX_LIMIT = 200` ต้องเท่ากับ `MAX_PAGE_LIMIT` ใน `ERP-Back-SLJ/src/common/dto/paginated.dto.ts`
+ส่งเกินค่านี้ backend ตอบ **400 `"จำนวนต่อหน้าเกินค่าที่กำหนด"`** ไม่ใช่ตัดให้เอง
+
+- **ห้ามใส่ตัวเลข limit ดิบในหน้าเพจ** — อ้าง `PAGINATION.MAX_LIMIT` เสมอ หรือไม่ส่ง params เลยเพื่อใช้ default ของ hook
+- ตรวจก่อน commit: `grep -rnoE "limit: [0-9]+" src | awk -F'limit: ' '$2+0 > 200'` ต้องว่าง
+
+**ต้องการข้อมูลมากกว่า 200 → อย่าดัน limit ขึ้น** ให้เลือกอย่างใดอย่างหนึ่ง:
+
+| ต้องการ | ใช้ |
+| --- | --- |
+| แค่ "จำนวน" | ขอ `limit: 1` แล้วอ่าน `r.data.pagination.total` |
+| กรองชุดย่อย | ส่ง filter ให้ backend (เช่น `lowStock: true`) แทนดึงทั้งหมดมากรองเอง |
+| ลิสต์ยาวใน dropdown | `useInfiniteQuery` + `InfiniteSearchSelect` |
+
+### กติกาเลือกวิธีดึงลิสต์ — ตัดสินจาก "เอาไปทำอะไร"
+
+| ใช้ทำอะไร | ใช้ | ห้าม |
+| --- | --- | --- |
+| **dropdown / filter / ช่องเลือก** | `<XxxSearchSelect>` — infinite + ค้นหาฝั่ง server ทีละ 20 | ดึงทั้งลิสต์มา `.map()` เป็น `options` |
+| **ตารางในหน้าเพจ** | `useXxxList({ page, limit })` + `pagination` prop ของ `Table` | ดึง 100–200 แถวแล้วปิด pagination |
+| **แค่ตัวเลข/สรุป** | `limit: 1` แล้วอ่าน `pagination.total` | ดึงทั้งหมดมา `.length` / `.filter().length` |
+| **ต้องรู้ทั้งเซ็ตจริงๆ** | ดึงชุดเต็มได้ แต่ต้องมีคอมเมนต์บอกเหตุผล + เงื่อนไขที่ทำให้ต้องเปลี่ยน | ใช้เพราะ "สะดวกกว่า" |
+
+**SearchSelect ที่มีให้ใช้แล้ว** (export จาก barrel ของแต่ละ feature):
+`BrandSearchSelect` · `CategorySearchSelect` · `EmployeeSearchSelect` · `ShopSearchSelect` ·
+`SupplierSearchSelect` · `ProductDropdownSelect`
+
+### dropdown ≠ ตาราง — คนละเส้น คนละ contract
+
+**dropdown มีเส้นของตัวเองเสมอ: `GET /<entity>/dropdown-search` และเป็น cursor ไม่ใช่ offset**
+ห้าม dropdown ไปยิงเส้นตาราง (`GET /<entity>`) แล้วส่ง `limit: 20` เข้าไปเด็ดขาด
+
+| | dropdown | ตาราง |
+| --- | --- | --- |
+| เส้น | `GET /<entity>/dropdown-search` | `GET /<entity>` |
+| query | `{ search?, cursor?, limit? }` (`DropdownParams`) | `{ page, limit, …filters }` |
+| response | `CursorPage<T>` = `{ data, nextCursor }` | `Paginated<T>` = `{ data, pagination }` |
+| เพดาน limit | `DROPDOWN.MAX_LIMIT` (50) | `PAGINATION.MAX_LIMIT` (200) |
+| projection | เฉพาะที่ option ใช้ (`DropdownOption` = `{ id, name }`) | entity เต็ม |
+
+ทำไมต้อง cursor:
+
+- **ถูกต้องกว่า** — offset นับจากหัวลิสต์ ถ้ามีคนเพิ่ม/ลบข้อมูลระหว่างที่ผู้ใช้เลื่อน ขอบเขตหน้าจะเลื่อนตาม → **แถวถูกข้ามหรือโผล่ซ้ำ** cursor คีย์บน `(name, id)` ของแถวสุดท้ายจึงต่อจุดเดิมได้เสมอ
+- **ถูกกว่า** — ไม่มี `COUNT(*)` (dropdown ไม่เคยโชว์ total) และหน้าลึกๆ ไม่ต้องเดินทิ้ง `N×limit` แถว
+- backend มี index `(name, id)` รองรับ seek นี้อยู่ (`db/performance-indexes.sql` §6)
+
+`nextCursor` **เป็นค่าทึบ** — ห้าม decode/เดารูปแบบ แค่ส่งกลับเป็น `cursor` ของหน้าถัดไป · `null` = หมดลิสต์
+
+```ts
+// ✅ hook มาตรฐานของ dropdown ทุกตัว
+export function useBrandDropdown(search?: string) {
+  return useInfiniteQuery({
+    queryKey: brandKeys.dropdown(search),            // ← key factory ไม่ใช่ array ดิบ
+    queryFn: ({ pageParam }) =>
+      brandService.dropdownSearch({ cursor: pageParam, limit: DROPDOWN.DEFAULT_LIMIT, search })
+        .then((r) => r.data),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,  // null → undefined ปิด hasNextPage
+    initialPageParam: undefined as string | undefined,          // undefined = หน้าแรก
+    staleTime: STALE_TIME.SHORT,
+  });
+}
+```
+
+**ผลข้างเคียงที่ต้องรู้:** dropdown เรียงตาม `(name, id)` เท่านั้น เรียงตามคะแนนความเข้ากันของคำค้น
+(relevance) ไม่ได้ เพราะ keyset ต้องเทียบด้วยคีย์เดียวกับที่ ORDER BY ใช้ — **การ match ยังฉลาดเหมือนเดิม**
+(multi-token + fuzzy pg_trgm) แค่ไม่ดันตัวที่ตรงเป๊ะขึ้นหัวลิสต์
+ฝั่ง backend: ใช้ `applySmartMatch` (WHERE อย่างเดียว) คู่กับ `cursorPaginateQuery` — **ห้ามใช้
+`applySmartSearch`** ซึ่ง set ORDER BY เป็นสูตรคะแนนและจะทำให้ cursor ข้าม/ซ้ำแถว
+
+จะเพิ่มตัวใหม่ ทำครบ 4 อย่าง:
+
+1. **backend** — `@Get('dropdown-search')` **วางเหนือ `@Get(':id')`** (Nest จับ route ตามลำดับที่ประกาศ
+   ถ้าอยู่ล่างจะโดน `:id` กินไปเป็น `id="dropdown-search"`) + `@ApiOkResponseDropdown(ItemDto)`
+   + service เรียก `cursorPaginateQuery`
+2. **index** — เพิ่ม `(sortColumn, id)` ใน `db/performance-indexes.sql`
+3. **frontend** — `dropdownSearch(params: DropdownParams)` ใน service คืน `CursorPage<T>`,
+   `dropdown(search)` ใน key factory, แล้ว `useXxxDropdown` ตามแบบข้างบน
+4. ห่อด้วย `InfiniteSearchSelect` ตามแบบ `EmployeeSearchSelect` — อย่าเขียน `<Select options={...}>` เอง
+
+**ข้อยกเว้นที่ยอมรับตอนนี้มีที่เดียว**: `useShops()` (limit 100) เพราะ `OrderEntryPage` จัดกลุ่ม
+ร้านตาม platform และ `ShopPriceModal` ต้องตัดร้านที่ตั้งราคาไปแล้วออก — ทั้งสองอย่างต้องรู้เซ็ตเต็ม
+มีคอมเมนต์อธิบายไว้ที่ตัว hook แล้ว
+
+```ts
+// ❌ ดึง 500 แถวมากรองเอง — เกิน MAX_LIMIT และโหลดเกินจำเป็น
+inventoryService.getAll({ page: 1, limit: 500, isActive: true })
+  .then((r) => r.data.data.filter((p) => p.remaining < p.minStock!));
+
+// ✅ ให้ backend กรอง แล้วเอาแค่ total
+inventoryService.getAll({ page: 1, limit: 1, isActive: true, lowStock: true })
+  .then((r) => r.data.pagination.total);
+```
+
 ---
 
 ## 6. Hook File Structure — Required for Every Feature

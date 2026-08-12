@@ -5,7 +5,7 @@ import type { ColumnType } from '@design-system';
 import { Spinner } from '@/components/ui/spinner';
 import { useOrderDetail } from '../react-query';
 import { OrderStatuses } from '../types';
-import type { Order, OrderDetail } from '../types';
+import type { Order, OrderDetail, OrderItem } from '../types';
 
 interface OrderDetailModalProps {
   open: boolean;
@@ -20,12 +20,9 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
 
   function handleReorder() {
     if (!displayOrder?.orderDetails?.length) return;
-    const items = displayOrder.orderDetails.map((d) => ({
+    const items: OrderItem[] = displayOrder.orderDetails.map((d) => ({
       barcode: d.product.barcode,
       name: d.product.name,
-      sellingPrice: d.product.sellPrice?.pack ?? d.product.sellPrice?.carton ?? 0,
-      sellPriceCarton: d.product.sellPrice?.carton ?? 0,
-      costPrice: d.product.costPrice?.pack ?? d.product.costPrice?.carton ?? 0,
       quantity: d.quantityPack,
       quantityCarton: d.quantityCarton,
     }));
@@ -87,7 +84,7 @@ export function OrderDetailModal({ open, order, onClose }: OrderDetailModalProps
   return (
     <Modal
       open={open}
-      title={displayOrder ? `Order ${displayOrder.id}` : 'รายละเอียด Order'}
+      title={displayOrder?.orderNumber ? `คำสั่งซื้อ ${displayOrder.orderNumber}` : 'รายละเอียด Order'}
       onCancel={onClose}
       width={720}
       footer={

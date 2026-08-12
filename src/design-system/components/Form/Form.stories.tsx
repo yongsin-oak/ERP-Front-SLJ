@@ -15,7 +15,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 const meta = {
-  title: 'Design System/Form',
+  title: 'Design System/Inputs/Form',
   component: Form,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

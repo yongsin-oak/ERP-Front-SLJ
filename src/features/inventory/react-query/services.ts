@@ -1,6 +1,6 @@
-import { req } from '@shared';
-import type { Paginated, ApiData } from '@shared/types';
-import type { Product, ProductDropdown, CreateProductDto, UpdateProductDto, StockEntry, CreateStockEntryDto, ShopPrice, CreateShopPriceDto, UpdateShopPriceDto } from '../types';
+import { req, API } from '@shared';
+import type { Paginated, ApiData, CursorPage, DropdownParams } from '@shared/types';
+import type { Product, ProductRef, ProductDropdown, CreateProductDto, UpdateProductDto, StockEntry, CreateStockEntryDto, ShopPrice, CreateShopPriceDto, UpdateShopPriceDto } from '../types';
 
 export interface ProductParams {
   page: number;
@@ -22,42 +22,43 @@ export interface StockEntryParams {
   dateTo?: string;
 }
 
-const BASE = '/product';
-const STOCK_BASE = '/stock-entry';
-
 export const inventoryService = {
   getAll: (params: ProductParams) =>
-    req.get<Paginated<Product>>(BASE, { params }),
+    req.get<Paginated<Product>>(API.product.root, { params }),
 
   getByBarcode: (barcode: string) =>
-    req.get<ApiData<Product>>(`${BASE}/${barcode}`),
+    req.get<ApiData<Product>>(API.product.byBarcode(barcode)),
+
+  /** barcode → { barcode, name } — ไม่ join brand/category ใช้ตอนสแกน */
+  getByBarcodeRef: (barcode: string) =>
+    req.get<ApiData<ProductRef>>(API.product.byBarcodeRef(barcode)),
 
   create: (data: CreateProductDto) =>
-    req.post<ApiData<Product>>(BASE, data),
+    req.post<ApiData<Product>>(API.product.root, data),
 
   update: (barcode: string, data: UpdateProductDto) =>
-    req.patch<ApiData<Product>>(`${BASE}/${barcode}`, data),
+    req.patch<ApiData<Product>>(API.product.byBarcode(barcode), data),
 
   delete: (barcode: string) =>
-    req.delete<ApiData<Product>>(`${BASE}/${barcode}`),
+    req.delete<ApiData<Product>>(API.product.byBarcode(barcode)),
 
   bulkDelete: (barcodes: string[]) =>
     req.delete<ApiData<{ deleted: Product[]; errors: unknown[] }>>(
-      `${BASE}/bulk`,
+      API.product.bulk,
       { data: { barcodes } },
     ),
 
-  /** Paginated lightweight search for dropdown — page/limit optional (default 1/20, max limit 50) */
-  dropdownSearch: (params: { search?: string; page?: number; limit?: number } = {}) =>
-    req.get<Paginated<ProductDropdown>>(`${BASE}/dropdown-search`, { params }),
+  /** เส้นของ dropdown เท่านั้น — cursor + projection แคบ ห้ามเอาไปทำตาราง (ไม่มี total) */
+  dropdownSearch: (params: DropdownParams = {}) =>
+    req.get<CursorPage<ProductDropdown>>(API.product.dropdownSearch, { params }),
 
   checkExist: (barcodes: string[]) =>
     req.post<ApiData<{ existing: string[]; missing: string[] }>>(
-      `${BASE}/check-exist`, { barcodes },
+      API.product.checkExist, { barcodes },
     ),
 
   bulkCreate: (dtos: CreateProductDto[]) =>
-    req.post<ApiData<{ created: Product[]; errors: string[] }>>(`${BASE}/bulk`, dtos),
+    req.post<ApiData<{ created: Product[]; errors: string[] }>>(API.product.bulk, dtos),
 };
 
 export interface BulkStockEntryDto {
@@ -79,36 +80,36 @@ export interface BulkStockResult {
 
 export const stockEntryService = {
   getAll: (params: StockEntryParams) =>
-    req.get<Paginated<StockEntry>>(STOCK_BASE, { params }),
+    req.get<Paginated<StockEntry>>(API.stockEntry.root, { params }),
 
   create: (data: CreateStockEntryDto) =>
-    req.post<ApiData<StockEntry>>(STOCK_BASE, data),
+    req.post<ApiData<StockEntry>>(API.stockEntry.root, data),
 
   bulkCreate: (data: BulkStockEntryDto) =>
-    req.post<ApiData<BulkStockResult>>(`${STOCK_BASE}/bulk`, data),
+    req.post<ApiData<BulkStockResult>>(API.stockEntry.bulk, data),
 
   bulkAdjust: (data: BulkStockAdjustDto) =>
-    req.post<ApiData<BulkStockResult>>(`${STOCK_BASE}/bulk-adjust`, data),
+    req.post<ApiData<BulkStockResult>>(API.stockEntry.bulkAdjust, data),
 };
 
 export const shopPriceService = {
   getAll: (barcode: string) =>
-    req.get<ApiData<ShopPrice[]>>(`${BASE}/${barcode}/shop-price`),
+    req.get<ApiData<ShopPrice[]>>(API.product.shopPrices(barcode)),
 
   create: (barcode: string, body: CreateShopPriceDto) =>
-    req.post<ApiData<ShopPrice>>(`${BASE}/${barcode}/shop-price`, body),
+    req.post<ApiData<ShopPrice>>(API.product.shopPrices(barcode), body),
 
   update: (barcode: string, shopId: string, body: UpdateShopPriceDto) =>
-    req.patch<ApiData<ShopPrice>>(`${BASE}/${barcode}/shop-price/${shopId}`, body),
+    req.patch<ApiData<ShopPrice>>(API.product.shopPrice(barcode, shopId), body),
 
   remove: (barcode: string, shopId: string) =>
-    req.delete<ApiData<{ barcode: string; shopId: string }>>(`${BASE}/${barcode}/shop-price/${shopId}`),
+    req.delete<ApiData<{ barcode: string; shopId: string }>>(API.product.shopPrice(barcode, shopId)),
 };
 
 export const inventoryExportService = {
   exportProducts: (params: Omit<ProductParams, 'page' | 'limit'>) =>
-    req.get<Blob>(`${BASE}/export`, { params, responseType: 'blob' }),
+    req.get<Blob>(API.product.export, { params, responseType: 'blob' }),
 
   exportStockHistory: (params: Omit<StockEntryParams, 'page' | 'limit'>) =>
-    req.get<Blob>(`${STOCK_BASE}/export`, { params, responseType: 'blob' }),
+    req.get<Blob>(API.stockEntry.export, { params, responseType: 'blob' }),
 };

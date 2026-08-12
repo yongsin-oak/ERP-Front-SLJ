@@ -12,12 +12,12 @@ export interface SummaryCardProps {
 
 export function SummaryCard({ title, value, suffix, prefix, color, formatter, style }: SummaryCardProps) {
   return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-xs" style={style}>
-      <div className="text-sm text-muted-foreground">{title}</div>
-      <div className="mt-1 flex items-baseline gap-1 text-xl font-semibold text-foreground" style={{ color }}>
+    <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-none" style={style}>
+      <div className="text-xs text-foreground-light">{title}</div>
+      <div className="mt-1 flex items-baseline gap-1 font-mono text-xl font-medium text-foreground" style={{ color }}>
         {prefix}
         <span>{formatter ? formatter(value) : value}</span>
-        {suffix && <span className="text-sm font-normal text-muted-foreground">{suffix}</span>}
+        {suffix && <span className="font-sans text-sm font-normal text-foreground-light">{suffix}</span>}
       </div>
     </div>
   );

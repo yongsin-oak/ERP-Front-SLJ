@@ -4,7 +4,7 @@ import { Button } from '../Button';
 import { Empty } from './index';
 
 const meta = {
-  title: 'Design System/Empty',
+  title: 'Design System/Feedback/Empty',
   component: Empty,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

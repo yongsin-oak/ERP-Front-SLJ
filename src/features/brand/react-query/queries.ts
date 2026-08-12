@@ -1,18 +1,23 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { STALE_TIME, PAGINATION } from '@shared';
+import { STALE_TIME, PAGINATION, DROPDOWN } from '@shared';
 import { brandService } from './services';
 import { brandKeys } from './queryKeys';
 import type { BrandListParams } from './queryKeys';
 
-const DROPDOWN_LIMIT = 20;
-
+/**
+ * ตัวเลือกแบรนด์สำหรับ `BrandSearchSelect` — ยิง `/brand/dropdown-search` (cursor)
+ * ไม่ใช่เส้นตาราง `/brand` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
+ */
 export function useBrandDropdown(search?: string) {
   return useInfiniteQuery({
-    queryKey: [...brandKeys.all, 'dropdown', search ?? ''],
-    queryFn: ({ pageParam = 1 }) =>
-      brandService.getAll({ page: pageParam as number, limit: DROPDOWN_LIMIT, search }).then((r) => r.data),
-    getNextPageParam: (last) => last.pagination.hasNextPage ? last.pagination.page + 1 : undefined,
-    initialPageParam: 1,
+    queryKey: brandKeys.dropdown(search),
+    queryFn: ({ pageParam }) =>
+      brandService
+        .dropdownSearch({ cursor: pageParam, limit: DROPDOWN.DEFAULT_LIMIT, search })
+        .then((r) => r.data),
+    // null = หมดลิสต์ → ต้องคืน undefined ให้ react-query ปิด hasNextPage
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
     staleTime: STALE_TIME.SHORT,
   });
 }

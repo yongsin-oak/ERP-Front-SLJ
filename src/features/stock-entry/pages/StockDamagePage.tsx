@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Table, Button, PageHeader, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
-import { useEmployeeList } from '@features/employee/react-query';
 import { ProductDropdownSelect } from '@features/inventory';
 
 interface DamageRow {
@@ -26,12 +25,6 @@ export function StockDamagePage() {
 
   const bulkDamage = useBulkDamage();
 
-  const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
-  const employees = empData?.data ?? [];
-  const employeeOptions = useMemo(
-    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
-    [employees],
-  );
 
   function updateRow(key: string, patch: Partial<DamageRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -147,6 +140,7 @@ export function StockDamagePage() {
         <Button
           variant="danger-ghost"
           size="small"
+          aria-label="ลบแถวนี้"
           icon={<AppIcons.delete />}
           onClick={() => removeRow(r.key)}
           disabled={rows.length === 1}
@@ -171,7 +165,6 @@ export function StockDamagePage() {
 
       <div style={{ maxWidth: 1000 }}>
         <EntryMetaBar
-          employeeOptions={employeeOptions}
           employeeId={employeeId}
           note={note}
           notePlaceholder="สาเหตุของเสีย เช่น สินค้าหมดอายุ, บรรจุภัณฑ์แตก"

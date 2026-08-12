@@ -4,7 +4,7 @@ import { AppIcons } from '../../icons';
 import { Segmented } from './index';
 
 const meta = {
-  title: 'Design System/Segmented',
+  title: 'Design System/Inputs/Segmented',
   component: Segmented,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

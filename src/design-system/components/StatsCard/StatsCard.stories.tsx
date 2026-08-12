@@ -10,7 +10,7 @@ const Narrow: Decorator = Story => (
 );
 
 const meta = {
-  title: 'Design System/StatsCard',
+  title: 'Design System/Display/StatsCard',
   component: StatsCard,
   tags: ['autodocs'],
   args: { label: 'ยอดขายวันนี้', value: '48,250' },

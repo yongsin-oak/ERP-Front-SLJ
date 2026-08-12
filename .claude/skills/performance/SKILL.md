@@ -235,6 +235,35 @@ const orders = useOrderStore((s) => s.orders);
 const { orders, isLoading, filters } = useOrderStore();
 ```
 
+ต้องการหลายค่า → **เรียก selector ทีละค่า** อย่ารวมเป็น object
+
+```ts
+// ✅ สองบรรทัด แต่ subscribe แยกกันจริง
+const user = useAuth((s) => s.user);
+const logout = useAuth((s) => s.logout);
+
+// ❌ selector คืน object ใหม่ทุกครั้ง → Zustand v5 เทียบด้วย Object.is → re-render ไม่หยุด
+const { user, logout } = useAuth((s) => ({ user: s.user, logout: s.logout }));
+// ถ้าจำเป็นต้องรวมจริงๆ ต้องห่อ useShallow — แต่ปกติแยก selector อ่านง่ายกว่า
+```
+
+จุดที่เจ็บที่สุดคือ component ที่ mount ค้างตลอดอายุแอป (`AppLayout`, `ActorModal`, `PrivateRoute`) —
+`useAuth()` เปล่าๆ ตรงนั้นทำให้ทั้งแอป re-render ทุกครั้งที่ auth store ขยับแม้แต่ field ที่ไม่ได้ใช้
+
+### derived value ที่เป็น object/array ต้อง memo ถ้ามันเป็น dep ของ useMemo อื่น
+
+```ts
+// ❌ array ใหม่ทุก render → params useMemo ไม่เคย hit → queryKey เป็น object ใหม่ทุกรอบ
+const dateRange = startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : null;
+const params = useMemo(() => ({ ...,  dateFrom: dateRange?.[0] }), [dateRange]);
+
+// ✅
+const dateRange = useMemo(
+  () => (startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : null),
+  [startDate, endDate],
+);
+```
+
 ### Stable references for event handlers
 
 ```tsx

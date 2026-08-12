@@ -104,7 +104,8 @@ export function SupplierPage() {
     {
       title: '',
       key: 'action',
-      width: 90,
+      width: 56,
+      align: 'center' as const,
       fixed: 'right',
       render: (_: unknown, r: Supplier) => (
         <ActionCell

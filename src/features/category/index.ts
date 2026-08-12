@@ -6,3 +6,4 @@ export {
 } from './react-query';
 export { categoryService } from './react-query';
 export type { Category, CategoryTreeNode, CreateCategoryDto, UpdateCategoryDto } from './types';
+export { CategorySearchSelect } from './components/CategorySearchSelect';

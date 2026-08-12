@@ -7,15 +7,15 @@ export const OrderStatuses = {
 
 export type OrderStatus = keyof typeof OrderStatuses;
 
-/** Row ใน OrderItemsEditor — UI representation */
+/**
+ * Row ใน OrderItemsEditor — UI representation
+ *
+ * ไม่เก็บราคา: หน้าบันทึกออเดอร์ไม่แสดงราคา และ payload ที่ส่งขึ้น API มีแค่
+ * barcode + จำนวน (ดู CreateOrderDto) — backend คำนวณยอดเงินเองจาก sellPrice ของสินค้า
+ */
 export interface OrderItem {
   barcode: string;
   name: string;
-  costPrice: number;
-  /** ราคาขาย/แพ็ค */
-  sellingPrice: number;
-  /** ราคาขาย/ลัง — ใช้คำนวณยอดรวมเมื่อกรอกจำนวนลัง */
-  sellPriceCarton?: number;
   /** จำนวนแพ็ค (default จากการสแกน) */
   quantity: number;
   /** จำนวนลัง */
@@ -55,7 +55,8 @@ export interface Order {
   startRecordAt?: string | null;
   completedRecordAt?: string | null;
   note?: string | null;
-  orderNumber?: string | null;
+  /** เลขคำสั่งซื้อจากแพลตฟอร์ม — required (บังคับตอนสร้าง + NOT NULL ใน DB) ใช้เป็นตัวระบุหลักบน UI แทน id */
+  orderNumber: string;
   orderDetails?: OrderDetail[];
   createdAt?: string;
   updatedAt?: string;
@@ -67,7 +68,8 @@ export interface Order {
  */
 export interface CreateOrderDto {
   shopId: string;
-  orderNumber?: string;
+  /** required — บังคับกรอกทุกครั้ง (backend @IsNotEmpty + column NOT NULL) */
+  orderNumber: string;
   status?: OrderStatus;
   startRecordAt?: string;
   completedRecordAt?: string;

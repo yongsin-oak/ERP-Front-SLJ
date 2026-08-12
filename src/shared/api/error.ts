@@ -1,11 +1,28 @@
 import { isAxiosError } from 'axios';
 import { notify } from '../utils/notify';
 
+/**
+ * Machine-readable error codes จาก backend (`ErrorCode` ใน common/constants/error-code.enum.ts)
+ * มีเฉพาะ error ที่ client ต้อง "ทำอะไรต่างออกไป" — ไม่ใช่แค่แสดงข้อความต่างกัน
+ */
+export const ERROR_CODE = {
+  /**
+   * PIN (actor) token หมด/ไม่ถูกต้อง — เป็น identity ชั้นรอง session หลักอาจยังดีอยู่
+   * ห้าม refresh session และห้าม redirect ไป /login — ให้ขอ PIN ใหม่แล้วลองต่อที่เดิม
+   */
+  ACTOR_TOKEN_INVALID: 'ACTOR_TOKEN_INVALID',
+} as const;
+
+export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE];
+
 export interface ApiErrorBody {
   success: false;
   statusCode: number;
   message: string | string[];
+  /** HTTP label — "Unauthorized", "Conflict", … */
   error: string;
+  /** มีเฉพาะ error ที่ต้องแยกแยะด้วยเครื่อง — ดู ERROR_CODE */
+  code?: ErrorCode;
   timestamp: string;
   path: string;
 }
@@ -62,6 +79,16 @@ export function getErrorMessage(err: unknown, fallback = 'เกิดข้อ�
 /** Status code จาก error (ถ้าเป็น axios) */
 export function getErrorStatus(err: unknown): number | null {
   return isAxiosError(err) ? err.response?.status ?? null : null;
+}
+
+/**
+ * Machine-readable code จาก error body — null ถ้า backend ไม่ได้ติดมา
+ * ใช้แยกประเภท error ด้วยเครื่อง แทนการ match ข้อความ (ข้อความเปลี่ยนเมื่อไหร่ก็พัง)
+ */
+export function getErrorCode(err: unknown): ErrorCode | null {
+  if (!isAxiosError(err)) return null;
+  const data = err.response?.data as Partial<ApiErrorBody> | undefined;
+  return data?.code ?? null;
 }
 
 /**

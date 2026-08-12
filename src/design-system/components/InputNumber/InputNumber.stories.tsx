@@ -4,7 +4,7 @@ import { AppIcons } from '../../icons';
 import { InputNumber } from './index';
 
 const meta = {
-  title: 'Design System/InputNumber',
+  title: 'Design System/Inputs/InputNumber',
   component: InputNumber,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },
@@ -125,7 +125,7 @@ const ReceiveStockDemo = () => {
   const [price, setPrice] = useState<number | null>(4.5);
   const total = (qty ?? 0) * (price ?? 0);
   return (
-    <div className="flex max-w-md flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
+    <div className="flex max-w-md flex-col gap-4 rounded-lg border border-border bg-card p-5">
       <h3 className="text-base font-semibold text-foreground">รับสต็อก — กล่องไปรษณีย์ เบอร์ 0 (11×17×6 ซม.)</h3>
       <div className="flex gap-3">
         <label className="flex flex-1 flex-col gap-1.5 text-sm font-medium text-foreground">

@@ -39,7 +39,7 @@ function CheckboxBase({
   return (
     <label
       className={cn(
-        'inline-flex cursor-pointer select-none items-center gap-2 text-sm text-foreground',
+        'inline-flex w-fit cursor-pointer select-none items-center gap-2 text-sm text-foreground',
         disabled && 'cursor-not-allowed opacity-60',
         className,
       )}
@@ -55,20 +55,17 @@ function CheckboxBase({
   );
 }
 
-function CheckboxGroup({
-  options = [],
-  value,
-  defaultValue,
-  disabled,
-  onChange,
-  className,
-}: CheckboxGroupProps) {
+function CheckboxGroup(props: CheckboxGroupProps) {
+  const { options = [], value, defaultValue, disabled, onChange, className } = props;
+
   const [internal, setInternal] = React.useState<string[]>(defaultValue ?? []);
-  const selected = value ?? internal;
+  // controlled ตัดสินจาก "ส่ง prop value มาไหม" ไม่ใช่ค่าของมัน — เหตุผลเดียวกับ Select
+  const isControlled = 'value' in props;
+  const selected = isControlled ? (value ?? []) : internal;
 
   function toggle(v: string, checked: boolean) {
     const next = checked ? [...selected, v] : selected.filter((x) => x !== v);
-    if (value === undefined) setInternal(next);
+    if (!isControlled) setInternal(next);
     onChange?.(next);
   }
 

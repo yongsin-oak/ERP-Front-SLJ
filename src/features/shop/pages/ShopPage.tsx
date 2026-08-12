@@ -4,20 +4,33 @@ import {
   SummaryCard, DateCell, CodeCell, AppIcons, Inline,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { useSearchState, PAGINATION } from '@shared';
 import { ShopFormModal } from '../components/ShopFormModal';
 import { PlatformBadge } from '../components/PlatformBadge';
-import { useShops, useCreateShop, useUpdateShop, useDeleteShop, useBulkDeleteShop } from '../react-query';
+import { useShopList, useCreateShop, useUpdateShop, useDeleteShop, useBulkDeleteShop } from '../react-query';
 import { PlatformColor, PLATFORM_ORDER } from '../types';
 import type { Shop, CreateShopDto, Platform } from '../types';
 
 const ONLINE_PLATFORMS: Platform[] = ['Shopee', 'Lazada', 'TikTok', 'LineOA', 'LineMan'];
+
+// annotate เป็น number ตรงๆ — PAGINATION เป็น `as const` ค่าเลยเป็น literal type
+const SHOP_LIST_DEFAULTS: { page: number; pageSize: number } = {
+  page: PAGINATION.DEFAULT_PAGE,
+  pageSize: PAGINATION.DEFAULT_LIMIT,
+};
 
 export function ShopPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Shop | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
 
-  const { data: shops = [], isLoading, refetch, isFetching } = useShops();
+  // แบ่งหน้าฝั่ง server — ไม่ดึงร้านค้าทั้งหมดมาไว้ในหน่วยความจำ
+  const [tableState, setTableState] = useSearchState('shop-list', SHOP_LIST_DEFAULTS);
+  const { page, pageSize } = tableState;
+
+  const { data, isLoading, refetch, isFetching } = useShopList({ page, limit: pageSize });
+  const shops = data?.data ?? [];
+  const total = data?.pagination?.total ?? shops.length;
   const createShop = useCreateShop();
   const updateShop = useUpdateShop();
   const deleteShop = useDeleteShop();
@@ -99,7 +112,8 @@ export function ShopPage() {
     {
       title: '',
       key: 'action',
-      width: 100,
+      width: 56,
+      align: 'center' as const,
       fixed: 'right',
       render: (_: unknown, r: Shop) => (
         <ActionCell
@@ -165,6 +179,13 @@ export function ShopPage() {
           preserveSelectedRowKeys: true,
         }}
         scroll={{ x: 'max-content' }}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
+        }}
       />
 
       <ShopFormModal

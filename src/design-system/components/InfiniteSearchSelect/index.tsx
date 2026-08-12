@@ -71,7 +71,7 @@ export function InfiniteSearchSelect({
       onPopupScroll={handlePopupScroll}
       dropdownFooter={
         isFetchingNextPage ? (
-          <div className="border-t border-divider py-2 text-center">
+          <div className="border-t border-border-muted py-2 text-center">
             <Spinner size="sm" className="mx-auto" />
           </div>
         ) : null

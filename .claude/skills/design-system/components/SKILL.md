@@ -1,7 +1,7 @@
 # Skill: Design System — Components
 
 > All `@design-system` wrapper components and ERP composite patterns (Tailwind v4 + Radix — no antd).
-> Back to parent: [design-system](../SKILL.md) · [icons](../icons/SKILL.md)
+> Back to parent: [design-system](../SKILL.md) · [icons](../icons/SKILL.md) · **which feedback component for which purpose → [feedback](../feedback/SKILL.md)**
 > ทุก component มี story: `bun run storybook` → หมวด "Design System"
 
 ---
@@ -9,6 +9,12 @@
 ## Trigger
 
 Use this skill when picking a UI component or implementing a page/table/modal/form pattern.
+
+## Atlassian reference contract
+
+- ตรวจ component/pattern ที่เกี่ยวข้องใน [Atlassian components](https://atlassian.design/components) ก่อนตัดสินใจเรื่อง hierarchy, state, content และ accessibility
+- ใช้หลัก composability จาก [layout primitives](https://atlassian.design/foundations/spacing/primitives/) และเลือก feedback ตามระดับการขัดจังหวะ
+- อ้างเฉพาะ behavior/guidance; implement ด้วย Tailwind CSS + Radix + component ที่มีใน `@design-system` เท่านั้น ห้าม Emotion, `css` prop, `styled()` และ `@atlaskit/*`
 
 ---
 
@@ -19,10 +25,10 @@ Use this skill when picking a UI component or implementing a page/table/modal/fo
 | Layout | `Stack` `Inline` `Grid` `Divider` `Card` |
 | Form controls | `Input` `InputPassword` `InputSearch` `Textarea` `InputNumber` `Select` `Checkbox` `Radio` `Switch` `Segmented` `DatePicker` `DateRangePicker` `DateRangePresets` |
 | Form system | `Form` (`Form.useForm`/`Form.Item` บน RHF) `FormModal` `Field` `TextField` `TextareaField` |
-| Smart inputs | `PriceInput` `QuantityInput` `ScanInput` `InlineEdit` `SearchableSelect` `InfiniteSearchSelect` |
-| Table | `Table` (+`Table.Summary`) `DateCell` `MoneyCell` `CodeCell` `QuantityCell` `ActionCell` `BulkSelectionBar` |
+| Smart inputs | `PriceInput` `QuantityInput` `QuantityStepper` `ScanInput` `InlineEdit` `SearchableSelect` `InfiniteSearchSelect` |
+| Table | `Table` (+`Table.Summary`) `DateCell` `MoneyCell` `CodeCell` `QuantityCell` `ActionCell` `ActionMenu` `BulkSelectionBar` |
 | Overlay | `Modal` `Drawer` `ConfirmDrawer` `DeleteConfirmButton` `Tooltip` `FormModal` |
-| Feedback | `Alert` `Tag`/`StatusTag` `Badge` `Spinner` `Empty` `notify.*` (Sonner) |
+| Feedback | `Alert` `Banner` `Tag`/`StatusTag` `Badge` `Spinner` `Empty` `notify.*` (Sonner: `success`/`error`/`warning`/`loading`/`action`/`undo`/`retry`) — [decision guide](../feedback/SKILL.md) |
 | Page | `PageShell` `PageHeader` `FilterBar` `StatsCard` `SummaryCard` `Tabs` `Typography` (`Text`/`Title`/`PageTitle`) |
 | Sheet import | `DropZoneSheet` `SheetColumnMapper` `SheetTable` `SheetImportModal` |
 
@@ -52,9 +58,37 @@ const columns: ColumnType<Order>[] = [
 <Table dataSource={rows} columns={columns} rowKey="id" virtual scroll={{ y: 480 }} pagination={false} />
 ```
 
+#### สูตรคอลัมน์ — ตารางที่ไม่เสียทรง
+
+อ้างอิงแนวปฏิบัติ data table ระดับ enterprise ([Pencil & Paper](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables) ·
+[UX Design World](https://uxdworld.com/data-table-design-best-practices/)) แล้ว map เข้ากับ `Table` ตัวนี้:
+
+| กติกา | ทำยังไงกับ `Table` |
+| --- | --- |
+| **ข้อความชิดซ้าย · ตัวเลขเชิงปริมาณชิดขวา + mono** | `align: 'right'` + `font-mono tabular-nums` (จำนวน/เงิน) — วันที่/รหัสถือเป็นตัวเลขเชิงคุณภาพ ชิดซ้ายได้ |
+| **หนึ่งบรรทัดต่อช่อง** | ห้ามยัด 2 บรรทัดในช่องเดียว แถวสูงไม่เท่ากันแล้วกวาดสายตาไม่ได้ · ข้อมูลรองไปอยู่ใน `expandedRowRender` |
+| **คอลัมน์ยืดได้แค่คอลัมน์เดียว** | คอลัมน์นั้นใส่ `ellipsis: true` **ไม่ต้องใส่ `width`** ที่เหลือกำหนด `width` คงที่ทุกตัว |
+| **ตัดคำแล้วต้อง hover อ่านเต็มได้** | `ellipsis: true` + ให้ `render` คืน **string ล้วน** → `Table` ใส่ `title` ให้เอง |
+| **หัวคอลัมน์บอกหน่วยแล้ว ในช่องไม่ต้องซ้ำ** | หัวว่า "รายการ" → ในช่องใส่แค่ `12` ไม่ใช่ `12 รายการ` |
+
+> **`ellipsis` ไม่ใช่แค่จุดไข่ปลา — มันคือตัวบังคับ `width` ให้มีผลจริง**
+> `width` ที่ `<th>` เป็นแค่ข้อเสนอแนะใน `table-layout: auto` เนื้อหายาวๆ ดันคอลัมน์บานได้
+> ตัวที่บังคับจริงคือ `max-w-0 truncate` ที่ `ellipsis` ใส่ให้ `<td>`
+> **คอลัมน์ที่ตั้ง `width` แล้วเนื้อหาอาจยาวเกิน ต้องใส่ `ellipsis: true` เสมอ**
+
+ข้อยกเว้น: **คอลัมน์แรกของตารางที่มี `expandable` ห้ามใส่ `ellipsis`** — ปุ่มขยายแถวถูก render
+อยู่ในช่องนั้น `truncate` จะกินปุ่มได้ ให้เลือกคอลัมน์แรกเป็นอะไรที่ความยาวคงที่แทน (เวลา/รหัส)
+
+เนื้อหาใน `render` ของคอลัมน์ที่ `ellipsis` ต้องเป็น **inline** (`<span>`, fragment ของ span)
+ถ้าเป็น `flex`/`block` จะหลุดจาก `truncate` ของ `<td>`
+
+`scroll={{ x }}` ตั้งให้ ≈ ผลรวม `width` ทุกคอลัมน์ ไม่ใช่ตั้งเผื่อ — ตั้งเกินจะบังคับให้เลื่อน
+แนวนอนทั้งที่จอกว้างพอ · ความสูงแถว: `size="small"` 33px · `middle` 41px (ดีฟอลต์) · `large` 49px
+
 - `rowSelection={{ selectedRowKeys, onChange, preserveSelectedRowKeys: true }}` — `preserveSelectedRowKeys` ทำงานจริง: cache record ที่เคยเลือกไว้ให้ bulk action ข้ามหน้า
 - client-side pagination clamp หน้าให้เองเมื่อ filter แล้วจำนวนหน้าลด
-- `virtual` ใช้ไม่ได้ร่วมกับ `expandable` (tree) — จะ fallback เป็น render ปกติ
+- `virtual` ใช้ไม่ได้ร่วมกับ `expandable` — จะ fallback เป็น render ปกติ
+- `expandable` มี 2 โหมด: **panel** `expandedRowRender: (record) => ReactNode` (แสดงเนื้อหาเต็มความกว้างใต้แถว) หรือ **tree** ผ่าน `childrenColumnName`; คุม expandable รายแถวด้วย `rowExpandable: (record) => boolean`
 - `render(value, record, index)` — index เป็น index ในหน้าปัจจุบัน (ตรงกับ antd)
 
 ### Modal
@@ -84,7 +118,7 @@ useEffect(() => { if (open && item) form.setFieldsValue(item); }, [open, item, f
 
 FormModal จัดการ: footer มาตรฐาน, `validateFields()` ก่อน submit, `resetFields()` ตอนปิด, แยก validation error (เงียบ — RHF โชว์ใต้ field) จาก runtime error (log ใน dev)
 
-### Field / TextField (ฟอร์มสไตล์ Stripe — ใช้เมื่อไม่ต้องการ Form.Item)
+### Field / TextField (inline form pattern — ใช้เมื่อไม่ต้องการ Form.Item)
 
 ```tsx
 <TextField label="ชื่อสินค้า" hint="ตามที่ลูกค้าเห็น" error={errors.name?.message} required {...register('name')} />
@@ -104,14 +138,44 @@ FormModal จัดการ: footer มาตรฐาน, `validateFields()` �
 </DeleteConfirmButton>
 ```
 
-### ActionCell — edit + delete ท้ายแถว table
+### ActionCell — เมนู kebab ท้ายแถว table
+
+action ท้ายแถวเป็น **ปุ่มสามจุดปุ่มเดียว** ไม่ใช่ปุ่มเรียงกัน — ประหยัดความกว้าง และไม่วางปุ่มลบ
+ไว้ปลายนิ้วทุกแถว ลำดับในเมนูคงที่เสมอ: `actions` → แก้ไข → *(เส้นคั่น)* → **ลบ (แดง ท้ายสุด)**
 
 ```tsx
-{ title: '', key: 'actions', fixed: 'right', width: 80,
+{ title: '', key: 'actions', fixed: 'right', width: 56, align: 'center',
   render: (_: unknown, record: Product) => (
     <ActionCell onEdit={() => openEdit(record)} onDelete={() => del.mutate(record.id)} isDeleting={del.isPending} />
   ) }
 ```
+
+เพิ่ม action อื่นผ่าน `actions` — ตัวที่ `danger: true` ถูกดันไปท้ายให้เอง ไม่ต้องจัดลำดับเอง:
+
+```tsx
+<ActionCell
+  actions={[
+    { key: 'view', label: 'ดูรายละเอียด', icon: <AppIcons.view />, onSelect: () => open(record) },
+    { key: 'void', label: 'ยกเลิกบิล', icon: <AppIcons.close />, danger: true,
+      onSelect: () => voidOrder.mutateAsync(record.id),
+      confirm: { title: 'ยกเลิกบิลนี้?', description: 'สต็อกจะถูกคืนอัตโนมัติ' } },
+  ]}
+  onEdit={() => openEdit(record)}
+  onDelete={() => del.mutate(record.id)}
+/>
+```
+
+### ActionMenu — kebab menu นอกตาราง
+
+ตัวเดียวกับที่ `ActionCell` ใช้ภายใน เรียกตรงได้เมื่อต้องการเมนู action ที่มุมการ์ด/หัวหน้า:
+
+```tsx
+<ActionMenu size="middle" label="ตัวเลือกใบสั่งซื้อ" items={[...]} />
+```
+
+- `confirm` บน item ใดเปิดโมดัลยืนยันให้เอง (`danger` → ปุ่มยืนยันเป็นสีแดง) — **action ที่ย้อนกลับไม่ได้ต้องใส่ `confirm` เสมอ**
+- `onSelect` คืน Promise ได้ → โมดัลขึ้น loading จนกว่าจะ settle
+- `DeleteConfirmButton` ยังใช้ต่อสำหรับปุ่มลบเดี่ยวๆ ที่ไม่ได้อยู่ในเมนู (เช่นใน `BulkSelectionBar`)
 
 ### BulkSelectionBar
 
@@ -181,6 +245,23 @@ FormModal จัดการ: footer มาตรฐาน, `validateFields()` �
 // Enter = ยิง · เคลียร์ค่า + คืนโฟกัสเองเสมอ (แม้ onScan throw หรือเพิ่งหาย disabled/loading)
 ```
 
+### QuantityStepper — ช่องจำนวนพร้อมปุ่ม − / +
+
+```tsx
+<QuantityStepper size="large" label="จำนวนแพ็ค" value={qty} onChange={setQty} />
+// พิมพ์เองก็ได้ กดปุ่มก็ได้ · −/+ ถูก disable อัตโนมัติเมื่อถึง min (default 0) / max
+// size="large" = control 38px; ถ้าเป็นจอสัมผัสให้เพิ่ม hit area ด้วย wrapper/min-h-11 โดยไม่เปลี่ยน control contract
+// label ใช้ประกอบ aria-label ของปุ่ม ("เพิ่มจำนวนแพ็ค") — ใส่เสมอเมื่ออยู่ในตาราง
+```
+
+เลือกตัวไหน:
+
+| ต้องการ | ใช้ |
+| --- | --- |
+| จำนวนที่ปรับทีละ 1 บ่อยๆ ด้วยนิ้ว | `QuantityStepper` |
+| จำนวน + หน่วย (ชิ้น/กล่อง/แพ็ค) | `QuantityInput` |
+| ตัวเลขทั่วไป (ราคา, ค่า config) | `InputNumber` |
+
 ### ConfirmDrawer — flow 2 ขั้น (กรอก → ยืนยัน) สำหรับงานเสี่ยง
 
 ```tsx
@@ -197,6 +278,38 @@ FormModal จัดการ: footer มาตรฐาน, `validateFields()` �
 ---
 
 ## Conventions ที่ทุก component ทำตาม
+
+### controlled ตัดสินจาก "ส่ง prop `value` มาไหม" ไม่ใช่ค่าของมัน
+
+```tsx
+// ❌ พัง — ทุกหน้าเขียน value={status || undefined} พอเคลียร์ตัวกรอง ค่าเป็น '' → undefined
+//    component สลับไป uncontrolled เงียบๆ แล้วโชว์ internal ที่ค้างค่าเดิม
+//    (อาการที่ผู้ใช้เจอ: "ล้างตัวกรองแล้วต้องกดอีกรอบถึงจะหาย")
+const selected = value !== undefined ? value : internal;
+
+// ✅ ถูก — เช็คว่า key มีอยู่ใน props จริงไหม
+export function Select(props: SelectProps) {
+  const { value, defaultValue, onChange } = props;
+  const [internal, setInternal] = React.useState(defaultValue);
+  const isControlled = 'value' in props;
+  const selected = isControlled ? value : internal;
+
+  function pick(v: string) {
+    if (!isControlled) setInternal(v);   // controlled → ห้ามแตะ internal
+    onChange?.(v);
+  }
+}
+```
+
+ต้องรับ props เป็นก้อน (`props: XProps`) แล้ว destructure ข้างในถึงจะเช็ค `'value' in props` ได้ —
+destructure ที่ signature จะไม่เหลือ object ให้เช็ค
+
+ทำแล้วใน: `Input` · `Select` · `DatePicker` · `Segmented` · `Checkbox.Group`
+**component ใหม่ที่มี internal state ต้องทำตามนี้ด้วย** และตอนอยู่ใน `Form.Item`
+จะเป็น controlled เสมอ (`Form.Item` inject `value` ให้ผ่าน `cloneElement`) ซึ่งถูกต้องแล้ว
+
+`DateRangePicker` ไม่มีปัญหานี้ — label บนปุ่มอ่านจาก `value` ตรงๆ ส่วน state ภายในเป็นแค่
+สถานะระหว่างเลือกในปฏิทิน และ resync ทุกครั้งที่เปิด
 
 - Async callback (`onOk`/`onConfirm`) คืน Promise ได้ → loading + กันกดซ้ำอัตโนมัติ
 - `null`/`undefined` ใน cell formatter → "—" ไม่ crash

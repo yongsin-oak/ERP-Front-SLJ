@@ -21,7 +21,7 @@ Is this type used by only one feature?
 ├── YES → features/<feature>/types/index.ts
 │
 └── NO — used by 2+ features, or it's a generic API shape?
-    ├── Generic API envelope (Paginated, ApiData, Pagination) → src/lib/apiTypes.ts
+    ├── Generic API envelope (Paginated, CursorPage, ApiData, Pagination) → src/shared/types/index.ts
     ├── Global UI type (StatusType, SizeType) → src/design-system/types.ts
     └── Shared domain type (role, platform, currency) → src/lib/types.ts
 ```
@@ -121,43 +121,76 @@ export function useEmployees(params: EmployeeParams) { ... }
 
 ---
 
-## Rule 5 — Generic API Types Live in `@lib/apiTypes`
+## Rule 5 — Generic API Types Live in `@shared/types`
 
-Shapes that wrap every endpoint response are defined once in `src/lib/apiTypes.ts` and imported everywhere via `@lib`.
+Shapes that wrap every endpoint response are defined once in `src/shared/types/index.ts`
+and imported via `@shared/types` (re-exported from `@shared` too).
+
+> เดิมสกิลนี้เขียนว่า `src/lib/apiTypes.ts` — **ไฟล์นั้นไม่มีอยู่จริง** `src/lib/` เหลือแค่
+> `utils.ts` + `fieldStyles.ts` อย่าไปสร้างใหม่ตามของเก่า
 
 ```ts
-// src/lib/apiTypes.ts
-export interface Paginated<T> {
-  data: T[];
-  pagination: Pagination;
-}
-export interface ApiData<T> { data: T }
+// src/shared/types/index.ts
+export interface Paginated<T> { data: T[]; pagination: Pagination }
+export interface ApiData<T>   { data: T }
 export interface Pagination {
   page: number; limit: number; total: number;
   totalPages: number; hasNextPage: boolean; hasPreviousPage: boolean;
 }
 
-// usage in any service
-import type { Paginated, ApiData } from '@lib/apiTypes';
+// dropdown ใช้ cursor ไม่ใช่ offset — คนละ envelope กันคนละเส้น
+export interface CursorPage<T>    { data: T[]; nextCursor: string | null }
+export interface DropdownParams   { search?: string; cursor?: string; limit?: number }
+export interface DropdownOption   { id: string; name: string }
 
-getAll: (params: ProductParams) => req.get<Paginated<Product>>(BASE, { params }),
-getOne: (id: string)           => req.get<ApiData<Product>>(`${BASE}/${id}`),
+// usage in any service
+import type { Paginated, ApiData, CursorPage, DropdownParams, DropdownOption } from '@shared/types';
+
+getAll:         (params: ProductParams)  => req.get<Paginated<Product>>(BASE, { params }),
+getOne:         (id: string)             => req.get<ApiData<Product>>(`${BASE}/${id}`),
+dropdownSearch: (params: DropdownParams) => req.get<CursorPage<DropdownOption>>(`${BASE}/dropdown-search`, { params }),
 ```
 
 Never define local `PaginatedResponse`, `ListResponse`, or `ApiResponse` wrappers — use `Paginated<T>` and `ApiData<T>`.
 
+**เลือก envelope ให้ถูก:** `Paginated<T>` = ตาราง (กระโดดหน้าได้, มี `total`) · `CursorPage<T>` = dropdown
+(เลื่อนไปข้างหน้าอย่างเดียว, ไม่มี `total`) เส้นหนึ่งเส้นให้แค่แบบเดียว ห้ามผสม — เหตุผลเต็มอยู่ใน
+[`query-constants`](../query-constants/SKILL.md#dropdown--ตาราง--คนละเส้น-คนละ-contract)
+
+`DropdownOption` ใช้ได้เมื่อ option ต้องการแค่ `{ id, name }` (brand/category/supplier)
+ถ้าต้องการฟิลด์เพิ่ม ให้ประกาศ type ของ feature นั้นเอง (`ShopOption` มี `platform`,
+`EmployeeOption` แยกชื่อ 3 ส่วน) ตาม Rule 6 — อย่าไปขยาย `DropdownOption`
+
 ---
 
-## Rule 6 — Lite / Projection Types Stay in the Owning Feature
+## Rule 6 — Projection Types Stay in the Owning Feature
 
-When an endpoint returns a reduced shape (dropdown-search, autocomplete, summary), declare the lite type **alongside the full type** in the same `types/index.ts` — not in the hook or component.
+When an endpoint returns a reduced shape, declare the projection type **alongside the full type** in the same `types/index.ts` — not in the hook or component.
+
+### Name a projection by what it contains
+
+Never use a relative adjective (`lite`, `mini`, `slim`). They are unbounded and say nothing about the contents — the next subset has nowhere to go (`lite-plus`?). Use this ladder, matching the backend's `standard-naming-conventions` § Projections:
+
+| Name | Contains | Endpoint |
+| --- | --- | --- |
+| *(canonical)* | everything + relations | `GET /product/:barcode` |
+| `Ref` | identifier + label, nothing else | `GET /product/:barcode/ref` |
+| `Summary` | the set a list/grid/dropdown renders | `GET /product/dropdown-search` |
+
+`Ref ⊂ Summary ⊂ canonical`. `Ref` is **self-bounding**: add a field and it is no longer a reference — it is a summary. That is the boundary `lite` cannot enforce.
 
 ```ts
 // features/inventory/types/index.ts
 export interface Product { barcode: string; name: string; sellPrice: PriceSet; costPrice: PriceSet; ... }
 
-/** Lite shape returned by GET /product/dropdown-search */
-export interface ProductDropdown {
+/** Ref projection — identifier + label (GET /product/:barcode/ref) */
+export interface ProductRef {
+  barcode: string;
+  name: string;
+}
+
+/** Summary projection — the list/dropdown set (GET /product/dropdown-search) */
+export interface ProductDropdown {   // ← existing debt: shape is a summary, name says "dropdown"
   barcode: string;
   name: string;
   remaining: number;
@@ -169,6 +202,8 @@ export interface ProductDropdown {
 // features/order/components/OrderItemsEditor.tsx
 import type { ProductDropdown } from '@features/inventory';
 ```
+
+**Each projection needs its own query key** — two shapes of one entity must never share a key. See `react-query` skill § One key per response shape.
 
 ---
 

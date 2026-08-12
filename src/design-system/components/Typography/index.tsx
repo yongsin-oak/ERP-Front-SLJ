@@ -32,7 +32,7 @@ export const TEXT_SIZE: Record<TextSize, number> = {
 type TextType = 'secondary' | 'success' | 'warning' | 'danger';
 
 const TYPE_CLASS: Record<TextType, string> = {
-  secondary: 'text-muted-foreground',
+  secondary: 'text-foreground-lighter',
   success: 'text-success-text',
   warning: 'text-warning-text',
   danger: 'text-error-text',
@@ -55,7 +55,7 @@ function CopyButton({ value }: { value: string }) {
     <button
       type="button"
       aria-label="คัดลอก"
-      className="text-muted-foreground transition-colors hover:text-primary"
+      className="text-foreground-lighter transition-colors hover:text-primary"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value);
@@ -88,9 +88,9 @@ export function Text({
     <span
       className={cn(
         type && TYPE_CLASS[type],
-        strong && 'font-semibold',
+        strong && 'font-medium',
         code &&
-          'rounded bg-muted px-1 py-0.5 font-mono text-[0.85em] text-foreground',
+          'rounded bg-surface-200 px-1 py-0.5 font-mono text-[0.85em] text-foreground',
         ellipsis && 'block truncate',
         className,
       )}
@@ -114,11 +114,11 @@ export function Text({
 type TitleLevel = 1 | 2 | 3 | 4 | 5;
 
 const TITLE_CLASS: Record<TitleLevel, string> = {
-  1: 'text-3xl font-semibold',
-  2: 'text-2xl font-semibold',
-  3: 'text-xl font-semibold',
-  4: 'text-lg font-semibold',
-  5: 'text-base font-semibold',
+  1: 'text-3xl font-medium',
+  2: 'text-2xl font-medium',
+  3: 'text-xl font-medium',
+  4: 'text-lg font-medium',
+  5: 'text-base font-medium',
 };
 
 export interface TitleProps extends React.HTMLAttributes<HTMLHeadingElement> {

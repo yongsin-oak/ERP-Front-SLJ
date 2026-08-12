@@ -4,7 +4,7 @@ import { AppIcons } from '../../icons';
 import { Input, InputPassword, InputSearch, TextArea } from './index';
 
 const meta = {
-  title: 'Design System/Input',
+  title: 'Design System/Inputs/Input',
   component: Input,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

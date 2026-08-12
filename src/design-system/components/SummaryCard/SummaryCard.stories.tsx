@@ -8,7 +8,7 @@ const formatNumber = (value: number | string): ReactNode =>
   typeof value === 'number' ? value.toLocaleString('th-TH') : value;
 
 const meta = {
-  title: 'Design System/SummaryCard',
+  title: 'Design System/Display/SummaryCard',
   component: SummaryCard,
   tags: ['autodocs'],
   args: { title: 'ยอดขายรวม', value: 48250, style: { width: 260 } },

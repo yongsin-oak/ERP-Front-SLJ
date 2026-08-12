@@ -8,6 +8,8 @@ export const categoryKeys = {
   all: ['categories'] as const,
   lists: () => [...categoryKeys.all, 'list'] as const,
   list: (params: CategoryListParams) => [...categoryKeys.lists(), params] as const,
+  /** แยกจาก lists() — คนละเส้น คนละ shape (cursor) จึงต้องเป็นคนละ cache entry */
+  dropdown: (search?: string) => [...categoryKeys.all, 'dropdown', search ?? ''] as const,
   tree: () => [...categoryKeys.all, 'tree'] as const,
   detail: (id: string) => [...categoryKeys.all, 'detail', id] as const,
 };

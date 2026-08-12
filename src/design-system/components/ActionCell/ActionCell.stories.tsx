@@ -24,7 +24,7 @@ const PRODUCTS: Product[] = [
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 const meta = {
-  title: 'Design System/ActionCell',
+  title: 'Design System/Actions/ActionCell',
   component: ActionCell,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },
@@ -55,11 +55,37 @@ export const DeleteOnly: Story = {
 };
 
 export const Deleting: Story = {
-  parameters: { docs: { description: { story: 'isDeleting=true — ปุ่มลบขึ้นสถานะ loading ระหว่าง mutation ทำงาน' } } },
+  parameters: { docs: { description: { story: 'isDeleting=true — ปุ่ม kebab ขึ้นสถานะ loading ระหว่าง mutation ทำงาน' } } },
   args: {
     onEdit: () => console.log('edit'),
     onDelete: () => console.log('delete'),
     isDeleting: true,
+  },
+};
+
+export const WithExtraActions: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'ส่ง `actions` เพิ่มได้ — จะเรียงก่อน "แก้ไข" ส่วนตัวที่ `danger: true` ถูกดันไปท้ายพร้อมเส้นคั่นให้อัตโนมัติ ไม่ว่าจะส่งมาลำดับไหน',
+      },
+    },
+  },
+  args: {
+    actions: [
+      { key: 'view', label: 'ดูรายละเอียด', onSelect: () => console.log('view') },
+      { key: 'duplicate', label: 'ทำสำเนา', onSelect: () => console.log('duplicate') },
+      {
+        key: 'archive',
+        label: 'เก็บเข้าคลัง',
+        danger: true,
+        onSelect: () => console.log('archive'),
+        confirm: { title: 'เก็บสินค้านี้เข้าคลัง?', description: 'สินค้าจะไม่แสดงในรายการขาย' },
+      },
+    ],
+    onEdit: () => console.log('edit'),
+    onDelete: () => console.log('delete'),
   },
 };
 
@@ -79,9 +105,9 @@ const TableDemo = () => {
       render: (_: unknown, r) => <MoneyCell value={r.price} />,
     },
     {
-      title: 'จัดการ',
+      title: '',
       key: 'actions',
-      width: 100,
+      width: 56,
       align: 'center',
       render: (_: unknown, record) => (
         <ActionCell
@@ -99,7 +125,7 @@ const TableDemo = () => {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="text-sm text-muted-foreground">{message}</div>
+      <div className="text-sm text-foreground-lighter">{message}</div>
       <Table<Product> columns={columns} dataSource={rows} rowKey="id" pagination={false} />
     </div>
   );
@@ -107,7 +133,12 @@ const TableDemo = () => {
 
 export const InTable: Story = {
   parameters: {
-    docs: { description: { story: 'ใช้งานจริงในคอลัมน์ "จัดการ" ของตารางสินค้า — กดดินสอเพื่อแก้ไข กดถังขยะเพื่อยืนยันการลบ' } },
+    docs: {
+      description: {
+        story:
+          'ใช้งานจริงในคอลัมน์ "จัดการ" ของตารางสินค้า — กดปุ่มสามจุดเพื่อเปิดเมนู "ลบ" อยู่ท้ายสุดเป็นสีแดงและต้องยืนยันในโมดัลก่อน',
+      },
+    },
   },
   render: () => <TableDemo />,
 };

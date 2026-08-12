@@ -35,7 +35,9 @@ body {
 /* ════════════════════════════════════════════════════════════════════════
    TIER 1 — PRIMITIVE / GLOBAL TOKENS  (raw palette — NEVER use directly in components)
    ทุกตัวต้องถูกอ้างอิงโดย semantic อย่างน้อยหนึ่งที่
-   Stripe-grade: neutral เป็น cool-gray อมน้ำเงิน · เงาอมน้ำเงิน (rgba 50,50,93)
+
+   Supabase-grade: neutral เป็น "เทาแท้" ไม่อมน้ำเงิน · ความลึกมาจากเส้น+ชั้นพื้นผิว ไม่ใช่เงา
+   (ก่อนหน้านี้เป็น Stripe cool-gray — ดู SUPABASE-DS-PLAN.md §1)
    ════════════════════════════════════════════════════════════════════════ */
 :root {
   /* ── z-index layer (ค่ากลาง — แก้ที่เดียว) ─────────────────────────────────
@@ -46,36 +48,35 @@ body {
      ค่านี้ต้องสูงกว่า app chrome (sidebar/header = z-100, mobile drawer = z-110) เสมอ */
   --z-overlay: 1000;
 
-  /* Neutral — Stripe cool-gray scale (อมน้ำเงินเล็กน้อย) */
-  --neutral-0:   #ffffff;
-  --neutral-50:  #f6f9fc;   /* page canvas */
-  --neutral-100: #eef2f7;   /* subtle fill */
-  --neutral-150: #e6ebf1;   /* divider */
-  --neutral-200: #e3e8ee;   /* default border (Stripe hairline) */
-  --neutral-300: #cdd5df;
-  --neutral-400: #a5b0c0;
-  --neutral-500: #8792a2;   /* placeholder / tertiary text */
-  --neutral-600: #6b7688;   /* secondary text */
-  --neutral-700: #4f566b;
-  --neutral-800: #3c4257;
-  --neutral-900: #1a1f36;   /* primary text (navy ink) */
+  /* Absolute — ไม่เปลี่ยนตามธีม (ใช้เป็นฐานของ color-mix / scrim เท่านั้น) */
+  --white: #ffffff;
+  --black: #000000;
 
-  /* Ink (black alpha — overlay surfaces & legacy fallbacks on light) */
-  --ink-88: rgba(26, 31, 54, 0.92);
-  --ink-65: rgba(26, 31, 54, 0.66);
-  --ink-45: rgba(26, 31, 54, 0.46);
-  --ink-25: rgba(26, 31, 54, 0.28);
-  --ink-08: rgba(26, 31, 54, 0.08);
-  --ink-04: rgba(26, 31, 54, 0.04);
+  /* Neutral — Supabase true-gray scale (hue = 0 · ไล่ตามความสว่างล้วน)
+     dark mode override สเกลนี้ทั้งชุดด้านล่าง → semantic ส่วนใหญ่ไม่ต้อง override ซ้ำ */
+  --gray-0:   #ffffff;   /* deepest base (light = ขาว) */
+  --gray-25:  #fcfcfc;   /* page canvas */
+  --gray-50:  #f8f9fa;   /* surface 1 */
+  --gray-100: #f2f3f5;   /* surface 2 / hover fill */
+  --gray-150: #ededed;   /* surface 3 / divider */
+  --gray-200: #e6e8eb;   /* border default */
+  --gray-300: #dfe1e3;   /* border control / strong */
+  --gray-400: #c9cdd0;   /* border stronger / focus ring / disabled fg */
+  --gray-500: #8f9296;   /* foreground muted (placeholder) */
+  --gray-600: #6f7377;   /* foreground lighter */
+  --gray-700: #55585c;   /* foreground light (secondary text) */
+  --gray-800: #3a3d40;
+  --gray-900: #171717;   /* foreground default */
 
-  /* Scrim (modal/drawer overlay) — navy-tinted */
-  --scrim: rgba(26, 31, 54, 0.5);
+  /* Scrim (modal/drawer overlay) — ดำล้วน ไม่อมสี */
+  --scrim: rgb(0 0 0 / 0.45);
 
-  /* Lines */
-  --line-default: #e3e8ee;
-  --line-subtle: #eef2f7;
+  /* Overlay tint — hover/active ที่ต้อง "ทับ" พื้นที่มีสีอยู่แล้ว (เช่น แถวที่ถูกเลือก)
+     ต่างจาก --accent ที่เป็นพื้นทึบ */
+  --overlay-hover:  rgb(0 0 0 / 0.04);
+  --overlay-active: rgb(0 0 0 / 0.07);
 
-  /* Brand (red) — 500 base / 600 hover / 700 active · light tint สำหรับพื้นอ่อน */
+  /* Brand (red — SLJ) — 500 base / 600 hover / 700 active · 50 = tint บนพื้นอ่อน */
   --brand-50:  #fff1f0;
   --brand-500: #e0282e;
   --brand-600: #c1252a;
@@ -87,69 +88,159 @@ body {
   --gold-50: #fffbe6;  --gold-200: #ffe58f;  --gold-500: #faad14;  --gold-700: #d48806;
   --blue-50: #e6f4ff;  --blue-200: #91caff;  --blue-500: #1677ff;  --blue-700: #0958d9;
 
-  /* Categorical / data-viz hues — bg(50) · border(200) · text(700) */
-  --volcano-50: #fff2e8;  --volcano-200: #ffbb96;  --volcano-700: #d4380d;
-  --orange-50: #fff7e6;   --orange-200: #ffd591;   --orange-700: #d46b08;
-  --yellow-50: #feffe6;   --yellow-200: #fffb8f;   --yellow-700: #d4b106;
-  --lime-50: #fcffe6;     --lime-200: #eaff8f;     --lime-700: #7cb305;
-  --cyan-50: #e6fffb;     --cyan-200: #87e8de;     --cyan-700: #08979c;
-  --geekblue-50: #f0f5ff; --geekblue-200: #adc6ff; --geekblue-700: #1d39c4;
-  --purple-50: #f9f0ff;   --purple-200: #d3adf7;   --purple-700: #531dab;
-  --magenta-50: #fff0f6;  --magenta-200: #ffadd2;  --magenta-700: #c41d7f;
+  /* Categorical / data-viz hues — bg(50) · border(200) · solid(500) · text(700)
+     (500 จำเป็นสำหรับสูตร color-mix ในโหมด dark) */
+  --volcano-50: #fff2e8;  --volcano-200: #ffbb96;  --volcano-500: #fa541c;  --volcano-700: #d4380d;
+  --orange-50: #fff7e6;   --orange-200: #ffd591;   --orange-500: #fa8c16;   --orange-700: #d46b08;
+  --yellow-50: #feffe6;   --yellow-200: #fffb8f;   --yellow-500: #fadb14;   --yellow-700: #d4b106;
+  --lime-50: #fcffe6;     --lime-200: #eaff8f;     --lime-500: #a0d911;     --lime-700: #7cb305;
+  --cyan-50: #e6fffb;     --cyan-200: #87e8de;     --cyan-500: #13c2c2;     --cyan-700: #08979c;
+  --geekblue-50: #f0f5ff; --geekblue-200: #adc6ff; --geekblue-500: #2f54eb; --geekblue-700: #1d39c4;
+  --purple-50: #f9f0ff;   --purple-200: #d3adf7;   --purple-500: #722ed1;   --purple-700: #531dab;
+  --magenta-50: #fff0f6;  --magenta-200: #ffadd2;  --magenta-500: #eb2f96;  --magenta-700: #c41d7f;
+}
 
-  /* Shadow ingredients — Stripe ใช้เงาอมน้ำเงิน (50,50,93) ซ้อนเงาดำบาง */
-  --shadow-key:   50 50 93;   /* blue-ink */
-  --shadow-ambient: 0 0 0;    /* black */
+/* ── TIER 1 · dark override ────────────────────────────────────────────────
+   สเกลเทากลับด้าน (0 = มืดสุด → 900 = สว่างสุด) semantic จึงชี้ตัวเดิมได้เกือบทั้งหมด
+   hue tint คำนวณจาก 500 ด้วย color-mix แทนการไล่เขียนมือ 36 ค่า */
+.dark {
+  --gray-0:   #121212;
+  --gray-25:  #171717;
+  --gray-50:  #1c1c1c;
+  --gray-100: #232323;
+  --gray-150: #282828;
+  --gray-200: #2e2e2e;
+  --gray-300: #3e3e3e;
+  --gray-400: #4d4d4d;
+  --gray-500: #707070;
+  --gray-600: #8f8f8f;
+  --gray-700: #b4b4b4;
+  --gray-800: #d4d4d4;
+  --gray-900: #ededed;
+
+  --scrim: rgb(0 0 0 / 0.65);
+  --overlay-hover:  rgb(255 255 255 / 0.06);
+  --overlay-active: rgb(255 255 255 / 0.10);
+
+  --brand-50: color-mix(in oklab, var(--brand-500) 22%, var(--gray-50));
+
+  --red-50: color-mix(in oklab, var(--red-500) 16%, var(--gray-50));
+  --red-200: color-mix(in oklab, var(--red-500) 34%, var(--gray-50));
+  --red-700: color-mix(in oklab, var(--red-500) 72%, var(--white));
+  --green-50: color-mix(in oklab, var(--green-500) 16%, var(--gray-50));
+  --green-200: color-mix(in oklab, var(--green-500) 34%, var(--gray-50));
+  --green-700: color-mix(in oklab, var(--green-500) 72%, var(--white));
+  --gold-50: color-mix(in oklab, var(--gold-500) 16%, var(--gray-50));
+  --gold-200: color-mix(in oklab, var(--gold-500) 34%, var(--gray-50));
+  --gold-700: color-mix(in oklab, var(--gold-500) 72%, var(--white));
+  --blue-50: color-mix(in oklab, var(--blue-500) 16%, var(--gray-50));
+  --blue-200: color-mix(in oklab, var(--blue-500) 34%, var(--gray-50));
+  --blue-700: color-mix(in oklab, var(--blue-500) 72%, var(--white));
+
+  --volcano-50: color-mix(in oklab, var(--volcano-500) 16%, var(--gray-50));
+  --volcano-200: color-mix(in oklab, var(--volcano-500) 34%, var(--gray-50));
+  --volcano-700: color-mix(in oklab, var(--volcano-500) 72%, var(--white));
+  --orange-50: color-mix(in oklab, var(--orange-500) 16%, var(--gray-50));
+  --orange-200: color-mix(in oklab, var(--orange-500) 34%, var(--gray-50));
+  --orange-700: color-mix(in oklab, var(--orange-500) 72%, var(--white));
+  --yellow-50: color-mix(in oklab, var(--yellow-500) 16%, var(--gray-50));
+  --yellow-200: color-mix(in oklab, var(--yellow-500) 34%, var(--gray-50));
+  --yellow-700: color-mix(in oklab, var(--yellow-500) 72%, var(--white));
+  --lime-50: color-mix(in oklab, var(--lime-500) 16%, var(--gray-50));
+  --lime-200: color-mix(in oklab, var(--lime-500) 34%, var(--gray-50));
+  --lime-700: color-mix(in oklab, var(--lime-500) 72%, var(--white));
+  --cyan-50: color-mix(in oklab, var(--cyan-500) 16%, var(--gray-50));
+  --cyan-200: color-mix(in oklab, var(--cyan-500) 34%, var(--gray-50));
+  --cyan-700: color-mix(in oklab, var(--cyan-500) 72%, var(--white));
+  --geekblue-50: color-mix(in oklab, var(--geekblue-500) 16%, var(--gray-50));
+  --geekblue-200: color-mix(in oklab, var(--geekblue-500) 34%, var(--gray-50));
+  --geekblue-700: color-mix(in oklab, var(--geekblue-500) 72%, var(--white));
+  --purple-50: color-mix(in oklab, var(--purple-500) 16%, var(--gray-50));
+  --purple-200: color-mix(in oklab, var(--purple-500) 34%, var(--gray-50));
+  --purple-700: color-mix(in oklab, var(--purple-500) 72%, var(--white));
+  --magenta-50: color-mix(in oklab, var(--magenta-500) 16%, var(--gray-50));
+  --magenta-200: color-mix(in oklab, var(--magenta-500) 34%, var(--gray-50));
+  --magenta-700: color-mix(in oklab, var(--magenta-500) 72%, var(--white));
 }
 
 /* ════════════════════════════════════════════════════════════════════════
    TIER 2 — SEMANTIC TOKENS  (reference Tier 1 — the ONLY thing components consume)
    ════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* Surfaces */
-  --canvas: var(--neutral-50);                   /* app/page background */
-  --background: var(--neutral-0);                /* base surface */
-  --foreground: var(--neutral-900);
-  --foreground-subtle: var(--neutral-500);       /* tertiary / placeholder */
-  --card: var(--neutral-0);
-  --card-foreground: var(--neutral-900);
-  --popover: var(--neutral-0);
-  --popover-foreground: var(--neutral-900);
-  --muted: var(--neutral-100);
-  --muted-foreground: var(--neutral-600);
-  --secondary: var(--neutral-100);
-  --secondary-foreground: var(--neutral-900);
+  /* ── Surfaces ─────────────────────────────────────────────────────────
+     Supabase: canvas (นอกสุด) → background/card (แผง) → surface-100/200/300 (ชั้นซ้อนในแผง)
+     ทุกชั้นแยกกันด้วย "เส้น" ไม่ใช่เงา */
+  --canvas: var(--gray-25);                      /* app/page background */
+  --background: var(--gray-0);                   /* base surface (panel/card/input) */
+  --surface-100: var(--gray-50);                 /* ชั้นซ้อนที่ 1 — table head, section fill */
+  --surface-200: var(--gray-100);                /* ชั้นซ้อนที่ 2 — hover fill, code block */
+  --surface-300: var(--gray-150);                /* ชั้นซ้อนที่ 3 — active/pressed fill */
+  --overlay: var(--gray-0);                      /* dialog / popover / dropdown surface */
 
-  /* Interaction surfaces (overlay) */
-  --accent: var(--ink-04);                       /* hover bg (ghost/row) */
-  --accent-foreground: var(--neutral-900);
-  --accent-active: var(--ink-08);                /* pressed bg */
+  /* Foreground — Supabase ไล่ 4 ระดับ */
+  --foreground: var(--gray-900);                 /* primary */
+  --foreground-light: var(--gray-700);           /* secondary */
+  --foreground-lighter: var(--gray-600);         /* tertiary */
+  --foreground-muted: var(--gray-500);           /* placeholder / disabled label */
+  --foreground-subtle: var(--gray-500);          /* alias เดิม = foreground-muted */
+
+  --card: var(--gray-0);
+  --card-foreground: var(--gray-900);
+  --popover: var(--gray-0);
+  --popover-foreground: var(--gray-900);
+  /* ── Legacy aliases ───────────────────────────────────────────────────
+     ชื่อชุดเดิม (ยุค shadcn/Stripe) ยังมีผู้เรียกอยู่ใน src/features/** จำนวนมาก
+     ผูกให้ชี้ค่า *เดียวกันเป๊ะ* กับชื่อชุดใหม่ เพื่อไม่ให้เกิด "สองคำศัพท์คนละเฉด":
+       --muted            = --surface-200
+       --muted-foreground = --foreground-lighter
+       --accent           = --surface-200
+       --divider          = --border-muted
+       --foreground-subtle = --foreground-muted
+     โค้ดใหม่ให้ใช้ชื่อชุดใหม่เสมอ */
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-600);
+  --secondary: var(--gray-100);
+  --secondary-foreground: var(--gray-900);
+
+  /* Interaction surfaces — Supabase ใช้ "พื้นทึบ" เป็นหลัก (ไม่ใช่ alpha)
+     ใช้ accent-overlay/-active-overlay เฉพาะตอนต้องทับพื้นที่มีสีอยู่แล้ว */
+  --accent: var(--gray-100);                     /* hover bg (ghost/row) */
+  --accent-foreground: var(--gray-900);
+  --accent-active: var(--gray-150);              /* pressed bg */
+  --accent-overlay: var(--overlay-hover);
+  --accent-active-overlay: var(--overlay-active);
   --scrim-bg: var(--scrim);                      /* modal/drawer overlay */
 
   /* Primary (interactive) */
   --primary: var(--brand-500);
   --primary-hover: var(--brand-600);
   --primary-active: var(--brand-700);
-  --primary-foreground: var(--neutral-0);
+  --primary-foreground: var(--white);
   --primary-subtle: var(--brand-50);             /* selected row / brand tint bg */
 
   /* Destructive (interactive) */
   --destructive: var(--red-500);
   --destructive-hover: var(--red-600);
   --destructive-active: var(--red-700);
-  --destructive-foreground: var(--neutral-0);
+  --destructive-foreground: var(--white);
 
   /* States */
-  --disabled: var(--ink-25);                     /* disabled foreground */
-  --disabled-bg: var(--neutral-100);
-  --control-off: var(--neutral-300);             /* switch/checkbox off track */
+  --disabled: var(--gray-400);                   /* disabled foreground */
+  --disabled-bg: var(--gray-100);
+  --control: var(--background);                  /* input/select/textarea bg — เท่ากับแผง เส้นเป็นตัวแยก */
+  --control-off: var(--gray-300);                /* switch/checkbox off track */
+  --control-thumb: var(--white);                 /* หัวสวิตช์ — ขาวทั้งสองธีม (ต้องลอยเหนือ track ทั้ง on/off) */
 
-  /* Borders */
-  --border: var(--line-default);
-  --border-strong: var(--neutral-300);
-  --input: var(--line-default);
-  --divider: var(--line-subtle);
-  --ring: var(--brand-500);
+  /* Borders — Supabase ไล่ 4 ระดับ + control ที่เข้มกว่า default หนึ่งขั้น */
+  --border-muted: var(--gray-150);               /* จางสุด — เส้นในลิสต์ */
+  --border: var(--gray-200);                     /* default — ขอบแผง/การ์ด */
+  --border-strong: var(--gray-300);
+  --border-stronger: var(--gray-400);
+  --border-control: var(--gray-300);             /* ขอบ input — เข้มกว่าแผงหนึ่งขั้น */
+  --border-overlay: var(--gray-200);             /* ขอบ dialog/popover */
+  --input: var(--gray-300);
+  --divider: var(--gray-150);
+  --ring: var(--gray-400);                       /* focus = "เทา" ไม่ใช่สีแบรนด์ (Supabase signature) */
 
   /* Status — bg · border · solid(accent) · text(readable) */
   --success-bg: var(--green-50); --success-border: var(--green-200); --success: var(--green-500); --success-text: var(--green-700);
@@ -170,70 +261,69 @@ body {
   --data-geekblue-bg: var(--geekblue-50); --data-geekblue-border: var(--geekblue-200); --data-geekblue-text: var(--geekblue-700);
   --data-purple-bg: var(--purple-50);     --data-purple-border: var(--purple-200);     --data-purple-text: var(--purple-700);
   --data-magenta-bg: var(--magenta-50);   --data-magenta-border: var(--magenta-200);   --data-magenta-text: var(--magenta-700);
-  --data-default-bg: var(--neutral-100);  --data-default-border: var(--line-default);  --data-default-text: var(--neutral-600);
+  --data-default-bg: var(--gray-100);     --data-default-border: var(--gray-200);      --data-default-text: var(--gray-700);
 
   /* charts */
   --chart-1: var(--brand-500);
   --chart-2: var(--blue-500);
   --chart-3: var(--green-500);
   --chart-4: var(--gold-500);
-  --chart-5: var(--purple-700);
+  --chart-5: var(--purple-500);
 
-  /* Elevation — Stripe signature: เงาอมน้ำเงินซ้อนเงาดำบาง (key + ambient) */
-  --shadow-xs: 0 1px 1px 0 rgb(var(--shadow-key) / 0.04), 0 1px 2px 0 rgb(var(--shadow-ambient) / 0.04);
-  --shadow-sm: 0 1px 2px 0 rgb(var(--shadow-key) / 0.06), 0 1px 1px 0 rgb(var(--shadow-ambient) / 0.04);
-  --shadow-md: 0 2px 5px -1px rgb(var(--shadow-key) / 0.08), 0 2px 3px -2px rgb(var(--shadow-ambient) / 0.05);
-  --shadow-lg: 0 12px 24px -6px rgb(var(--shadow-key) / 0.12), 0 4px 8px -4px rgb(var(--shadow-ambient) / 0.07);
-  --shadow-xl: 0 24px 48px -12px rgb(var(--shadow-key) / 0.16), 0 8px 18px -8px rgb(var(--shadow-ambient) / 0.10);
-  --shadow-overlay: 0 16px 40px -8px rgb(var(--shadow-key) / 0.18), 0 6px 14px -6px rgb(var(--shadow-ambient) / 0.12);
+  /* ── Elevation ────────────────────────────────────────────────────────
+     Supabase: แผง/การ์ด/ตาราง = "ไม่มีเงา" ความลึกมาจากเส้น+ชั้นพื้นผิว
+     เงาจริงมีเฉพาะสิ่งที่ลอยเหนือหน้า (dropdown / popover / dialog / toast) */
+  --shadow-xs: 0 0 0 0 rgb(0 0 0 / 0);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 2px 6px -1px rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 8px 24px -6px rgb(0 0 0 / 0.10), 0 2px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 12px 32px -8px rgb(0 0 0 / 0.14), 0 4px 10px -4px rgb(0 0 0 / 0.07);
+  --shadow-overlay: 0 8px 24px -4px rgb(0 0 0 / 0.12), 0 2px 8px -2px rgb(0 0 0 / 0.07);
 
-  /* Motion — easing + duration (Stripe: เร่ง-หน่วงนุ่ม) */
+  /* Motion — Supabase สั้นและคม */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.5, 1);
-  --duration-fast: 120ms;
-  --duration-base: 180ms;
-  --duration-slow: 280ms;
+  --duration-fast: 100ms;
+  --duration-base: 150ms;
+  --duration-slow: 250ms;
 
-  --radius: 0.5rem; /* 8px base — Stripe-ish */
+  /* Radius — Supabase คม: control = 6px (rounded-md) */
+  --radius: 6px;
 
-  /* sidebar */
-  --sidebar: var(--neutral-50);
-  --sidebar-foreground: var(--neutral-900);
+  /* sidebar — Supabase: ผนังเดียวกับ canvas แยกด้วยเส้น ไม่ใช่สีต่าง */
+  --sidebar: var(--gray-25);
+  --sidebar-foreground: var(--gray-900);
   --sidebar-primary: var(--brand-500);
-  --sidebar-primary-foreground: var(--neutral-0);
-  --sidebar-accent: var(--ink-04);
-  --sidebar-accent-foreground: var(--neutral-900);
-  --sidebar-border: var(--line-default);
-  --sidebar-ring: var(--brand-500);
+  --sidebar-primary-foreground: var(--white);
+  --sidebar-accent: var(--gray-100);
+  --sidebar-accent-foreground: var(--gray-900);
+  --sidebar-border: var(--gray-200);
+  --sidebar-ring: var(--gray-400);
 }
 
+/* ── TIER 2 · dark override ────────────────────────────────────────────────
+   เฉพาะตัวที่ "กลับด้าน" ไม่ได้ด้วยสเกลเทา (canvas/panel สลับลำดับความสว่าง)
+   + เงาที่ต้องเข้มขึ้นเพราะพื้นมืด */
 .dark {
-  --canvas: oklch(0.145 0 0);
-  --background: oklch(0.175 0 0);
-  --foreground: oklch(0.985 0 0);
-  --foreground-subtle: oklch(0.62 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --accent: oklch(1 0 0 / 8%);
-  --accent-foreground: oklch(0.985 0 0);
-  --accent-active: oklch(1 0 0 / 12%);
-  --scrim-bg: rgba(0, 0, 0, 0.6);
-  --disabled: oklch(1 0 0 / 25%);
-  --disabled-bg: oklch(0.269 0 0);
-  --control-off: oklch(1 0 0 / 25%);
-  --border: oklch(1 0 0 / 10%);
-  --border-strong: oklch(1 0 0 / 18%);
-  --input: oklch(1 0 0 / 15%);
-  --divider: oklch(1 0 0 / 8%);
-  --primary-subtle: oklch(0.4 0.12 18 / 0.18);
-  --shadow-ambient: 0 0 0;
+  --canvas: var(--gray-0);                       /* #121212 — มืดสุดอยู่นอกสุด */
+  --background: var(--gray-50);                  /* #1c1c1c — แผงลอยขึ้นมาหนึ่งขั้น */
+  --surface-100: var(--gray-100);
+  --surface-200: var(--gray-150);
+  --surface-300: var(--gray-200);
+  --overlay: var(--gray-50);
+
+  --card: var(--gray-50);
+  --popover: var(--gray-50);
+  --control: var(--gray-25);                     /* input ยุบลงจากแผงหนึ่งขั้น */
+
+  --sidebar: var(--gray-25);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.30);
+  --shadow-md: 0 2px 6px -1px rgb(0 0 0 / 0.40), 0 1px 2px -1px rgb(0 0 0 / 0.30);
+  --shadow-lg: 0 8px 24px -6px rgb(0 0 0 / 0.50), 0 2px 6px -2px rgb(0 0 0 / 0.35);
+  --shadow-xl: 0 12px 32px -8px rgb(0 0 0 / 0.60), 0 4px 10px -4px rgb(0 0 0 / 0.40);
+  --shadow-overlay: 0 8px 24px -4px rgb(0 0 0 / 0.55), 0 2px 8px -2px rgb(0 0 0 / 0.40);
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -242,12 +332,25 @@ body {
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: 'Bai Jamjuree', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* mono สำหรับข้อมูลเชิงรหัส (SKU / order code / id / ตัวเลขในตาราง) — system stack ไม่โหลดเพิ่ม */
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
   /* surfaces */
   --color-canvas: var(--canvas);
   --color-background: var(--background);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-overlay: var(--overlay);
+  --color-control: var(--control);
+
+  /* foreground */
   --color-foreground: var(--foreground);
+  --color-foreground-light: var(--foreground-light);
+  --color-foreground-lighter: var(--foreground-lighter);
+  --color-foreground-muted: var(--foreground-muted);
   --color-foreground-subtle: var(--foreground-subtle);
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -259,6 +362,8 @@ body {
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-active: var(--accent-active);
+  --color-accent-overlay: var(--accent-overlay);
+  --color-accent-active-overlay: var(--accent-active-overlay);
   --color-scrim: var(--scrim-bg);
 
   /* interactive */
@@ -276,10 +381,15 @@ body {
   --color-disabled: var(--disabled);
   --color-disabled-bg: var(--disabled-bg);
   --color-control-off: var(--control-off);
+  --color-control-thumb: var(--control-thumb);
 
   /* borders */
   --color-border: var(--border);
+  --color-border-muted: var(--border-muted);
   --color-border-strong: var(--border-strong);
+  --color-border-stronger: var(--border-stronger);
+  --color-border-control: var(--border-control);
+  --color-border-overlay: var(--border-overlay);
   --color-input: var(--input);
   --color-divider: var(--divider);
   --color-ring: var(--ring);
@@ -347,24 +457,33 @@ body {
   --ease-in-out: var(--ease-in-out);
   --ease-spring: var(--ease-spring);
 
-  /* radius → rounded-{sm,md,lg,xl,2xl,3xl} */
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 14px);
+  /* radius → rounded-{sm,md,lg,xl,2xl,3xl} — ค่าคงที่ ไม่ใช้ calc เพื่อให้อ่านสเปกได้ตรงๆ
+     control ทั้งหมดใช้ rounded-md (6px) · pill ใช้ rounded-full */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 6px;   /* shadcn primitives บางตัว hardcode 2xl ไว้ (badge/alert/switch) — บีบให้คมตามสเปก */
+  --radius-3xl: 12px;
+  --radius-4xl: 8px;   /* ui/card ใช้ min(var(--radius-4xl),24px) — บีบการ์ดจาก 24px เหลือ 8px */
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-canvas text-foreground;
   }
   html {
     @apply font-sans;
+  }
+
+  /* Focus ring — Supabase signature: outline "เทา" 2px offset 1px ไม่ใช่ glow สีแบรนด์
+     (component ที่ต้องการ ring สีอื่น เช่น destructive ให้ override เฉพาะจุด) */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
   }
 
   /* Tailwind v4 รีเซ็ต cursor ของปุ่มเป็น default — คืน pointer ให้ทุก element ที่คลิกได้

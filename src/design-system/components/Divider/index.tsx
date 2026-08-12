@@ -22,7 +22,7 @@ export function Divider({
     return (
       <span
         role="separator"
-        className={cn('mx-2 inline-block h-[0.9em] w-px align-middle bg-divider', className)}
+        className={cn('mx-2 inline-block h-[0.9em] w-px align-middle bg-border-muted', className)}
         style={style}
         {...props}
       />
@@ -33,7 +33,7 @@ export function Divider({
     <span
       className={cn(
         grow,
-        dashed ? 'border-t border-dashed border-divider' : 'h-px bg-divider',
+        dashed ? 'border-t border-dashed border-border-muted' : 'h-px bg-border-muted',
       )}
     />
   );
@@ -44,7 +44,7 @@ export function Divider({
         role="separator"
         className={cn(
           'my-4 flex items-center gap-3 text-sm',
-          plain ? 'font-normal text-muted-foreground' : 'font-medium text-foreground',
+          plain ? 'font-normal text-foreground-lighter' : 'font-medium text-foreground',
           className,
         )}
         style={style}
@@ -62,7 +62,7 @@ export function Divider({
       role="separator"
       className={cn(
         'my-4 w-full',
-        dashed ? 'border-t border-dashed border-divider' : 'h-px bg-divider',
+        dashed ? 'border-t border-dashed border-border-muted' : 'h-px bg-border-muted',
         className,
       )}
       style={style}

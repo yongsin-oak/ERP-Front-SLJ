@@ -127,17 +127,26 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 - **No prop drilling >2 levels** — lift to Zustand or React Query cache
 - **No `new Date()` or `moment`** — use `dayjs`
 - **No raw `axios`** — use `req` from `@lib`
-- **No inline `#hex` or `px` literals** — use Tailwind semantic utilities from the 3-tier tokens in `src/index.css` (`bg-canvas`, `text-muted-foreground`, `text-success-text`…); when a prop needs a CSS color string use `var(--color-<token>)`. See `.claude/skills/design-system/SKILL.md`.
+- **No inline `#hex` or `px` literals** — use Tailwind semantic utilities from the 3-tier tokens in `src/index.css` (`bg-canvas`, `text-foreground-light`, `text-success-text`…); when a prop needs a CSS color string use `var(--color-<token>)`. This includes `shadow-[…rgba()]` — use `shadow-overlay`. See `.claude/skills/design-system/SKILL.md`.
+- **Supabase visual language** — depth comes from borders + surface layers, never shadows (panels/tables/cards have no shadow; only overlays do). Control radius is `rounded-md`; control heights are `h-6.5/7.5/8.5/9.5`; default icon size is `size-3.5`.
+- **Focus ring is neutral, not brand** — `index.css` sets a global `:focus-visible` outline. Never add a brand-colored ring, and never put `outline-none` on a focusable control (only on overlay surfaces).
+- **No `font-bold`** — `font-medium` is the heaviest weight (semibold only for page headings)
+- **Mono for code-like data** — SKU, document numbers, dates, and table numerics use `font-mono tabular-nums`
 - **All icons via `AppIcons`** (Tabler only) — `import { AppIcons } from '@design-system'`; `<AppIcons.add />`, `<AppIcons.delete />`. Key by **purpose**, not shape. NEVER import `@tabler/icons-react` or `@ant-design/icons` directly. See `.claude/skills/design-system/icons/SKILL.md`.
+- **Icon-only buttons need `aria-label`** — `AppIcons` sets `aria-hidden` on every icon by default, so an icon-only button with no label is silent to screen readers. Icons beside text need nothing. Ambiguous actions (import/export/move/publish) get a text label, never icon-only.
+- **Pick components by behavior, not looks** — Purpose → Behavior → Frequency → Importance → Complexity → Accessibility. `Switch` = takes effect immediately; `Checkbox` = saved with the form. See `.claude/skills/component-patterns/SKILL.md`.
+- **Shortest text that stays unambiguous** — buttons 1–3 words, menu/dropdown options 1–5, tabs 1–2; front-load the distinguishing word. See `.claude/skills/design-system/content/SKILL.md`.
 - **No hardcoded query keys** — use key factories from `hooks/queryKeys.ts`
 - **No magic timing numbers** — use `STALE_TIME`, `GC_TIME`, `REFETCH_INTERVAL` from `@lib`
+- **Never raise `limit` to fetch "everything"** — backend caps it at `PAGINATION.MAX_LIMIT` (200) and returns 400. Tables use `useXxxList({ page, limit })` + `Table`'s `pagination`; counts read `pagination.total` from a `limit: 1` request. See `.claude/skills/query-constants/SKILL.md`.
+- **Dropdown ≠ table — different endpoint, different contract** — dropdowns hit `GET /<entity>/dropdown-search` and paginate by **cursor** (`{ search?, cursor?, limit? }` → `CursorPage<T>` = `{ data, nextCursor }`, cap `DROPDOWN.MAX_LIMIT` 50). Never point a dropdown at the table's `GET /<entity>` — offset pages skip/repeat rows while the user scrolls, and pay a `COUNT(*)` nobody reads. Use `<XxxSearchSelect>`; `nextCursor` is opaque, pass it back, `null` = end. See `.claude/skills/query-constants/SKILL.md`.
 - **All pages lazy-loaded** — wrap in `lazy()` + `<Suspense>` in `routes/index.tsx`
 - **Server state → React Query · Shared UI state → Zustand · Local UI state → useState**
 - **Every mutation must have** `onError: handleError('Action name')` from `@lib`
 - **Every page must handle** loading / empty (with CTA) / error states — use `PageShell` from `@design-system`
 - **Every delete must confirm** — use `DeleteConfirmButton` from `@design-system`
 - **Bulk selection** — use `BulkSelectionBar` from `@design-system`
-- **Table edit+delete actions** — use `ActionCell` from `@design-system`
+- **Table row actions** — use `ActionCell` from `@design-system` (renders a single kebab menu, never a row of buttons; destructive items go last and are red). For a kebab menu outside a table, use `ActionMenu`.
 - **Create/edit modals** — use `FormModal` from `@design-system` (handles reset, footer, validateFields)
 - **Table cell formatters** — use `DateCell`, `MoneyCell`, `CodeCell`, `QuantityCell` from `@design-system`
 
@@ -152,9 +161,11 @@ Detailed patterns and examples live in `.claude/skills/`.
 | Skill | Covers |
 | --- | --- |
 | `folder-structure` | Feature anatomy, barrel exports, file naming, import rules |
-| `design-system` | Tokens (colors/spacing/radius/shadow), Emotion rules, responsive layout |
+| `design-system` | Atlassian-guided tokens, Tailwind-only styling, responsive layout |
 | `design-system/components` | Component catalog, ERP composite components (Table, Modal, FormModal, ActionCell…) |
 | `design-system/icons` | AppIcons map (Tabler-only, purpose-named), adding new icons |
+| `design-system/feedback` | Feedback/notification decision by purpose (Dialog/Toast/Snackbar/Banner/Inline/Tooltip/Popover), when-NOT-to-use |
+| `design-system/content` | UI text: label length per component, front-loading, dropdown scannability, destructive copy |
 | `react-query` | queryKeys factory, useQuery, useMutation, invalidate vs setQueryData |
 | `constants` | Where to define constants, naming conventions, status/label/color pattern |
 | `component-patterns` | Component anatomy, page/table/modal patterns, naming, anti-patterns |

@@ -8,7 +8,8 @@ import { QueryProvider, ThemeProvider } from './providers';
 import { router } from './router';
 
 function AppInit() {
-  const { getMe } = useAuth();
+  // selector ทีละค่า — subscribe แค่ action ไม่ใช่ทั้ง store (ดูเหตุผลใน PrivateRoute)
+  const getMe = useAuth((s) => s.getMe);
   useEffect(() => {
     getMe();
   }, [getMe]);

@@ -3,7 +3,7 @@ import { AppIcons } from '../../icons';
 import { Button } from './index';
 
 const meta = {
-  title: 'Design System/Button',
+  title: 'Design System/Actions/Button',
   component: Button,
   tags: ['autodocs'],
   args: { children: 'ปุ่ม' },

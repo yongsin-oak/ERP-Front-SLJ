@@ -1,7 +1,7 @@
 export { EmployeePage } from './pages/EmployeePage';
 export { EmployeeImportModal } from './components/EmployeeImportModal';
 export {
-  useEmployeeList, useEmployees, useEmployeeDetail,
+  useEmployeeList, useEmployeeDetail,
   useCreateEmployee, useUpdateEmployee, useDeleteEmployee, useBulkDeleteEmployee,
   useSetEmployeePin,
 } from './react-query';
@@ -10,3 +10,4 @@ export type { EmployeeListParams } from './react-query';
 export { employeeService } from './react-query';
 export type { Employee, CreateEmployeeDto, UpdateEmployeeDto, Department } from './types';
 export { Departments, DepartmentOptions } from './types';
+export { EmployeeSearchSelect } from './components/EmployeeSearchSelect';

@@ -1,18 +1,23 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { STALE_TIME } from '@shared';
+import { STALE_TIME, DROPDOWN } from '@shared';
 import { supplierService } from './services';
 import { supplierKeys } from './queryKeys';
 import type { SupplierParams } from './queryKeys';
 
-const DROPDOWN_LIMIT = 20;
-
+/**
+ * ตัวเลือกซัพพลายเออร์สำหรับ `SupplierSearchSelect` — ยิง `/supplier/dropdown-search` (cursor)
+ * ไม่ใช่เส้นตาราง `/supplier` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
+ */
 export function useSupplierDropdown(search?: string) {
   return useInfiniteQuery({
-    queryKey: [...supplierKeys.all, 'dropdown', search ?? ''],
-    queryFn: ({ pageParam = 1 }) =>
-      supplierService.getAll({ page: pageParam as number, limit: DROPDOWN_LIMIT, search }).then((r) => r.data),
-    getNextPageParam: (last) => last.pagination.hasNextPage ? last.pagination.page + 1 : undefined,
-    initialPageParam: 1,
+    queryKey: supplierKeys.dropdown(search),
+    queryFn: ({ pageParam }) =>
+      supplierService
+        .dropdownSearch({ cursor: pageParam, limit: DROPDOWN.DEFAULT_LIMIT, search })
+        .then((r) => r.data),
+    // null = หมดลิสต์ → ต้องคืน undefined ให้ react-query ปิด hasNextPage
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
     staleTime: STALE_TIME.SHORT,
   });
 }

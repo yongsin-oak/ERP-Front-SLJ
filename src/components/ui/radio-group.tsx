@@ -24,12 +24,12 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        "aspect-square size-4.5 shrink-0 rounded-full border border-control-off bg-background shadow-xs transition-[color,border-color,box-shadow] duration-150 outline-none",
-        "hover:border-primary",
-        "focus-visible:ring-[3px] focus-visible:ring-ring/20 focus-visible:border-ring",
+        "aspect-square size-4 shrink-0 rounded-full border border-border-control bg-control transition-colors duration-(--duration-fast) ease-out outline-none",
+        "hover:border-border-stronger",
+        "focus-visible:border-border-stronger focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-stronger",
         "data-[state=checked]:border-primary",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-disabled-bg",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+        "aria-invalid:border-destructive aria-invalid:focus-visible:outline-destructive",
         className
       )}
       {...props}

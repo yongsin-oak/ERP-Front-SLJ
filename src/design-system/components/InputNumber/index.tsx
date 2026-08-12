@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { FIELD_BORDER_WITHIN } from '@/lib/fieldStyles';
 
 type InputNumberSize = 'small' | 'middle' | 'large';
 
 const SIZE_H: Record<InputNumberSize, string> = {
-  small: 'h-8 text-sm',
-  middle: 'h-9 text-sm',
-  large: 'h-10 text-base',
+  small: 'h-7.5 text-sm',
+  middle: 'h-8.5 text-sm',
+  large: 'h-9.5 text-sm',
 };
 
 export interface InputNumberProps {
@@ -30,7 +31,7 @@ export interface InputNumberProps {
 }
 
 const ADDON =
-  'flex items-center border border-input bg-muted px-3 text-sm whitespace-nowrap text-muted-foreground';
+  'flex items-center border border-border-control bg-surface-100 px-3 text-sm whitespace-nowrap text-foreground-light';
 
 export function InputNumber({
   value,
@@ -85,11 +86,11 @@ export function InputNumber({
 
   const field = (
     <div
+      data-disabled={disabled || undefined}
       className={cn(
-        'flex w-full min-w-0 items-center gap-2 rounded-md border border-input bg-background px-3 text-foreground shadow-xs transition-[color,border-color,box-shadow] duration-150 outline-none',
-        'hover:border-border-strong focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/20',
+        'flex w-full min-w-0 items-center gap-2 rounded-md bg-control px-3 text-foreground ease-out',
+        FIELD_BORDER_WITHIN,
         SIZE_H[size],
-        disabled && 'pointer-events-none cursor-not-allowed border-border bg-disabled-bg text-disabled',
         hasAddon && 'rounded-none',
         addonBefore != null && addonAfter == null && 'rounded-r-md',
         addonAfter != null && addonBefore == null && 'rounded-l-md',
@@ -98,7 +99,7 @@ export function InputNumber({
       style={hasAddon ? undefined : style}
     >
       {prefix != null && (
-        <span className="flex shrink-0 items-center text-foreground-subtle">{prefix}</span>
+        <span className="flex shrink-0 items-center text-foreground-muted">{prefix}</span>
       )}
       <input
         id={id}
@@ -115,10 +116,10 @@ export function InputNumber({
           commit(parse(e.target.value));
         }}
         onBlur={() => setFocused(false)}
-        className="min-w-0 flex-1 bg-transparent text-right tabular-nums outline-none placeholder:text-left placeholder:text-foreground-subtle disabled:cursor-not-allowed"
+        className="min-w-0 flex-1 bg-transparent text-right font-mono tabular-nums outline-none placeholder:text-left placeholder:font-sans placeholder:text-foreground-muted disabled:cursor-not-allowed"
       />
       {suffix != null && (
-        <span className="flex shrink-0 items-center text-foreground-subtle">{suffix}</span>
+        <span className="flex shrink-0 items-center text-foreground-muted">{suffix}</span>
       )}
     </div>
   );

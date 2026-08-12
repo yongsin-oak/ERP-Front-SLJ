@@ -44,7 +44,7 @@ function transformRow(mapped: Record<string, unknown>): ProductImportRow {
 // (satisfies ชนกับ generics)
 
 const meta: Meta<typeof SheetImportModal> = {
-  title: 'Design System/SheetImportModal',
+  title: 'Design System/Data Import/SheetImportModal',
   component: SheetImportModal,
   tags: ['autodocs'],
   parameters: {

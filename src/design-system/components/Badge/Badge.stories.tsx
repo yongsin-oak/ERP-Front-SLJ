@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from './index';
 
 const meta = {
-  title: 'Design System/Badge',
+  title: 'Design System/Display/Badge',
   component: Badge,
   tags: ['autodocs'],
   args: { status: 'success', text: 'ใช้งาน' },

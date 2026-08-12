@@ -19,10 +19,10 @@ export function Empty({
       className={cn('flex flex-col items-center justify-center gap-3 py-12 text-center', className)}
       {...props}
     >
-      <div className="text-foreground-subtle">
+      <div className="text-foreground-muted">
         {image ?? <IconInbox className="size-12" stroke={1.25} />}
       </div>
-      {description != null && <div className="text-sm text-muted-foreground">{description}</div>}
+      {description != null && <div className="text-sm text-foreground-lighter">{description}</div>}
       {children != null && <div className="mt-1">{children}</div>}
     </div>
   );

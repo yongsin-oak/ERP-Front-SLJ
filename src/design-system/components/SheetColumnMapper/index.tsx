@@ -72,8 +72,8 @@ export function SheetColumnMapper({ sheetData, dbFields, onChange }: SheetColumn
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
-      <div className={cn(GRID, 'border-b border-border bg-muted px-4 py-2')}>
+    <div className="overflow-hidden rounded-md border border-border">
+      <div className={cn(GRID, 'border-b border-border bg-surface-100 px-4 py-2')}>
         <Text size="xs" strong type="secondary">
           คอลัมน์ในไฟล์ / ตัวอย่าง
         </Text>
@@ -90,13 +90,13 @@ export function SheetColumnMapper({ sheetData, dbFields, onChange }: SheetColumn
         return (
           <div
             key={col}
-            className={cn(GRID, 'items-center border-b border-divider px-4 py-2 last-of-type:border-b-0 hover:bg-muted')}
+            className={cn(GRID, 'items-center border-b border-border-muted px-4 py-2 last-of-type:border-b-0 hover:bg-surface-100')}
           >
             <div className="min-w-0">
               <Text size="sm" strong className="block text-foreground">
                 {col}
               </Text>
-              <div className="mt-px truncate text-[11px] text-foreground-subtle" title={sampleByCol[col]}>
+              <div className="mt-px truncate text-[11px] text-foreground-muted" title={sampleByCol[col]}>
                 {sampleByCol[col]}
               </div>
             </div>
@@ -116,7 +116,7 @@ export function SheetColumnMapper({ sheetData, dbFields, onChange }: SheetColumn
         );
       })}
 
-      <div className="flex items-center justify-between gap-4 border-t border-border bg-muted px-4 py-3">
+      <div className="flex items-center justify-between gap-4 border-t border-border bg-surface-100 px-4 py-3">
         <div className="flex items-center gap-1">
           <AppIcons.success className="size-3.5 text-success-text" />
           <Text size="xs" type="success">

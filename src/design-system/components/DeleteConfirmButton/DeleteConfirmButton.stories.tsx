@@ -6,7 +6,7 @@ import { Button } from '../Button';
 import { AppIcons } from '../../icons';
 
 const meta = {
-  title: 'Design System/DeleteConfirmButton',
+  title: 'Design System/Actions/DeleteConfirmButton',
   component: DeleteConfirmButton,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

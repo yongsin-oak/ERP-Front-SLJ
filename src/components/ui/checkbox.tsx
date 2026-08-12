@@ -12,12 +12,12 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer flex size-4.5 shrink-0 items-center justify-center rounded-[5px] border border-control-off bg-background text-primary-foreground shadow-xs transition-[color,background-color,border-color,box-shadow] duration-150 outline-none",
-        "hover:border-primary",
-        "focus-visible:ring-[3px] focus-visible:ring-ring/20 focus-visible:border-ring",
+        "peer flex size-4 shrink-0 items-center justify-center rounded-sm border border-border-control bg-control text-primary-foreground transition-colors duration-(--duration-fast) ease-out outline-none",
+        "hover:border-border-stronger",
+        "focus-visible:border-border-stronger focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-stronger",
         "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-disabled-bg",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+        "aria-invalid:border-destructive aria-invalid:focus-visible:outline-destructive",
         className
       )}
       {...props}
@@ -27,9 +27,9 @@ function Checkbox({
         className="flex items-center justify-center text-current"
       >
         {props.checked === "indeterminate" ? (
-          <IconMinus className="size-3.5" stroke={3} />
+          <IconMinus className="size-3" stroke={3} />
         ) : (
-          <IconCheck className="size-3.5" stroke={3} />
+          <IconCheck className="size-3" stroke={3} />
         )}
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>

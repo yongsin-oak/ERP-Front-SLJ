@@ -37,11 +37,11 @@ export function SheetTable({ data, errors = {}, maxHeight = DEFAULT_MAX_HEIGHT }
     >
       {/* Sticky header */}
       <div
-        className="sticky top-0 z-2 flex border-b-2 border-border bg-muted"
+        className="sticky top-0 z-2 flex border-b border-border bg-surface-100"
         style={{ minWidth, height: ROW_HEIGHT }}
       >
         <div
-          className="flex h-full shrink-0 items-center justify-end border-r border-border px-2 text-xs font-semibold text-foreground-subtle"
+          className="flex h-full shrink-0 items-center justify-end border-r border-border px-2 text-xs font-medium text-foreground-muted"
           style={{ width: ROW_NUM_WIDTH }}
         >
           #
@@ -50,7 +50,7 @@ export function SheetTable({ data, errors = {}, maxHeight = DEFAULT_MAX_HEIGHT }
           <div
             key={h}
             title={h}
-            className="flex h-full shrink-0 items-center truncate border-r border-divider px-3 text-xs font-semibold text-muted-foreground"
+            className="flex h-full shrink-0 items-center truncate border-r border-border-muted px-3 text-xs font-medium text-foreground-lighter"
             style={{ width: COL_WIDTH }}
           >
             {h}
@@ -69,15 +69,15 @@ export function SheetTable({ data, errors = {}, maxHeight = DEFAULT_MAX_HEIGHT }
             <div
               key={vRow.key}
               className={cn(
-                'absolute top-0 left-0 flex border-b border-divider',
-                hasError ? 'bg-error-bg hover:bg-error-border/30' : 'bg-background hover:bg-accent',
+                'absolute top-0 left-0 flex border-b border-border-muted',
+                hasError ? 'bg-error-bg hover:bg-error-border/30' : 'bg-background hover:bg-accent-overlay',
               )}
               style={{ minWidth, height: ROW_HEIGHT, transform: `translateY(${vRow.start}px)` }}
             >
               <div
                 className={cn(
                   'flex h-full shrink-0 items-center justify-end border-r border-border px-2 text-xs',
-                  hasError ? 'text-error-text' : 'text-foreground-subtle',
+                  hasError ? 'text-error-text' : 'text-foreground-muted',
                 )}
                 style={{ width: ROW_NUM_WIDTH }}
               >
@@ -97,7 +97,7 @@ export function SheetTable({ data, errors = {}, maxHeight = DEFAULT_MAX_HEIGHT }
                   <div
                     key={h}
                     title={cellVal}
-                    className="flex h-full shrink-0 items-center truncate border-r border-divider px-3 text-sm text-foreground"
+                    className="flex h-full shrink-0 items-center truncate border-r border-border-muted px-3 text-sm text-foreground"
                     style={{ width: COL_WIDTH }}
                   >
                     {cellVal}

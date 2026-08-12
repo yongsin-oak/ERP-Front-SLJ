@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { QuantityInput } from './index';
 
 const meta = {
-  title: 'Design System/QuantityInput',
+  title: 'Design System/Inputs/QuantityInput',
   component: QuantityInput,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },
@@ -58,7 +58,7 @@ const StockReceiveDemo = () => {
   const piecesPerPack = 50;
   const totalPieces = unit === 'แพ็ค' && qty != null ? qty * piecesPerPack : null;
   return (
-    <div className="max-w-sm rounded-xl border border-border bg-card p-6 shadow-sm">
+    <div className="max-w-sm rounded-lg border border-border bg-card p-5">
       <h3 className="mb-1 text-base font-semibold text-foreground">รับสินค้าเข้าสต็อก</h3>
       <p className="mb-5 text-[13px] text-muted-foreground">
         ซองกันกระแทก 9×12 นิ้ว — ใบสั่งซื้อ PO-2026-0148

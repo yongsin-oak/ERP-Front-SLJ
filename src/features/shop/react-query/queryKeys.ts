@@ -11,6 +11,8 @@ export const shopKeys = {
   all: ['shops'] as const,
   lists: () => [...shopKeys.all, 'list'] as const,
   list: (params: ShopListParams) => [...shopKeys.lists(), params] as const,
+  /** แยกจาก lists() — คนละเส้น คนละ shape (cursor) จึงต้องเป็นคนละ cache entry */
+  dropdown: (search?: string) => [...shopKeys.all, 'dropdown', search ?? ''] as const,
   all_flat: () => [...shopKeys.all, 'all'] as const,
   detail: (id: string) => [...shopKeys.all, 'detail', id] as const,
 };

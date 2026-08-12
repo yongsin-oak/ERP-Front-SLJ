@@ -2,18 +2,30 @@ import { useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard , AppIcons, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
+import { useSearchState, PAGINATION } from '@shared';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
   useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand, useBulkDeleteBrand,
 } from '../react-query';
 import type { Brand, CreateBrandDto } from '../types';
 
+// annotate เป็น number ตรงๆ — PAGINATION เป็น `as const` ค่าเลยเป็น literal type (1 / 20)
+// ถ้าไม่ประกาศชนิด useSearchState จะล็อก state ไว้ที่ literal นั้นแล้วเปลี่ยนหน้าไม่ได้
+const BRAND_LIST_DEFAULTS: { page: number; pageSize: number } = {
+  page: PAGINATION.DEFAULT_PAGE,
+  pageSize: PAGINATION.DEFAULT_LIMIT,
+};
+
 export function BrandPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Brand | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
 
-  const { data, isLoading, refetch, isFetching } = useBrands({ page: 1, limit: 200 });
+  // แบ่งหน้าฝั่ง server — ไม่ดึงทั้งตารางมาไว้ในหน่วยความจำ
+  const [tableState, setTableState] = useSearchState('brand-list', BRAND_LIST_DEFAULTS);
+  const { page, pageSize } = tableState;
+
+  const { data, isLoading, refetch, isFetching } = useBrands({ page, limit: pageSize });
   const brands = useMemo(() => data?.data ?? [], [data]);
   const total = data?.pagination?.total ?? brands.length;
 
@@ -72,7 +84,8 @@ export function BrandPage() {
     {
       title: '',
       key: 'action',
-      width: 100,
+      width: 56,
+      align: 'center' as const,
       fixed: 'right',
       render: (_: unknown, r: Brand) => (
         <ActionCell
@@ -127,6 +140,13 @@ export function BrandPage() {
           preserveSelectedRowKeys: true,
         }}
         scroll={{ x: 'max-content' }}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
+        }}
       />
 
       <BrandFormModal

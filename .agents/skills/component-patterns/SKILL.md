@@ -12,6 +12,11 @@ Use this skill when:
 - Unsure whether to create a new component or extend an existing one
 - Naming a file, function, or prop
 
+## Atlassian + Tailwind contract
+
+- อ้าง [Atlassian components](https://atlassian.design/components) และ [layout primitives](https://atlassian.design/foundations/spacing/primitives/) ก่อนสร้าง pattern ใหม่
+- ใช้ Tailwind CSS + `cn()` เท่านั้น ห้าม Emotion, CSS-in-JS, `styled()` และ legacy token imports
+
 ---
 
 ## Core Rules
@@ -96,9 +101,7 @@ Every page is a thin orchestration layer:
 ```tsx
 // features/order/pages/OrderPage.tsx
 import { useState } from 'react';
-import styled from '@emotion/styled';
-import { spacing } from '@design-system/tokens';
-import { PageHeader, Button } from '@design-system';
+import { PageHeader, Button, Stack } from '@design-system';
 import { useOrders, useDeleteOrder } from '../hooks';
 import { OrderTable } from '../components/OrderTable';
 import { OrderFormModal } from '../components/OrderFormModal';
@@ -110,7 +113,7 @@ export function OrderPage() {
   const deleteOrder = useDeleteOrder();
 
   return (
-    <Wrapper>
+    <Stack gap={4} className="p-6">
       <PageHeader
         title="Orders"
         extra={<Button variant="primary" onClick={() => setModalOpen(true)}>New Order</Button>}
@@ -121,16 +124,10 @@ export function OrderPage() {
         onDelete={(id) => deleteOrder.mutate(id)}
       />
       <OrderFormModal open={modalOpen} onClose={() => setModalOpen(false)} />
-    </Wrapper>
+    </Stack>
   );
 }
 
-const Wrapper = styled.div`
-  padding: ${spacing[6]};
-  display: flex;
-  flex-direction: column;
-  gap: ${spacing[4]};
-`;
 ```
 
 Pages do NOT contain: table column definitions, inline styles, business logic, API calls.
@@ -279,4 +276,19 @@ switch(status) {
 {orders.filter(o => o.status !== 'cancelled').sort(...).slice(0, 5).map(...)}
 // ✅ compute above return, name the variable
 const recentActive = useMemo(() => ..., [orders]);
+
+// ❌ effect that reacts to state to run an action (cascading renders — react-hooks/set-state-in-effect)
+useEffect(() => {
+  if (pin.length === PIN_MAX) void handleConfirm();
+}, [pin]);
+// ✅ trigger from the event that changed the state, pass the next value directly
+function handleKey(k: string) {
+  const next = pin + k;
+  setPin(next);
+  if (next.length === PIN_MAX) void handleConfirm(next);   // action fn takes the value as a param
+}
 ```
+
+`useEffect` is for syncing with **external** systems (DOM listeners, subscriptions, timers) — not for
+"when state becomes X, do Y". Every entry point that can produce X calls the action itself; the action
+signature accepts the fresh value (`handleConfirm(pinValue = pin)`) so it never reads stale state.

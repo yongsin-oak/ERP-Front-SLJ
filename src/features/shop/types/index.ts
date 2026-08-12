@@ -29,6 +29,16 @@ export interface Shop {
   updatedAt?: string;
 }
 
+/**
+ * แถวจาก `/shop/dropdown-search` — ไม่ใช่ `Shop` เต็ม
+ * มี `platform` มาด้วยเพราะชื่อร้านซ้ำข้ามแพลตฟอร์มได้ (เช่น "SLJ Official" มีทั้ง Shopee และ Lazada)
+ */
+export interface ShopOption {
+  id: string;
+  name: string;
+  platform: Platform;
+}
+
 export interface CreateShopDto {
   name: string;
   platform: Platform;

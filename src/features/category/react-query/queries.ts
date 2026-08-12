@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { STALE_TIME, PAGINATION } from '@shared';
+import { STALE_TIME, PAGINATION, DROPDOWN } from '@shared';
 import { categoryService } from './services';
 import { categoryKeys } from './queryKeys';
 import type { CategoryListParams } from './queryKeys';
@@ -15,15 +15,20 @@ export function useCategories(
   });
 }
 
-const DROPDOWN_LIMIT = 20;
-
+/**
+ * ตัวเลือกหมวดหมู่สำหรับ `CategorySearchSelect` — ยิง `/category/dropdown-search` (cursor)
+ * ไม่ใช่เส้นตาราง `/category` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
+ */
 export function useCategoryDropdown(search?: string) {
   return useInfiniteQuery({
-    queryKey: ['categories', 'dropdown', search ?? ''],
-    queryFn: ({ pageParam = 1 }) =>
-      categoryService.getAll({ page: pageParam as number, limit: DROPDOWN_LIMIT, search }).then((r) => r.data),
-    getNextPageParam: (last) => last.pagination.hasNextPage ? last.pagination.page + 1 : undefined,
-    initialPageParam: 1,
+    queryKey: categoryKeys.dropdown(search),
+    queryFn: ({ pageParam }) =>
+      categoryService
+        .dropdownSearch({ cursor: pageParam, limit: DROPDOWN.DEFAULT_LIMIT, search })
+        .then((r) => r.data),
+    // null = หมดลิสต์ → ต้องคืน undefined ให้ react-query ปิด hasNextPage
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    initialPageParam: undefined as string | undefined,
     staleTime: STALE_TIME.SHORT,
   });
 }

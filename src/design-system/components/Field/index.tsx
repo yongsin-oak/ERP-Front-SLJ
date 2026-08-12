@@ -26,18 +26,18 @@ export function Field({ label, hint, error, required, htmlFor, className, childr
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
       {label != null && (
-        <label htmlFor={htmlFor} className="text-sm font-medium text-foreground">
+        <label htmlFor={htmlFor} className="text-sm text-foreground-light">
           {label}
           {required && <span className="ml-0.5 text-destructive">*</span>}
         </label>
       )}
       {children}
       {hasError ? (
-        <p id={htmlFor ? `${htmlFor}-error` : undefined} className="text-[13px] leading-snug text-error">
+        <p id={htmlFor ? `${htmlFor}-error` : undefined} className="text-xs leading-snug text-error-text">
           {error}
         </p>
       ) : hint != null ? (
-        <p id={htmlFor ? `${htmlFor}-hint` : undefined} className="text-[13px] leading-snug text-muted-foreground">
+        <p id={htmlFor ? `${htmlFor}-hint` : undefined} className="text-xs leading-snug text-foreground-lighter">
           {hint}
         </p>
       ) : null}
@@ -98,13 +98,13 @@ export const TextField = React.forwardRef<HTMLInputElement, TextFieldProps>(func
       {prefix != null || suffix != null ? (
         <div className="relative flex items-center">
           {prefix != null && (
-            <span className="pointer-events-none absolute left-3 flex items-center text-foreground-subtle [&_svg]:size-4">
+            <span className="pointer-events-none absolute left-3 flex items-center text-foreground-muted [&_svg]:size-3.5">
               {prefix}
             </span>
           )}
           {input}
           {suffix != null && (
-            <span className="absolute right-3 flex items-center text-foreground-subtle [&_svg]:size-4">
+            <span className="absolute right-3 flex items-center text-foreground-muted [&_svg]:size-3.5">
               {suffix}
             </span>
           )}

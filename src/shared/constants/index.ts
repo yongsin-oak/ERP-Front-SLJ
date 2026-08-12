@@ -47,7 +47,26 @@ export const REFETCH_INTERVAL = {
 export const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 20,
+  /**
+   * ต้องเท่ากับ `MAX_PAGE_LIMIT` ใน backend (`src/common/dto/paginated.dto.ts`) เป๊ะ
+   * ส่งเกินค่านี้ backend ตอบ 400 "จำนวนต่อหน้าเกินค่าที่กำหนด" ทันที
+   * ห้ามใส่ตัวเลข limit ดิบในหน้าเพจ — ให้อ้าง PAGINATION.MAX_LIMIT เสมอ
+   * ถ้าต้องการข้อมูลมากกว่านี้ ให้ใช้ infinite query หรือขอ `total` จาก pagination แทน
+   */
   MAX_LIMIT: 200,
+} as const;
+
+/**
+ * Page size for `/<entity>/dropdown-search` — **ไม่ใช่ชุดเดียวกับ `PAGINATION`**
+ *
+ * dropdown ใช้ cursor ไม่ใช่ offset จึงไม่มี `page`/`total` ให้ตั้ง
+ * `MAX_LIMIT` ตรงนี้คือ `DROPDOWN_MAX_LIMIT` ฝั่ง backend
+ * (`src/common/dto/dropdown-query.dto.ts`) ส่งเกินได้ 400 เหมือนกัน
+ * และต่ำกว่า `PAGINATION.MAX_LIMIT` มาก เพราะ dropdown ให้เลื่อนดู ไม่ใช่โหลดทั้งชุด
+ */
+export const DROPDOWN = {
+  DEFAULT_LIMIT: 20,
+  MAX_LIMIT: 50,
 } as const;
 
 // ---------------------------------------------------------------------------

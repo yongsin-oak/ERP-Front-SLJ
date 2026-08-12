@@ -27,7 +27,7 @@ function PreviewTable({ headers, rows }: { headers: string[]; rows: Record<strin
             {headers.map((h) => (
               <th
                 key={h}
-                className="whitespace-nowrap border-b border-border bg-muted px-2.5 py-1.5 text-left font-semibold text-muted-foreground"
+                className="whitespace-nowrap border-b border-border bg-surface-100 px-2.5 py-1.5 text-left font-medium text-foreground-lighter"
               >
                 {h}
               </th>
@@ -41,7 +41,7 @@ function PreviewTable({ headers, rows }: { headers: string[]; rows: Record<strin
                 <td
                   key={h}
                   title={String(row[h] ?? '')}
-                  className="max-w-45 truncate whitespace-nowrap border-b border-divider px-2.5 py-1.5 text-foreground"
+                  className="max-w-45 truncate whitespace-nowrap border-b border-border-muted px-2.5 py-1.5 text-foreground"
                 >
                   {String(row[h] ?? '—')}
                 </td>
@@ -135,7 +135,7 @@ export function DropZoneSheet({
   if (sheet) {
     return (
       <div>
-        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+        <div className="rounded-md border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AppIcons.excel className="size-5.5 text-success-text" />
@@ -183,10 +183,10 @@ export function DropZoneSheet({
         }}
         onDragLeave={() => setActive(false)}
         className={cn(
-          'rounded-lg border-2 border-dashed px-6 py-10 text-center transition-colors',
+          'rounded-md border border-dashed px-6 py-10 text-center transition-colors duration-(--duration-fast)',
           active
             ? 'border-primary bg-primary-subtle'
-            : 'border-border bg-muted hover:border-primary hover:bg-primary-subtle',
+            : 'border-border-strong bg-surface-100 hover:border-primary hover:bg-primary-subtle',
           disabled || loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
         )}
       >
@@ -199,7 +199,7 @@ export function DropZoneSheet({
           disabled={disabled}
         />
         <div className="flex flex-col items-center gap-2">
-          <AppIcons.inbox className={cn('size-10', loading ? 'text-primary' : 'text-foreground-subtle')} />
+          <AppIcons.inbox className={cn('size-10', loading ? 'text-primary' : 'text-foreground-muted')} />
           <div>
             <Text size="sm" strong className={cn(loading ? 'text-primary' : 'text-foreground')}>
               {loading ? 'กำลังอ่านไฟล์…' : 'ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก'}

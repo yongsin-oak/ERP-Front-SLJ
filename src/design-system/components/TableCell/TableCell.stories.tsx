@@ -61,7 +61,7 @@ const ExampleRow = ({ label, children }: { label: string; children: ReactNode })
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 const meta = {
-  title: 'Design System/TableCell',
+  title: 'Design System/Display/TableCell',
   component: DateCell,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

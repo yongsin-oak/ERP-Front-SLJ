@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Table, Button, Tag, PageHeader, BulkSelectionBar, AppIcons,
-  DeleteConfirmButton, Modal, Input, InputPassword, SummaryCard, DateCell,
+  ActionCell, Modal, Input, InputPassword, SummaryCard, DateCell,
   Inline, Text, Badge,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
@@ -121,24 +121,18 @@ export function EmployeePage() {
     {
       title: '',
       key: 'action',
-      width: 130,
+      width: 56,
+      align: 'center' as const,
       render: (_: unknown, r: Employee) => (
-        <Inline>
-          <Button
-            variant="ghost" size="small" icon={<AppIcons.key />}
-            title="ตั้ง PIN"
-            onClick={() => { setPinEmployee(r); setPinValue(''); }}
-          />
-          <Button
-            variant="ghost" size="small" icon={<AppIcons.edit />}
-            onClick={() => { setSelected(r); setModalOpen(true); }}
-          />
-          <DeleteConfirmButton
-            onConfirm={() => deleteEmployee.mutate(r.id)}
-            loading={deleteEmployee.isPending}
-            title="ลบพนักงานนี้?"
-          />
-        </Inline>
+        <ActionCell
+          actions={[
+            { key: 'pin', label: 'ตั้ง PIN', onSelect: () => { setPinEmployee(r); setPinValue(''); } },
+          ]}
+          onEdit={() => { setSelected(r); setModalOpen(true); }}
+          onDelete={() => deleteEmployee.mutate(r.id)}
+          isDeleting={deleteEmployee.isPending}
+          deleteTitle="ลบพนักงานนี้?"
+        />
       ),
     },
   ];
@@ -230,24 +224,24 @@ export function EmployeePage() {
         onOk={handleSetPin}
         okText="บันทึก PIN"
         confirmLoading={setPin.isPending}
-        okButtonProps={{ disabled: pinValue.length < 4 }}
+        okButtonProps={{ disabled: pinValue.length !== 4 }}
       >
         <div style={{ padding: '16px 0' }}>
           <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-            PIN ต้องเป็นตัวเลข 4–6 หลัก
+            PIN ต้องเป็นตัวเลข 4 หลัก
           </Text>
           <InputPassword
             value={pinValue}
-            onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            placeholder="กรอก PIN 4-6 หลัก"
-            maxLength={6}
+            onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            placeholder="กรอก PIN 4 หลัก"
+            maxLength={4}
             style={{ width: '100%', letterSpacing: 6, fontSize: 20, textAlign: 'center' }}
           />
           <Text
-            type={pinValue.length >= 4 && pinValue.length <= 6 ? 'success' : 'secondary'}
+            type={pinValue.length === 4 ? 'success' : 'secondary'}
             style={{ fontSize: 12, marginTop: 4, display: 'block' }}
           >
-            {pinValue.length} หลัก {pinValue.length >= 4 && pinValue.length <= 6 ? '✓' : '(ต้องการ 4-6 หลัก)'}
+            {pinValue.length} หลัก {pinValue.length === 4 ? '✓' : '(ต้องการ 4 หลัก)'}
           </Text>
         </div>
       </Modal>

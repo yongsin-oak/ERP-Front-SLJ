@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { InlineEdit } from './index';
 
 const meta = {
-  title: 'Design System/InlineEdit',
+  title: 'Design System/Inputs/InlineEdit',
   component: InlineEdit,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

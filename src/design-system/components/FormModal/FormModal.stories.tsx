@@ -11,7 +11,7 @@ import { Button } from '../Button';
 const NOOP = () => undefined;
 
 const meta = {
-  title: 'Design System/FormModal',
+  title: 'Design System/Overlay/FormModal',
   component: FormModal,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

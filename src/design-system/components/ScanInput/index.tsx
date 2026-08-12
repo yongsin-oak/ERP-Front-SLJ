@@ -65,7 +65,7 @@ export function ScanInput({
       )}
       <Input
         ref={inputRef}
-        prefix={<AppIcons.barcode className={cn(loading ? 'text-primary' : 'text-foreground-subtle')} />}
+        prefix={<AppIcons.barcode className={cn(loading ? 'text-primary' : 'text-foreground-muted')} />}
         placeholder={placeholder}
         onKeyDown={handleKeyDown}
         disabled={disabled || loading}

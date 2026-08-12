@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { Modal, Select, Button, Alert, Inline, Text, AppIcons } from '@design-system';
+import { Modal, Button, Alert, Inline, Text, AppIcons } from '@design-system';
 import { showError } from "@shared";
-import { useEmployees } from "@features/employee/react-query";
+import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
 import { authService } from "../react-query/services";
 import { useActorModal, useActor } from "../stores";
 import { cn } from '@/lib/utils';
 
 const PIN_MIN = 4;
-const PIN_MAX = 6;
+const PIN_MAX = 4;
 
 const KEYS = [
   "1",
@@ -35,34 +35,43 @@ const KEY_VARIANT: Record<'danger' | 'muted' | 'default', string> = {
 
 /* ── main ────────────────────────────────────────── */
 export function ActorModal() {
-  const { open, confirm, cancel } = useActorModal();
+  // selector ทีละค่า — ActorModal ถูก mount ค้างไว้ใน AppLayout ตลอดอายุแอป
+  const open = useActorModal((s) => s.open);
+  const confirm = useActorModal((s) => s.confirm);
+  const cancel = useActorModal((s) => s.cancel);
   const [employeeId, setEmployeeId] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { data: employees = [] } = useEmployees();
 
 
   function handleKey(k: string) {
     setError("");
     if (k === "clear") return setPin("");
     if (k === "back") return setPin((p) => p.slice(0, -1));
-    if (pin.length < PIN_MAX) setPin((p) => p + k);
+    if (pin.length >= PIN_MAX) return;
+
+    const next = pin + k;
+    setPin(next);
+    // กรอกครบ PIN_MAX หลัก + เลือกพนักงานแล้ว → ยืนยันอัตโนมัติ (Operator ไม่ต้องกดปุ่มซ้ำ)
+    // ยังไม่เลือกพนักงาน = ไม่ยิง (กันขึ้น error ทั้งที่แค่กรอก PIN ก่อน)
+    if (next.length === PIN_MAX && employeeId && !loading) void handleConfirm(next);
   }
 
-  async function handleConfirm() {
-    if (!employeeId) {
+  // pinValue / empId รับค่าล่าสุดตรง ๆ ได้ เพราะ auto-confirm ยิงก่อน state รอบใหม่จะ commit
+  async function handleConfirm(pinValue = pin, empId = employeeId) {
+    if (!empId) {
       setError("กรุณาเลือกพนักงาน");
       return;
     }
-    if (pin.length < PIN_MIN) {
+    if (pinValue.length < PIN_MIN) {
       setError(`กรุณากรอก PIN อย่างน้อย ${PIN_MIN} หลัก`);
       return;
     }
     setLoading(true);
     try {
-      const res = await authService.verifyPin(employeeId, pin);
+      const res = await authService.verifyPin(empId, pinValue);
       useActor.getState().setActor(res.data.data);
       confirm();
     } catch (err) {
@@ -73,10 +82,6 @@ export function ActorModal() {
     }
   }
 
-  const employeeOptions = employees.map((e) => ({
-    label: `${e.firstName} ${e.lastName} (${e.nickname})`,
-    value: e.id,
-  }));
 
   const canConfirm = !!employeeId && pin.length >= PIN_MIN;
 
@@ -130,17 +135,18 @@ export function ActorModal() {
           <AppIcons.user style={{ marginRight: 4 }} />
           พนักงาน
         </Text>
-        <Select
+        <EmployeeSearchSelect
           style={{ width: "100%", marginTop: 6 }}
-          options={employeeOptions}
           placeholder="เลือกพนักงาน"
-          showSearch={{ optionFilterProp: "label" }}
           value={employeeId || undefined}
           onChange={(v) => {
-            setEmployeeId(v as string);
+            const next = v as string;
+            setEmployeeId(next);
             setError("");
             // ปล่อย focus ออกจาก select เพื่อให้พิมพ์ PIN ด้วยคีย์บอร์ดได้ทันที
             requestAnimationFrame(() => (document.activeElement as HTMLElement | null)?.blur());
+            // กรอก PIN ครบก่อนแล้วค่อยเลือกพนักงาน → ยืนยันอัตโนมัติเช่นกัน
+            if (pin.length === PIN_MAX && !loading) void handleConfirm(pin, next);
           }}
         />
       </div>
@@ -148,7 +154,7 @@ export function ActorModal() {
       {/* PIN dots (show up to PIN_MAX slots, filled = entered digits) */}
       <Text type="secondary" style={{ fontSize: 12 }}>
         <AppIcons.lock style={{ marginRight: 4 }} />
-        PIN ({PIN_MIN}–{PIN_MAX} หลัก) · พิมพ์ด้วยคีย์บอร์ดได้
+        PIN ({PIN_MAX} หลัก) · พิมพ์ด้วยคีย์บอร์ดได้
       </Text>
       <div className="flex justify-center gap-2.5 mt-3.5 mb-4.5">
         {Array.from({ length: PIN_MAX }).map((_, i) => {
@@ -206,7 +212,7 @@ export function ActorModal() {
         style={{ marginTop: 14, height: 44 }}
         loading={loading}
         disabled={!canConfirm}
-        onClick={handleConfirm}
+        onClick={() => void handleConfirm()}
       >
         ยืนยัน
       </Button>

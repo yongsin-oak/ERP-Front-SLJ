@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useSearchState, showError, notify } from '@shared';
 import {
   Table, Button, Tag, PageHeader, Select, BulkSelectionBar,
-  AppIcons, DeleteConfirmButton, CodeCell,
+  AppIcons, ActionCell, CodeCell,
   Inline, Input, Badge, Tabs, Tooltip,
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { downloadFile } from '@shared';
-import { useBrands } from '@features/brand';
-import { useCategories } from '@features/category';
+import { BrandSearchSelect } from '@features/brand/components/BrandSearchSelect';
+import { CategorySearchSelect } from '@features/category/components/CategorySearchSelect';
 import {
   useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useBulkDeleteProduct,
   inventoryExportService,
@@ -54,10 +54,6 @@ export function InventoryPage() {
   const products = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
-  const { data: brandsData } = useBrands({ page: 1, limit: 200 });
-  const brands = brandsData?.data ?? [];
-  const { data: categoriesData } = useCategories({ page: 1, limit: 200 });
-  const categories = categoriesData?.data ?? [];
 
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
@@ -173,38 +169,26 @@ export function InventoryPage() {
     {
       title: '',
       key: 'action',
-      width: 160,
+      width: 56,
+      align: 'center' as const,
       render: (_: unknown, r: Product) => (
-        <Inline>
-          <Tooltip title="รับสินค้าเข้า">
-            <Button
-              variant="ghost" size="small" icon={<AppIcons.inbox />}
-              onClick={() => openStockEntry(r.barcode)}
-            />
-          </Tooltip>
-          <Tooltip title="ราคาร้านค้าเฉพาะ">
-            <Button
-              variant="ghost" size="small" icon={<AppIcons.money />}
-              onClick={() => setShopPriceBarcode(r.barcode)}
-            />
-          </Tooltip>
-          <Button
-            variant="ghost" size="small" icon={<AppIcons.edit />}
-            onClick={() => { setSelected(r); setModalOpen(true); }}
-          />
-          <DeleteConfirmButton
-            onConfirm={async () => {
-              setDeletingBarcode(r.barcode);
-              try {
-                await deleteProduct.mutateAsync(r.barcode);
-              } finally {
-                setDeletingBarcode(null);
-              }
-            }}
-            loading={deletingBarcode === r.barcode}
-            title="ลบสินค้านี้?"
-          />
-        </Inline>
+        <ActionCell
+          actions={[
+            { key: 'receive', label: 'รับสินค้าเข้า', onSelect: () => openStockEntry(r.barcode) },
+            { key: 'shopPrice', label: 'ราคาร้านค้าเฉพาะ', onSelect: () => setShopPriceBarcode(r.barcode) },
+          ]}
+          onEdit={() => { setSelected(r); setModalOpen(true); }}
+          onDelete={async () => {
+            setDeletingBarcode(r.barcode);
+            try {
+              await deleteProduct.mutateAsync(r.barcode);
+            } finally {
+              setDeletingBarcode(null);
+            }
+          }}
+          isDeleting={deletingBarcode === r.barcode}
+          deleteTitle="ลบสินค้านี้?"
+        />
       ),
     },
   ];
@@ -225,23 +209,19 @@ export function InventoryPage() {
           }}
           onPressEnter={() => setTableState({ ...tableState, search: searchText, page: 1 })}
         />
-        <Select
+        <BrandSearchSelect
           allowClear
           placeholder="แบรนด์"
           value={brandId || undefined}
           onChange={(v) => setTableState({ ...tableState, brandId: v ?? '', page: 1 })}
-          options={brands.map((b) => ({ label: b.name, value: b.id }))}
           style={{ width: 160 }}
-          showSearch={{ optionFilterProp: 'label' }}
         />
-        <Select
+        <CategorySearchSelect
           allowClear
           placeholder="หมวดหมู่"
           value={categoryId || undefined}
           onChange={(v) => setTableState({ ...tableState, categoryId: v ?? '', page: 1 })}
-          options={categories.map((c) => ({ label: c.name, value: c.id }))}
           style={{ width: 160 }}
-          showSearch={{ optionFilterProp: 'label' }}
         />
         <Select
           allowClear

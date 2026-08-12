@@ -9,7 +9,7 @@ import { downloadFile, showError, notify } from '@shared';
 import { useStockEntries, stockEntryService } from '../react-query';
 import { StockEntryTypes } from '../types';
 import type { StockEntry, StockEntryType } from '../types';
-import { useEmployeeList } from '@features/employee/react-query';
+import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
 import { ProductDropdownSelect } from '@features/inventory';
 
 const DECREASE_TYPES: StockEntryType[] = ['damage'];
@@ -38,17 +38,14 @@ const STOCK_HISTORY_DEFAULTS = {
 export function StockHistoryPage() {
   const [tableState, setTableState] = useSearchState('stock-history', STOCK_HISTORY_DEFAULTS);
   const { search, type, employeeId, startDate, endDate, page, pageSize } = tableState;
-  const dateRange: [Dayjs, Dayjs] | null =
-    startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : null;
+  // ต้อง memo — เป็น array ใหม่ทุก render ถ้าไม่ทำ แล้วมันเป็น dep ของ `params` ข้างล่าง
+  // ผลคือ useMemo ของ params ไม่เคย hit เลย และ queryKey ก็เป็น object ใหม่ทุกรอบ
+  const dateRange = useMemo<[Dayjs, Dayjs] | null>(
+    () => (startDate && endDate ? [dayjs(startDate), dayjs(endDate)] : null),
+    [startDate, endDate],
+  );
   const [exporting, setExporting] = useState(false);
 
-  const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
-  const employees = empData?.data ?? [];
-
-  const employeeOptions = useMemo(
-    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
-    [employees],
-  );
 
   const params = useMemo(
     () => ({
@@ -236,12 +233,10 @@ export function StockHistoryPage() {
             value={type || undefined}
             onChange={(v) => setTableState({ ...tableState, type: v ?? '', page: 1 })}
           />
-          <Select
+          <EmployeeSearchSelect
             allowClear
             placeholder="พนักงาน"
-            showSearch={{ optionFilterProp: 'label' }}
             style={{ width: 180 }}
-            options={employeeOptions}
             value={employeeId || undefined}
             onChange={(v) => setTableState({ ...tableState, employeeId: v ?? '', page: 1 })}
           />

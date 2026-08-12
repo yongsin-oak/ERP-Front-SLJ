@@ -1,5 +1,5 @@
 import { req } from '@shared';
-import type { Paginated, ApiData } from '@shared/types';
+import type { Paginated, ApiData, CursorPage, DropdownParams, DropdownOption } from '@shared/types';
 import type { Supplier, CreateSupplierDto, UpdateSupplierDto } from '../types';
 
 export interface SupplierParams {
@@ -13,6 +13,10 @@ const BASE = '/supplier';
 export const supplierService = {
   getAll: (params: SupplierParams) =>
     req.get<Paginated<Supplier>>(BASE, { params }),
+
+  /** เส้นของ dropdown เท่านั้น — cursor + projection แคบ ห้ามเอาไปทำตาราง (ไม่มี total) */
+  dropdownSearch: (params: DropdownParams) =>
+    req.get<CursorPage<DropdownOption>>(`${BASE}/dropdown-search`, { params }),
 
   getById: (id: string) =>
     req.get<ApiData<Supplier>>(`${BASE}/${id}`),

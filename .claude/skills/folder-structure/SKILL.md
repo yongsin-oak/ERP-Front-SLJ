@@ -136,9 +136,9 @@ export function useBrands(params: BrandListParams) {
   return useQuery({ queryKey: brandKeys.list(params), queryFn: () => brandService.getAll(params) });
 }
 
-// ✅ react-query/services.ts — HTTP only
+// ✅ react-query/services.ts — HTTP only, path from the central registry
 export const brandService = {
-  getAll: (params) => req.get<Paginated<Brand>>('/brand', { params }),
+  getAll: (params) => req.get<Paginated<Brand>>(API.brand.root, { params }),
 };
 
 // ✅ stores/useBrandStore.ts — UI state only
@@ -154,7 +154,7 @@ export const useBrandStore = create<BrandStore>((set) => ({
 
 ```ts
 // ✅ correct imports inside services.ts
-import { req } from '@shared';                          // HTTP client
+import { req, API } from '@shared';                      // HTTP client + endpoint registry
 import type { Paginated, ApiData } from '@shared/types'; // shared response types
 import type { Brand, CreateBrandDto } from '../types';   // feature-local types
 import type { BrandListParams } from './queryKeys';      // params from queryKeys (same folder)
@@ -162,6 +162,27 @@ import type { BrandListParams } from './queryKeys';      // params from queryKey
 // ❌ never import from node_modules/axios directly
 // ❌ never import from feature barrel (circular)
 ```
+
+### API paths — `shared/api/endpoints.ts` is the single source of truth
+
+Every URL path lives in the `API` registry. A `services.ts` must never build a path string itself.
+
+```ts
+// ✅ path from the registry — param'd routes are functions, so TS enforces the args
+getByBarcode: (barcode: string) => req.get<ApiData<Product>>(API.product.byBarcode(barcode)),
+bulkDelete:   (barcodes: string[]) => req.delete<...>(API.product.bulk, { data: { barcodes } }),
+
+// ❌ local BASE const + template string — path drifts from backend, invisible to grep
+const BASE = '/product';
+getByBarcode: (barcode: string) => req.get<ApiData<Product>>(`${BASE}/${barcode}`),
+```
+
+Rules:
+- Paths must match the backend `@Controller({ path })` + route decorator (`E:\ERP-Back-SLJ/src/modules/<x>/<x>.controller.ts`)
+- The registry holds **paths only** — request/response types stay in each feature's `services.ts`. Moving types there would make importing one feature drag in every feature's types.
+- Adding a feature → add its block to `endpoints.ts` first, then write `services.ts` against it
+
+> Migration status: `product` / `stock-entry` / `order` are on the registry. The other 11 features still use a local `BASE` const — convert as you touch them.
 
 ### Feature barrel (`index.ts`) pattern
 

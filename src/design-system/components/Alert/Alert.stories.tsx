@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Alert } from './index';
 
 const meta = {
-  title: 'Design System/Alert',
+  title: 'Design System/Feedback/Alert',
   component: Alert,
   tags: ['autodocs'],
   args: { type: 'info', message: 'ข้อความแจ้งเตือน', showIcon: true },

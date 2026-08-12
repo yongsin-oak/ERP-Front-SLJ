@@ -1,5 +1,5 @@
 import { req } from '@shared';
-import type { Paginated, ApiData } from '@shared/types';
+import type { Paginated, ApiData, CursorPage, DropdownParams, DropdownOption } from '@shared/types';
 import type { Brand, CreateBrandDto, UpdateBrandDto } from '../types';
 
 const BASE = '/brand';
@@ -7,6 +7,10 @@ const BASE = '/brand';
 export const brandService = {
   getAll: (params: { page: number; limit: number; search?: string }) =>
     req.get<Paginated<Brand>>(BASE, { params }),
+
+  /** เส้นของ dropdown เท่านั้น — cursor + projection แคบ ห้ามเอาไปทำตาราง (ไม่มี total) */
+  dropdownSearch: (params: DropdownParams) =>
+    req.get<CursorPage<DropdownOption>>(`${BASE}/dropdown-search`, { params }),
 
   getById: (id: string) => req.get<ApiData<Brand>>(`${BASE}/${id}`),
 

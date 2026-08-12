@@ -10,6 +10,13 @@ export interface AuthUser {
   isTerminal?: boolean;
 }
 
+/** ตัวเลือก terminal สำหรับ dropdown หน้า login (GET /auth/terminals — public) */
+export interface LoginTerminal {
+  terminalCode: string;
+  name: string;
+  role: Role;
+}
+
 export interface AuthState {
   user: AuthUser | null;
   isAuth: boolean;

@@ -48,7 +48,7 @@ const Demo = ({ initial = {} }: { initial?: FilterValues }) => {
 };
 
 const meta = {
-  title: 'Design System/FilterBar',
+  title: 'Design System/Inputs/FilterBar',
   component: FilterBar,
   tags: ['autodocs'],
   args: { items: ITEMS, values: {}, onChange: () => undefined },

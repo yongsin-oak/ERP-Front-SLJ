@@ -45,11 +45,11 @@ export function Alert({
       className={cn('flex items-start gap-2 rounded-md border px-3 py-2 text-sm', s.box, className)}
       {...props}
     >
-      {showIcon && <s.Icon size={18} className={cn('mt-px shrink-0', s.icon)} />}
+      {showIcon && <s.Icon className={cn('mt-0.5 size-4 shrink-0', s.icon)} />}
       <div className="min-w-0 flex-1">
         {head != null && <div className="font-medium text-foreground">{head}</div>}
         {description != null && (
-          <div className="mt-0.5 text-[13px] text-muted-foreground">{description}</div>
+          <div className="mt-0.5 text-xs text-foreground-lighter">{description}</div>
         )}
       </div>
       {action != null && <div className="shrink-0">{action}</div>}

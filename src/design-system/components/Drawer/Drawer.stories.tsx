@@ -5,7 +5,7 @@ import { Button } from '../Button';
 import { Drawer, type DrawerProps } from './index';
 
 const meta = {
-  title: 'Design System/Drawer',
+  title: 'Design System/Overlay/Drawer',
   component: Drawer,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

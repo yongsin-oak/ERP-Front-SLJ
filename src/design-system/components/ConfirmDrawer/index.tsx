@@ -90,7 +90,9 @@ export function ConfirmDrawer({
               <span
                 className={cn(
                   'flex size-6 items-center justify-center rounded-full text-xs font-medium',
-                  i <= step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                  i <= step
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-surface-200 text-foreground-lighter',
                 )}
               >
                 {i + 1}
@@ -98,13 +100,13 @@ export function ConfirmDrawer({
               <span
                 className={cn(
                   'text-sm',
-                  i === step ? 'font-medium text-foreground' : 'text-muted-foreground',
+                  i === step ? 'font-medium text-foreground' : 'text-foreground-lighter',
                 )}
               >
                 {label}
               </span>
             </div>
-            {i < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-divider" />}
+            {i < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-border-muted" />}
           </React.Fragment>
         ))}
       </div>
@@ -114,7 +116,7 @@ export function ConfirmDrawer({
       ) : (
         <div>
           {confirmTitle && (
-            <div className="mb-4 rounded-md border border-warning-border bg-warning-bg px-4 py-3">
+            <div className="mb-4 rounded-md border border-warning-border bg-warning-bg px-3 py-2.5">
               <Text size="sm" strong type="warning">
                 {confirmTitle}
               </Text>

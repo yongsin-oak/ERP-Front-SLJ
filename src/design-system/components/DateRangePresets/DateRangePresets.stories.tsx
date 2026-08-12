@@ -6,7 +6,7 @@ import type { DateRangeValue } from './index';
 import type { DateRangePreset } from '../DatePicker';
 
 const meta = {
-  title: 'Design System/DateRangePresets',
+  title: 'Design System/Inputs/DateRangePresets',
   component: DateRangePresets,
   tags: ['autodocs'],
   parameters: {

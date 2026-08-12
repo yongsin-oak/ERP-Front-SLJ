@@ -8,8 +8,9 @@ import { ActorModal } from '@features/auth';
 import { AppIcons, Button, Tag, Tooltip } from '@design-system';
 import { inventoryService } from '@features/inventory/react-query/services';
 import { productKeys } from '@features/inventory/react-query/queryKeys';
-import { STALE_TIME, notify } from '@shared';
+import { STALE_TIME, notify, useLocalStorage } from '@shared';
 import { canAccess } from '@config/access';
+import { APP_CONFIG } from '@config/app.config';
 import { cn } from '@/lib/utils';
 
 const SIDEBAR_WIDTH = 230;
@@ -150,7 +151,7 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
                 'flex size-10 items-center justify-center rounded-md transition-colors [&_svg]:size-5',
                 selectedKey === l.key
                   ? 'bg-primary-subtle text-primary'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  : 'text-foreground-light hover:bg-surface-200 hover:text-foreground',
               )}
             >
               {l.icon}
@@ -173,7 +174,7 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
                   o.includes(s.groupKey) ? o.filter((k) => k !== s.groupKey) : [...o, s.groupKey],
                 )
               }
-              className={cn(LEAF_BASE, 'text-muted-foreground hover:bg-accent hover:text-foreground')}
+              className={cn(LEAF_BASE, 'text-foreground-light hover:bg-surface-200 hover:text-foreground')}
             >
               {s.icon}
               <span className="flex-1 text-left">{s.label}</span>
@@ -193,7 +194,7 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
                       'pl-9',
                       selectedKey === c.key
                         ? 'bg-primary-subtle font-medium text-primary'
-                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                        : 'text-foreground-light hover:bg-surface-200 hover:text-foreground',
                     )}
                   >
                     {c.icon}
@@ -212,7 +213,7 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
               LEAF_BASE,
               selectedKey === s.key
                 ? 'bg-primary-subtle font-medium text-primary'
-                : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                : 'text-foreground-light hover:bg-surface-200 hover:text-foreground',
             )}
           >
             {s.icon}
@@ -225,21 +226,77 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
 }
 
 /* ── Brand ─────────────────────────────────────────── */
-function Brand({ collapsed }: { collapsed: boolean }) {
+
+/** ไทล์โลโก้ — ไฟล์เป็น WebP ทึบ ต้องมีขอบ+มุมมน ไม่งั้น dark mode เป็นก้อนขาวลอย */
+function LogoTile({ className }: { className?: string }) {
+  return (
+    <img
+      src={APP_CONFIG.logoSrc}
+      alt=""
+      width={32}
+      height={32}
+      className={cn('size-8 shrink-0 rounded-md border border-border object-cover', className)}
+    />
+  );
+}
+
+function BrandText() {
+  return (
+    <span className="overflow-hidden text-left">
+      <span className="block text-sm font-medium leading-tight tracking-wide whitespace-nowrap text-foreground">
+        {APP_CONFIG.shortName}
+      </span>
+      <span className="block text-[10px] tracking-wide text-foreground-muted">{APP_CONFIG.tagline}</span>
+    </span>
+  );
+}
+
+/** แบรนด์แบบอ่านอย่างเดียว — ใช้ใน header มือถือกับ drawer ที่ไม่มีสถานะย่อ/ขยาย */
+function Brand() {
   return (
     <div className="flex items-center gap-2.5 overflow-hidden">
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-[0_2px_8px_rgba(224,40,46,0.33)]">
-        S
-      </div>
-      {!collapsed && (
-        <div className="overflow-hidden">
-          <div className="block text-sm font-semibold leading-tight tracking-wide whitespace-nowrap text-foreground">
-            SLJ ERP
-          </div>
-          <div className="block text-[10px] tracking-wide text-foreground-subtle">Management System</div>
-        </div>
-      )}
+      <LogoTile />
+      <BrandText />
     </div>
+  );
+}
+
+/**
+ * โลโก้ = ปุ่มย่อ/ขยาย
+ *
+ * เดิมเป็นปุ่มแยกที่ตอนย่อถูกดันไปลอยอยู่เหนือ footer (`absolute bottom-18`) ซึ่งหาไม่เจอ
+ * และไม่มีอะไรบอกว่าเกี่ยวกับแถบเมนู ตอนนี้รวมเป็นชิ้นเดียว: โลโก้อยู่มุมบนซ้ายเสมอ
+ * พอ hover/focus ไอคอนย่อ-ขยายจะ fade ทับตัวโลโก้ — จุดกดอยู่ที่เดิมทั้งสองสถานะ
+ * (a11y ไม่ได้พึ่ง hover: เป็น <button> จริง มี aria-label + aria-expanded และ focus ก็ติดสถานะเดียวกัน)
+ */
+function BrandToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={collapsed ? 'ขยายแถบเมนู' : 'ย่อแถบเมนู'}
+      aria-expanded={!collapsed}
+      className={cn(
+        'group flex items-center gap-2.5 overflow-hidden rounded-md p-1 transition-colors',
+        'hover:bg-surface-200 focus-visible:bg-surface-200',
+        collapsed ? 'justify-center' : 'w-full',
+      )}
+    >
+      <span className="relative size-8 shrink-0">
+        <LogoTile className="transition-opacity duration-(--duration-base) group-hover:opacity-0 group-focus-visible:opacity-0" />
+        <span
+          aria-hidden
+          className={cn(
+            'absolute inset-0 flex items-center justify-center rounded-md border border-border bg-surface-200',
+            'text-foreground-light opacity-0 transition-opacity duration-(--duration-base)',
+            'group-hover:opacity-100 group-focus-visible:opacity-100 [&_svg]:size-4.5',
+          )}
+        >
+          {collapsed ? <AppIcons.expandSidebar /> : <AppIcons.collapseSidebar />}
+        </span>
+      </span>
+      {!collapsed && <BrandText />}
+    </button>
   );
 }
 
@@ -262,7 +319,7 @@ function UserFooter({ collapsed, user, onLogout, onProfile }: {
             <AppIcons.user />
           </div>
           <div className="flex-1 overflow-hidden">
-            <div className="block truncate text-sm font-semibold leading-tight text-foreground">
+            <div className="block truncate text-sm font-medium leading-tight text-foreground">
               {user.username ?? user.terminalCode}
             </div>
             <Tag color={ROLE_COLOR[user.role]} className="mt-0.5">
@@ -317,30 +374,38 @@ function UserFooter({ collapsed, user, onLogout, onProfile }: {
 
 /* ── AppLayout ──────────────────────────────────────── */
 export function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  // จำสถานะย่อ/ขยายข้ามการรีโหลด — คนที่ย่อไว้คือคนที่อยากได้พื้นที่จอ ไม่ใช่อยากกดใหม่ทุกครั้ง
+  const [collapsed, setCollapsed] = useLocalStorage('slj:sidebar-collapsed', false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { logout, user } = useAuth();
+  // selector ทีละค่า — AppLayout ห่อทุกหน้า `useAuth()` เปล่าๆ ทำให้ทั้งแอป re-render
+  // ทุกครั้งที่ field ใดก็ตามใน auth store ขยับ (รวม isLoadingUser ที่หน้าเพจไม่ได้ใช้)
+  const logout = useAuth((s) => s.logout);
+  const user = useAuth((s) => s.user);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const notifiedRef = useRef(false);
 
-  const { data: lowStockProducts } = useQuery({
-    queryKey: [...productKeys.all, 'low-stock'],
+  // ต้องการแค่ "จำนวน" ไม่ใช่ตัวสินค้า → ให้ backend กรอง lowStock แล้วอ่าน pagination.total
+  // (เดิมดึง 500 แถวมากรองเองฝั่ง client ซึ่งเกิน MAX_PAGE_LIMIT=200 ของ backend → 400 ทุกหน้า)
+  const { data: lowStockCount = 0 } = useQuery({
+    queryKey: [...productKeys.all, 'low-stock-count'],
     queryFn: () =>
-      inventoryService.getAll({ page: 1, limit: 500, isActive: true }).then((r) =>
-        r.data.data.filter((p) => p.minStock != null && p.remaining < p.minStock),
-      ),
+      inventoryService
+        .getAll({ page: 1, limit: 1, isActive: true, lowStock: true })
+        .then((r) => r.data.pagination.total),
     staleTime: STALE_TIME.STATIC,
+    // role ที่เข้าคลังสินค้าไม่ได้ ก็ทำอะไรกับแจ้งเตือนนี้ไม่ได้ — และ backend จะตอบ 403
+    enabled: canAccess(user?.role, '/inventory'),
   });
 
   useEffect(() => {
-    if (notifiedRef.current || !lowStockProducts?.length) return;
+    if (notifiedRef.current || lowStockCount === 0) return;
     notifiedRef.current = true;
     notify.warning(
       'สินค้าใกล้หมดสต็อก',
-      `มี ${lowStockProducts.length} รายการที่ต่ำกว่าสต็อกขั้นต่ำ — ตรวจสอบที่หน้าสินค้าคงคลัง`,
+      `มี ${lowStockCount} รายการที่ต่ำกว่าสต็อกขั้นต่ำ — ตรวจสอบที่หน้าสินค้าคงคลัง`,
     );
-  }, [lowStockProducts]);
+  }, [lowStockCount]);
 
   async function handleLogout() {
     await logout();
@@ -356,24 +421,17 @@ export function AppLayout() {
     <div className="min-h-screen">
       {/* ── Desktop Sidebar ── */}
       <aside
-        className="desktop-sidebar fixed inset-y-0 left-0 z-100 flex flex-col border-r border-border bg-background shadow-[2px_0_8px_rgba(0,0,0,0.04)] transition-[width] duration-200"
+        className="desktop-sidebar fixed inset-y-0 left-0 z-100 flex flex-col border-r border-border bg-sidebar transition-[width] duration-200"
         style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
       >
-        {/* header: brand + collapse toggle */}
+        {/* header: โลโก้ทำหน้าที่เป็นปุ่มย่อ/ขยายในตัว */}
         <div
           className={cn(
-            'flex min-h-14 items-center border-b border-border',
-            collapsed ? 'justify-center px-0 py-3.5' : 'justify-between py-3 pr-2.5 pl-3.5',
+            'flex min-h-14 items-center border-b border-border px-2.5',
+            collapsed && 'justify-center',
           )}
         >
-          <Brand collapsed={collapsed} />
-          <Button
-            variant="ghost"
-            size="small"
-            className={cn('shrink-0 text-foreground-subtle', collapsed && 'absolute bottom-18 left-0 right-0 mx-auto w-10')}
-            icon={collapsed ? <AppIcons.expandSidebar /> : <AppIcons.collapseSidebar />}
-            onClick={() => setCollapsed((c) => !c)}
-          />
+          <BrandToggle collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
         </div>
 
         {/* nav */}
@@ -390,16 +448,17 @@ export function AppLayout() {
       </aside>
 
       {/* ── Mobile Header ── */}
-      <header className="mobile-header fixed inset-x-0 top-0 z-100 flex h-13 items-center justify-between border-b border-border bg-background px-4 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-        <Brand collapsed={false} />
+      <header className="mobile-header fixed inset-x-0 top-0 z-100 flex h-13 items-center justify-between border-b border-border bg-sidebar px-4">
+        <Brand />
         {user && (
           <div className="flex items-center gap-2">
             <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
             <Button
               variant="ghost"
+              aria-label="เปิดเมนู"
               icon={<AppIcons.menu />}
               onClick={() => setDrawerOpen(true)}
-              className="text-muted-foreground"
+              className="text-foreground-lighter"
             />
           </div>
         )}
@@ -409,9 +468,9 @@ export function AppLayout() {
       {drawerOpen && (
         <div className="fixed inset-0 z-110 md:hidden">
           <div className="absolute inset-0 bg-scrim" onClick={() => setDrawerOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-62 flex-col bg-background shadow-overlay">
+          <div className="absolute inset-y-0 left-0 flex w-62 flex-col border-r border-border bg-sidebar shadow-overlay">
             <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3.5">
-              <Brand collapsed={false} />
+              <Brand />
             </div>
             <div className="flex-1 overflow-auto py-2">
               <SidebarMenu collapsed={false} onNavigate={() => setDrawerOpen(false)} />

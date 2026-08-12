@@ -1,6 +1,6 @@
 import { req } from '@shared';
-import type { Paginated, ApiData } from '@shared/types';
-import type { Employee, CreateEmployeeDto, UpdateEmployeeDto, Department } from '../types';
+import type { Paginated, ApiData, CursorPage, DropdownParams } from '@shared/types';
+import type { Employee, EmployeeOption, CreateEmployeeDto, UpdateEmployeeDto, Department } from '../types';
 
 export interface EmployeeParams {
   page: number;
@@ -15,6 +15,10 @@ const BASE = '/employee';
 export const employeeService = {
   getAll: (params: EmployeeParams) =>
     req.get<Paginated<Employee>>(BASE, { params }),
+
+  /** เส้นของ dropdown เท่านั้น — cursor + projection แคบ ห้ามเอาไปทำตาราง (ไม่มี total) */
+  dropdownSearch: (params: DropdownParams) =>
+    req.get<CursorPage<EmployeeOption>>(`${BASE}/dropdown-search`, { params }),
 
   getById: (id: string) =>
     req.get<ApiData<Employee>>(`${BASE}/${id}`),

@@ -25,7 +25,7 @@ const ProductRows = () => (
 );
 
 const meta = {
-  title: 'Design System/PageShell',
+  title: 'Design System/Layout/PageShell',
   component: PageShell,
   tags: ['autodocs'],
   args: { children: <ProductRows /> },

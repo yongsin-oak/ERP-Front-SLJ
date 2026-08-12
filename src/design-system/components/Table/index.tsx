@@ -62,6 +62,8 @@ export interface TableExpandable<T> {
   defaultExpandedRowKeys?: React.Key[];
   onExpandedRowsChange?: (keys: React.Key[]) => void;
   rowExpandable?: (record: T) => boolean;
+  /** antd-style panel — render เนื้อหาเต็มความกว้างใต้แถวเมื่อขยาย (โหมด panel แทน tree children) */
+  expandedRowRender?: (record: T, index: number) => React.ReactNode;
   childrenColumnName?: string;
   indentSize?: number;
 }
@@ -89,7 +91,6 @@ export interface TableProps<T extends object = object> {
 const CELL_PAD = { small: 'px-2 py-1.5', middle: 'px-3 py-2.5', large: 'px-4 py-3.5' } as const;
 /** ค่าประมาณความสูงแถวต่อ size สำหรับ virtualizer (วัดจริงซ้ำด้วย measureElement) */
 const ROW_EST = { small: 33, middle: 41, large: 49 } as const;
-const FOCUS_RING = 'outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20';
 
 function getValue(record: unknown, path?: string | string[]): unknown {
   if (path == null) return undefined;
@@ -124,7 +125,7 @@ function SummaryRow({
   children: React.ReactNode;
 }) {
   return (
-    <tr style={style} className={cn('border-t border-border bg-muted/40 font-medium', className)}>
+    <tr style={style} className={cn('border-t border-border bg-surface-100 font-medium', className)}>
       {children}
     </tr>
   );
@@ -177,8 +178,8 @@ function SearchFilter({
         <button
           type="button"
           className={cn(
-            'flex size-5 items-center justify-center rounded transition-colors',
-            active ? 'text-primary' : 'text-foreground-subtle hover:text-foreground',
+            'flex size-5 items-center justify-center rounded-sm transition-colors duration-(--duration-fast)',
+            active ? 'text-primary' : 'text-foreground-muted hover:text-foreground',
           )}
         >
           <IconSearch className="size-3.5" />
@@ -196,7 +197,7 @@ function SearchFilter({
             }
           }}
           placeholder="ค้นหา"
-          className="mb-2 h-8 w-full rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20"
+          className="mb-2 h-7.5 w-full rounded-md border border-control bg-control px-2 text-sm transition-colors duration-(--duration-fast) focus-visible:border-border-stronger"
         />
         <div className="flex justify-end gap-1.5">
           <button
@@ -206,7 +207,7 @@ function SearchFilter({
               onApply('');
               setOpen(false);
             }}
-            className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+            className="rounded-md px-2 py-1 text-xs text-foreground-light hover:bg-surface-200 hover:text-foreground"
           >
             ล้าง
           </button>
@@ -249,8 +250,8 @@ function FilterDropdown({
         <button
           type="button"
           className={cn(
-            'flex size-5 items-center justify-center rounded transition-colors',
-            selected.length > 0 ? 'text-primary' : 'text-foreground-subtle hover:text-foreground',
+            'flex size-5 items-center justify-center rounded-sm transition-colors duration-(--duration-fast)',
+            selected.length > 0 ? 'text-primary' : 'text-foreground-muted hover:text-foreground',
           )}
         >
           <IconFilter className="size-3.5" />
@@ -268,7 +269,7 @@ function FilterDropdown({
             </label>
           ))}
         </div>
-        <div className="flex justify-end gap-1.5 border-t border-divider pt-2">
+        <div className="flex justify-end gap-1.5 border-t border-border-muted pt-2">
           <button
             type="button"
             onClick={() => {
@@ -276,7 +277,7 @@ function FilterDropdown({
               onApply([]);
               setOpen(false);
             }}
-            className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+            className="rounded-md px-2 py-1 text-xs text-foreground-light hover:bg-surface-200 hover:text-foreground"
           >
             ล้าง
           </button>
@@ -505,7 +506,11 @@ export function Table<T extends object = object>({
   ): React.ReactNode {
     const key = getKey(record, i);
     const kids = (getValue(record, childrenKey) as T[] | undefined) ?? undefined;
-    const canExpand = expandable && (expandable.rowExpandable ? expandable.rowExpandable(record) : !!kids?.length);
+    const canExpand =
+      expandable &&
+      (expandable.rowExpandable
+        ? expandable.rowExpandable(record)
+        : !!expandable.expandedRowRender || !!kids?.length);
     const isExpanded = expandedKeys.some((k) => String(k) === String(key));
     const rowProps = onRow?.(record, i);
 
@@ -516,7 +521,8 @@ export function Table<T extends object = object>({
         data-index={measureRef ? i : undefined}
         {...rowProps}
         className={cn(
-          'border-b border-divider transition-colors hover:bg-accent/50',
+          // hover เป็น alpha overlay ไม่ใช่พื้นทึบ — เพื่อให้ยังเห็นสีของแถวที่ถูกเลือก/ไฮไลต์ทับได้
+          'border-b border-border-muted transition-colors duration-(--duration-fast) hover:bg-accent-overlay',
           rowClassName?.(record, i),
           rowProps?.className,
         )}
@@ -547,7 +553,11 @@ export function Table<T extends object = object>({
                 col.fixed === 'left' && 'sticky left-0 z-1 bg-background',
                 col.className,
               )}
-              style={col.ellipsis ? { width: col.width } : undefined}
+              // ใส่ width ให้ td เสมอ ไม่ใช่เฉพาะตอน ellipsis — เดิมคอลัมน์ที่ตั้ง width ไว้
+              // แต่ไม่ได้ตั้ง ellipsis จะไม่ได้ width ที่ td เลย เหลือแค่ที่ th ซึ่งใน
+              // table-layout: auto เป็นแค่ข้อเสนอแนะ เนื้อหายาวๆ จึงดันคอลัมน์บานได้
+              // (ตัวที่ "บังคับ" ความกว้างจริงคือ max-w-0 + truncate ที่มากับ ellipsis)
+              style={{ width: col.width }}
               title={col.ellipsis && typeof content === 'string' ? content : undefined}
             >
               <span className={cn(isFirst && depth > 0 && 'inline-flex items-center')}>
@@ -559,12 +569,9 @@ export function Table<T extends object = object>({
                         aria-label={isExpanded ? 'ย่อแถว' : 'ขยายแถว'}
                         aria-expanded={isExpanded}
                         onClick={() => toggleExpand(key)}
-                        className={cn(
-                          'mr-1 flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent',
-                          FOCUS_RING,
-                        )}
+                        className="mr-1 flex size-5 items-center justify-center rounded-sm text-foreground-lighter transition-colors duration-(--duration-fast) hover:bg-surface-200 hover:text-foreground"
                       >
-                        <IconChevronRight className={cn('size-4 transition-transform', isExpanded && 'rotate-90')} />
+                        <IconChevronRight className={cn('size-3.5 transition-transform', isExpanded && 'rotate-90')} />
                       </button>
                     ) : (
                       <span className="mr-1 inline-block size-5" />
@@ -586,11 +593,21 @@ export function Table<T extends object = object>({
     rows.forEach((record, i) => {
       out.push(rowEl(record, i, depth));
       const key = getKey(record, i);
-      const kids = (getValue(record, childrenKey) as T[] | undefined) ?? undefined;
       const isExpanded = expandedKeys.some((k) => String(k) === String(key));
-      if (expandable && isExpanded && kids?.length) {
-        out.push(...renderRows(kids, depth + 1));
+      if (!expandable || !isExpanded) return;
+      // โหมด panel (expandedRowRender) มาก่อน tree children
+      if (expandable.expandedRowRender) {
+        out.push(
+          <tr key={`${String(key)}-expanded`} className="border-b border-border-muted bg-surface-100">
+            <td colSpan={colCount} className={cn(pad, 'text-sm text-foreground')}>
+              {expandable.expandedRowRender(record, i)}
+            </td>
+          </tr>,
+        );
+        return;
       }
+      const kids = (getValue(record, childrenKey) as T[] | undefined) ?? undefined;
+      if (kids?.length) out.push(...renderRows(kids, depth + 1));
     });
     return out;
   }
@@ -603,11 +620,13 @@ export function Table<T extends object = object>({
       <div className="relative">
         <div
           ref={scrollRef}
-          className={cn('overflow-auto rounded-lg border border-border', bordered && 'border-border')}
+          className={cn('overflow-auto rounded-md border border-border', bordered && 'border-border')}
           style={{ maxHeight: scroll?.y }}
         >
         <table className="w-full border-collapse text-left" style={{ minWidth }}>
-          <thead className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
+          {/* หัวตารางเป็นพื้นทึบ (ไม่ใช้ backdrop-blur) — Supabase ใช้ชั้นพื้นผิวแยก ไม่ใช้ความโปร่ง
+              และตัด repaint cost ของ blur ตอน scroll ตารางยาวๆ ออกไปด้วย */}
+          <thead className="sticky top-0 z-10 bg-surface-100">
             <tr className="border-b border-border">
               {hasSelection && (
                 <th className={cn(pad, 'w-10')}>
@@ -627,10 +646,10 @@ export function Table<T extends object = object>({
                     style={{ width: col.width }}
                     className={cn(
                       pad,
-                      'whitespace-nowrap text-xs font-semibold tracking-wide text-muted-foreground uppercase',
+                      'whitespace-nowrap text-xs font-medium text-foreground-lighter',
                       alignClass(col.align),
-                      col.fixed === 'right' && 'sticky right-0 z-1 bg-muted',
-                      col.fixed === 'left' && 'sticky left-0 z-1 bg-muted',
+                      col.fixed === 'right' && 'sticky right-0 z-1 bg-surface-100',
+                      col.fixed === 'left' && 'sticky left-0 z-1 bg-surface-100',
                     )}
                   >
                     <div
@@ -644,7 +663,7 @@ export function Table<T extends object = object>({
                         <button
                           type="button"
                           onClick={() => onSortClick(col, k)}
-                          className={cn('inline-flex items-center gap-1 rounded hover:text-foreground', FOCUS_RING)}
+                          className="inline-flex items-center gap-1 rounded-sm transition-colors duration-(--duration-fast) hover:text-foreground"
                         >
                           {col.title}
                           {sorted === 'ascend' ? (
@@ -689,7 +708,7 @@ export function Table<T extends object = object>({
               <tr>
                 <td colSpan={colCount} className="py-12">
                   {locale?.emptyText != null ? (
-                    <div className="text-center text-sm text-muted-foreground">{locale.emptyText}</div>
+                    <div className="text-center text-sm text-foreground-lighter">{locale.emptyText}</div>
                   ) : (
                     <Empty />
                   )}
@@ -718,7 +737,7 @@ export function Table<T extends object = object>({
         </table>
         </div>
         {loading && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-background/60 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-20 flex items-center justify-center rounded-md bg-background/60 backdrop-blur-[1px]">
             <Spinner />
           </div>
         )}
@@ -764,7 +783,7 @@ function Pagination({
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-3 px-1 py-3 text-sm">
-      <span className="text-muted-foreground">
+      <span className="text-foreground-lighter">
         {showTotal ? showTotal(total, [start, end]) : `${start}-${end} จาก ${total} รายการ`}
       </span>
       <div className="flex items-center gap-1">
@@ -772,20 +791,20 @@ function Pagination({
           type="button"
           disabled={current <= 1}
           onClick={() => onChange(current - 1, pageSize)}
-          className="flex size-8 items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-7.5 items-center justify-center rounded-md border border-control text-foreground transition-colors duration-(--duration-fast) hover:bg-surface-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <IconChevronLeft className="size-4" />
+          <IconChevronLeft className="size-3.5" />
         </button>
-        <span className="px-2 tabular-nums text-foreground">
+        <span className="px-2 font-mono text-foreground tabular-nums">
           {current} / {pageCount}
         </span>
         <button
           type="button"
           disabled={current >= pageCount}
           onClick={() => onChange(current + 1, pageSize)}
-          className="flex size-8 items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex size-7.5 items-center justify-center rounded-md border border-control text-foreground transition-colors duration-(--duration-fast) hover:bg-surface-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          <IconChevronRight className="size-4" />
+          <IconChevronRight className="size-3.5" />
         </button>
       </div>
       {showSizeChanger && (

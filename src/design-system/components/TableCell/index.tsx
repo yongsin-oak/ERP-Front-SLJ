@@ -8,11 +8,14 @@ interface DateCellProps {
   format?: string;
 }
 
+// ข้อมูลเชิงรหัส/ตัวเลขในตารางใช้ mono + tabular-nums ให้หลักตรงกันทุกแถว (Supabase pattern)
+const NUMERIC = 'font-mono text-[13px] tabular-nums';
+
 export function DateCell({ value, format = 'DD/MM/YYYY HH:mm' }: DateCellProps) {
   if (!value) return <>—</>;
   const d = dayjs(value);
   if (!d.isValid()) return <>—</>;
-  return <>{d.format(format)}</>;
+  return <span className={NUMERIC}>{d.format(format)}</span>;
 }
 
 // ── MoneyCell ───────────────────────────────────────────────
@@ -25,13 +28,13 @@ interface MoneyCellProps {
 export function MoneyCell({ value, decimals = 2, prefix = '฿' }: MoneyCellProps) {
   if (value == null) return <>—</>;
   return (
-    <>
+    <span className={NUMERIC}>
       {prefix}
       {value.toLocaleString('th-TH', {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       })}
-    </>
+    </span>
   );
 }
 
@@ -46,7 +49,10 @@ export function CodeCell({ children, style, className }: CodeCellProps) {
   return (
     <code
       style={style}
-      className={cn('rounded-sm bg-muted px-1 py-px font-mono text-xs text-foreground', className)}
+      className={cn(
+        'rounded-sm border border-border-muted bg-surface-200 px-1.5 py-px font-mono text-xs text-foreground',
+        className,
+      )}
     >
       {children}
     </code>
@@ -77,7 +83,7 @@ export function QuantityCell({
         : 'text-success-text';
 
   return (
-    <span className={cn(color, value <= lowThreshold && 'font-semibold')}>
+    <span className={cn(NUMERIC, color, value <= lowThreshold && 'font-medium')}>
       {value.toLocaleString()}
       {unit ? ` ${unit}` : ''}
     </span>

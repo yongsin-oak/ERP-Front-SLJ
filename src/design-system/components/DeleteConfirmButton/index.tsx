@@ -50,7 +50,14 @@ export function DeleteConfirmButton({
   }
 
   const trigger = children ?? (
-    <Button variant="danger-ghost" size={size} icon={<AppIcons.delete />} loading={loading} disabled={disabled} />
+    <Button
+      variant="danger-ghost"
+      size={size}
+      aria-label={title}
+      icon={<AppIcons.delete />}
+      loading={loading}
+      disabled={disabled}
+    />
   );
 
   return (
@@ -60,10 +67,10 @@ export function DeleteConfirmButton({
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64 p-3">
         <div className="flex gap-2">
-          <IconAlertTriangle className="size-5 shrink-0 text-warning" />
+          <IconAlertTriangle className="size-4 shrink-0 text-warning" />
           <div className="flex-1">
             <div className="text-sm font-medium text-foreground">{title}</div>
-            {description && <div className="mt-0.5 text-xs text-muted-foreground">{description}</div>}
+            {description && <div className="mt-0.5 text-xs text-foreground-lighter">{description}</div>}
           </div>
         </div>
         <div className="mt-3 flex justify-end gap-2">

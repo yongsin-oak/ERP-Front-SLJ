@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Table, Button, PageHeader, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkAdjustStock } from '../react-query';
-import { useEmployeeList } from '@features/employee/react-query';
 import { ProductDropdownSelect } from '@features/inventory';
 
 interface AdjustRow {
@@ -25,12 +24,6 @@ export function StockAdjustPage() {
 
   const bulkAdjust = useBulkAdjustStock();
 
-  const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
-  const employees = empData?.data ?? [];
-  const employeeOptions = useMemo(
-    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
-    [employees],
-  );
 
   function updateRow(key: string, patch: Partial<AdjustRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -129,6 +122,7 @@ export function StockAdjustPage() {
         <Button
           variant="danger-ghost"
           size="small"
+          aria-label="ลบแถวนี้"
           icon={<AppIcons.delete />}
           onClick={() => removeRow(r.key)}
           disabled={rows.length === 1}
@@ -153,7 +147,6 @@ export function StockAdjustPage() {
 
       <div style={{ maxWidth: 900 }}>
         <EntryMetaBar
-          employeeOptions={employeeOptions}
           employeeId={employeeId}
           note={note}
           notePlaceholder="เช่น นับสต็อกประจำเดือน พ.ค. 2026"

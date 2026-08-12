@@ -9,7 +9,7 @@ const PAYMENT_OPTIONS = [
 ];
 
 const meta = {
-  title: 'Design System/Radio',
+  title: 'Design System/Inputs/Radio',
   component: Radio.Group,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },
@@ -63,7 +63,7 @@ const ControlledDemo = () => {
   const [carrier, setCarrier] = useState('flash');
   const selected = SHIPPING_OPTIONS.find((s) => s.value === carrier);
   return (
-    <div className="flex max-w-md flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm">
+    <div className="flex max-w-md flex-col gap-3 rounded-lg border border-border bg-card p-5">
       <h3 className="text-sm font-semibold text-foreground">เลือกขนส่ง — ออเดอร์ #SLJ-2026-04512</h3>
       <Radio.Group
         options={SHIPPING_OPTIONS}

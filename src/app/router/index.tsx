@@ -5,11 +5,25 @@ import { Spinner } from "@design-system";
 import { PrivateRoute } from "./PrivateRoute";
 import { RoleGuard } from "./RoleGuard";
 import { RouteError } from "./RouteError";
-import { LoginPage } from "@features/auth";
-import { ROUTE_ROLES } from "@config/access";
+import { LoginPage, useAuth } from "@features/auth";
+import { getLandingPath } from "@config/access";
 
+/**
+ * ห่อทุกหน้าด้วย RoleGuard — สิทธิ์อ่านจาก `ROUTE_ROLES` ตาม path ปัจจุบัน
+ * guard อยู่นอก Suspense เพื่อไม่ให้โหลด chunk ของหน้าที่ผู้ใช้เข้าไม่ได้
+ */
 function Page({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<Spinner fullPage />}>{children}</Suspense>;
+  return (
+    <RoleGuard>
+      <Suspense fallback={<Spinner fullPage />}>{children}</Suspense>
+    </RoleGuard>
+  );
+}
+
+/** เข้า root แล้วเด้งไปหน้าเริ่มต้นของ role นั้น — terminal ไปหน้าบันทึกออเดอร์ */
+function IndexRedirect() {
+  const user = useAuth((s) => s.user);
+  return <Navigate to={getLandingPath(user)} replace />;
 }
 
 const DashboardPage = lazy(() =>
@@ -49,7 +63,9 @@ const SupplierPage = lazy(() =>
   import("@features/supplier").then((m) => ({ default: m.SupplierPage })),
 );
 const StockReceivePage = lazy(() =>
-  import("@features/stock-entry").then((m) => ({ default: m.StockReceivePage })),
+  import("@features/stock-entry").then((m) => ({
+    default: m.StockReceivePage,
+  })),
 );
 const StockDamagePage = lazy(() =>
   import("@features/stock-entry").then((m) => ({ default: m.StockDamagePage })),
@@ -58,26 +74,28 @@ const StockAdjustPage = lazy(() =>
   import("@features/stock-entry").then((m) => ({ default: m.StockAdjustPage })),
 );
 const StockHistoryPage = lazy(() =>
-  import("@features/stock-entry").then((m) => ({ default: m.StockHistoryPage })),
+  import("@features/stock-entry").then((m) => ({
+    default: m.StockHistoryPage,
+  })),
 );
 const ReportPage = lazy(() =>
   import("@features/report").then((m) => ({ default: m.ReportPage })),
 );
 const StockCountListPage = lazy(() =>
-  import("@features/stock-count").then((m) => ({ default: m.StockCountListPage })),
+  import("@features/stock-count").then((m) => ({
+    default: m.StockCountListPage,
+  })),
 );
 const StockCountDetailPage = lazy(() =>
-  import("@features/stock-count").then((m) => ({ default: m.StockCountDetailPage })),
+  import("@features/stock-count").then((m) => ({
+    default: m.StockCountDetailPage,
+  })),
 );
 const ProfilePage = lazy(() =>
-  import("@features/auth/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })),
+  import("@features/auth/pages/ProfilePage").then((m) => ({
+    default: m.ProfilePage,
+  })),
 );
-
-/** อ่าน role ที่ต้องการจาก ROUTE_ROLES (single source) — path ที่ไม่ถูก gate = ผ่านเลย */
-function Guarded({ children, path }: { children: React.ReactNode; path: string }) {
-  const roles = ROUTE_ROLES[path];
-  return roles?.length ? <RoleGuard roles={roles}>{children}</RoleGuard> : <>{children}</>;
-}
 
 export const router = createBrowserRouter([
   {
@@ -94,7 +112,7 @@ export const router = createBrowserRouter([
     ),
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <IndexRedirect /> },
       {
         path: "dashboard",
         element: (
@@ -131,9 +149,7 @@ export const router = createBrowserRouter([
         path: "brand",
         element: (
           <Page>
-            <Guarded path="/brand">
-              <BrandPage />
-            </Guarded>
+            <BrandPage />
           </Page>
         ),
       },
@@ -141,9 +157,7 @@ export const router = createBrowserRouter([
         path: "category",
         element: (
           <Page>
-            <Guarded path="/category">
-              <CategoryPage />
-            </Guarded>
+            <CategoryPage />
           </Page>
         ),
       },
@@ -151,9 +165,7 @@ export const router = createBrowserRouter([
         path: "shop",
         element: (
           <Page>
-            <Guarded path="/shop">
-              <ShopPage />
-            </Guarded>
+            <ShopPage />
           </Page>
         ),
       },
@@ -161,9 +173,7 @@ export const router = createBrowserRouter([
         path: "employee",
         element: (
           <Page>
-            <Guarded path="/employee">
-              <EmployeePage />
-            </Guarded>
+            <EmployeePage />
           </Page>
         ),
       },
@@ -171,9 +181,7 @@ export const router = createBrowserRouter([
         path: "role",
         element: (
           <Page>
-            <Guarded path="/role">
-              <RolePage />
-            </Guarded>
+            <RolePage />
           </Page>
         ),
       },
@@ -181,9 +189,7 @@ export const router = createBrowserRouter([
         path: "user",
         element: (
           <Page>
-            <Guarded path="/user">
-              <UserPage />
-            </Guarded>
+            <UserPage />
           </Page>
         ),
       },
@@ -191,9 +197,7 @@ export const router = createBrowserRouter([
         path: "terminal",
         element: (
           <Page>
-            <Guarded path="/terminal">
-              <TerminalPage />
-            </Guarded>
+            <TerminalPage />
           </Page>
         ),
       },
@@ -225,9 +229,7 @@ export const router = createBrowserRouter([
         path: "stock/adjust",
         element: (
           <Page>
-            <Guarded path="/stock/adjust">
-              <StockAdjustPage />
-            </Guarded>
+            <StockAdjustPage />
           </Page>
         ),
       },

@@ -3,3 +3,4 @@ export { useSuppliers, useCreateSupplier, useUpdateSupplier, useDeleteSupplier, 
 export type { SupplierParams } from './react-query';
 export { supplierService } from './react-query';
 export type { Supplier, CreateSupplierDto, UpdateSupplierDto } from './types';
+export { SupplierSearchSelect } from './components/SupplierSearchSelect';

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { PriceInput } from './index';
 
 const meta = {
-  title: 'Design System/PriceInput',
+  title: 'Design System/Inputs/PriceInput',
   component: PriceInput,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },
@@ -64,7 +64,7 @@ const ProfitDemo = () => {
   const [sell, setSell] = useState<number | null>(6.5);
   const margin = cost != null && sell != null ? sell - cost : null;
   return (
-    <div className="max-w-sm rounded-xl border border-border bg-card p-6 shadow-sm">
+    <div className="max-w-sm rounded-lg border border-border bg-card p-5">
       <h3 className="mb-1 text-base font-semibold text-foreground">ตั้งราคาสินค้า</h3>
       <p className="mb-5 text-[13px] text-muted-foreground">กล่องไปรษณีย์ เบอร์ 0 (11×17×6 ซม.)</p>
       <div className="flex flex-col gap-4">

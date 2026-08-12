@@ -5,7 +5,8 @@ import {
 } from '@design-system';
 import type { ColumnType } from '@design-system';
 import type { Role } from '@features/auth/types';
-import { useUsers, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../react-query';
+import { useSearchState, PAGINATION } from '@shared';
+import { useUserList, useRoles, useCreateUser, useUpdateUserRole, useDeleteUser } from '../react-query';
 import { UserFormModal } from '../components/UserFormModal';
 import type { User } from '../types';
 
@@ -16,12 +17,24 @@ const ROLE_COLOR: Record<Role, string> = {
 
 const ADMIN_ROLES: Role[] = ['SuperAdmin', 'Admin'];
 
+// annotate เป็น number ตรงๆ — PAGINATION เป็น `as const` ค่าเลยเป็น literal type
+const LIST_DEFAULTS: { page: number; pageSize: number } = {
+  page: PAGINATION.DEFAULT_PAGE,
+  pageSize: PAGINATION.DEFAULT_LIMIT,
+};
+
 export function UserPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<User | null>(null);
   const [editForm] = Form.useForm<{ role: Role }>();
 
-  const { data: users = [], isLoading } = useUsers();
+  // แบ่งหน้าฝั่ง server — ไม่ดึงผู้ใช้ทั้งหมดมาไว้ในหน่วยความจำ
+  const [tableState, setTableState] = useSearchState('user-list', LIST_DEFAULTS);
+  const { page, pageSize } = tableState;
+
+  const { data, isLoading } = useUserList({ page, limit: pageSize });
+  const users = data?.data ?? [];
+  const total = data?.pagination?.total ?? users.length;
   const { data: roles = [] } = useRoles();
   const createUser = useCreateUser();
   const updateRole = useUpdateUserRole();
@@ -61,7 +74,7 @@ export function UserPage() {
     {
       title: '',
       key: 'actions',
-      width: 90,
+      width: 56,
       align: 'right' as const,
       render: (_: unknown, r: User) => (
         <ActionCell
@@ -79,7 +92,7 @@ export function UserPage() {
     <Stack gap={4}>
       <PageHeader
         title="ผู้ใช้งาน"
-        subtitle={`${users.length} บัญชีในระบบ`}
+        subtitle={`${total} บัญชีในระบบ`}
         actions={
           <Button variant="primary" icon={<AppIcons.add />} onClick={() => setCreateOpen(true)}>
             เพิ่มผู้ใช้งาน
@@ -88,7 +101,7 @@ export function UserPage() {
       />
 
       <Inline gap={3} wrap>
-        <SummaryCard title="ทั้งหมด" value={users.length} suffix="บัญชี" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
+        <SummaryCard title="ทั้งหมด" value={total} suffix="บัญชี" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="Admin" value={adminCount} suffix="บัญชี" color="var(--color-error)" style={{ flex: 1, minWidth: 140 }} />
         <SummaryCard title="ปฏิบัติงาน" value={operatorCount} suffix="บัญชี" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
       </Inline>
@@ -98,9 +111,15 @@ export function UserPage() {
         columns={columns}
         dataSource={users}
         loading={isLoading}
-        pagination={false}
         size="middle"
         scroll={{ x: 'max-content' }}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
+        }}
       />
 
       <UserFormModal

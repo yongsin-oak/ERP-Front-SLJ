@@ -1,7 +1,7 @@
-# Skill: Design System — Tokens & Styling
+# Skill: Design System — Atlassian-guided Tokens & Styling
 
 > Tailwind v4 tokens, styling rules, and Storybook workflow.
-> Sub-skills: [components](./components/SKILL.md) · [icons](./icons/SKILL.md)
+> Sub-skills: [components](./components/SKILL.md) · [icons](./icons/SKILL.md) · [feedback](./feedback/SKILL.md) · [content](./content/SKILL.md)
 > The design system lives at `src/design-system/` — import from `@design-system`.
 
 ---
@@ -21,9 +21,17 @@ Use this skill when:
 
 antd + Emotion ถูกถอดออกทั้งหมด (ประวัติ/เหตุผลอยู่ใน [`DESIGN-SYSTEM-MIGRATION.md`](../../../DESIGN-SYSTEM-MIGRATION.md)).
 
+### Implementation boundary (strict)
+
+- ใช้ **Tailwind CSS v4 เท่านั้น** สำหรับ styling: semantic utilities, variants, responsive prefixes และ `cn()`
+- ห้ามใช้ Emotion, styled-components, CSS-in-JS, `css` prop, `styled()` หรือ runtime style generation
+- ห้ามติดตั้ง `@emotion/*`, `@atlaskit/*` หรือคัดลอกตัวอย่าง Emotion จาก Atlassian
+- ใช้ `atlassian.design` เป็นแหล่งอ้างอิงด้าน semantics, accessibility และ behavior แล้ว implement ด้วย Tailwind + Radix + DS wrappers ของโปรเจกต์
+- Inline `style` ใช้ได้เฉพาะ runtime data ที่ Tailwind ระบุล่วงหน้าไม่ได้ ห้ามใช้แทน utility class
+
 | Layer | Where | Role |
 | --- | --- | --- |
-| **Tokens** | `src/index.css` (3 tiers) | สีทั้งหมด, เงา, radius, motion — source of truth เดียว |
+| **Tokens** | `src/index.css` (3 tiers) | สีทั้งหมด, เงา, radius, motion, focus ring — source of truth เดียว |
 | **Primitives** | `src/components/ui/*` | shadcn-style own-the-code, Radix-based (dialog, popover, checkbox, select, tabs, tooltip, sonner…) |
 | **ERP wrappers** | `src/design-system/components/*` | API ระดับแอป (ส่วนใหญ่คง antd-compatible surface) — export ผ่าน `@design-system` |
 | **Toasts** | Sonner ผ่าน `notify.*` (`src/shared/utils/notify.tsx`) | อย่าเรียก `toast` ตรง |
@@ -36,38 +44,76 @@ antd + Emotion ถูกถอดออกทั้งหมด (ประวั
 
 ---
 
+## Design principles — Atlassian Design System adapted for SLJ
+
+ใช้ [Atlassian foundations](https://atlassian.design/foundations) เป็นหลักอ้างอิงทุกหัวข้อ แล้ว map เข้าสู่ brand และ token contract ของ SLJ โดยไม่ copy package หรือ implementation ของ Atlassian:
+
+1. เลือก token ตามความหมาย ไม่ใช่ค่าสีที่ดูคล้าย ([design tokens](https://atlassian.design/foundations/tokens/design-tokens/))
+2. ใช้ semantic state และตรวจ WCAG AA ([color](https://atlassian.design/foundations/color))
+3. ใช้ spacing scale และจัดกลุ่มตามความสัมพันธ์ ([spacing](https://atlassian.design/foundations/grid-beta/applying-grid))
+4. รักษา heading hierarchy; 12px ใช้เฉพาะ meta/fine print ([typography](https://atlassian.design/foundations/typography/applying-typography))
+5. ประกอบ layout ด้วย `Grid`, `Stack`, `Inline` ([layout primitives](https://atlassian.design/foundations/spacing/primitives/))
+6. ใช้ surface, border และ overlay สื่อระดับความลึก; เงาสงวนให้ floating layer
+7. ทุก control ต้องมี hover, pressed, focus, disabled, invalid และ loading ที่สม่ำเสมอ
+
+ค่าภาพเฉพาะ SLJ ยังคงใช้ neutral gray, brand red, geometry contract ด้านล่าง และ mono สำหรับรหัส/ตัวเลข
+
+---
+
 ## Token Architecture — 3 tiers ใน `src/index.css`
 
-1. **Tier 1 — primitive** (`:root`): raw scales `--neutral-*` (0–900 cool-gray), `--brand-*` (แดง #e0282e), `--red/green/gold/blue-*`, `--ink-*`. **ห้ามใช้ตรงใน component**
-2. **Tier 2 — semantic** (`:root` + `.dark`): shadcn core (`--primary`, `--background`, `--border`…) + app states `--success/-bg/-border/-text`, `--warning*`, `--error*`, `--info*`, interaction states (`--primary-hover/-active`, `--accent`, `--disabled*`, `--divider`, `--control-off`), `--canvas`, `--scrim`, `--border-strong`, `--primary-subtle`
-3. **Tier 3 — `@theme inline`**: map semantic → Tailwind utilities: `bg-canvas`, `bg-primary`, `hover:bg-primary-hover`, `text-success-text`, `bg-success-bg`, `border-divider`, `shadow-{xs,sm,md,lg,xl,overlay}`, `ease-{out,in-out,spring}`, `bg-data-volcano-bg` ฯลฯ
+1. **Tier 1 — primitive** (`:root` + `.dark`): raw scales `--gray-0…900` (เทาแท้ hue 0 · dark override กลับด้านทั้งสเกล), `--brand-*` (แดง #e0282e), `--red/green/gold/blue-*` + data hues, `--white/--black`, `--scrim`, `--overlay-hover/-active`. **ห้ามใช้ตรงใน component**
+   - dark mode ของ hue ทุกตัวคำนวณด้วย `color-mix(in oklab, …)` จาก `-500` — เพิ่ม hue ใหม่ต้องมี `-500` ด้วย
+2. **Tier 2 — semantic** (`:root` + `.dark`): surfaces (`--canvas`, `--background`, `--surface-100/200/300`, `--overlay`, `--control`), foreground 4 ระดับ (`--foreground`, `-light`, `-lighter`, `-muted`), borders 5 ระดับ (`--border-muted`, `--border`, `--border-strong`, `--border-stronger`, `--border-control`), interaction (`--accent`, `--accent-overlay`, `--primary-hover/-active`, `--disabled*`), สถานะ `--success/-bg/-border/-text` (×warning/error/info)
+3. **Tier 3 — `@theme inline`**: map semantic → Tailwind utilities
 
 ### Rules (strict)
 
-- **No hardcoded colors** — ห้าม `#hex`, `bg-black/25`, `text-white` ใน component → ใช้ semantic token (`text-primary-foreground`, `bg-scrim`, …)
-- **Components consume Tier 3 only** — ห้าม `bg-[var(--neutral-300)]`; ถ้า token ไม่พอ ให้**เพิ่ม semantic token ใหม่** ไม่ใช่ดึง primitive
-- **Interaction states เป็น token หมด**: hover/active/disabled มีคู่ token แล้ว — อย่า hardcode
-- **Dynamic class maps ต้องเป็น literal strings** (เช่น `success: 'bg-success-bg border-success-border text-success-text'`) เพื่อให้ Tailwind scanner เห็น — ห้ามประกอบ class ด้วย template string (`grid-cols-${n}` จะไม่ถูก emit)
-- Categorical/data-viz palette ใช้ `--data-<hue>-{bg,border,text}` ผ่าน literal classes
-- Spacing/size ใช้ Tailwind scale (`px-3`, `gap-2`, `size-9`) — ถือเป็น token; ห้าม inline `style={{ padding: 16 }}`
+- **No hardcoded colors** — ห้าม `#hex`, `rgba()` ใน `shadow-[…]`, `bg-black/25`, `text-white` ใน component → ใช้ semantic token
+- **Components consume Tier 3 only** — ห้าม `bg-[var(--gray-300)]`; ถ้า token ไม่พอ ให้**เพิ่ม semantic token ใหม่** ไม่ใช่ดึง primitive
+- **Focus: อย่าใส่ ring สีแบรนด์ และอย่าใส่ `outline-none` บน control ที่โฟกัสได้** — `index.css` มี `:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px }` เป็น global แล้ว ปล่อยให้มันทำงานเอง
+  ใส่ `outline-none` เฉพาะ "พื้นผิว" ที่ไม่ควรมีขอบโฟกัส (dialog/popover/select content)
+- **Dynamic class maps ต้องเป็น literal strings** เพื่อให้ Tailwind scanner เห็น — ห้ามประกอบ class ด้วย template string
+- **ใช้รูป canonical ของ Tailwind เสมอ** — `h-8.5` ไม่ใช่ `h-[34px]`, `duration-(--duration-fast)` ไม่ใช่ `duration-[var(--duration-fast)]`, `data-disabled:` ไม่ใช่ `data-[disabled]:` (linter จะเตือน `suggestCanonicalClasses`)
+- **ห้าม `font-bold`** — หนักสุดที่ `font-medium` (semibold เฉพาะ heading ระดับหน้า)
+- Spacing/size ใช้ Tailwind scale — ห้าม inline `style={{ padding: 16 }}`
+- ทุกหัวข้อใหม่ต้องตรวจ foundation/component ที่เกี่ยวข้องบน `atlassian.design` ก่อน แล้วนำมาใช้ผ่าน semantic Tailwind token ของโปรเจกต์
+
+### Geometry contract (ทุก component ต้องใช้ค่าเดียวกัน)
+
+```
+radius     rounded-sm 4 · rounded-md 6 (control) · rounded-lg 8 (แผง/dialog) · rounded-xl 12 · rounded-full (pill)
+control h  xs h-6.5(26) · sm h-7.5(30) · md h-8.5(34, default) · lg h-9.5(38)
+control px xs px-2 · sm px-2.5 · md px-3 · lg px-3.5
+icon       xs size-3 · sm/md size-3.5 · lg size-4      ← default คือ 14px ไม่ใช่ 16px
+font       base text-sm · meta text-xs · heading text-base font-medium
+transition transition-colors duration-(--duration-fast)
+```
+
+**ข้อยกเว้นเดียวของ control h — CTA หลักบนหน้าที่ Operator/Warehouse ใช้ทุกกะ**
+UX bar บังคับ touch target ≥ 44px (`project-context` §5.5) ซึ่งชนกับ lg = 38px ตรงๆ
+กรณีนี้ให้ `size="large"` แล้วทับด้วย `className="h-11"` **เฉพาะปุ่ม submit เต็มความกว้าง**
+ของหน้า standalone (เช่น `LoginPage`) — ห้ามลามไปปุ่มใน app chrome/ตาราง/โมดัล
+input/select ยังคง `size="large"` ตามสัญญาเดิม ไม่ต้องขยาย
 
 ### Common utilities cheat sheet
 
 ```
-พื้นหลังหน้า      bg-canvas          ตัวหนังสือหลัก/รอง  text-foreground / text-muted-foreground
-พื้น card/surface  bg-card bg-popover  ตัวหนังสือจาง      text-foreground-subtle
-เส้นแบ่ง           border-divider      เส้นขอบ           border-border / border-strong
-hover ผิว          hover:bg-accent     แถว/ปุ่ม pressed   active:bg-accent-active
-โฟกัส              focus-visible:ring-[3px] focus-visible:ring-ring/20
-เงา                shadow-xs … shadow-overlay             motion  ease-out duration-150
+พื้นหน้าเพจ        bg-canvas             แผง/การ์ด/input   bg-background · bg-control
+ชั้นซ้อนในแผง      bg-surface-100/200/300  overlay ลอย       bg-overlay
+ตัวหนังสือ 4 ระดับ  text-foreground → -light → -lighter → -muted
+เส้น 5 ระดับ       border-border-muted → border-border → -strong → -stronger · input ใช้ border-control
+hover พื้นทึบ      hover:bg-surface-200   hover ทับพื้นมีสี  hover:bg-accent-overlay
+เงา                แผง/ตาราง = ไม่มี · dropdown/dialog/toast = shadow-overlay
 สถานะ              text-success-text bg-success-bg border-success-border (×warning/error/info)
+ข้อมูลเชิงรหัส/ตัวเลข  font-mono tabular-nums
 ```
 
 ---
 
-## Legacy TS tokens — deprecated
+## Legacy TS tokens — ลบแล้ว
 
-`src/design-system/tokens/colors.ts` + `spacing.ts` เป็นของยุค antd/Emotion — **ห้ามใช้ในโค้ดใหม่** (ยังเหลือ consumer เก่า ~10 ไฟล์ รอ migrate แล้วลบ) ใช้ Tailwind semantic utilities แทนเสมอ
+`src/design-system/tokens/` (colors.ts + spacing.ts ยุค antd/Emotion) ถูกลบทิ้งพร้อม barrel export ตอนโละเป็น Supabase — ใช้ Tailwind semantic utilities เท่านั้น
 
 ---
 
@@ -88,7 +134,20 @@ hover ผิว          hover:bg-accent     แถว/ปุ่ม pressed   ac
 
 - รัน `bun run storybook` (port 6006) · build `bun run build-storybook`
 - Story อยู่คู่ component: `src/design-system/components/<Name>/<Name>.stories.tsx`
-- Convention: `title: 'Design System/<Name>'`, `tags: ['autodocs']`, `satisfies Meta<typeof X>`, เนื้อหาตัวอย่างเป็นภาษาไทยตามโดเมน ERP, ไอคอนผ่าน `AppIcons`
+- Convention: `title: 'Design System/<หมวด>/<Name>'`, `tags: ['autodocs']`, `satisfies Meta<typeof X>`, เนื้อหาตัวอย่างเป็นภาษาไทยตามโดเมน ERP, ไอคอนผ่าน `AppIcons`
+- **หมวดใน Storybook — เพิ่ม component ใหม่ต้องเลือกหมวดให้ตรง ห้ามตั้งหมวดใหม่เองโดยไม่อัปเดตตารางนี้**
+
+  | หมวด | ใส่อะไร | ตัวอย่าง |
+  | --- | --- | --- |
+  | `Actions` | สิ่งที่ผู้ใช้ "กดแล้วเกิดอะไรขึ้น" | Button · ActionCell · ActionMenu · DeleteConfirmButton · BulkSelectionBar |
+  | `Inputs` | ทุกอย่างที่รับค่าจากผู้ใช้ รวม Form/Field/FilterBar | Input · Select · DatePicker · Checkbox · Switch · Segmented · InlineEdit |
+  | `Display` | แสดงข้อมูลอย่างเดียว ไม่รับ input | Table · TableCell · Tag · Badge · Card · StatsCard · Typography |
+  | `Feedback` | บอกสถานะ/ผลลัพธ์/ความว่างเปล่า | Alert · Banner · Spinner · Tooltip · Empty |
+  | `Overlay` | ลอยทับหน้าและกินโฟกัส | Modal · FormModal · Drawer · ConfirmDrawer |
+  | `Layout` | จัดวางล้วน ไม่มีความหมายเชิงข้อมูล | Grid · Stack · Divider · PageHeader · PageShell · Tabs |
+  | `Data Import` | flow นำเข้าไฟล์ Excel/CSV | DropZoneSheet · SheetImportModal · SheetColumnMapper · SheetTable |
+
+  เส้นแบ่งที่มักตัดสินผิด: `Tooltip` = Feedback (ไม่ใช่ Overlay เพราะไม่กินโฟกัส) · `Empty` = Feedback (ไม่ใช่ Display เพราะสื่อ "ไม่มีข้อมูล") · `Divider` = Layout (ไม่ใช่ Display)
 - **ทุก component ใหม่/แก้ API ต้องมี/อัปเดต story** — reviewer ดูของจริงจาก Storybook
 - Tailwind CSS + font โหลดผ่าน `.storybook/preview.tsx` + `preview-head.html`
 

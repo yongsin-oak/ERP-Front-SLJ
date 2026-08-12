@@ -63,25 +63,25 @@ export function Drawer({
       }}
     >
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-(--z-overlay) bg-scrim backdrop-blur-[1px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-(--z-overlay) bg-scrim backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
           onInteractOutside={(e) => {
             if (maskClosable === false) e.preventDefault();
           }}
           className={cn(
             'fixed z-(--z-overlay) flex flex-col border-border bg-background shadow-overlay outline-none ease-out',
-            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-300 data-[state=closed]:duration-200',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:duration-200 data-[state=closed]:duration-150',
             PLACEMENT[placement],
             className,
           )}
           style={{ width: horizontal ? width : undefined, height: horizontal ? undefined : height }}
         >
           <div
-            className="flex items-center justify-between gap-2 border-b border-divider px-6 py-4"
+            className="flex items-center justify-between gap-2 border-b border-border px-5 py-3.5"
             style={styles?.header}
           >
             {title != null ? (
-              <DialogPrimitive.Title className="text-base font-semibold text-foreground">
+              <DialogPrimitive.Title className="text-base font-medium text-foreground">
                 {title}
               </DialogPrimitive.Title>
             ) : (
@@ -90,20 +90,21 @@ export function Drawer({
             <div className="flex items-center gap-2">
               {extra}
               {closable && (
-                <DialogPrimitive.Close className="flex size-7 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/20">
-                  <IconX className="size-4" />
+                <DialogPrimitive.Close className="flex size-6 items-center justify-center rounded-sm text-foreground-lighter transition-colors duration-(--duration-fast) hover:bg-surface-200 hover:text-foreground">
+                  <IconX className="size-3.5" />
                   <span className="sr-only">ปิด</span>
                 </DialogPrimitive.Close>
               )}
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto px-6 py-5" style={styles?.body}>
+          <div className="flex-1 overflow-auto px-5 py-4" style={styles?.body}>
             {children}
           </div>
 
+          {/* footer ยกพื้นเป็น surface-100 — สองโทนแบบ panel ของ Supabase */}
           {footer != null && (
-            <div className="border-t border-divider px-6 py-4" style={styles?.footer}>
+            <div className="border-t border-border bg-surface-100 px-5 py-3.5" style={styles?.footer}>
               {footer}
             </div>
           )}

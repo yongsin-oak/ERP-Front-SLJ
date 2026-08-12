@@ -74,7 +74,7 @@ export function InlineEdit({
           }}
           disabled={saving}
           autoFocus
-          className="min-w-20 rounded-sm border border-primary bg-background px-2 py-0.5 font-[inherit] text-[length:inherit] text-foreground outline-none ring-[3px] ring-ring/20"
+          className="min-w-20 rounded-sm border border-border-stronger bg-control px-2 py-0.5 font-[inherit] text-[length:inherit] text-foreground"
         />
         <button
           type="button"
@@ -108,14 +108,14 @@ export function InlineEdit({
       title={disabled ? undefined : 'คลิกเพื่อแก้ไข'}
       className={cn(
         'group inline-flex min-w-10 items-center gap-1 rounded-sm px-1 py-0.5',
-        !disabled && 'cursor-pointer hover:bg-accent',
+        !disabled && 'cursor-pointer hover:bg-accent-overlay',
       )}
     >
-      <span className={cn(value ? 'text-foreground' : 'text-foreground-subtle')}>
+      <span className={cn(value ? 'text-foreground' : 'text-foreground-muted')}>
         {renderDisplay ? renderDisplay(value) : value || placeholder}
       </span>
       {!disabled && (
-        <AppIcons.edit className="size-3.5 text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100" />
+        <AppIcons.edit className="size-3.5 text-foreground-muted opacity-0 transition-opacity group-hover:opacity-100" />
       )}
     </div>
   );

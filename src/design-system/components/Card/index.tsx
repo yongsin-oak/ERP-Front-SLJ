@@ -24,7 +24,7 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-lg bg-card text-card-foreground',
+        'rounded-lg bg-card text-card-foreground shadow-none',
         bordered && 'border border-border',
         className,
       )}
@@ -33,8 +33,8 @@ export function Card({
       {(title != null || extra != null) && (
         <div
           className={cn(
-            'flex items-center justify-between border-b border-border font-medium',
-            small ? 'px-3 py-2 text-sm' : 'px-6 py-3.5',
+            'flex items-center justify-between border-b border-border-muted bg-surface-100 font-medium',
+            small ? 'px-3 py-2 text-sm' : 'px-5 py-3 text-sm',
           )}
           style={styles?.header}
         >
@@ -42,7 +42,7 @@ export function Card({
           {extra != null && <div className="shrink-0 font-normal">{extra}</div>}
         </div>
       )}
-      <div className={cn(small ? 'p-3' : 'p-6')} style={styles?.body}>
+      <div className={cn(small ? 'p-3' : 'p-5')} style={styles?.body}>
         {children}
       </div>
     </div>

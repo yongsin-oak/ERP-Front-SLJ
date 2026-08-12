@@ -113,13 +113,13 @@ export function Modal({
           if (pending) e.preventDefault();
         }}
         className={cn(
-          'max-h-[calc(100vh-3rem)] max-w-[calc(100vw-2rem)] gap-0 p-0',
+          'max-h-[calc(100vh-3rem)] max-w-[calc(100vw-2rem)] gap-0 overflow-hidden p-0',
           !centered && 'top-[7vh] translate-y-0',
           className,
         )}
         style={{ width }}
       >
-        <DialogHeader className="border-b border-divider px-6 py-4" style={styles?.header}>
+        <DialogHeader className="border-b border-border px-5 py-3.5" style={styles?.header}>
           {title != null ? (
             <DialogTitle>{title}</DialogTitle>
           ) : (
@@ -127,13 +127,14 @@ export function Modal({
           )}
         </DialogHeader>
 
-        <div className="overflow-y-auto px-6 py-5" style={styles?.body}>
+        <div className="overflow-y-auto px-5 py-4" style={styles?.body}>
           {children}
         </div>
 
+        {/* footer ยกพื้นเป็น surface-100 — สองโทนแบบ dialog ของ Supabase */}
         {footer !== null && (
           <div
-            className="flex items-center justify-end gap-2 border-t border-divider px-6 py-4"
+            className="flex items-center justify-end gap-2 border-t border-border bg-surface-100 px-5 py-3.5"
             style={styles?.footer}
           >
             {footer === undefined ? defaultFooter : footer}

@@ -19,38 +19,43 @@ export interface SegmentedProps {
 }
 
 const SIZE = {
-  small: 'px-2.5 py-1 text-xs',
-  middle: 'px-3 py-1.5 text-sm',
-  large: 'px-4 py-2 text-base',
+  small: 'h-6.5 px-2 text-xs',
+  middle: 'h-7.5 px-2.5 text-sm',
+  large: 'h-8.5 px-3 text-sm',
 } as const;
 
 function normalize(o: SegmentedOption | string): SegmentedOption {
   return typeof o === 'string' ? { label: o, value: o } : o;
 }
 
-export function Segmented({
-  options,
-  value,
-  defaultValue,
-  onChange,
-  block,
-  size = 'middle',
-  disabled,
-  className,
-}: SegmentedProps) {
+export function Segmented(props: SegmentedProps) {
+  const {
+    options,
+    value,
+    defaultValue,
+    onChange,
+    block,
+    size = 'middle',
+    disabled,
+    className,
+  } = props;
+
   const opts = options.map(normalize);
   const [internal, setInternal] = React.useState(defaultValue ?? opts[0]?.value);
-  const current = value !== undefined ? value : internal;
+  // controlled ตัดสินจาก "ส่ง prop value มาไหม" ไม่ใช่ค่าของมัน — เหตุผลเดียวกับ Select
+  const isControlled = 'value' in props;
+  const current = isControlled ? value : internal;
 
   function pick(v: string) {
-    if (value === undefined) setInternal(v);
+    if (!isControlled) setInternal(v);
     onChange?.(v);
   }
 
   return (
     <div
       className={cn(
-        'inline-flex gap-1 rounded-lg bg-muted p-1',
+        // w-fit + self-start กันยืดเต็มความกว้างเมื่ออยู่ใน Form.Item (`flex flex-col` → stretch)
+        'inline-flex w-fit self-start gap-1 rounded-md border border-border bg-surface-100 p-1',
         block && 'flex w-full',
         className,
       )}
@@ -63,12 +68,12 @@ export function Segmented({
           onClick={() => pick(o.value)}
           className={cn(
             'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors outline-none',
-            'focus-visible:ring-[3px] focus-visible:ring-ring/20',
+            'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-stronger',
             SIZE[size],
             block && 'flex-1',
             current === o.value
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground',
+              ? 'border border-border bg-background text-foreground shadow-none'
+              : 'text-foreground-lighter hover:text-foreground',
             (disabled || o.disabled) && 'cursor-not-allowed opacity-50',
           )}
         >

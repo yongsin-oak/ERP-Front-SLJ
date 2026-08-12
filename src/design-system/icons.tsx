@@ -26,6 +26,7 @@ import {
   IconPlus, IconMinus, IconSearch, IconPencil, IconTrash, IconX, IconCheck, IconMail,
   IconCircleCheck, IconRefresh, IconFilter, IconDeviceFloppy, IconCopy, IconEye,
   IconDownload, IconClearAll, IconLoader2, IconSettings, IconList, IconAdjustments,
+  IconDotsVertical,
   // layout / nav chrome
   IconMenu2, IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand, IconLayoutGrid,
   IconDeviceDesktop, IconChevronDown,
@@ -41,10 +42,24 @@ import { cn } from '@/lib/utils';
 
 type AppIconProps = Omit<IconProps, 'ref'> & { spin?: boolean };
 
-/** Wrap a Tabler icon: default size 1em (inherit font-size, antd-compatible) + `spin`. */
+/**
+ * Wrap a Tabler icon: default size 1em (inherit font-size, antd-compatible) + `spin`.
+ *
+ * a11y: ไอคอนเป็น "ของตกแต่ง" โดยดีฟอลต์ → `aria-hidden` ให้อัตโนมัติ screen reader จะข้าม
+ * เพราะความหมายมาจากข้อความข้างๆ หรือ `aria-label` ของปุ่มที่ห่ออยู่ ไม่ใช่จากตัวไอคอน
+ * ถ้าไอคอน "เป็นตัวสื่อความหมายเอง" (เช่น ✓ เดี่ยวๆ ในตารางที่ไม่มีข้อความกำกับ)
+ * ให้ส่ง `aria-label` มาที่ไอคอนโดยตรง — ตัวนี้จะเลิกซ่อนให้เอง
+ */
 function make(Icon: TablerIcon) {
   return function AppIcon({ spin, className, size = '1em', ...props }: AppIconProps) {
-    return <Icon size={size} className={cn(spin && 'animate-spin', className)} {...props} />;
+    return (
+      <Icon
+        size={size}
+        aria-hidden={props['aria-label'] == null || undefined}
+        className={cn(spin && 'animate-spin', className)}
+        {...props}
+      />
+    );
   };
 }
 
@@ -103,6 +118,8 @@ export const AppIcons = {
   download:     make(IconDownload),
   clear:        make(IconClearAll),
   loading:      make(IconLoader2),
+  /** เมนู action ท้ายแถว/มุมการ์ด (kebab) — ยุบหลายปุ่มให้เหลือปุ่มเดียว */
+  more:         make(IconDotsVertical),
   settings:     make(IconSettings),
   list:         make(IconList),
   adjust:       make(IconAdjustments),

@@ -153,7 +153,7 @@ export function StockHistoryTab({ active }: Props) {
             style={{ width: 240 }}
             placeholder={['วันเริ่มต้น', 'วันสิ้นสุด']}
           />
-          <Button icon={<AppIcons.refresh />} onClick={() => refetch()} />
+          <Button aria-label="รีเฟรชประวัติสต็อก" icon={<AppIcons.refresh />} onClick={() => refetch()} />
         </Inline>
         <Button
           icon={<AppIcons.exportFile size={16} />}

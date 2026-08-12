@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Table, Button, FormModal, DeleteConfirmButton, Select, Tag, AppIcons, Form, InputNumber, Inline } from '@design-system';
+import { Modal, Table, Button, FormModal, ActionCell, Select, Tag, AppIcons, Form, InputNumber, Inline } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { useShops } from '@features/shop';
 import { PlatformBadge } from '@features/shop';
@@ -137,12 +137,15 @@ export function ShopPriceModal({ open, barcode, productName, onClose }: Props) {
     {
       title: '',
       key: 'action',
-      width: 90,
+      width: 56,
+      align: 'center' as const,
       render: (_: unknown, r: ShopPrice) => (
-        <Inline>
-          <Button variant="ghost" size="small" onClick={() => openEdit(r)}>แก้ไข</Button>
-          <DeleteConfirmButton onConfirm={() => remove.mutate(r.shopId)} size="small" />
-        </Inline>
+        <ActionCell
+          onEdit={() => openEdit(r)}
+          onDelete={() => remove.mutate(r.shopId)}
+          isDeleting={remove.isPending}
+          deleteTitle="ลบราคาร้านค้านี้?"
+        />
       ),
     },
   ];

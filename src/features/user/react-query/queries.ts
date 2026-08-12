@@ -3,10 +3,12 @@ import { STALE_TIME } from '@shared';
 import { userService } from './services';
 import { userKeys } from './queryKeys';
 
-export function useUsers() {
+/** แบ่งหน้าฝั่ง server — ใช้กับหน้าตาราง (อย่าดึงทั้งหมดมาไว้ในหน่วยความจำ) */
+export function useUserList(params: { page: number; limit: number }) {
   return useQuery({
-    queryKey: userKeys.lists(),
-    queryFn: () => userService.getAll({ page: 1, limit: 200 }).then((r) => r.data.data),
+    queryKey: userKeys.list(params),
+    queryFn: () => userService.getAll(params).then((r) => r.data),
+    placeholderData: (prev) => prev,
   });
 }
 

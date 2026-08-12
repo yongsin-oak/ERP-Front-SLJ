@@ -38,7 +38,7 @@ const UNMATCHED_SHEET: SheetData = {
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 const meta = {
-  title: 'Design System/SheetColumnMapper',
+  title: 'Design System/Data Import/SheetColumnMapper',
   component: SheetColumnMapper,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

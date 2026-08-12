@@ -12,10 +12,10 @@ import {
   Legend,
 } from 'recharts';
 import dayjs from 'dayjs';
-import { Button, PageHeader, Table, Select, CodeCell, DateCell, Card, Tag, Segmented, Alert, SummaryCard, Stack, Inline, Grid, Text, AppIcons } from '@design-system';
+import { Button, PageHeader, Table, CodeCell, DateCell, Card, Tag, Segmented, Alert, SummaryCard, Stack, Inline, Grid, Text, AppIcons } from '@design-system';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats, useDailyRevenue, useRecentOrders, useLowStock, dashboardKeys } from '../react-query';
-import { useShops } from '@features/shop';
+import { ShopSearchSelect } from '@features/shop/components/ShopSearchSelect';
 import type { ColumnType } from '@design-system';
 import type { RecentOrder, LowStockProduct } from '../types';
 import { cn } from '@/lib/utils';
@@ -119,7 +119,6 @@ export function DashboardPage() {
   const { dateFrom, dateTo, days } = resolvePeriod(period);
   const periodLabel = PERIOD_LABEL[period];
 
-  const { data: shops, isLoading: shopsLoading } = useShops();
   const { data: stats, isLoading: statsLoading } = useDashboardStats({ shopId, dateFrom, dateTo });
   const { data: daily = [], isLoading: dailyLoading } = useDailyRevenue({ days, shopId });
   const { data: recentOrders = [], isLoading: recentLoading } = useRecentOrders({ limit: 8, shopId });
@@ -210,14 +209,12 @@ export function DashboardPage() {
             onChange={(v) => setPeriod(v as Period)}
           />
           <Text type="secondary" style={{ fontSize: 13, marginLeft: 8 }}>ร้านค้า:</Text>
-          <Select
+          <ShopSearchSelect
             placeholder="ทุกร้าน"
             allowClear
             style={{ minWidth: 180 }}
             value={shopId}
             onChange={(v: string | undefined) => setShopId(v)}
-            loading={shopsLoading}
-            options={shops?.map((s) => ({ label: s.name, value: s.id }))}
           />
         </Inline>
       </Card>

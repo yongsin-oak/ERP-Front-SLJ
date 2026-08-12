@@ -33,7 +33,17 @@ export interface Product {
   updatedAt?: string;
 }
 
-/** Lite shape returned by GET /product/dropdown-search */
+/**
+ * Ref projection — identifier + label เท่านั้น (GET /product/:barcode/ref)
+ * ใช้ตอนสแกนบันทึกออเดอร์ ซึ่งไม่แสดงราคา/สต็อก/แบรนด์/หมวดหมู่
+ * ถ้าต้องการมากกว่านี้ = ไม่ใช่ ref แล้ว → ใช้ ProductDropdown (summary) แทน
+ */
+export interface ProductRef {
+  barcode: string;
+  name: string;
+}
+
+/** Summary projection — ชุดที่ list/dropdown ใช้ (GET /product/dropdown-search) */
 export interface ProductDropdown {
   barcode: string;
   name: string;

@@ -7,6 +7,7 @@ export type DateRangeValue = [Dayjs | null, Dayjs | null] | null;
 
 const PRESETS: DateRangePreset[] = [
   { label: 'วันนี้', value: [dayjs().startOf('day'), dayjs().endOf('day')] },
+  { label: 'เมื่อวาน', value: [dayjs().subtract(1, 'day').startOf('day'), dayjs().subtract(1, 'day').endOf('day')] },
   { label: 'สัปดาห์นี้', value: [dayjs().startOf('week'), dayjs().endOf('week')] },
   { label: 'เดือนนี้', value: [dayjs().startOf('month'), dayjs().endOf('month')] },
   { label: '3 เดือน', value: [dayjs().subtract(3, 'month').startOf('day'), dayjs().endOf('day')] },

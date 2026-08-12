@@ -1,4 +1,11 @@
-export { useProducts, useProductByBarcode, useProductDropdown, useShopPrices, useStockEntries } from './queries';
+export {
+  useProducts,
+  useProductByBarcode,
+  productRefQuery,
+  useProductDropdown,
+  useShopPrices,
+  useStockEntries,
+} from './queries';
 export {
   useCreateProduct,
   useUpdateProduct,

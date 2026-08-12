@@ -79,7 +79,7 @@ const productColumns: ColumnType<Product>[] = [
 // Table เป็น generic component — ใช้ Meta<typeof Table> ตรง ๆ (satisfies ชนกับ generics)
 
 const meta: Meta<typeof Table> = {
-  title: 'Design System/Table',
+  title: 'Design System/Display/Table',
   component: Table,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

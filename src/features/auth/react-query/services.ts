@@ -1,19 +1,16 @@
-import { req } from '@shared';
-import type { AuthUser, ActorToken, Role } from '../types';
+import { req, API } from '@shared';
+import type { AuthUser, ActorToken, LoginTerminal } from '../types';
 import type { ApiData } from '@shared/types';
-
-interface TerminalInfo {
-  terminalCode: string;
-  name: string;
-  role: Role;
-}
 
 export const authService = {
   login: (username: string, password: string) =>
     req.post<{ message: string; user: AuthUser }>('/auth/login', { username, password }),
 
   loginTerminal: (terminalCode: string, password: string) =>
-    req.post<{ message: string; terminal: TerminalInfo }>('/auth/login', { terminalCode, password }),
+    req.post<{ message: string; terminal: LoginTerminal }>('/auth/login', { terminalCode, password }),
+
+  /** public — รายชื่อ terminal ที่ isActive สำหรับ dropdown หน้า login */
+  getTerminals: () => req.get<ApiData<LoginTerminal[]>>(API.auth.terminals),
 
   logout: () => req.post('/auth/logout'),
 

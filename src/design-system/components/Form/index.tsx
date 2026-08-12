@@ -42,22 +42,26 @@ export interface FormInstance<T extends FieldValues = FieldValues> {
   submit: () => void;
   /** @internal — kept non-generic so FormInstance<Specific> stays assignable both ways */
   __rhf: UseFormReturn<FieldValues>;
-  /** @internal */ __initial: React.MutableRefObject<Partial<FieldValues> | undefined>;
+  /** @internal — จำค่าตั้งต้นไว้ให้ resetFields() ใช้ (setter ไม่ใช่ ref ดูเหตุผลใน useForm) */
+  __setInitial: (values: Partial<FieldValues> | undefined) => void;
 }
 
-function createInstance(
-  methods: UseFormReturn<FieldValues>,
-  initial: React.MutableRefObject<Partial<FieldValues> | undefined>,
-): FormInstance {
+function createInstance(methods: UseFormReturn<FieldValues>): FormInstance {
+  // ค่าตั้งต้นเก็บใน closure ของ instance ไม่ใช่ React ref — instance ถูกสร้างครั้งเดียวใน
+  // useMemo อยู่แล้ว ตัวแปรนี้จึงอยู่ยาวเท่ากับ instance โดยไม่ต้องพึ่ง useRef
+  // (useRef ทำให้ React Compiler เตือนว่าอาจอ่าน .current ตอน render — และมันไม่เคยถูกอ่านตอน render จริง)
+  let initial: Partial<FieldValues> | undefined;
   return {
     __rhf: methods,
-    __initial: initial,
+    __setInitial: (values) => {
+      initial = values;
+    },
     validateFields: async () => {
       const ok = await methods.trigger();
       if (!ok) throw new Error('VALIDATION_FAILED');
       return methods.getValues();
     },
-    resetFields: () => methods.reset(initial.current ?? {}),
+    resetFields: () => methods.reset(initial ?? {}),
     setFieldsValue: (values) => {
       Object.entries(values).forEach(([k, v]) => methods.setValue(k, v, { shouldDirty: true }));
     },
@@ -78,8 +82,7 @@ function createInstance(
 
 export function useForm<T extends FieldValues = FieldValues>(): [FormInstance<T>] {
   const methods = useRHF();
-  const initial = React.useRef<Partial<FieldValues> | undefined>(undefined);
-  const inst = React.useMemo(() => createInstance(methods, initial), [methods]);
+  const inst = React.useMemo(() => createInstance(methods), [methods]);
   return [inst as FormInstance<T>];
 }
 
@@ -203,7 +206,8 @@ function FormComp<T extends FieldValues = FieldValues>({
   const applied = React.useRef(false);
 
   React.useEffect(() => {
-    inst.__initial.current = initialValues;
+    // เรียกเมธอดของ instance แทนการเขียนทับ property — ไม่ใช่การ mutate `inst` หลัง render
+    inst.__setInitial(initialValues);
     if (!applied.current && initialValues) {
       methods.reset({ ...methods.getValues(), ...initialValues } as T);
       applied.current = true;
@@ -275,7 +279,7 @@ function FieldShell({ label, error, extra, noStyle, layout, htmlFor, className, 
       {label != null && (
         <label
           htmlFor={htmlFor}
-          className={cn('text-sm font-medium text-foreground', horizontal && 'w-32 shrink-0 pt-2')}
+          className={cn('text-sm text-foreground-light', horizontal && 'w-32 shrink-0 pt-2')}
         >
           {label}
         </label>
@@ -283,7 +287,7 @@ function FieldShell({ label, error, extra, noStyle, layout, htmlFor, className, 
       <div className={cn('flex flex-col gap-1', horizontal && 'flex-1')}>
         {children}
         {error && <span className="text-xs text-error-text">{error}</span>}
-        {extra && <span className="text-xs text-muted-foreground">{extra}</span>}
+        {extra && <span className="text-xs text-foreground-lighter">{extra}</span>}
       </div>
     </div>
   );
@@ -296,8 +300,7 @@ function RenderPropItem({
 }) {
   const methods = useFormContext();
   useRHFWatch({ control: methods.control });
-  const initial = React.useRef<Partial<FieldValues> | undefined>(undefined);
-  const inst = React.useMemo(() => createInstance(methods, initial), [methods]);
+  const inst = React.useMemo(() => createInstance(methods), [methods]);
   return <>{render(inst)}</>;
 }
 

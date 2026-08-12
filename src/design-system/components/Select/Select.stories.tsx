@@ -45,7 +45,7 @@ const CATEGORY_GROUPS = [
 ];
 
 const meta = {
-  title: 'Design System/Select',
+  title: 'Design System/Inputs/Select',
   component: Select,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

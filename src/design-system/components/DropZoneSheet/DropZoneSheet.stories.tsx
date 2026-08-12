@@ -4,7 +4,7 @@ import { DropZoneSheet } from './index';
 import type { SheetData } from './index';
 
 const meta = {
-  title: 'Design System/DropZoneSheet',
+  title: 'Design System/Data Import/DropZoneSheet',
   component: DropZoneSheet,
   tags: ['autodocs'],
   parameters: {

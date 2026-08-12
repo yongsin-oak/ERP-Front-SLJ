@@ -8,13 +8,15 @@ import {
 } from '@tabler/icons-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { FIELD_BORDER } from '@/lib/fieldStyles';
 
 const WEEKDAYS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
 
+/** ความสูง control ตาม geometry contract — 30 / 34 / 38px (SUPABASE-DS-PLAN.md §2.4) */
 const SIZE_H = {
-  small: 'h-8 text-sm',
-  middle: 'h-9 text-sm',
-  large: 'h-10 text-base',
+  small: 'h-7.5 text-sm',
+  middle: 'h-8.5 text-sm',
+  large: 'h-9.5 text-sm',
 } as const;
 
 type PickerSize = keyof typeof SIZE_H;
@@ -24,8 +26,10 @@ function buildMonth(view: Dayjs): Dayjs[] {
   return Array.from({ length: 42 }, (_, i) => start.add(i, 'day'));
 }
 
-const TRIGGER_CLASS =
-  'flex w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 text-foreground shadow-xs transition-[color,border-color,box-shadow] duration-150 outline-none hover:border-border-strong focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 data-[state=open]:border-ring data-[state=open]:ring-[3px] data-[state=open]:ring-ring/20 disabled:cursor-not-allowed disabled:border-border disabled:bg-disabled-bg disabled:text-disabled';
+const TRIGGER_CLASS = cn(
+  'flex w-full items-center justify-between gap-2 rounded-md bg-control px-3 text-foreground',
+  FIELD_BORDER,
+);
 
 interface MonthViewProps {
   view: Dayjs;
@@ -54,23 +58,23 @@ function MonthView({
           type="button"
           aria-label="เดือนก่อนหน้า"
           onClick={() => setView(view.subtract(1, 'month'))}
-          className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
+          className="flex size-7 items-center justify-center rounded-md text-foreground-lighter transition-colors duration-(--duration-fast) hover:bg-surface-200 hover:text-foreground"
         >
-          <IconChevronLeft className="size-4" />
+          <IconChevronLeft className="size-3.5" />
         </button>
         <div className="text-sm font-medium">{view.format('MMMM YYYY')}</div>
         <button
           type="button"
           aria-label="เดือนถัดไป"
           onClick={() => setView(view.add(1, 'month'))}
-          className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
+          className="flex size-7 items-center justify-center rounded-md text-foreground-lighter transition-colors duration-(--duration-fast) hover:bg-surface-200 hover:text-foreground"
         >
-          <IconChevronRight className="size-4" />
+          <IconChevronRight className="size-3.5" />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-y-1">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="flex h-7 items-center justify-center text-xs text-muted-foreground">
+          <div key={d} className="flex h-7 items-center justify-center text-xs text-foreground-lighter">
             {d}
           </div>
         ))}
@@ -87,11 +91,13 @@ function MonthView({
               onMouseEnter={() => onHover?.(day)}
               onClick={() => onPick(day)}
               className={cn(
-                'mx-auto flex size-9 items-center justify-center text-sm transition-colors',
+                // size-9 ต้องเท่าความกว้างคอลัมน์ (w-64 ÷ 7 ≈ 36.5px) ห้ามลด — ไม่งั้นแถบช่วงวันที่
+                // (ranged + rounded-none) จะขาดเป็นช่วงๆ แทนที่จะต่อกันเป็นแถบเดียว
+                'mx-auto flex size-9 items-center justify-center font-mono text-sm tabular-nums transition-colors duration-(--duration-fast)',
                 ranged && !selected ? 'rounded-none bg-primary-subtle' : 'rounded-md',
-                outside && !selected && 'text-foreground-subtle',
+                outside && !selected && 'text-foreground-muted',
                 selected && 'bg-primary font-medium text-primary-foreground',
-                !selected && !disabled && 'hover:bg-accent',
+                !selected && !disabled && 'hover:bg-surface-200',
                 disabled && 'cursor-not-allowed opacity-30',
               )}
             >
@@ -121,34 +127,38 @@ export interface DatePickerProps {
   id?: string;
 }
 
-export function DatePicker({
-  value,
-  defaultValue,
-  onChange,
-  format = 'DD/MM/YYYY',
-  placeholder = 'เลือกวันที่',
-  allowClear = true,
-  disabled,
-  size = 'middle',
-  disabledDate,
-  className,
-  style,
-  id,
-}: DatePickerProps) {
+export function DatePicker(props: DatePickerProps) {
+  const {
+    value,
+    defaultValue,
+    onChange,
+    format = 'DD/MM/YYYY',
+    placeholder = 'เลือกวันที่',
+    allowClear = true,
+    disabled,
+    size = 'middle',
+    disabledDate,
+    className,
+    style,
+    id,
+  } = props;
+
   const [open, setOpen] = React.useState(false);
   const [internal, setInternal] = React.useState<Dayjs | null>(defaultValue ?? null);
-  const current = value !== undefined ? value : internal;
+  // controlled ตัดสินจาก "ส่ง prop value มาไหม" ไม่ใช่ค่าของมัน — เหตุผลเดียวกับ Select
+  const isControlled = 'value' in props;
+  const current = isControlled ? (value ?? null) : internal;
   const [view, setView] = React.useState<Dayjs>(current ?? dayjs());
 
   function pick(day: Dayjs) {
-    if (value === undefined) setInternal(day);
+    if (!isControlled) setInternal(day);
     onChange?.(day, day.format(format));
     setOpen(false);
   }
 
   function clear(e: React.MouseEvent) {
     e.stopPropagation();
-    if (value === undefined) setInternal(null);
+    if (!isControlled) setInternal(null);
     onChange?.(null, '');
   }
 
@@ -162,16 +172,16 @@ export function DatePicker({
     >
       <PopoverTrigger asChild>
         <button type="button" id={id} disabled={disabled} className={cn(TRIGGER_CLASS, SIZE_H[size], className)} style={style}>
-          <span className={cn('truncate', current == null && 'text-foreground-subtle')}>
+          <span className={cn('truncate', current == null && 'text-foreground-muted')}>
             {current ? current.format(format) : placeholder}
           </span>
-          <span className="flex shrink-0 items-center text-foreground-subtle">
+          <span className="flex shrink-0 items-center text-foreground-muted">
             {allowClear && current && !disabled ? (
               <span role="button" tabIndex={-1} aria-label="ล้าง" onClick={clear} className="hover:text-foreground">
-                <IconX className="size-4" />
+                <IconX className="size-3.5" />
               </span>
             ) : (
-              <IconCalendar className="size-4 opacity-70" />
+              <IconCalendar className="size-3.5" />
             )}
           </span>
         </button>
@@ -291,37 +301,37 @@ export function DateRangePicker({
     >
       <PopoverTrigger asChild>
         <button type="button" disabled={disabled} className={cn(TRIGGER_CLASS, SIZE_H[size], className)} style={style}>
-          <span className={cn('flex min-w-0 flex-1 items-center gap-1.5 truncate', !hasValue && 'text-foreground-subtle')}>
+          <span className={cn('flex min-w-0 flex-1 items-center gap-1.5 truncate', !hasValue && 'text-foreground-muted')}>
             {hasValue ? (
               <>
                 {committed?.[0]?.format(format)}
-                <span className="text-foreground-subtle">→</span>
+                <span className="text-foreground-muted">→</span>
                 {committed?.[1]?.format(format)}
               </>
             ) : (
               `${placeholder[0]} → ${placeholder[1]}`
             )}
           </span>
-          <span className="flex shrink-0 items-center text-foreground-subtle">
+          <span className="flex shrink-0 items-center text-foreground-muted">
             {allowClear && hasValue && !disabled ? (
               <span role="button" tabIndex={-1} aria-label="ล้าง" onClick={clear} className="hover:text-foreground">
-                <IconX className="size-4" />
+                <IconX className="size-3.5" />
               </span>
             ) : (
-              <IconCalendar className="size-4 opacity-70" />
+              <IconCalendar className="size-3.5" />
             )}
           </span>
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" sideOffset={4} className="flex w-auto gap-2 p-3">
         {presets && presets.length > 0 && (
-          <div className="flex w-28 shrink-0 flex-col gap-0.5 border-r border-divider pr-2">
+          <div className="flex w-28 shrink-0 flex-col gap-0.5 border-r border-border-muted pr-2">
             {presets.map((p, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => applyPreset(p)}
-                className="rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-accent"
+                className="rounded-md px-2 py-1.5 text-left text-sm text-foreground hover:bg-surface-200"
               >
                 {p.label}
               </button>

@@ -48,7 +48,7 @@ function usePagedProducts() {
 }
 
 const meta = {
-  title: 'Design System/InfiniteSearchSelect',
+  title: 'Design System/Inputs/InfiniteSearchSelect',
   component: InfiniteSearchSelect,
   tags: ['autodocs'],
   parameters: {

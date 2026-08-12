@@ -4,3 +4,4 @@ export {
 } from './react-query';
 export { brandService } from './react-query';
 export type { Brand, CreateBrandDto, UpdateBrandDto } from './types';
+export { BrandSearchSelect } from './components/BrandSearchSelect';

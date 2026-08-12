@@ -41,16 +41,16 @@ function Steps({ current }: { current: number }) {
             <span
               className={cn(
                 'flex size-6 items-center justify-center rounded-full text-xs font-medium',
-                i <= current ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground',
+                i <= current ? 'bg-primary text-primary-foreground' : 'bg-surface-200 text-foreground-lighter',
               )}
             >
               {i + 1}
             </span>
-            <span className={cn('text-sm', i === current ? 'font-medium text-foreground' : 'text-muted-foreground')}>
+            <span className={cn('text-sm', i === current ? 'font-medium text-foreground' : 'text-foreground-lighter')}>
               {label}
             </span>
           </div>
-          {i < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-divider" />}
+          {i < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-border-muted" />}
         </React.Fragment>
       ))}
     </div>

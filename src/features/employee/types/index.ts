@@ -17,6 +17,18 @@ export const DepartmentOptions = Object.entries(Departments).map(
   }),
 );
 
+/**
+ * แถวจาก `/employee/dropdown-search` — ไม่ใช่ `Employee` เต็ม
+ * แยกชื่อ 3 ส่วนไว้เพราะ picker ประกอบเป็น "ชื่อ นามสกุล (ชื่อเล่น)" เอง
+ * และ highlight คำค้นต้องตรงกับสตริงที่ประกอบนั้น
+ */
+export interface EmployeeOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nickname: string;
+}
+
 export interface Employee {
   id: string;
   firstName: string;

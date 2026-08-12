@@ -21,7 +21,7 @@ export function BulkSelectionBar({
   deleteTitle,
 }: BulkSelectionBarProps) {
   return (
-    <div className="mb-3 flex items-center justify-between rounded-md bg-accent px-3 py-2">
+    <div className="mb-3 flex items-center justify-between rounded-md border border-border bg-surface-100 px-3 py-2">
       <Text size="sm" type="secondary">
         เลือก {count} {itemLabel}
       </Text>

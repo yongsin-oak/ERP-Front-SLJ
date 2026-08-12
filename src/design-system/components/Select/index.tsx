@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { FIELD_BORDER } from '@/lib/fieldStyles';
 
 export interface SelectOption {
   label: React.ReactNode;
@@ -55,10 +56,11 @@ export interface SelectProps {
   status?: 'error' | 'warning';
 }
 
+/** ความสูง control ตาม geometry contract — 30 / 34 / 38px (SUPABASE-DS-PLAN.md §2.4) */
 const SIZE_H = {
-  small: 'h-8 text-sm',
-  middle: 'h-9 text-sm',
-  large: 'h-10 text-base',
+  small: 'h-7.5 text-sm',
+  middle: 'h-8.5 text-sm',
+  large: 'h-9.5 text-sm',
 } as const;
 
 function isGroup(item: SelectOption | SelectOptionGroup): item is SelectOptionGroup {
@@ -79,31 +81,40 @@ function labelText(node: React.ReactNode): string {
   return '';
 }
 
-export function Select({
-  options = [],
-  value,
-  defaultValue,
-  onChange,
-  placeholder = 'เลือก',
-  showSearch,
-  allowClear,
-  disabled,
-  loading,
-  size = 'middle',
-  notFoundContent = 'ไม่พบข้อมูล',
-  popupMatchSelectWidth = true,
-  onPopupScroll,
-  dropdownFooter,
-  optionRender,
-  className,
-  style,
-  id,
-  status,
-}: SelectProps) {
+export function Select(props: SelectProps) {
+  const {
+    options = [],
+    value,
+    defaultValue,
+    onChange,
+    placeholder = 'เลือก',
+    showSearch,
+    allowClear,
+    disabled,
+    loading,
+    size = 'middle',
+    notFoundContent = 'ไม่พบข้อมูล',
+    popupMatchSelectWidth = true,
+    onPopupScroll,
+    dropdownFooter,
+    optionRender,
+    className,
+    style,
+    id,
+    status,
+  } = props;
+
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
   const [internal, setInternal] = React.useState<string | undefined>(defaultValue);
-  const selected = value !== undefined ? value : internal;
+
+  // controlled = ผู้เรียก "ส่ง prop value มา" ไม่ใช่ "ส่งค่าที่ไม่ใช่ undefined มา"
+  // เทียบด้วย `value !== undefined` ไม่ได้ เพราะทุกหน้าเขียน `value={status || undefined}`
+  // พอเคลียร์ตัวกรองค่าเป็น '' → undefined → component จะสลับไป uncontrolled เงียบๆ
+  // แล้วโชว์ `internal` ที่ค้างค่าเดิม (ตัวกรองหายจากข้อมูลแล้วแต่ยังโชว์อยู่บนจอ)
+  // เทียบเท่ากับที่ `Input` ทำอยู่ — ดู Input/index.tsx
+  const isControlled = 'value' in props;
+  const selected = isControlled ? value : internal;
 
   const all = React.useMemo(() => flatten(options), [options]);
   const selectedOption = all.find((o) => o.value === selected);
@@ -128,7 +139,7 @@ export function Select({
   }, [options, searchEnabled, localFilter, searchCfg, search]);
 
   function pick(v: string) {
-    if (value === undefined) setInternal(v);
+    if (!isControlled) setInternal(v);
     onChange?.(v);
     setOpen(false);
     setSearch('');
@@ -136,7 +147,7 @@ export function Select({
 
   function clear(e: React.MouseEvent) {
     e.stopPropagation();
-    if (value === undefined) setInternal(undefined);
+    if (!isControlled) setInternal(undefined);
     onChange?.(undefined);
   }
 
@@ -151,14 +162,14 @@ export function Select({
       disabled={o.disabled}
       onClick={() => pick(o.value)}
       className={cn(
-        'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm outline-none',
-        'hover:bg-accent focus-visible:bg-accent',
+        'flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none',
+        'hover:bg-surface-200 focus-visible:bg-surface-200',
         o.value === selected && 'font-medium',
         o.disabled && 'pointer-events-none opacity-50',
       )}
     >
       <span className="truncate">{optionRender ? optionRender(o) : o.label}</span>
-      {o.value === selected && <IconCheck className="size-4 shrink-0 text-primary" />}
+      {o.value === selected && <IconCheck className="size-3.5 shrink-0 text-primary" />}
     </button>
   );
 
@@ -171,23 +182,19 @@ export function Select({
           disabled={disabled}
           aria-invalid={status === 'error' || undefined}
           className={cn(
-            'group flex w-full items-center justify-between gap-2 rounded-md border bg-background px-3 text-foreground shadow-xs transition-[color,border-color,box-shadow] duration-150 outline-none',
-            'hover:border-border-strong focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20',
-            'data-[state=open]:border-ring data-[state=open]:ring-[3px] data-[state=open]:ring-ring/20',
+            'group flex w-full items-center justify-between gap-2 rounded-md bg-control px-3 text-foreground',
+            FIELD_BORDER,
             SIZE_H[size],
-            status === 'error' && 'border-destructive focus-visible:ring-destructive/20',
-            !status && 'border-input',
-            disabled && 'cursor-not-allowed border-border bg-disabled-bg text-disabled',
             className,
           )}
           style={style}
         >
-          <span className={cn('truncate', selectedOption == null && 'text-foreground-subtle')}>
+          <span className={cn('truncate', selectedOption == null && 'text-foreground-muted')}>
             {selectedOption?.label ?? placeholder}
           </span>
-          <span className="flex shrink-0 items-center text-foreground-subtle">
+          <span className="flex shrink-0 items-center text-foreground-muted">
             {loading ? (
-              <IconLoader2 className="size-4 animate-spin" />
+              <IconLoader2 className="size-3.5 animate-spin" />
             ) : showClear ? (
               <span
                 role="button"
@@ -196,10 +203,10 @@ export function Select({
                 onClick={clear}
                 className="hover:text-foreground"
               >
-                <IconX className="size-4" />
+                <IconX className="size-3.5" />
               </span>
             ) : (
-              <IconChevronDown className="size-4 opacity-70" />
+              <IconChevronDown className="size-3.5" />
             )}
           </span>
         </button>
@@ -211,8 +218,8 @@ export function Select({
         style={popupMatchSelectWidth ? undefined : { minWidth: 'var(--radix-popover-trigger-width)' }}
       >
         {searchEnabled && (
-          <div className="mb-1 flex items-center gap-2 border-b border-divider px-2 pb-2">
-            <IconSearch className="size-4 shrink-0 text-foreground-subtle" />
+          <div className="mb-1 flex items-center gap-2 border-b border-border-muted px-2 pb-2">
+            <IconSearch className="size-3.5 shrink-0 text-foreground-muted" />
             <input
               autoFocus
               value={search}
@@ -221,20 +228,22 @@ export function Select({
                 searchCfg?.onSearch?.(e.target.value);
               }}
               placeholder="ค้นหา"
-              className="w-full bg-transparent text-sm outline-none placeholder:text-foreground-subtle"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-foreground-muted"
             />
           </div>
         )}
         <div role="listbox" className="max-h-64 overflow-y-auto" onScroll={onPopupScroll}>
           {flatten(filtered).length === 0 ? (
-            <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+            <div className="px-2 py-6 text-center text-sm text-foreground-lighter">
               {notFoundContent}
             </div>
           ) : (
             filtered.map((it, i) =>
               isGroup(it) ? (
-                <div key={`group-${String(it.label ?? i)}`} className="py-1">
-                  <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{it.label}</div>
+                // label อาจเป็น ReactNode (เช่น badge+ข้อความ) → stringify แล้วชนกันเป็น
+                // "[object Object]". ใช้ value ของ option แรกซึ่งเป็น string ที่ไม่ซ้ำแทน
+                <div key={`group-${it.options[0]?.value ?? i}`} className="py-1">
+                  <div className="px-2 py-1 text-xs font-medium text-foreground-lighter">{it.label}</div>
                   {it.options.map(renderOption)}
                 </div>
               ) : (

@@ -4,26 +4,27 @@ import { Toaster as Sonner } from "sonner"
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 /**
- * Stripe-style toast surface — white card, colored type icon, subtle border + elevation.
- * สีทั้งหมดผูกกับ semantic token (--popover / --border / status) ไม่มี hex ตรงๆ
+ * Supabase-style toast surface — พื้น overlay + เส้นขอบ, เงาเฉพาะเพราะมันลอยเหนือหน้า,
+ * สีบอกชนิดอยู่ที่ "ไอคอน" อย่างเดียว ไม่ย้อมพื้นทั้งใบ
+ * สีทั้งหมดผูกกับ semantic token (--overlay / --border-overlay / status) ไม่มี hex ตรงๆ
  */
 function Toaster({ ...props }: ToasterProps) {
   return (
     <Sonner
       position="top-right"
       offset={16}
-      gap={10}
+      gap={8}
       closeButton
       toastOptions={{
         classNames: {
           toast:
-            "group rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
+            "group rounded-md border border-overlay bg-overlay text-popover-foreground shadow-overlay",
           title: "text-sm font-medium text-foreground",
-          description: "!text-muted-foreground text-[13px] leading-snug",
+          description: "!text-foreground-light text-xs leading-snug",
           closeButton:
-            "!bg-popover !border-border !text-muted-foreground hover:!text-foreground",
-          actionButton: "!bg-primary !text-primary-foreground",
-          cancelButton: "!bg-muted !text-muted-foreground",
+            "!bg-overlay !border-border !text-foreground-lighter hover:!text-foreground",
+          actionButton: "!bg-primary !text-primary-foreground !rounded-md",
+          cancelButton: "!bg-surface-200 !text-foreground-light !rounded-md",
           success: "[&_[data-icon]]:text-success",
           error: "[&_[data-icon]]:text-error",
           warning: "[&_[data-icon]]:text-warning",
@@ -32,9 +33,9 @@ function Toaster({ ...props }: ToasterProps) {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
+          "--normal-bg": "var(--overlay)",
           "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
+          "--normal-border": "var(--border-overlay)",
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }

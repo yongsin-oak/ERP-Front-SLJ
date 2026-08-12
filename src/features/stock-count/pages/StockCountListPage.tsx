@@ -2,9 +2,9 @@ import { useState, useMemo } from 'react';
 import { useSearchState } from '@shared';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { Table, Button, PageHeader, FormModal, Input, DeleteConfirmButton, Select, Card, SummaryCard , AppIcons, Form, Inline, Stack, Badge } from '@design-system';
+import { Table, Button, PageHeader, FormModal, Input, ActionCell, Select, Card, SummaryCard , AppIcons, Form, Inline, Stack, Badge } from '@design-system';
 import type { ColumnType } from '@design-system';
-import { useEmployees } from '@features/employee/react-query';
+import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
 import {
   useStockCounts,
   useCreateStockCount,
@@ -31,7 +31,6 @@ export function StockCountListPage() {
   const sessions = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
 
-  const { data: employees = [] } = useEmployees();
 
   const createCount = useCreateStockCount();
   const deleteCount = useDeleteStockCount();
@@ -119,25 +118,19 @@ export function StockCountListPage() {
     {
       title: '',
       key: 'action',
-      width: 90,
+      width: 56,
+      align: 'center' as const,
       fixed: 'right',
       render: (_: unknown, r: StockCount) => (
-        <Inline wrap={false}>
-          <Button
-            variant="ghost"
-            size="small"
-            icon={<AppIcons.view />}
-            onClick={() => navigate(`/stock/count/${r.id}`)}
-          />
-          {r.status === 'Draft' && (
-            <DeleteConfirmButton
-              onConfirm={() => deleteCount.mutate(r.id)}
-              loading={deleteCount.isPending}
-              title="ลบรายการนับสต็อก?"
-              description="ลบได้เฉพาะรายการที่ยังไม่สิ้นสุด"
-            />
-          )}
-        </Inline>
+        <ActionCell
+          actions={[
+            { key: 'view', label: 'ดูรายละเอียด', onSelect: () => navigate(`/stock/count/${r.id}`) },
+          ]}
+          // ลบได้เฉพาะรายการที่ยังไม่สิ้นสุด — สถานะอื่นไม่ต้องมีเมนูลบเลย
+          onDelete={r.status === 'Draft' ? () => deleteCount.mutate(r.id) : undefined}
+          isDeleting={deleteCount.isPending}
+          deleteTitle="ลบรายการนับสต็อก?"
+        />
       ),
     },
   ];
@@ -216,14 +209,9 @@ export function StockCountListPage() {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="employeeId" label="ผู้รับผิดชอบ">
-            <Select
+            <EmployeeSearchSelect
               allowClear
               placeholder="เลือกพนักงาน (ถ้ามี)"
-              showSearch={{ optionFilterProp: 'label' }}
-              options={employees.map((e) => ({
-                label: `${e.firstName} (${e.nickname})`,
-                value: e.id,
-              }))}
             />
           </Form.Item>
           <Form.Item name="note" label="หมายเหตุ">

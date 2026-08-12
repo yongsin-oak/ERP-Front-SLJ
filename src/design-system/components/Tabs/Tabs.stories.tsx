@@ -28,7 +28,7 @@ const ORDER_TABS: TabItem[] = [
 ];
 
 const meta = {
-  title: 'Design System/Tabs',
+  title: 'Design System/Layout/Tabs',
   component: Tabs,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

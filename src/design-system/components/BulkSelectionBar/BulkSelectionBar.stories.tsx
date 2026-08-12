@@ -27,7 +27,7 @@ const PRODUCTS: Product[] = Array.from({ length: 12 }, (_, i) => ({
 // ── Meta ──────────────────────────────────────────────────────────────────────
 
 const meta = {
-  title: 'Design System/BulkSelectionBar',
+  title: 'Design System/Actions/BulkSelectionBar',
   component: BulkSelectionBar,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

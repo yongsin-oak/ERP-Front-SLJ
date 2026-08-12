@@ -148,16 +148,34 @@ Never define local `PaginatedResponse`, `ListResponse`, or `ApiResponse` wrapper
 
 ---
 
-## Rule 6 — Lite / Projection Types Stay in the Owning Feature
+## Rule 6 — Projection Types Stay in the Owning Feature
 
-When an endpoint returns a reduced shape (dropdown-search, autocomplete, summary), declare the lite type **alongside the full type** in the same `types/index.ts` — not in the hook or component.
+When an endpoint returns a reduced shape, declare the projection type **alongside the full type** in the same `types/index.ts` — not in the hook or component.
+
+### Name a projection by what it contains
+
+Never use a relative adjective (`lite`, `mini`, `slim`). They are unbounded and say nothing about the contents — the next subset has nowhere to go (`lite-plus`?). Use this ladder, matching the backend's `standard-naming-conventions` § Projections:
+
+| Name | Contains | Endpoint |
+| --- | --- | --- |
+| *(canonical)* | everything + relations | `GET /product/:barcode` |
+| `Ref` | identifier + label, nothing else | `GET /product/:barcode/ref` |
+| `Summary` | the set a list/grid/dropdown renders | `GET /product/dropdown-search` |
+
+`Ref ⊂ Summary ⊂ canonical`. `Ref` is **self-bounding**: add a field and it is no longer a reference — it is a summary. That is the boundary `lite` cannot enforce.
 
 ```ts
 // features/inventory/types/index.ts
 export interface Product { barcode: string; name: string; sellPrice: PriceSet; costPrice: PriceSet; ... }
 
-/** Lite shape returned by GET /product/dropdown-search */
-export interface ProductDropdown {
+/** Ref projection — identifier + label (GET /product/:barcode/ref) */
+export interface ProductRef {
+  barcode: string;
+  name: string;
+}
+
+/** Summary projection — the list/dropdown set (GET /product/dropdown-search) */
+export interface ProductDropdown {   // ← existing debt: shape is a summary, name says "dropdown"
   barcode: string;
   name: string;
   remaining: number;
@@ -169,6 +187,8 @@ export interface ProductDropdown {
 // features/order/components/OrderItemsEditor.tsx
 import type { ProductDropdown } from '@features/inventory';
 ```
+
+**Each projection needs its own query key** — two shapes of one entity must never share a key. See `react-query` skill § One key per response shape.
 
 ---
 

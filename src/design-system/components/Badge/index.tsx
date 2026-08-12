@@ -9,7 +9,7 @@ const DOT: Record<BadgeStatus, string> = {
   error: 'bg-error',
   warning: 'bg-warning',
   processing: 'bg-info',
-  default: 'bg-muted-foreground',
+  default: 'bg-foreground-lighter',
 };
 
 export interface BadgeProps extends React.ComponentProps<'span'> {

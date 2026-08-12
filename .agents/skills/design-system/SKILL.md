@@ -1,6 +1,7 @@
-# Skill: Design System
+# Skill: Design System — Atlassian-guided Tokens & Styling
 
-> Everything about tokens, components, and styling rules for this codebase.
+> Tailwind v4 tokens, styling rules, and Storybook workflow.
+> Sub-skills: [components](./components/SKILL.md) · [icons](./icons/SKILL.md) · [feedback](./feedback/SKILL.md)
 > The design system lives at `src/design-system/` — import from `@design-system`.
 
 ---
@@ -8,441 +9,115 @@
 ## Trigger
 
 Use this skill when:
+
 - Styling any component (color, spacing, layout, typography)
-- Picking a UI component (button, table, modal, etc.)
 - Tempted to write a raw `#hex` value or `px` literal
+- Adding or modifying a design-system component
+- Writing or updating a Storybook story
 
 ---
 
-## Token Reference
+## Architecture (migration จาก antd เสร็จแล้ว — 2026-07)
 
-Import tokens from `@design-system/tokens` (or the barrel `@design-system`).
+antd + Emotion ถูกถอดออกทั้งหมด (ประวัติ/เหตุผลอยู่ใน [`DESIGN-SYSTEM-MIGRATION.md`](../../../DESIGN-SYSTEM-MIGRATION.md)).
 
-### Colors — `colors`
+### Implementation boundary (strict)
 
-```ts
-import { colors } from '@design-system/tokens';
+- ใช้ **Tailwind CSS v4 เท่านั้น** สำหรับ styling ผ่าน semantic utilities, variants, responsive prefixes และ `cn()`
+- ห้ามใช้ Emotion, styled-components, CSS-in-JS, `css` prop, `styled()` หรือ runtime style generation
+- ห้ามติดตั้ง `@emotion/*`, `@atlaskit/*` หรือคัดลอกตัวอย่าง Emotion จาก Atlassian
+- ใช้ `atlassian.design` เป็นแหล่งอ้างอิงด้าน semantics, accessibility และ behavior แล้ว implement ด้วย Tailwind + Radix + DS wrappers
+- Inline `style` ใช้ได้เฉพาะ runtime data ที่ Tailwind ระบุล่วงหน้าไม่ได้ ห้ามใช้แทน utility class
+
+| Layer | Where | Role |
+| --- | --- | --- |
+| **Tokens** | `src/index.css` (3 tiers) | สีทั้งหมด, เงา, radius, motion — source of truth เดียว |
+| **Primitives** | `src/components/ui/*` | shadcn-style own-the-code, Radix-based (dialog, popover, checkbox, select, tabs, tooltip, sonner…) |
+| **ERP wrappers** | `src/design-system/components/*` | API ระดับแอป (ส่วนใหญ่คง antd-compatible surface) — export ผ่าน `@design-system` |
+| **Toasts** | Sonner ผ่าน `notify.*` (`src/shared/utils/notify.tsx`) | อย่าเรียก `toast` ตรง |
+| **Forms** | react-hook-form + zod ผ่าน DS `Form` (antd-compatible surface: `Form.useForm`/`Form.Item`/rules) | |
+| **Table** | DS `Table` (antd-like API + `@tanstack/react-virtual` เมื่อส่ง `virtual` + `scroll.y`) | |
+
+- `cn()` จาก `src/lib/utils.ts` (clsx + tailwind-merge) — ใช้ประกอบ className เสมอ
+- Font: Bai Jamjuree ผ่าน `--font-sans`
+- Icons: `AppIcons` เท่านั้น — ดู [icons/SKILL.md](./icons/SKILL.md)
+
+---
+
+## Design principles — Atlassian Design System adapted for SLJ
+
+- ใช้ [Foundations](https://atlassian.design/foundations) เป็นสารบัญหลักของ color, spacing, typography, iconography, elevation, border และ radius
+- เลือก token ตามความหมาย ไม่ใช่ค่าสี ([design tokens](https://atlassian.design/foundations/tokens/design-tokens/))
+- ใช้ semantic interaction state และตรวจ WCAG AA ([color](https://atlassian.design/foundations/color))
+- ใช้ spacing scale เพื่อจัดกลุ่มตามความสัมพันธ์ ([spacing](https://atlassian.design/foundations/grid-beta/applying-grid))
+- รักษา heading hierarchy; 12px ใช้เฉพาะ meta/fine print ([typography](https://atlassian.design/foundations/typography/applying-typography))
+- ประกอบ layout ด้วย `Grid`, `Stack`, `Inline` ([layout primitives](https://atlassian.design/foundations/spacing/primitives/))
+- แปลหลักการทั้งหมดเป็น Tailwind utilities ของ SLJ; ไม่ใช้ package หรือ styling runtime ของ Atlassian
+
+## Token Architecture — 3 tiers ใน `src/index.css`
+
+1. **Tier 1 — primitive** (`:root`): raw scales `--neutral-*` (0–900 cool-gray), `--brand-*` (แดง #e0282e), `--red/green/gold/blue-*`, `--ink-*`. **ห้ามใช้ตรงใน component**
+2. **Tier 2 — semantic** (`:root` + `.dark`): shadcn core (`--primary`, `--background`, `--border`…) + app states `--success/-bg/-border/-text`, `--warning*`, `--error*`, `--info*`, interaction states (`--primary-hover/-active`, `--accent`, `--disabled*`, `--divider`, `--control-off`), `--canvas`, `--scrim`, `--border-strong`, `--primary-subtle`
+3. **Tier 3 — `@theme inline`**: map semantic → Tailwind utilities: `bg-canvas`, `bg-primary`, `hover:bg-primary-hover`, `text-success-text`, `bg-success-bg`, `border-divider`, `shadow-{xs,sm,md,lg,xl,overlay}`, `ease-{out,in-out,spring}`, `bg-data-volcano-bg` ฯลฯ
+
+### Rules (strict)
+
+- **No hardcoded colors** — ห้าม `#hex`, `bg-black/25`, `text-white` ใน component → ใช้ semantic token (`text-primary-foreground`, `bg-scrim`, …)
+- **Components consume Tier 3 only** — ห้าม `bg-[var(--neutral-300)]`; ถ้า token ไม่พอ ให้**เพิ่ม semantic token ใหม่** ไม่ใช่ดึง primitive
+- **Interaction states เป็น token หมด**: hover/active/disabled มีคู่ token แล้ว — อย่า hardcode
+- **Dynamic class maps ต้องเป็น literal strings** (เช่น `success: 'bg-success-bg border-success-border text-success-text'`) เพื่อให้ Tailwind scanner เห็น — ห้ามประกอบ class ด้วย template string (`grid-cols-${n}` จะไม่ถูก emit)
+- Categorical/data-viz palette ใช้ `--data-<hue>-{bg,border,text}` ผ่าน literal classes
+- Spacing/size ใช้ Tailwind scale (`px-3`, `gap-2`, `size-9`) — ถือเป็น token; ห้าม inline `style={{ padding: 16 }}`
+
+### Common utilities cheat sheet
+
 ```
-
-| Group | Keys | Usage |
-|---|---|---|
-| `colors.brand` | `primary` `hover` `active` `light` `border` | Brand red — primary actions |
-| `colors.neutral` | `0` `50` `100` `200` `300` `400` `500` `600` `700` `800` `900` | Gray scale |
-| `colors.semantic` | `successBg/Border/success/successText` (×4 per state: success/warning/error/info) | UX feedback — form validation, alerts, badges |
-| `colors.status` | `pending` `processing` `completed` `cancelled` `onHold` — each has `.color` `.bg` `.border` | Workflow/order status tags |
-| `colors.text` | `primary` `secondary` `tertiary` `disabled` `inverse` `link` `linkHover` | Text hierarchy + links |
-| `colors.border` | `default` `strong` `focus` | Borders, dividers, focus rings |
-| `colors.bg` | `base` `layout` `hover` `active` `selected` `disabled` `mask` `skeleton` | All background states |
-
-#### Semantic — 4 tiers per state
-
-Each semantic state (success/warning/error/info) has 4 keys:
-
-| Suffix | Use case |
-|---|---|
-| `*Bg` | Tag fill, alert background, highlighted row |
-| `*Border` | Outlined tag, form validation ring |
-| (none) | Icon, badge dot, filled button background |
-| `*Text` | Readable colored text on white — WCAG AA darker variant |
-
-```ts
-// ✅ form field error
-color: ${colors.semantic.errorText};       // dark red — readable on white
-border: 1px solid ${colors.semantic.errorBorder};
-background: ${colors.semantic.errorBg};
-
-// ✅ success badge
-background: ${colors.semantic.successBg};
-border: 1px solid ${colors.semantic.successBorder};
-color: ${colors.semantic.successText};
-```
-
-#### Status — workflow states
-
-```ts
-// ✅ dynamic status tag
-const s = colors.status[order.status];  // pending | processing | completed | cancelled | onHold
-// s.color → text/icon color
-// s.bg    → background fill
-// s.border → border stroke
-
-<Tag style={{ color: s.color, background: s.bg, border: `1px solid ${s.border}` }}>
-  {ORDER_STATUS_LABEL[order.status]}
-</Tag>
-```
-
-#### Background utilities
-
-```ts
-colors.bg.selected   // selected table row, active nav item  (#fff1f0 — brand tint)
-colors.bg.disabled   // disabled input/button background
-colors.bg.mask       // modal/drawer dark overlay
-colors.bg.skeleton   // skeleton loading placeholder color
-```
-
-```ts
-// ✅
-color: ${colors.text.primary};
-background: ${colors.bg.layout};
-border: 1px solid ${colors.border.default};
-
-// ❌ never
-color: 'rgba(0,0,0,0.88)';
-background: '#f5f5f5';
-```
-
-### Spacing — `spacing`
-
-```ts
-import { spacing } from '@design-system/tokens';
-// values: 0='0px' 1='4px' 2='8px' 3='12px' 4='16px' 5='20px' 6='24px' 8='32px' 10='40px' 12='48px' 16='64px'
-```
-
-```ts
-// ✅
-padding: ${spacing[4]};          // 16px
-gap: ${spacing[2]};              // 8px
-margin: ${spacing[6]} 0;        // 24px 0
-
-// ❌ never
-padding: '16px';
-gap: 8;
-```
-
-### Border Radius — `radius`
-
-```ts
-import { radius } from '@design-system/tokens';
-// sm='4px'  md='6px'  lg='8px'  xl='12px'  full='9999px'
-
-border-radius: ${radius.md};
-```
-
-### Shadow — `shadow`
-
-```ts
-import { shadow } from '@design-system/tokens';
-// sm  md  lg  xl
-
-box-shadow: ${shadow.md};
+พื้นหลังหน้า      bg-canvas          ตัวหนังสือหลัก/รอง  text-foreground / text-muted-foreground
+พื้น card/surface  bg-card bg-popover  ตัวหนังสือจาง      text-foreground-subtle
+เส้นแบ่ง           border-divider      เส้นขอบ           border-border / border-strong
+hover ผิว          hover:bg-accent     แถว/ปุ่ม pressed   active:bg-accent-active
+โฟกัส              focus-visible:ring-[3px] focus-visible:ring-ring/20
+เงา                shadow-xs … shadow-overlay             motion  ease-out duration-150
+สถานะ              text-success-text bg-success-bg border-success-border (×warning/error/info)
 ```
 
 ---
 
-## Available Components
+## Legacy TS tokens — removed
 
-Import from `@design-system`:
-
-```ts
-import {
-  Button, Input, InputPassword, InputSearch, TextArea,
-  Select, Table, Modal, Card, Badge, Tag, Form,
-  Text, Title, PageTitle,
-  Spinner, Empty, PageHeader,
-} from '@design-system';
-```
-
-### Button
-
-```tsx
-import { Button } from '@design-system';
-// variant: 'primary' | 'secondary' | 'danger' | 'danger-ghost' | 'ghost' | 'link'
-
-<Button variant="primary" onClick={handleSave}>Save</Button>
-<Button variant="danger-ghost" onClick={handleDelete}>Delete</Button>
-<Button variant="ghost" icon={<EditOutlined />} />
-```
-
-### Table
-
-```tsx
-import { Table } from '@design-system';
-import type { ColumnType } from '@design-system';
-
-const columns: ColumnType<Order>[] = [
-  { title: 'ID', dataIndex: 'id', searchable: true },   // adds search dropdown
-  { title: 'Status', dataIndex: 'status', sorter: true },
-];
-
-// virtual for >100 rows
-<Table
-  dataSource={orders}
-  columns={columns}
-  rowKey="id"
-  virtual
-  scroll={{ y: 500 }}
-/>
-```
-
-### Modal
-
-```tsx
-import { Modal } from '@design-system';
-// default width=560, destroyOnHidden=true
-
-<Modal title="Edit Order" open={open} onCancel={onClose} onOk={handleSave}>
-  ...
-</Modal>
-```
-
-### Tag (Status)
-
-```tsx
-import { Tag } from '@design-system';
-import type { StatusType } from '@design-system';
-// StatusType: 'success' | 'warning' | 'error' | 'info' | 'default'
-
-<Tag status="success">Active</Tag>
-<Tag status="error">Cancelled</Tag>
-```
-
-### Typography
-
-```tsx
-import { Text, Title, PageTitle, TEXT_SIZE } from '@design-system';
-// TEXT_SIZE: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
-
-<PageTitle>Order Management</PageTitle>
-<Title level={2}>Section</Title>
-<Text size="sm" type="secondary">Helper text</Text>
-```
-
-### Spinner
-
-```tsx
-import { Spinner } from '@design-system';
-
-<Spinner />                      // inline
-<Spinner fullPage />             // centered full-page overlay
-```
-
-### PageHeader
-
-```tsx
-import { PageHeader } from '@design-system';
-
-<PageHeader
-  title="Orders"
-  extra={<Button variant="primary">New Order</Button>}
-/>
-```
+`src/design-system/tokens/` และ Emotion styling ถูกลบแล้ว ใช้ `src/index.css` + Tailwind semantic utilities เท่านั้น
 
 ---
 
-## Emotion Styled Components
+## Responsive
 
-Always use design tokens — never literals:
+ใช้ Tailwind breakpoints ตรงๆ (`sm: md: lg: xl:`) หรือ primitive `Grid`/`Stack` จาก `@design-system`:
 
 ```tsx
-import styled from '@emotion/styled';
-import { colors, spacing, radius, shadow } from '@design-system/tokens';
-
-// ✅
-const PageWrapper = styled.div`
-  padding: ${spacing[6]};
-  background: ${colors.bg.layout};
-  display: flex;
-  flex-direction: column;
-  gap: ${spacing[4]};
-`;
-
-const FilterCard = styled.div`
-  background: ${colors.bg.base};
-  border-radius: ${radius.lg};
-  padding: ${spacing[4]};
-  box-shadow: ${shadow.sm};
-`;
-
-// ❌
-const Bad = styled.div`
-  padding: 24px;
-  background: #f5f5f5;
-  border-radius: 8px;
-`;
+<Grid cols={4} gap={4}>…</Grid>   {/* cols = จำนวนคอลัมน์สูงสุด — ladder มือถือ 1 → sm 2 → lg 4 ในตัว */}
+<Stack gap={4}>…</Stack>  <Inline gap={2} align="center">…</Inline>
 ```
+
+(`Grid` ใช้ class map แบบ literal ภายใน — ถ้าเพิ่มค่า cols/breakpoint ใหม่ต้องเพิ่มใน map ของ component ห้าม template string)
 
 ---
 
-## Responsive Layout
+## Storybook
 
-Use Ant Design Grid for responsive columns:
-
-```tsx
-import { Row, Col } from 'antd';
-
-<Row gutter={[16, 16]}>
-  <Col xs={24} sm={12} lg={8}><StatCard /></Col>
-  <Col xs={24} sm={12} lg={8}><StatCard /></Col>
-</Row>
-```
-
-Use Emotion breakpoints for component-level responsive:
-
-```tsx
-import styled from '@emotion/styled';
-
-const Panel = styled.div`
-  width: 100%;
-  @media (min-width: 768px) { width: 50%; }
-  @media (min-width: 1200px) { width: 33.333%; }
-`;
-```
-
----
-
-## When to Use Ant Design Directly
-
-Use a `@design-system` wrapper for components listed above.
-Use Ant Design directly for components NOT wrapped:
-- `Dropdown`, `Tooltip`, `Popover`, `Tabs`, `Steps`, `Upload`
-- `DatePicker`, `TimePicker`, `Checkbox`, `Radio`, `Switch`
-- `Collapse`, `Tree`, `Transfer`
-
-Import Ant Design components from `antd` — do NOT create wrappers for one-off uses.
+- รัน `bun run storybook` (port 6006) · build `bun run build-storybook`
+- Story อยู่คู่ component: `src/design-system/components/<Name>/<Name>.stories.tsx`
+- Convention: `title: 'Design System/<Name>'`, `tags: ['autodocs']`, `satisfies Meta<typeof X>`, เนื้อหาตัวอย่างเป็นภาษาไทยตามโดเมน ERP, ไอคอนผ่าน `AppIcons`
+- **ทุก component ใหม่/แก้ API ต้องมี/อัปเดต story** — reviewer ดูของจริงจาก Storybook
+- Tailwind CSS + font โหลดผ่าน `.storybook/preview.tsx` + `preview-head.html`
 
 ---
 
 ## Adding a New Design-System Component
 
-Only wrap an Ant Design component if:
-1. It needs default props applied project-wide (e.g. `Modal` always `destroyOnHidden`)
-2. It needs a custom variant API (e.g. `Button` with `variant` prop)
-3. It will be reused in ≥3 features
-
-Place it in `src/design-system/components/<ComponentName>/index.tsx` and export from `src/design-system/index.ts`.
-
----
-
-## ERP Composite Components
-
-These components remove boilerplate common across all feature pages. Always prefer them over writing the pattern from scratch.
-
-### DeleteConfirmButton
-
-Wraps `Popconfirm` + `Button danger-ghost`. Default: icon-only trash button. Pass `children` for a custom trigger.
-
-```tsx
-import { DeleteConfirmButton } from '@design-system';
-
-// icon-only (default)
-<DeleteConfirmButton onConfirm={() => deleteMutation.mutate(id)} loading={deleteMutation.isPending} />
-
-// custom trigger
-<DeleteConfirmButton onConfirm={handleDelete} title="Remove product?" description="Stock will be lost.">
-  <Button variant="danger">Remove</Button>
-</DeleteConfirmButton>
-```
-
-### BulkSelectionBar
-
-Show when `selectedKeys.length > 0` — replaces repeated inline JSX in every page.
-
-```tsx
-import { BulkSelectionBar } from '@design-system';
-
-{selectedKeys.length > 0 && (
-  <BulkSelectionBar
-    count={selectedKeys.length}
-    onDelete={handleBulkDelete}
-    onClear={() => setSelectedKeys([])}
-    isDeleting={bulkDelete.isPending}
-    itemLabel="products"
-  />
-)}
-```
-
-### ActionCell
-
-Edit + Delete icon buttons for table row `render`. Replaces repeated column action patterns.
-
-```tsx
-import { ActionCell } from '@design-system';
-
-{
-  title: 'Actions',
-  key: 'actions',
-  fixed: 'right',
-  width: 80,
-  render: (_: unknown, record: Product) => (
-    <ActionCell
-      onEdit={() => { setSelected(record); setModalOpen(true); }}
-      onDelete={() => deleteMutation.mutate(record.id)}
-      isDeleting={deleteMutation.isPending}
-    />
-  ),
-}
-```
-
-### FormModal
-
-Handles modal structure, standard footer, `form.validateFields()`, and `form.resetFields()` on close.
-Parent only needs to: provide `form` instance + `setFieldsValue` in edit mode (via `useEffect`).
-
-```tsx
-import { FormModal } from '@design-system';
-import { Form } from '@design-system';
-
-const [form] = Form.useForm<ProductFormValues>();
-
-// Edit mode: set values when modal opens
-useEffect(() => {
-  if (open && item) form.setFieldsValue(item);
-}, [open, item, form]);
-
-<FormModal
-  open={open}
-  onClose={onClose}
-  title={item ? 'Edit Product' : 'New Product'}
-  form={form}
-  onFinish={(values) => mutation.mutate(values as ProductFormValues)}
-  loading={mutation.isPending}
->
-  <Form.Item name="name" label="Name" rules={[{ required: true }]}>
-    <Input />
-  </Form.Item>
-</FormModal>
-```
-
-### PageShell
-
-Handles loading / error / empty states on every page. Eliminates repeated if-chains.
-
-```tsx
-import { PageShell, Button } from '@design-system';
-
-<PageShell
-  isLoading={isLoading}
-  isError={isError}
-  errorMessage={getErrorMessage(error)}
-  isEmpty={!data?.length}
-  emptyDescription="No products in inventory"
-  emptyAction={<Button variant="primary" onClick={onAdd}>Add first product</Button>}
->
-  <Table dataSource={data} ... />
-</PageShell>
-```
-
-### Table Cell Helpers
-
-```tsx
-import { DateCell, MoneyCell, CodeCell, QuantityCell } from '@design-system';
-
-const columns = [
-  { title: 'Code',     dataIndex: 'sku',         render: (v: string) => <CodeCell>{v}</CodeCell> },
-  { title: 'Price',    dataIndex: 'price',        render: (v: number) => <MoneyCell value={v} /> },
-  { title: 'Stock',    dataIndex: 'stock',        render: (v: number) => <QuantityCell value={v} lowThreshold={10} criticalThreshold={3} /> },
-  { title: 'Updated',  dataIndex: 'updatedAt',    render: (v: string) => <DateCell value={v} /> },
-];
-```
-
-`QuantityCell` automatically colors: green (ok) → orange (low) → red (critical).
-
----
-
-## Quick Reference: Token Imports
-
-```ts
-import { colors, spacing, radius, shadow } from '@design-system/tokens';
-// or
-import { colors, spacing, radius, shadow, Button, Table } from '@design-system';
-```
+1. สร้าง `src/design-system/components/<Name>/index.tsx` — named export เท่านั้น
+2. ใช้ primitive จาก `src/components/ui/*` (Radix) เป็นฐานถ้ามี
+3. Semantic tokens เท่านั้น (กติกาด้านบน) + `cn()` + `focus-visible` ring + aria ครบ
+4. Async action ใน overlay ให้รองรับ Promise (ดู `Modal.onOk` / `DeleteConfirmButton.onConfirm` เป็นแบบ)
+5. Export จาก `src/design-system/index.ts`
+6. เขียน `<Name>.stories.tsx` + `tsc -b` ผ่าน
+7. อัปเดต [components/SKILL.md](./components/SKILL.md) ถ้าเป็น pattern ใหม่

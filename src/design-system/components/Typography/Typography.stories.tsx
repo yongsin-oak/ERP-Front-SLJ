@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Text, Title, PageTitle, TEXT_SIZE, type TextSize } from './index';
 
 const meta = {
-  title: 'Design System/Typography',
+  title: 'Design System/Display/Typography',
   component: Text,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },

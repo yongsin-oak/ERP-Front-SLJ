@@ -4,9 +4,9 @@ import { IconLoader2 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
 const SIZE = {
-  sm: "size-4",
-  md: "size-5",
-  lg: "size-7",
+  sm: "size-3",
+  md: "size-3.5",
+  lg: "size-4",
 } as const
 
 function Spinner({
@@ -18,7 +18,7 @@ function Spinner({
     <IconLoader2
       role="status"
       aria-label="loading"
-      className={cn("animate-spin text-muted-foreground", SIZE[size], className)}
+      className={cn("animate-spin text-foreground-lighter", SIZE[size], className)}
       {...props}
     />
   )

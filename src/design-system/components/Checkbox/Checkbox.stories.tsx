@@ -9,7 +9,7 @@ const PLATFORM_OPTIONS = [
 ];
 
 const meta = {
-  title: 'Design System/Checkbox',
+  title: 'Design System/Inputs/Checkbox',
   component: Checkbox,
   tags: ['autodocs'],
   parameters: { layout: 'padded' },
@@ -72,7 +72,7 @@ const SelectAllDemo = () => {
   const allChecked = selected.length === PLATFORM_OPTIONS.length;
   const partiallyChecked = selected.length > 0 && !allChecked;
   return (
-    <div className="flex max-w-sm flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm">
+    <div className="flex max-w-sm flex-col gap-3 rounded-lg border border-border bg-card p-5">
       <h3 className="text-sm font-semibold text-foreground">เปิดขายสินค้านี้บนช่องทาง</h3>
       <Checkbox
         checked={allChecked}

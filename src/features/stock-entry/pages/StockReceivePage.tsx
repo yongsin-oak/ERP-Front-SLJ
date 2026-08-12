@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Table, Button, PageHeader, Select, AppIcons, Inline, InputNumber, Text } from '@design-system';
 import type { ColumnType } from '@design-system';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkCreateStockEntry } from '../react-query';
-import { useEmployeeList } from '@features/employee/react-query';
 import { ProductDropdownSelect } from '@features/inventory';
 
 interface ReceiveRow {
@@ -26,12 +25,6 @@ export function StockReceivePage() {
 
   const bulkCreate = useBulkCreateStockEntry();
 
-  const { data: empData } = useEmployeeList({ page: 1, limit: 200 });
-  const employees = empData?.data ?? [];
-  const employeeOptions = useMemo(
-    () => employees.map((e) => ({ label: `${e.firstName} (${e.nickname})`, value: e.id })),
-    [employees],
-  );
 
   function updateRow(key: string, patch: Partial<ReceiveRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -148,6 +141,7 @@ export function StockReceivePage() {
         <Button
           variant="danger-ghost"
           size="small"
+          aria-label="ลบแถวนี้"
           icon={<AppIcons.delete />}
           onClick={() => removeRow(r.key)}
           disabled={rows.length === 1}
@@ -165,7 +159,6 @@ export function StockReceivePage() {
 
       <div style={{ maxWidth: 1000 }}>
         <EntryMetaBar
-          employeeOptions={employeeOptions}
           employeeId={employeeId}
           note={note}
           onEmployeeChange={setEmployeeId}

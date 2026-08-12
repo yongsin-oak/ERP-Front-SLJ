@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button, Input, InputNumber, Table, Tag, AppIcons } from '@design-system';
+import { useQueryClient } from '@tanstack/react-query';
+import { Button, Input, QuantityStepper, Table, Tag, AppIcons } from '@design-system';
 import type { ColumnType, InputRef } from '@design-system';
-import { ProductDropdownSelect, inventoryService } from '@features/inventory';
+import { ProductDropdownSelect, productRefQuery } from '@features/inventory';
 import type { ProductDropdown } from '@features/inventory';
 import { getErrorMessage, notify } from '@shared';
 import type { OrderItem } from '../types';
@@ -16,40 +17,39 @@ interface OrderItemsEditorProps {
 export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEditorProps) {
   const [barcodeInput, setBarcodeInput] = useState('');
   const barcodeRef = useRef<InputRef>(null);
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (resetSignal !== undefined) barcodeRef.current?.focus();
   }, [resetSignal]);
 
-  const mergeItem = (item: {
-    barcode: string;
-    name: string;
-    sellingPrice: number;
-    costPrice: number;
-    sellPriceCarton: number;
-  }) => {
-    const existing = items.find((i) => i.barcode === item.barcode);
-    if (existing) {
-      // สแกนซ้ำ = เพิ่มจำนวนแพ็ค 1
-      onChange(items.map((i) => (i.barcode === item.barcode ? { ...i, quantity: i.quantity + 1 } : i)));
-    } else {
-      onChange([...items, { ...item, quantity: 1, quantityCarton: 0 }]);
-    }
+  /** สแกนซ้ำ = เพิ่มจำนวนแพ็ค 1 */
+  const bumpQuantity = (barcode: string) => {
+    onChange(items.map((i) => (i.barcode === barcode ? { ...i, quantity: i.quantity + 1 } : i)));
+  };
+
+  const mergeItem = (item: { barcode: string; name: string }) => {
+    if (items.some((i) => i.barcode === item.barcode)) bumpQuantity(item.barcode);
+    else onChange([...items, { ...item, quantity: 1, quantityCarton: 0 }]);
   };
 
   const handleBarcodeSubmit = async () => {
     const barcode = barcodeInput.trim();
     if (!barcode) return;
+
+    // สแกนซ้ำสินค้าที่อยู่ในบิลแล้ว → บวกจำนวนได้เลย ไม่ต้อง fetch
+    // (ข้อมูลสินค้าอยู่ในแถวครบแล้ว + ยืนยันว่า barcode มีจริงตั้งแต่สแกนครั้งแรก)
+    if (items.some((i) => i.barcode === barcode)) {
+      bumpQuantity(barcode);
+      setBarcodeInput('');
+      barcodeRef.current?.focus();
+      return;
+    }
+
     try {
-      const res = await inventoryService.getByBarcode(barcode);
-      const p = res.data.data;
-      mergeItem({
-        barcode: p.barcode,
-        name: p.name,
-        sellingPrice: p.sellPrice?.pack ?? p.sellPrice?.carton ?? 0,
-        costPrice: p.costPrice?.pack ?? p.costPrice?.carton ?? 0,
-        sellPriceCarton: p.sellPrice?.carton ?? 0,
-      });
+      // fetchQuery = อ่าน cache ถ้ายัง fresh, ยิง API ถ้าไม่มี/หมดอายุ, และ dedupe คำขอที่ซ้อนกัน
+      const p = await qc.fetchQuery(productRefQuery(barcode));
+      mergeItem({ barcode: p.barcode, name: p.name });
       setBarcodeInput('');
       barcodeRef.current?.focus();
     } catch (err) {
@@ -59,13 +59,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
   };
 
   const handleDropdownSelect = (_: string, product: ProductDropdown) => {
-    mergeItem({
-      barcode: product.barcode,
-      name: product.name,
-      sellingPrice: product.sellPrice?.pack ?? product.sellPrice?.carton ?? 0,
-      costPrice: 0, // cost price not available in dropdown-search lite shape
-      sellPriceCarton: product.sellPrice?.carton ?? 0,
-    });
+    mergeItem({ barcode: product.barcode, name: product.name });
   };
 
   const updateQty = (barcode: string, qty: number) => {
@@ -90,10 +84,7 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
     onChange(items.filter((i) => i.barcode !== barcode));
   };
 
-  const rowTotal = (i: OrderItem) =>
-    i.sellingPrice * i.quantity + (i.sellPriceCarton ?? 0) * (i.quantityCarton ?? 0);
   const totalQty = items.reduce((s, i) => s + i.quantity + (i.quantityCarton ?? 0), 0);
-  const totalPrice = items.reduce((s, i) => s + rowTotal(i), 0);
 
   const columns: ColumnType<OrderItem>[] = [
     {
@@ -107,59 +98,41 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       ),
     },
     {
-      title: 'ราคา/แพ็ค',
-      dataIndex: 'sellingPrice',
-      width: 100,
-      align: 'right',
-      render: (v: number) => `฿${v?.toLocaleString()}`,
-    },
-    {
       title: 'แพ็ค',
       dataIndex: 'quantity',
-      width: 96,
+      width: 168,
       align: 'center',
       render: (v: number, record: OrderItem) => (
-        <InputNumber
-          min={0}
+        <QuantityStepper
+          size="large"
+          label="จำนวนแพ็ค"
           value={v}
-          onChange={(val) => updateQty(record.barcode, val ?? 0)}
-          style={{ width: 72 }}
-          size="small"
+          onChange={(val) => updateQty(record.barcode, val)}
         />
       ),
     },
     {
       title: 'ลัง',
       dataIndex: 'quantityCarton',
-      width: 96,
+      width: 168,
       align: 'center',
       render: (v: number | undefined, record: OrderItem) => (
-        <InputNumber
-          min={0}
+        <QuantityStepper
+          size="large"
+          label="จำนวนลัง"
           value={v ?? 0}
-          onChange={(val) => updateQtyCarton(record.barcode, val ?? 0)}
-          style={{ width: 72 }}
-          size="small"
+          onChange={(val) => updateQtyCarton(record.barcode, val)}
         />
-      ),
-    },
-    {
-      title: 'รวม',
-      key: 'total',
-      width: 110,
-      align: 'right',
-      render: (_: unknown, record: OrderItem) => (
-        <span style={{ fontWeight: 500 }}>฿{rowTotal(record).toLocaleString()}</span>
       ),
     },
     {
       title: '',
       key: 'del',
-      width: 48,
+      width: 56,
       render: (_: unknown, record: OrderItem) => (
         <Button
           variant="danger"
-          size="small"
+          aria-label="ลบรายการนี้"
           icon={<AppIcons.delete />}
           onClick={() => removeItem(record.barcode)}
         />
@@ -213,13 +186,9 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       />
 
       {items.length > 0 && (
-        <div className="mt-3 flex justify-end gap-6 rounded-md bg-muted px-4 py-2.5">
+        <div className="mt-3 flex justify-end rounded-md bg-muted px-4 py-2.5">
           <span>
             จำนวนรวม: <Tag status="info">{totalQty} หน่วย</Tag>
-          </span>
-          <span>
-            ยอดรวม:{' '}
-            <strong style={{ fontSize: 15 }}>฿{totalPrice.toLocaleString()}</strong>
           </span>
         </div>
       )}

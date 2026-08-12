@@ -3,7 +3,7 @@ import { Button } from '../Button';
 import { Card } from './index';
 
 const meta = {
-  title: 'Design System/Card',
+  title: 'Design System/Display/Card',
   component: Card,
   tags: ['autodocs'],
   args: { children: 'เนื้อหาภายในการ์ด' },

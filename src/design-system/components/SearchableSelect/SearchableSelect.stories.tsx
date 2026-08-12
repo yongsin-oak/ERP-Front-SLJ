@@ -26,7 +26,7 @@ const searchProducts = async (query: string): Promise<FakeOption[]> => {
 };
 
 const meta = {
-  title: 'Design System/SearchableSelect',
+  title: 'Design System/Inputs/SearchableSelect',
   component: SearchableSelect,
   tags: ['autodocs'],
   parameters: {

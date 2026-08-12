@@ -46,12 +46,14 @@ export function Switch({
       disabled={disabled}
       onClick={handleClick}
       className={cn(
-        'relative inline-flex shrink-0 items-center rounded-full align-middle transition-colors outline-none',
-        'focus-visible:ring-2 focus-visible:ring-ring/40',
+        // w-fit + self-start จำเป็น: Form.Item ห่อ control ด้วย `flex flex-col` ซึ่ง align-items
+        // เป็น stretch โดยดีฟอลต์ → มีแค่ min-w สวิตช์จะยืดเต็มความกว้างฟอร์ม/โมดัล
+        'relative inline-flex w-fit shrink-0 self-start items-center rounded-full align-middle transition-colors outline-none',
+        'focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-border-stronger',
         on ? 'bg-primary' : 'bg-control-off',
         disabled && 'cursor-not-allowed opacity-50',
-        small ? 'h-4' : 'h-[22px]',
-        small ? 'min-w-[28px]' : 'min-w-[44px]',
+        small ? 'h-4' : 'h-5.5',
+        small ? 'min-w-7' : 'min-w-11',
         className,
       )}
       style={style}
@@ -71,8 +73,8 @@ export function Switch({
       )}
       <span
         className={cn(
-          'absolute rounded-full bg-background shadow transition-all',
-          small ? 'size-3 top-0.5' : 'size-[18px] top-0.5',
+          'absolute rounded-full bg-control-thumb shadow-sm transition-all',
+          small ? 'size-3 top-0.5' : 'size-4.5 top-0.5',
           on
             ? small ? 'left-[calc(100%-14px)]' : 'left-[calc(100%-20px)]'
             : 'left-0.5',

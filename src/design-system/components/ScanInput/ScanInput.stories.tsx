@@ -4,7 +4,7 @@ import { ScanInput } from './index';
 import { AppIcons } from '../../icons';
 
 const meta = {
-  title: 'Design System/ScanInput',
+  title: 'Design System/Inputs/ScanInput',
   component: ScanInput,
   tags: ['autodocs'],
   parameters: {

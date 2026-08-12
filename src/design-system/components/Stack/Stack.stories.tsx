@@ -12,7 +12,7 @@ const Box = ({ children }: { children: ReactNode }) => (
 );
 
 const meta = {
-  title: 'Design System/Stack',
+  title: 'Design System/Layout/Stack',
   component: Stack,
   tags: ['autodocs'],
   argTypes: {

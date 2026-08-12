@@ -1,4 +1,4 @@
-export { useEmployeeList, useEmployees, useEmployeeDetail, useEmployeeDropdown } from './queries';
+export { useEmployeeList, useEmployeeDetail, useEmployeeDropdown } from './queries';
 export {
   useCreateEmployee,
   useUpdateEmployee,
