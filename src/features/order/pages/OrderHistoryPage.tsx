@@ -1,21 +1,52 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useSearchState } from '@shared';
+import { Fragment, useCallback, useMemo, useState } from 'react';
+import { AlertDialog, Checkbox, DropdownMenu } from 'radix-ui';
 import { useNavigate } from 'react-router-dom';
 import dayjs, { type Dayjs } from 'dayjs';
-import {
-  Table, Button, Tag, PageHeader, PageShell, Input, Select, BulkSelectionBar,
-  AppIcons, ActionCell, DateRangePresets, Inline, Text,
-} from '@design-system';
-import type { ColumnType } from '@design-system';
-import { downloadFile, showError, notify, getErrorMessage } from '@shared';
+import { useSearchState, downloadFile, showError, notify, getErrorMessage } from '@shared';
 import { ShopSearchSelect } from '@features/shop/components/ShopSearchSelect';
 import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
+import { AppIcons } from '@/lib/icons';
+import { cn } from '@/lib/utils';
 import {
-  useOrders, useDeleteOrder, useBulkDeleteOrder, orderService,
-} from '../react-query';
+  alertBox,
+  btn,
+  btnIcon,
+  BULK_BAR,
+  CHECKBOX,
+  dataPill,
+  DIALOG_CONTENT,
+  DIALOG_DESC,
+  DIALOG_FOOTER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  EMPTY_TEXT,
+  EMPTY_WRAP,
+  INPUT,
+  MENU_CONTENT,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_SEPARATOR,
+  PAGE_HEADER,
+  PAGE_SIZE_SELECT,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  PAGER,
+  SEARCH_CLEAR,
+  SEARCH_ICON,
+  SEARCH_INPUT,
+  TABLE,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+} from '@/lib/styles';
+import { useOrders, useDeleteOrder, useBulkDeleteOrder, orderService } from '../react-query';
 import { OrderDetailModal } from '../components';
 import { OrderStatuses } from '../types';
 import type { Order, OrderStatus, OrderDetail } from '../types';
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 /**
  * ค่าเริ่มต้นของหน้า — ช่วงวันที่คือ **วันนี้**
@@ -40,10 +71,26 @@ function makeDefaults() {
   };
 }
 
-const STATUS_OPTIONS = (Object.keys(OrderStatuses) as OrderStatus[]).map((s) => ({
-  label: OrderStatuses[s].label,
-  value: s,
-}));
+const STATUS_KEYS = Object.keys(OrderStatuses) as OrderStatus[];
+
+/** ช่วงวันที่ที่ใช้บ่อย — คิดตอนกด ไม่ใช่ตอน import (เหตุผลเดียวกับ makeDefaults) */
+const RANGE_PRESETS: { label: string; get: () => [Dayjs, Dayjs] }[] = [
+  { label: 'วันนี้', get: () => [dayjs().startOf('day'), dayjs().endOf('day')] },
+  {
+    label: 'เมื่อวาน',
+    get: () => [
+      dayjs().subtract(1, 'day').startOf('day'),
+      dayjs().subtract(1, 'day').endOf('day'),
+    ],
+  },
+  { label: 'สัปดาห์นี้', get: () => [dayjs().startOf('week'), dayjs().endOf('week')] },
+  { label: 'เดือนนี้', get: () => [dayjs().startOf('month'), dayjs().endOf('month')] },
+  {
+    label: '3 เดือน',
+    get: () => [dayjs().subtract(3, 'month').startOf('day'), dayjs().endOf('day')],
+  },
+  { label: 'ปีนี้', get: () => [dayjs().startOf('year'), dayjs().endOf('year')] },
+];
 
 export function OrderHistoryPage() {
   const navigate = useNavigate();
@@ -58,11 +105,14 @@ export function OrderHistoryPage() {
     [startDate, endDate],
   );
 
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selected, setSelected] = useState<Order | null>(null);
   const [exporting, setExporting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const [pendingDelete, setPendingDelete] = useState<Order | null>(null);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   const queryParams = useMemo(
     () => ({
@@ -81,6 +131,7 @@ export function OrderHistoryPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useOrders(queryParams);
   const orders = useMemo(() => data?.data ?? [], [data]);
   const total = data?.pagination?.total ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
 
   const deleteOrder = useDeleteOrder();
   const bulkDelete = useBulkDeleteOrder();
@@ -108,8 +159,9 @@ export function OrderHistoryPage() {
   );
 
   const handleBulkDelete = useCallback(async () => {
-    await bulkDelete.mutateAsync(selectedKeys.map(String));
+    await bulkDelete.mutateAsync(selectedKeys);
     setSelectedKeys([]);
+    setBulkConfirmOpen(false);
   }, [bulkDelete, selectedKeys]);
 
   const openDetail = useCallback((order: Order) => {
@@ -132,249 +184,522 @@ export function OrderHistoryPage() {
     }
   }
 
-  /**
-   * ทุกคอลัมน์เป็น "บรรทัดเดียว" โดยตั้งใจ
-   *
-   * เดิมยัดสองบรรทัดในช่องเดียว (เลขออเดอร์+เวลา, ชื่อร้าน+แพลตฟอร์ม) ทำให้แถวสูงไม่เท่ากัน
-   * และไม่มีจังหวะให้กวาดสายตา — ตารางแบบนี้ควรมีคอลัมน์ที่ยืด/ตัดคำได้ **แค่คอลัมน์เดียว**
-   * (ที่นี่คือ "หมายเหตุ") ที่เหลือกว้างคงที่ + `ellipsis` เพื่อบังคับความกว้างจริง
-   *
-   * `ellipsis` ไม่ได้แค่ทำจุดไข่ปลา — มันคือตัวที่ทำให้ `width` มีผลกับ `<td>` จริง
-   * (ใส่ `max-w-0 truncate` ให้) ถ้าไม่ใส่ เนื้อหายาวๆ จะดันคอลัมน์บานจนตารางเสียทรง
-   * และเมื่อ render คืน **string** ล้วน Table จะใส่ `title` ให้เอง = hover อ่านค่าเต็มได้
-   *
-   * ไม่ใส่ `sorter` เพราะข้อมูลแบ่งหน้าฝั่ง server — sorter ของ Table เรียงเฉพาะแถวในหน้านั้น
-   * ซึ่งจะหลอกผู้ใช้ว่าเรียงทั้งชุดแล้ว
-   */
-  const columns = useMemo<ColumnType<Order>[]>(
-    () => [
-      {
-        // คอลัมน์แรกมีปุ่มขยายแถวแทรกอยู่ด้วย → ไม่ใส่ ellipsis กัน truncate ไปกินปุ่ม
-        // (ความยาวคงที่อยู่แล้ว ไม่มีทางล้น)
-        title: 'เวลาบันทึก',
-        key: 'recordedAt',
-        width: 165,
-        render: (_: unknown, r: Order) => (
-          <span className="font-mono text-xs tabular-nums text-foreground-light">
-            {formatRecordedAt(r)}
+  async function handleDeleteOrder(id: string) {
+    setDeletingId(id);
+    try {
+      await deleteOrder.mutateAsync(id);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const allSelected = orders.length > 0 && orders.every((r) => selectedKeys.includes(r.id));
+  const someSelected = selectedKeys.length > 0 && !allSelected;
+
+  function toggleAll(checked: boolean) {
+    const pageIds = orders.map((r) => r.id);
+    setSelectedKeys((keys) =>
+      checked ? [...new Set([...keys, ...pageIds])] : keys.filter((k) => !pageIds.includes(k)),
+    );
+  }
+
+  function toggleExpand(id: string) {
+    setExpandedKeys((keys) => (keys.includes(id) ? keys.filter((k) => k !== id) : [...keys, id]));
+  }
+
+  /** เนื้อตาราง — แยกออกมาเพื่อให้สถานะโหลด/ผิดพลาด/ว่าง อ่านเป็นลำดับเดียวกัน */
+  function renderBody() {
+    if (isLoading) {
+      return (
+        <div className={EMPTY_WRAP}>
+          <AppIcons.loading spin className="size-6 text-primary" />
+        </div>
+      );
+    }
+
+    if (isError) {
+      return (
+        <div className={EMPTY_WRAP}>
+          <div className={alertBox('danger')}>
+            <AppIcons.alert />
+            <span>{getErrorMessage(error)}</span>
+          </div>
+          <button type="button" className={btn()} onClick={() => refetch()}>
+            <AppIcons.refresh />
+            ลองใหม่
+          </button>
+        </div>
+      );
+    }
+
+    if (orders.length === 0) {
+      return (
+        <div className={EMPTY_WRAP}>
+          <AppIcons.orders className="size-8 text-foreground-subtle" />
+          <p className={EMPTY_TEXT}>
+            {activeCount > 0 ?
+              'ไม่พบออเดอร์ที่ตรงกับตัวกรอง'
+            : `ยังไม่มีออเดอร์${dateRange ? 'ในช่วงวันที่ที่เลือก' : ''}`}
+          </p>
+          {activeCount > 0 ?
+            <button type="button" className={btn()} onClick={resetFilters}>
+              <AppIcons.clear />
+              ล้างตัวกรอง
+            </button>
+          : <button type="button" className={btn('primary')} onClick={() => navigate('/order')}>
+              <AppIcons.add />
+              บันทึกออเดอร์แรก
+            </button>
+          }
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className={TABLE_WRAP}>
+          <table className={cn(TABLE, 'min-w-240')}>
+            <thead>
+              <tr>
+                <th className={cn(TABLE_TH, 'w-10')}>
+                  <Checkbox.Root
+                    checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                    onCheckedChange={(c) => toggleAll(c === true)}
+                    aria-label="เลือกทุกแถวในหน้านี้"
+                    className={CHECKBOX}
+                  >
+                    <Checkbox.Indicator className="flex items-center justify-center">
+                      {someSelected ?
+                        <AppIcons.minus className="size-3" />
+                      : <AppIcons.check className="size-3" />}
+                    </Checkbox.Indicator>
+                  </Checkbox.Root>
+                </th>
+                <th className={cn(TABLE_TH, 'w-10')}>
+                  <span className="sr-only">ขยายแถว</span>
+                </th>
+                <th className={cn(TABLE_TH, 'w-41')}>เวลาบันทึก</th>
+                <th className={cn(TABLE_TH, 'w-38')}>เลขคำสั่งซื้อ</th>
+                <th className={cn(TABLE_TH, 'w-28')}>สถานะ</th>
+                <th className={cn(TABLE_TH, 'w-48')}>ร้านค้า</th>
+                <th className={cn(TABLE_TH, 'w-38')}>ผู้บันทึก</th>
+                <th className={cn(TABLE_TH, 'w-23 text-right')}>รายการ</th>
+                <th className={TABLE_TH}>หมายเหตุ</th>
+                <th className={cn(TABLE_TH, 'w-14 text-center')}>
+                  <span className="sr-only">ตัวเลือก</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((r) => {
+                const checked = selectedKeys.includes(r.id);
+                const itemCount = r.orderDetails?.length ?? 0;
+                const isExpanded = expandedKeys.includes(r.id);
+                return (
+                  <Fragment key={r.id}>
+                    <tr data-selected={checked} className={TABLE_TR}>
+                      <td className={TABLE_TD}>
+                        <Checkbox.Root
+                          checked={checked}
+                          onCheckedChange={(c) =>
+                            setSelectedKeys((keys) =>
+                              c === true ? [...keys, r.id] : keys.filter((k) => k !== r.id),
+                            )
+                          }
+                          aria-label={`เลือกออเดอร์ ${r.orderNumber ?? r.id}`}
+                          className={CHECKBOX}
+                        >
+                          <Checkbox.Indicator className="flex items-center justify-center">
+                            <AppIcons.check className="size-3" />
+                          </Checkbox.Indicator>
+                        </Checkbox.Root>
+                      </td>
+                      <td className={TABLE_TD}>
+                        {itemCount > 0 && (
+                          <button
+                            type="button"
+                            aria-expanded={isExpanded}
+                            aria-label={isExpanded ? 'ยุบรายการสินค้า' : 'ดูรายการสินค้า'}
+                            onClick={() => toggleExpand(r.id)}
+                            className="rounded-sm p-0.5 text-foreground-muted transition-colors hover:bg-surface-200 hover:text-foreground"
+                          >
+                            <AppIcons.chevronDown
+                              className={cn(
+                                'size-3.5 transition-transform',
+                                !isExpanded && '-rotate-90',
+                              )}
+                            />
+                          </button>
+                        )}
+                      </td>
+                      <td className={TABLE_TD}>
+                        <span className="font-mono text-xs tabular-nums text-foreground-light">
+                          {formatRecordedAt(r)}
+                        </span>
+                      </td>
+                      <td className={cn(TABLE_TD, 'max-w-38 truncate')}>
+                        <span className="font-mono text-sm tabular-nums text-foreground">
+                          {r.orderNumber || '—'}
+                        </span>
+                      </td>
+                      <td className={TABLE_TD}>
+                        {r.status ?
+                          <span className={dataPill(OrderStatuses[r.status].color)}>
+                            {OrderStatuses[r.status].label}
+                          </span>
+                        : '—'}
+                      </td>
+                      <td className={cn(TABLE_TD, 'max-w-48 truncate')}>
+                        {r.shop ?
+                          <>
+                            <span className="text-foreground">{r.shop.name}</span>
+                            <span className="ml-1.5 text-xs text-foreground-lighter">
+                              {r.shop.platform}
+                            </span>
+                          </>
+                        : '—'}
+                      </td>
+                      <td className={cn(TABLE_TD, 'max-w-38 truncate')}>
+                        {r.recordBy ? `${r.recordBy.firstName} (${r.recordBy.nickname})` : '—'}
+                      </td>
+                      <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                        {itemCount}
+                      </td>
+                      <td className={cn(TABLE_TD, 'max-w-50 truncate')} title={r.note ?? undefined}>
+                        {r.note || '—'}
+                      </td>
+                      <td className={cn(TABLE_TD, 'text-center')}>
+                        <DropdownMenu.Root>
+                          <DropdownMenu.Trigger asChild>
+                            <button
+                              type="button"
+                              aria-label="ตัวเลือกของแถวนี้"
+                              className={btnIcon('ghost', 'sm')}
+                              disabled={deletingId === r.id}
+                            >
+                              {deletingId === r.id ?
+                                <AppIcons.loading spin />
+                              : <AppIcons.more />}
+                            </button>
+                          </DropdownMenu.Trigger>
+                          <DropdownMenu.Portal>
+                            <DropdownMenu.Content
+                              align="end"
+                              sideOffset={4}
+                              className={MENU_CONTENT}
+                            >
+                              <DropdownMenu.Item
+                                className={MENU_ITEM}
+                                onSelect={() => openDetail(r)}
+                              >
+                                <AppIcons.view />
+                                ดูรายละเอียด
+                              </DropdownMenu.Item>
+                              <DropdownMenu.Separator className={MENU_SEPARATOR} />
+                              <DropdownMenu.Item
+                                className={MENU_ITEM_DANGER}
+                                onSelect={(e) => {
+                                  e.preventDefault();
+                                  setPendingDelete(r);
+                                }}
+                              >
+                                ลบ
+                              </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                          </DropdownMenu.Portal>
+                        </DropdownMenu.Root>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={10} className="border-b border-border-muted bg-surface-100 p-3">
+                          <OrderItemsPanel items={r.orderDetails ?? []} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className={PAGER}>
+          <span className={TEXT.subtle}>
+            แสดง {orders.length ? (page - 1) * pageSize + 1 : 0}–
+            {(page - 1) * pageSize + orders.length} จาก {total.toLocaleString()}
           </span>
-        ),
-      },
-      {
-        title: 'เลขคำสั่งซื้อ',
-        key: 'orderNumber',
-        width: 150,
-        ellipsis: true,
-        render: (_: unknown, r: Order) => (
-          <span className="font-mono text-sm tabular-nums text-foreground">
-            {r.orderNumber || '—'}
-          </span>
-        ),
-      },
-      {
-        title: 'สถานะ',
-        dataIndex: 'status',
-        width: 110,
-        render: (v: OrderStatus) =>
-          v ? <Tag color={OrderStatuses[v].color}>{OrderStatuses[v].label}</Tag> : '—',
-      },
-      {
-        title: 'ร้านค้า',
-        key: 'shop',
-        width: 190,
-        ellipsis: true,
-        // span เป็น inline ทั้งคู่ → truncate ที่ td คุมได้ (ถ้าเป็น flex/block จะหลุด)
-        render: (_: unknown, r: Order) =>
-          r.shop ? (
-            <>
-              <span className="text-foreground">{r.shop.name}</span>
-              <span className="ml-1.5 text-xs text-foreground-lighter">{r.shop.platform}</span>
-            </>
-          ) : '—',
-      },
-      {
-        title: 'ผู้บันทึก',
-        key: 'recordBy',
-        width: 150,
-        ellipsis: true,
-        render: (_: unknown, r: Order) =>
-          r.recordBy ? `${r.recordBy.firstName} (${r.recordBy.nickname})` : '—',
-      },
-      {
-        // ตัวเลขเชิงปริมาณ → ชิดขวา + mono ให้หลักตรงกันเวลาไล่สายตาลงมา
-        // หัวคอลัมน์บอก "รายการ" แล้ว ในช่องจึงเหลือแค่ตัวเลข ไม่ต้องเขียนซ้ำ
-        title: 'รายการ',
-        key: 'items',
-        width: 90,
-        align: 'right',
-        render: (_: unknown, r: Order) => (
-          <span className="font-mono tabular-nums">{r.orderDetails?.length ?? 0}</span>
-        ),
-      },
-      {
-        // คอลัมน์เดียวที่ปล่อยให้ยืดตามพื้นที่เหลือ — คืน string ล้วนเพื่อให้ได้ title tooltip
-        title: 'หมายเหตุ',
-        key: 'note',
-        ellipsis: true,
-        render: (_: unknown, r: Order) => r.note || '—',
-      },
-      {
-        title: '',
-        key: 'action',
-        width: 56,
-        align: 'center' as const,
-        fixed: 'right',
-        render: (_: unknown, r: Order) => (
-          <ActionCell
-            actions={[
-              { key: 'view', label: 'ดูรายละเอียด', icon: <AppIcons.view />, onSelect: () => openDetail(r) },
-            ]}
-            onDelete={async () => {
-              setDeletingId(r.id);
-              try {
-                await deleteOrder.mutateAsync(r.id);
-              } finally {
-                setDeletingId(null);
+          <div className="flex items-center gap-2">
+            <label htmlFor="order-page-size" className="sr-only">
+              จำนวนแถวต่อหน้า
+            </label>
+            <select
+              id="order-page-size"
+              value={pageSize}
+              onChange={(e) =>
+                setTableState({ ...tableState, page: 1, pageSize: Number(e.target.value) })
               }
-            }}
-            isDeleting={deletingId === r.id}
-            deleteTitle="ลบออเดอร์นี้?"
-          />
-        ),
-      },
-    ],
-    [deleteOrder, deletingId, openDetail],
-  );
+              className={PAGE_SIZE_SELECT}
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n} / หน้า
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              aria-label="หน้าก่อนหน้า"
+              className={btnIcon('secondary', 'sm')}
+              disabled={page <= 1}
+              onClick={() => setTableState({ ...tableState, page: page - 1 })}
+            >
+              <AppIcons.arrowLeft />
+            </button>
+            <span className={cn(TEXT.subtle, 'tabular-nums')}>
+              {page} / {lastPage}
+            </span>
+            <button
+              type="button"
+              aria-label="หน้าถัดไป"
+              className={btnIcon('secondary', 'sm')}
+              disabled={page >= lastPage}
+              onClick={() => setTableState({ ...tableState, page: page + 1 })}
+            >
+              <AppIcons.arrowRight />
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
-        title="ประวัติออเดอร์"
-        subtitle={rangeLabel(dateRange, total)}
-        actions={
-          <>
-            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching} aria-label="รีเฟรช" />
-            <Button icon={<AppIcons.exportFile />} onClick={handleExport} loading={exporting}>
-              ส่งออก Excel
-            </Button>
-            <Button variant="primary" icon={<AppIcons.add />} onClick={() => navigate('/order')}>
-              บันทึกออเดอร์
-            </Button>
-          </>
-        }
-      />
+      <div className={PAGE_HEADER}>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE}>ประวัติออเดอร์</h1>
+          <p className={PAGE_SUBTITLE}>{rangeLabel(dateRange, total)}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            aria-label="รีเฟรช"
+            className={btnIcon('secondary')}
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            {isFetching ? <AppIcons.loading spin /> : <AppIcons.refresh />}
+          </button>
+          <button type="button" className={btn()} onClick={handleExport} disabled={exporting}>
+            {exporting ? <AppIcons.loading spin /> : <AppIcons.exportFile />}
+            ส่งออก Excel
+          </button>
+          <button type="button" className={btn('primary')} onClick={() => navigate('/order')}>
+            <AppIcons.add />
+            บันทึกออเดอร์
+          </button>
+        </div>
+      </div>
 
       {/* ── แถบตัวกรอง — แถวเดียว ไม่ต้องมีการ์ดครอบ ตามภาษาแบบ Supabase (ความลึกมาจากเส้น) ── */}
       <div className="flex flex-col gap-2 rounded-lg border border-border bg-background p-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {RANGE_PRESETS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              className={btn('ghost', 'xs')}
+              onClick={() => {
+                const [from, to] = p.get();
+                setFilter({ startDate: from.toISOString(), endDate: to.toISOString() });
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
-          <DateRangePresets
-            value={dateRange}
-            onChange={(v) =>
-              setFilter({
-                startDate: v?.[0]?.toISOString() ?? '',
-                endDate: v?.[1]?.toISOString() ?? '',
-              })
-            }
-            format="DD/MM/YYYY"
-            placeholder={['วันที่เริ่ม', 'วันที่สิ้นสุด']}
-            className="w-full sm:w-64"
-          />
-          <Input
-            prefix={<AppIcons.search />}
-            placeholder="เลขออเดอร์ / หมายเหตุ"
-            allowClear
-            value={search}
-            onChange={(e) => setFilter({ search: e.target.value })}
-            className="w-full sm:w-56"
-          />
-          <Select
-            allowClear
-            placeholder="ทุกสถานะ"
-            value={status || undefined}
-            onChange={(v) => setFilter({ status: v ?? '' })}
-            options={STATUS_OPTIONS}
-            className="w-full sm:w-40"
-          />
-          <ShopSearchSelect
-            allowClear
-            placeholder="ทุกร้านค้า"
-            value={shopId || undefined}
-            onChange={(v) => setFilter({ shopId: v ?? '' })}
-            className="w-full sm:w-48"
-          />
-          <EmployeeSearchSelect
-            allowClear
-            placeholder="ทุกพนักงาน"
-            value={employeeId || undefined}
-            onChange={(v) => setFilter({ employeeId: v ?? '' })}
-            className="w-full sm:w-48"
-          />
+          <div className="flex items-center gap-1">
+            <input
+              type="date"
+              aria-label="วันที่เริ่ม"
+              value={startDate ? startDate.slice(0, 10) : ''}
+              max={endDate ? endDate.slice(0, 10) : undefined}
+              onChange={(e) =>
+                setFilter({
+                  startDate: e.target.value ? dayjs(e.target.value).startOf('day').toISOString() : '',
+                })
+              }
+              className={cn(INPUT, 'w-38')}
+            />
+            <span aria-hidden className={TEXT.subtle}>
+              –
+            </span>
+            <input
+              type="date"
+              aria-label="วันที่สิ้นสุด"
+              value={endDate ? endDate.slice(0, 10) : ''}
+              min={startDate ? startDate.slice(0, 10) : undefined}
+              onChange={(e) =>
+                setFilter({
+                  endDate: e.target.value ? dayjs(e.target.value).endOf('day').toISOString() : '',
+                })
+              }
+              className={cn(INPUT, 'w-38')}
+            />
+          </div>
+
+          <div className="relative w-full sm:w-56">
+            <AppIcons.search className={SEARCH_ICON} />
+            <input
+              className={SEARCH_INPUT}
+              placeholder="เลขออเดอร์ / หมายเหตุ"
+              aria-label="ค้นหาออเดอร์"
+              value={search}
+              onChange={(e) => setFilter({ search: e.target.value })}
+            />
+            {search && (
+              <button
+                type="button"
+                aria-label="ล้างคำค้น"
+                className={SEARCH_CLEAR}
+                onClick={() => setFilter({ search: '' })}
+              >
+                <AppIcons.close className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          <select
+            aria-label="สถานะออเดอร์"
+            value={status}
+            onChange={(e) => setFilter({ status: e.target.value })}
+            className={cn(INPUT, 'w-full sm:w-40')}
+          >
+            <option value="">ทุกสถานะ</option>
+            {STATUS_KEYS.map((s) => (
+              <option key={s} value={s}>
+                {OrderStatuses[s].label}
+              </option>
+            ))}
+          </select>
+
+          <div className="w-full sm:w-48">
+            <ShopSearchSelect
+              allowClear
+              placeholder="ทุกร้านค้า"
+              value={shopId || undefined}
+              onChange={(v) => setFilter({ shopId: v ?? '' })}
+            />
+          </div>
+
+          <div className="w-full sm:w-48">
+            <EmployeeSearchSelect
+              allowClear
+              placeholder="ทุกพนักงาน"
+              value={employeeId || undefined}
+              onChange={(v) => setFilter({ employeeId: v ?? '' })}
+            />
+          </div>
 
           {activeCount > 0 && (
-            <Button variant="ghost" size="small" icon={<AppIcons.clear />} onClick={resetFilters}>
+            <button type="button" className={btn('ghost', 'sm')} onClick={resetFilters}>
+              <AppIcons.clear />
               ล้างตัวกรอง ({activeCount})
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {selectedKeys.length > 0 && (
-        <BulkSelectionBar
-          count={selectedKeys.length}
-          isDeleting={bulkDelete.isPending}
-          onDelete={handleBulkDelete}
-          onClear={() => setSelectedKeys([])}
-          itemLabel="ออเดอร์"
-        />
+        <div className={`${BULK_BAR} justify-between`}>
+          <span className={TEXT.muted}>เลือก {selectedKeys.length} ออเดอร์</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={btn('danger', 'sm')}
+              onClick={() => setBulkConfirmOpen(true)}
+              disabled={bulkDelete.isPending}
+            >
+              {bulkDelete.isPending ? <AppIcons.loading spin /> : <AppIcons.delete />}
+              ลบที่เลือก
+            </button>
+            <button
+              type="button"
+              className={btn('ghost', 'sm')}
+              onClick={() => setSelectedKeys([])}
+              disabled={bulkDelete.isPending}
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
       )}
 
-      <PageShell
-        isLoading={isLoading}
-        isError={isError}
-        errorMessage={getErrorMessage(error)}
-        onRetry={refetch}
-        isEmpty={orders.length === 0}
-        emptyDescription={
-          activeCount > 0
-            ? 'ไม่พบออเดอร์ที่ตรงกับตัวกรอง'
-            : `ยังไม่มีออเดอร์${dateRange ? 'ในช่วงวันที่ที่เลือก' : ''}`
-        }
-        emptyAction={
-          activeCount > 0 ? (
-            <Button icon={<AppIcons.clear />} onClick={resetFilters}>ล้างตัวกรอง</Button>
-          ) : (
-            <Button variant="primary" icon={<AppIcons.add />} onClick={() => navigate('/order')}>
-              บันทึกออเดอร์แรก
-            </Button>
-          )
-        }
-      >
-        <Table<Order>
-          rowKey="id"
-          columns={columns}
-          dataSource={orders}
-          // ผลรวมคอลัมน์คงที่ ~910 + ช่องเลือก — ต่ำกว่านี้ค่อยเลื่อนแนวนอน
-          // ไม่ตั้งสูงกว่านี้ เพราะจะบังคับให้เลื่อนทั้งที่จอกว้างพอ
-          scroll={{ x: 960 }}
-          expandable={{
-            rowExpandable: (r) => (r.orderDetails?.length ?? 0) > 0,
-            expandedRowRender: (r) => <OrderItemsPanel items={r.orderDetails ?? []} />,
-          }}
-          rowSelection={{
-            selectedRowKeys: selectedKeys,
-            onChange: setSelectedKeys,
-            preserveSelectedRowKeys: true,
-          }}
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
-          }}
-        />
-      </PageShell>
+      {renderBody()}
 
       <OrderDetailModal open={detailOpen} order={selected} onClose={() => setDetailOpen(false)} />
+
+      <AlertDialog.Root open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+          <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <AlertDialog.Title className={DIALOG_TITLE}>ลบออเดอร์นี้?</AlertDialog.Title>
+            <AlertDialog.Description className={DIALOG_DESC}>
+              ไม่สามารถยกเลิกการดำเนินการนี้ได้
+            </AlertDialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <AlertDialog.Cancel asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </AlertDialog.Cancel>
+              <button
+                type="button"
+                className={btn('danger')}
+                onClick={() => {
+                  if (pendingDelete) void handleDeleteOrder(pendingDelete.id);
+                  setPendingDelete(null);
+                }}
+              >
+                ลบ
+              </button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+
+      <AlertDialog.Root open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+          <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <AlertDialog.Title className={DIALOG_TITLE}>
+              ลบ {selectedKeys.length} ออเดอร์ที่เลือก?
+            </AlertDialog.Title>
+            <AlertDialog.Description className={DIALOG_DESC}>
+              ไม่สามารถยกเลิกการดำเนินการนี้ได้
+            </AlertDialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <AlertDialog.Cancel asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </AlertDialog.Cancel>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={bulkDelete.isPending}
+                onClick={() => void handleBulkDelete()}
+              >
+                {bulkDelete.isPending && <AppIcons.loading spin />}
+                ลบที่เลือก
+              </button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </div>
   );
 }
@@ -408,11 +733,7 @@ function rangeLabel(range: [Dayjs, Dayjs] | null, total: number): string {
 /** แผงรายการสินค้าที่บันทึกไว้ในออเดอร์ — แสดงตอนกดขยายแถว (ไม่โชว์ราคา) */
 function OrderItemsPanel({ items }: { items: OrderDetail[] }) {
   if (!items.length) {
-    return (
-      <Inline className="px-2 py-1">
-        <Text size="base" type="secondary">ไม่มีรายการสินค้า</Text>
-      </Inline>
-    );
+    return <p className={cn(TEXT.muted, 'px-2 py-1')}>ไม่มีรายการสินค้า</p>;
   }
   return (
     <div className="overflow-hidden rounded-md border border-border bg-background">

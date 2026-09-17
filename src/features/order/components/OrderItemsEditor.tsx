@@ -1,10 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button, Input, QuantityStepper, Table, Tag, AppIcons } from '@design-system';
-import type { ColumnType, InputRef } from '@design-system';
 import { ProductDropdownSelect, productRefQuery } from '@features/inventory';
 import type { ProductDropdown } from '@features/inventory';
 import { getErrorMessage, notify } from '@shared';
+import { AppIcons } from '@/lib/icons';
+import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  INPUT,
+  LABEL,
+  statusPill,
+  TABLE,
+  TABLE_EMPTY,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+} from '@/lib/styles';
 import type { OrderItem } from '../types';
 
 interface OrderItemsEditorProps {
@@ -14,9 +27,52 @@ interface OrderItemsEditorProps {
   resetSignal?: number;
 }
 
+/**
+ * ปุ่ม −/+ คู่กับช่องตัวเลข — หน้านี้ Operator ใช้ยืนบนพื้นที่ร้านทั้งกะ
+ * ปุ่มจึงสูง 44px (h-11) ตาม UX bar ไม่ใช่ขนาด control ปกติ
+ */
+function QtyStepper({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  label: string;
+}) {
+  return (
+    <div className="inline-flex items-center gap-1">
+      <button
+        type="button"
+        aria-label={`ลด${label}`}
+        className={cn(btnIcon('secondary'), 'size-11')}
+        onClick={() => onChange(Math.max(0, value - 1))}
+      >
+        <AppIcons.minus />
+      </button>
+      <input
+        type="number"
+        min={0}
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
+        className={cn(INPUT, 'h-11 w-16 px-2 text-center font-mono tabular-nums')}
+      />
+      <button
+        type="button"
+        aria-label={`เพิ่ม${label}`}
+        className={cn(btnIcon('secondary'), 'size-11')}
+        onClick={() => onChange(value + 1)}
+      >
+        <AppIcons.add />
+      </button>
+    </div>
+  );
+}
+
 export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEditorProps) {
   const [barcodeInput, setBarcodeInput] = useState('');
-  const barcodeRef = useRef<InputRef>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -53,7 +109,10 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
       setBarcodeInput('');
       barcodeRef.current?.focus();
     } catch (err) {
-      notify.error('สแกน barcode ไม่สำเร็จ', getErrorMessage(err, `ไม่พบสินค้า barcode: ${barcode}`));
+      notify.error(
+        'สแกน barcode ไม่สำเร็จ',
+        getErrorMessage(err, `ไม่พบสินค้า barcode: ${barcode}`),
+      );
       barcodeRef.current?.focus();
     }
   };
@@ -86,89 +145,48 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
 
   const totalQty = items.reduce((s, i) => s + i.quantity + (i.quantityCarton ?? 0), 0);
 
-  const columns: ColumnType<OrderItem>[] = [
-    {
-      title: 'สินค้า',
-      key: 'product',
-      render: (_: unknown, record: OrderItem) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{record.name}</div>
-          <code className="text-[11px] text-foreground-subtle">{record.barcode}</code>
-        </div>
-      ),
-    },
-    {
-      title: 'แพ็ค',
-      dataIndex: 'quantity',
-      width: 168,
-      align: 'center',
-      render: (v: number, record: OrderItem) => (
-        <QuantityStepper
-          size="large"
-          label="จำนวนแพ็ค"
-          value={v}
-          onChange={(val) => updateQty(record.barcode, val)}
-        />
-      ),
-    },
-    {
-      title: 'ลัง',
-      dataIndex: 'quantityCarton',
-      width: 168,
-      align: 'center',
-      render: (v: number | undefined, record: OrderItem) => (
-        <QuantityStepper
-          size="large"
-          label="จำนวนลัง"
-          value={v ?? 0}
-          onChange={(val) => updateQtyCarton(record.barcode, val)}
-        />
-      ),
-    },
-    {
-      title: '',
-      key: 'del',
-      width: 56,
-      render: (_: unknown, record: OrderItem) => (
-        <Button
-          variant="danger"
-          aria-label="ลบรายการนี้"
-          icon={<AppIcons.delete />}
-          onClick={() => removeItem(record.barcode)}
-        />
-      ),
-    },
-  ];
-
   return (
     <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
-        <div style={{ flex: '1 1 320px' }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+      <div className="mb-4 flex flex-wrap gap-4">
+        <div className="min-w-80 flex-1">
+          <label htmlFor="order-barcode" className={cn(LABEL, 'mb-1.5 block')}>
             เพิ่มสินค้าด้วย Barcode
-          </div>
+          </label>
           <div className="flex w-full gap-2">
-            <Input
-              ref={barcodeRef}
-              prefix={<AppIcons.barcode />}
-              placeholder="สแกน หรือพิมพ์ barcode แล้วกด Enter"
-              value={barcodeInput}
-              onChange={(e) => setBarcodeInput(e.target.value)}
-              onPressEnter={handleBarcodeSubmit}
-              className="flex-1"
-            />
-            <Button variant="primary" icon={<AppIcons.add />} onClick={handleBarcodeSubmit}>
+            <div className="relative flex-1">
+              <AppIcons.barcode className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-foreground-muted" />
+              <input
+                id="order-barcode"
+                ref={barcodeRef}
+                className={cn(INPUT, 'pl-9')}
+                placeholder="สแกน หรือพิมพ์ barcode แล้วกด Enter"
+                value={barcodeInput}
+                onChange={(e) => setBarcodeInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void handleBarcodeSubmit();
+                  }
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              className={btn('primary')}
+              onClick={() => void handleBarcodeSubmit()}
+            >
+              <AppIcons.add />
               เพิ่ม
-            </Button>
+            </button>
           </div>
         </div>
 
-        <div style={{ flex: '1 1 280px' }}>
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>
+        <div className="min-w-70 flex-1">
+          <label htmlFor="order-product-search" className={cn(LABEL, 'mb-1.5 block')}>
             ค้นหาด้วยชื่อสินค้า
-          </div>
+          </label>
           <ProductDropdownSelect
-            style={{ width: '100%' }}
+            id="order-product-search"
             placeholder="พิมพ์ชื่อหรือบาร์โค้ดเพื่อค้นหา"
             onSelect={handleDropdownSelect}
             value={undefined}
@@ -176,19 +194,66 @@ export function OrderItemsEditor({ items, onChange, resetSignal }: OrderItemsEdi
         </div>
       </div>
 
-      <Table<OrderItem>
-        rowKey="barcode"
-        columns={columns}
-        dataSource={items}
-        pagination={false}
-        size="small"
-        locale={{ emptyText: 'ยังไม่มีสินค้า — สแกน/พิมพ์ barcode หรือค้นหาด้านบน' }}
-      />
+      <div className={TABLE_WRAP}>
+        <table className={TABLE}>
+          <thead>
+            <tr>
+              <th className={TABLE_TH}>สินค้า</th>
+              <th className={cn(TABLE_TH, 'w-42 text-center')}>แพ็ค</th>
+              <th className={cn(TABLE_TH, 'w-42 text-center')}>ลัง</th>
+              <th className={cn(TABLE_TH, 'w-14')}>
+                <span className="sr-only">ลบรายการ</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 ?
+              <tr>
+                <td colSpan={4} className={TABLE_EMPTY}>
+                  ยังไม่มีสินค้า — สแกน/พิมพ์ barcode หรือค้นหาด้านบน
+                </td>
+              </tr>
+            : items.map((record) => (
+                <tr key={record.barcode} className={TABLE_TR}>
+                  <td className={TABLE_TD}>
+                    <div className="font-medium">{record.name}</div>
+                    <code className="text-[11px] text-foreground-subtle">{record.barcode}</code>
+                  </td>
+                  <td className={cn(TABLE_TD, 'text-center')}>
+                    <QtyStepper
+                      label="จำนวนแพ็ค"
+                      value={record.quantity}
+                      onChange={(val) => updateQty(record.barcode, val)}
+                    />
+                  </td>
+                  <td className={cn(TABLE_TD, 'text-center')}>
+                    <QtyStepper
+                      label="จำนวนลัง"
+                      value={record.quantityCarton ?? 0}
+                      onChange={(val) => updateQtyCarton(record.barcode, val)}
+                    />
+                  </td>
+                  <td className={TABLE_TD}>
+                    <button
+                      type="button"
+                      aria-label="ลบรายการนี้"
+                      className={btnIcon('danger')}
+                      onClick={() => removeItem(record.barcode)}
+                    >
+                      <AppIcons.delete />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
 
       {items.length > 0 && (
-        <div className="mt-3 flex justify-end rounded-md bg-muted px-4 py-2.5">
-          <span>
-            จำนวนรวม: <Tag status="info">{totalQty} หน่วย</Tag>
+        <div className="mt-3 flex justify-end rounded-md bg-surface-200 px-4 py-2.5 text-sm">
+          <span className="flex items-center gap-2">
+            จำนวนรวม: <span className={statusPill('info')}>{totalQty} หน่วย</span>
           </span>
         </div>
       )}

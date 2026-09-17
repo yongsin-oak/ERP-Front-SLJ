@@ -1,9 +1,11 @@
 import type { Platform } from '@features/shop';
+import type { DataColor } from '@/lib/styles';
 
+/** สีผูกชนิดกับจานสีเชิงหมวดหมู่ใน styles.ts — พิมพ์ชื่อสีที่ไม่มีจริงแล้ว build ไม่ผ่าน */
 export const OrderStatuses = {
   completed: { label: 'สำเร็จ',  color: 'green' },
   cancelled: { label: 'ยกเลิก', color: 'red' },
-} as const;
+} as const satisfies Record<string, { label: string; color: DataColor }>;
 
 export type OrderStatus = keyof typeof OrderStatuses;
 
