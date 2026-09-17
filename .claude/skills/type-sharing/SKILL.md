@@ -22,7 +22,7 @@ Is this type used by only one feature?
 │
 └── NO — used by 2+ features, or it's a generic API shape?
     ├── Generic API envelope (Paginated, CursorPage, ApiData, Pagination) → src/shared/types/index.ts
-    ├── Global UI type (StatusType, SizeType) → src/design-system/types.ts
+    ├── Global UI type (StatusTone, DataColor) → src/lib/styles.ts
     └── Shared domain type (role, platform, currency) → src/lib/types.ts
 ```
 

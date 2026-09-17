@@ -30,14 +30,14 @@ src/
 │   ├── featureFlags.config.ts
 │   └── index.ts           # barrel
 │
-├── design-system/         # UI foundation
-│   ├── antd/
-│   │   ├── tokens.ts      # Ant Design global token overrides
-│   │   ├── components.ts  # Ant Design per-component overrides
-│   │   └── theme.ts       # lightAntdTheme = { token, components }
-│   ├── tokens/            # Our design tokens (colors, spacing, shadow, radius)
-│   ├── components/        # Generic UI components (Button, Table, FormModal…)
-│   └── index.ts           # public barrel
+├── lib/                   # ฐานของ UI — ไม่ใช่ component แต่เป็น class/ฟังก์ชัน/hook
+│   ├── styles.ts          # class vocabulary ทั้งระบบ (btn, INPUT, TABLE_TH, DIALOG_*)
+│   ├── fieldStyles.ts     # สูตรขอบ field ทุก state (rest/hover/focus/invalid/disabled)
+│   ├── icons.tsx          # AppIcons — Tabler ตั้งชื่อตามหน้าที่
+│   ├── format.ts          # formatDate / formatMoney / formatQuantity
+│   ├── highlightText.tsx  # ไฮไลต์คำค้นในผลลัพธ์
+│   ├── useCombobox.ts     # ตรรกะช่องเลือกที่ค้นได้ (Radix ไม่มี Combobox)
+│   └── utils.ts           # cn()
 │
 ├── shared/                # Reusable code used by ≥2 features
 │   ├── api/
@@ -65,10 +65,10 @@ src/
 |---|---|
 | `app/` | Boots React, wires providers + router — no business logic |
 | `config/` | Reads env vars and exposes typed constants — never imports from features |
-| `design-system/` | Generic UI components + tokens — no feature awareness |
+| `lib/` | class vocabulary + ฟังก์ชัน/hook ที่ UI ใช้ร่วมกัน — ไม่มี component, ไม่รู้จัก feature |
 | `shared/` | Reusable utilities — no feature awareness, no Zustand |
 | `features/` | All business logic — the only layer that can import from every other layer |
-| `layouts/` | App shell (nav, sidebar) — imports from design-system + features/auth |
+| `layouts/` | App shell (nav, sidebar) — ประกอบ Radix เอง + imports features/auth |
 
 ---
 
@@ -77,7 +77,7 @@ src/
 ```ts
 @app           → src/app
 @config        → src/config          (and @config/* → src/config/*)
-@design-system → src/design-system   (and @design-system/* → src/design-system/*)
+@              → src                 (ใช้ `@/lib/styles`, `@/lib/icons`, `@/lib/utils`)
 @shared        → src/shared          (and @shared/* → src/shared/*)
 @features      → src/features        (and @features/* → src/features/*)
 @layouts       → src/layouts
@@ -205,7 +205,7 @@ import { req, handleError, STALE_TIME } from '@shared';
 import type { Paginated, ApiData, PageParams } from '@shared/types';
 
 // Subpath — only when you need something not in the barrel
-import { lightAntdTheme } from '@design-system/antd/theme';
+import { AppIcons } from '@/lib/icons';
 import { IS_DEV } from '@config/env';
 ```
 

@@ -88,7 +88,7 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 | Build | Vite | 7 |
 | Package Manager | **bun** (primary) / npm | — |
 | Language | TypeScript | 5.9 (strict) |
-| UI Primitives | **Radix UI** (`radix-ui`) + shadcn-style own-the-code (`src/components/ui/*`) | 1.6 |
+| UI Primitives | **Radix UI** (`radix-ui`) — import ตรงในหน้าเพจ ไม่มีชั้น wrapper | 1.6 |
 | Icons (all) | **@tabler/icons-react** via `AppIcons` | 3 |
 | Styling | **Tailwind CSS v4** + `cn()` (clsx + tailwind-merge) · tokens in `src/index.css` (3-tier) | 4 |
 | State | Zustand | 5 |
@@ -108,14 +108,17 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 ## Path Aliases
 
 ```text
+@              → src         (ใช้ `@/lib/...`, `@/components/...`)
 @assets        → src/assets
-@design-system → src/design-system
-@lib           → src/lib
 @features      → src/features
 @layouts       → src/layouts
-@routes        → src/routes
+@shared        → src/shared
+@app           → src/app
+@config        → src/config
 @dev           → src/dev  (dev only)
 ```
+
+> `@design-system` ถูกถอดออกแล้ว — ไม่มีชั้น design-system ในโปรเจกต์นี้อีกต่อไป
 
 ---
 
@@ -132,23 +135,25 @@ If you detect any of the following at any point (planning, reviewing, or impleme
 - **Focus ring is neutral, not brand** — `index.css` sets a global `:focus-visible` outline. Never add a brand-colored ring, and never put `outline-none` on a focusable control (only on overlay surfaces).
 - **No `font-bold`** — `font-medium` is the heaviest weight (semibold only for page headings)
 - **Mono for code-like data** — SKU, document numbers, dates, and table numerics use `font-mono tabular-nums`
-- **All icons via `AppIcons`** (Tabler only) — `import { AppIcons } from '@design-system'`; `<AppIcons.add />`, `<AppIcons.delete />`. Key by **purpose**, not shape. NEVER import `@tabler/icons-react` or `@ant-design/icons` directly. See `.claude/skills/design-system/icons/SKILL.md`.
+- **All icons via `AppIcons`** (Tabler only) — `import { AppIcons } from '@/lib/icons'`; `<AppIcons.add />`, `<AppIcons.delete />`. Key by **purpose**, not shape. NEVER import `@tabler/icons-react` directly — เพิ่มไอคอนใหม่ที่ `src/lib/icons.tsx` เท่านั้น. See `.claude/skills/design-system/icons/SKILL.md`.
 - **Icon-only buttons need `aria-label`** — `AppIcons` sets `aria-hidden` on every icon by default, so an icon-only button with no label is silent to screen readers. Icons beside text need nothing. Ambiguous actions (import/export/move/publish) get a text label, never icon-only.
 - **Pick components by behavior, not looks** — Purpose → Behavior → Frequency → Importance → Complexity → Accessibility. `Switch` = takes effect immediately; `Checkbox` = saved with the form. See `.claude/skills/component-patterns/SKILL.md`.
 - **Shortest text that stays unambiguous** — buttons 1–3 words, menu/dropdown options 1–5, tabs 1–2; front-load the distinguishing word. See `.claude/skills/design-system/content/SKILL.md`.
 - **No hardcoded query keys** — use key factories from `hooks/queryKeys.ts`
 - **No magic timing numbers** — use `STALE_TIME`, `GC_TIME`, `REFETCH_INTERVAL` from `@lib`
-- **Never raise `limit` to fetch "everything"** — backend caps it at `PAGINATION.MAX_LIMIT` (200) and returns 400. Tables use `useXxxList({ page, limit })` + `Table`'s `pagination`; counts read `pagination.total` from a `limit: 1` request. See `.claude/skills/query-constants/SKILL.md`.
+- **Never raise `limit` to fetch "everything"** — backend caps it at `PAGINATION.MAX_LIMIT` (200) and returns 400. Tables use `useXxxList({ page, limit })` + แถบแบ่งหน้าที่เขียนเองในหน้าเพจ (`PAGER` จาก styles.ts); counts read `pagination.total` from a `limit: 1` request. See `.claude/skills/query-constants/SKILL.md`.
 - **Dropdown ≠ table — different endpoint, different contract** — dropdowns hit `GET /<entity>/dropdown-search` and paginate by **cursor** (`{ search?, cursor?, limit? }` → `CursorPage<T>` = `{ data, nextCursor }`, cap `DROPDOWN.MAX_LIMIT` 50). Never point a dropdown at the table's `GET /<entity>` — offset pages skip/repeat rows while the user scrolls, and pay a `COUNT(*)` nobody reads. Use `<XxxSearchSelect>`; `nextCursor` is opaque, pass it back, `null` = end. See `.claude/skills/query-constants/SKILL.md`.
 - **All pages lazy-loaded** — wrap in `lazy()` + `<Suspense>` in `routes/index.tsx`
 - **Server state → React Query · Shared UI state → Zustand · Local UI state → useState**
 - **Every mutation must have** `onError: handleError('Action name')` from `@lib`
-- **Every page must handle** loading / empty (with CTA) / error states — use `PageShell` from `@design-system`
-- **Every delete must confirm** — use `DeleteConfirmButton` from `@design-system`
-- **Bulk selection** — use `BulkSelectionBar` from `@design-system`
-- **Table row actions** — use `ActionCell` from `@design-system` (renders a single kebab menu, never a row of buttons; destructive items go last and are red). For a kebab menu outside a table, use `ActionMenu`.
-- **Create/edit modals** — use `FormModal` from `@design-system` (handles reset, footer, validateFields)
-- **Table cell formatters** — use `DateCell`, `MoneyCell`, `CodeCell`, `QuantityCell` from `@design-system`
+- **ไม่มีชั้น UI wrapper** — หน้าเพจ `import { Dialog, Select, … } from 'radix-ui'` เอง ห้ามสร้าง `src/components/ui` หรือ `src/design-system` ขึ้นมาใหม่
+- **หน้าตาทั้งหมดมาจาก `src/lib/styles.ts`** — class string ที่ตั้งชื่อไว้ (`btn()`, `INPUT`, `TABLE_TH`, `DIALOG_CONTENT`, `dataPill()`, …) ห้ามพิมพ์ชุด class ของ control ซ้ำในหน้าเพจ แก้สี/ขนาด control ต้องแก้ที่ไฟล์นี้ที่เดียว
+- **Radix ไม่มีอะไรบ้าง (ต้องเขียน HTML + Tailwind เอง)** — ตาราง, ช่องกรอก, การ์ด, ตัวเลือกวันที่ (ใช้ `<input type="date">`), combobox ที่ค้นได้ (ใช้ `Popover` + `useCombobox` จาก `@/lib/useCombobox`)
+- **Every page must handle** loading / empty (with CTA) / error states — เขียน 3 สถานะนี้ในหน้าเพจตรงๆ (ดู `OrderHistoryPage` เป็นตัวอย่าง)
+- **Every delete must confirm** — ใช้ `AlertDialog` ของ Radix + `DIALOG_*` จาก styles.ts
+- **Table row actions** — `DropdownMenu` ของ Radix เป็นเมนู kebab ปุ่มเดียว ห้ามเรียงปุ่มเป็นแถว; รายการทำลายอยู่ล่างสุดและใช้ `MENU_ITEM_DANGER`
+- **Create/edit modals** — `Dialog` ของ Radix + `react-hook-form`; `reset()` ค่าเดิมทุกครั้งที่เปิด (Radix ไม่ unmount เนื้อหาระหว่างสลับ open)
+- **Table cell formatters** — ใช้ `formatDate`, `formatMoney`, `formatNumber`, `formatQuantity` จาก `@/lib/format`
 
 ---
 
@@ -161,9 +166,9 @@ Detailed patterns and examples live in `.claude/skills/`.
 | Skill | Covers |
 | --- | --- |
 | `folder-structure` | Feature anatomy, barrel exports, file naming, import rules |
-| `design-system` | Atlassian-guided tokens, Tailwind-only styling, responsive layout |
-| `design-system/components` | Component catalog, ERP composite components (Table, Modal, FormModal, ActionCell…) |
-| `design-system/icons` | AppIcons map (Tabler-only, purpose-named), adding new icons |
+| `design-system` | โทเคนสี 3 ชั้นใน index.css, styling ด้วย Tailwind อย่างเดียว, responsive |
+| `design-system/components` | ประกอบ UI จาก Radix ตรงๆ + class vocabulary ใน `src/lib/styles.ts`, สูตรของตาราง/โมดัล/เมนู |
+| `design-system/icons` | AppIcons map (Tabler เท่านั้น, ตั้งชื่อตามหน้าที่) ที่ `src/lib/icons.tsx`, วิธีเพิ่มไอคอน |
 | `design-system/feedback` | Feedback/notification decision by purpose (Dialog/Toast/Snackbar/Banner/Inline/Tooltip/Popover), when-NOT-to-use |
 | `design-system/content` | UI text: label length per component, front-loading, dropdown scannability, destructive copy |
 | `react-query` | queryKeys factory, useQuery, useMutation, invalidate vs setQueryData |

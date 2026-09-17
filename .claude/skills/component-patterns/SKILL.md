@@ -34,7 +34,7 @@ Use this skill when:
 ```tsx
 // features/order/components/OrderStatusTag.tsx
 
-import { Tag } from '@design-system';
+import { statusPill } from '@/lib/styles';
 import { ORDER_STATUS_COLOR, ORDER_STATUS_LABEL } from '../types';
 import type { OrderStatus } from '../types';
 
@@ -127,8 +127,10 @@ import { OrderStatusTag } from '../components/OrderStatusTag';
 
 ```
 Is it reusable across 2+ features?
-  YES → src/design-system/components/<Name>/   (generic UI only)
-        or discuss with team before creating
+  YES → เป็น "หน้าตา" หรือ "การจัดรูปแบบ"? → src/lib/styles.ts | src/lib/format.ts
+        เป็น "ตรรกะ"?                     → src/lib/<useXxx>.ts (hook ไม่มี JSX)
+        เป็น component จริงๆ               → features/<เจ้าของ>/components/  แล้ว feature อื่น import ข้ามมา
+        (ไม่มีโฟลเดอร์ design-system แล้ว — ห้ามสร้างขึ้นใหม่)
   NO  → features/<feature>/components/<Name>.tsx
 ```
 
@@ -143,7 +145,7 @@ Every page is a thin orchestration layer:
 ```tsx
 // features/order/pages/OrderPage.tsx
 import { useState } from 'react';
-import { PageHeader, Button, Stack } from '@design-system';
+import { btn, PAGE_HEADER, PAGE_TITLE } from '@/lib/styles';
 import { useOrders, useDeleteOrder } from '../hooks';
 import { OrderTable } from '../components/OrderTable';
 import { OrderFormModal } from '../components/OrderFormModal';
@@ -182,8 +184,7 @@ Extract columns and table into its own component:
 
 ```tsx
 // features/order/components/OrderTable.tsx
-import { Table, Button } from '@design-system';
-import type { ColumnType } from '@design-system';
+import { btn, TABLE, TABLE_TD, TABLE_TH, TABLE_TR, TABLE_WRAP } from '@/lib/styles';
 import { OrderStatusTag } from './OrderStatusTag';
 import type { Order } from '../types';
 
@@ -233,7 +234,8 @@ Columns defined once as a function — reused in export, print, or detail views.
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Modal, Button } from '@design-system';
+import { Dialog } from 'radix-ui';
+import { btn, DIALOG_CONTENT, DIALOG_OVERLAY, DIALOG_TITLE } from '@/lib/styles';
 import { useCreateOrder, useUpdateOrder } from '../hooks';
 import { OrderSchema, type OrderFormValues } from '../types';
 import type { Order } from '../types';

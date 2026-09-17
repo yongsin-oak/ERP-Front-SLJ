@@ -1,317 +1,236 @@
-# Skill: Design System — Components
+---
+name: design-system-components
+description: ประกอบ UI จาก Radix primitives ตรงๆ + class vocabulary ใน src/lib/styles.ts — สูตรของตาราง โมดัล เมนู ฟอร์ม และช่องเลือกที่ค้นได้
+---
 
-> All `@design-system` wrapper components and ERP composite patterns (Tailwind v4 + Radix — no antd).
-> Back to parent: [design-system](../SKILL.md) · [icons](../icons/SKILL.md) · **which feedback component for which purpose → [feedback](../feedback/SKILL.md)**
-> ทุก component มี story: `bun run storybook` → หมวด "Design System"
+# Skill: ประกอบ UI จาก Radix
+
+> **ไม่มีชั้น wrapper** — โปรเจกต์นี้ไม่มี `src/design-system` และไม่มี `src/components/ui`
+> หน้าเพจ import จาก `radix-ui` เอง แล้วดึง class จาก `src/lib/styles.ts`
+> ถ้าเจอโค้ดที่ import `@design-system` แปลว่าเป็นโค้ดเก่าที่ยังไม่ได้ย้าย
 
 ---
 
-## Trigger
+## 3 ไฟล์ที่ต้องรู้ก่อนเขียน UI
 
-Use this skill when picking a UI component or implementing a page/table/modal/form pattern.
+| ไฟล์ | เก็บอะไร | ตัวอย่าง |
+| --- | --- | --- |
+| `src/lib/styles.ts` | **class string ที่ตั้งชื่อแล้ว** — หน้าตาทั้งหมดของระบบ | `btn('primary')`, `INPUT`, `TABLE_TH`, `DIALOG_CONTENT`, `dataPill('red')` |
+| `src/lib/icons.tsx` | `AppIcons` — ไอคอน Tabler ตั้งชื่อตามหน้าที่ | `<AppIcons.delete />` |
+| `src/lib/format.ts` | ฟังก์ชันจัดรูปแบบค่า (คืน string ไม่ใช่ JSX) | `formatDate()`, `formatMoney()` |
 
-## Atlassian reference contract
+เสริม: `src/lib/useCombobox.ts` (ตรรกะช่องเลือกที่ค้นได้), `src/lib/fieldStyles.ts` (สูตรขอบ field ทุก state)
 
-- ตรวจ component/pattern ที่เกี่ยวข้องใน [Atlassian components](https://atlassian.design/components) ก่อนตัดสินใจเรื่อง hierarchy, state, content และ accessibility
-- ใช้หลัก composability จาก [layout primitives](https://atlassian.design/foundations/spacing/primitives/) และเลือก feedback ตามระดับการขัดจังหวะ
-- อ้างเฉพาะ behavior/guidance; implement ด้วย Tailwind CSS + Radix + component ที่มีใน `@design-system` เท่านั้น ห้าม Emotion, `css` prop, `styled()` และ `@atlaskit/*`
+### กฎเหล็ก
+
+- **ห้ามพิมพ์ชุด class ของ control ซ้ำในหน้าเพจ** — ถ้ายังไม่มีชื่อใน `styles.ts` ให้ไปเพิ่มที่นั่น
+  แล้วค่อยเรียกใช้ การแก้สี/ความสูงของปุ่มต้องแก้ที่จุดเดียวเสมอ
+- **class เฉพาะตำแหน่ง (`mb-4`, `w-40`, `flex-1`) เขียนในหน้าเพจได้** — ใช้ `cn()` ต่อกับ constant
+- **ห้าม `#hex` / `px` ตรงๆ** — ใช้โทเคนจาก `index.css` (ยกเว้นค่าที่มาจากข้อมูล เช่น `PlatformHex`)
 
 ---
 
-## Catalog
+## Radix มีอะไร / ไม่มีอะไร
 
-| กลุ่ม | Components |
+### มีให้ใช้ (`import { X } from 'radix-ui'`)
+
+`Dialog` `AlertDialog` `DropdownMenu` `Popover` `Select` `Checkbox` `RadioGroup` `Switch`
+`Tabs` `Tooltip` `ToggleGroup` `Separator` `Label` `ScrollArea` `Accordion` `Collapsible`
+`HoverCard` `Progress` `Slider` `Avatar` `Slot`
+
+### **ไม่มี** — ต้องเขียน HTML + Tailwind เอง
+
+| ต้องการ | ทำยังไง |
 | --- | --- |
-| Layout | `Stack` `Inline` `Grid` `Divider` `Card` |
-| Form controls | `Input` `InputPassword` `InputSearch` `Textarea` `InputNumber` `Select` `Checkbox` `Radio` `Switch` `Segmented` `DatePicker` `DateRangePicker` `DateRangePresets` |
-| Form system | `Form` (`Form.useForm`/`Form.Item` บน RHF) `FormModal` `Field` `TextField` `TextareaField` |
-| Smart inputs | `PriceInput` `QuantityInput` `QuantityStepper` `ScanInput` `InlineEdit` `SearchableSelect` `InfiniteSearchSelect` |
-| Table | `Table` (+`Table.Summary`) `DateCell` `MoneyCell` `CodeCell` `QuantityCell` `ActionCell` `ActionMenu` `BulkSelectionBar` |
-| Overlay | `Modal` `Drawer` `ConfirmDrawer` `DeleteConfirmButton` `Tooltip` `FormModal` |
-| Feedback | `Alert` `Banner` `Tag`/`StatusTag` `Badge` `Spinner` `Empty` `notify.*` (Sonner: `success`/`error`/`warning`/`loading`/`action`/`undo`/`retry`) — [decision guide](../feedback/SKILL.md) |
-| Page | `PageShell` `PageHeader` `FilterBar` `StatsCard` `SummaryCard` `Tabs` `Typography` (`Text`/`Title`/`PageTitle`) |
-| Sheet import | `DropZoneSheet` `SheetColumnMapper` `SheetTable` `SheetImportModal` |
+| ตาราง | `<table>` + `TABLE_WRAP` `TABLE` `TABLE_TH` `TABLE_TD` `TABLE_TR` |
+| ช่องกรอก | `<input className={INPUT}>` / `<textarea className={TEXTAREA}>` |
+| การ์ด | `<div className={CARD_SM}>` |
+| ตัวเลือกวันที่ | `<input type="date">` (ได้ปฏิทินพื้นเมืองบนมือถือฟรี + พิมพ์ได้) |
+| ช่วงวันที่ | `<input type="date">` สองช่อง + ปุ่มลัด (`btn('ghost','xs')`) |
+| combobox ที่ค้นได้ | `Popover` + `<input>` + รายการ + `useCombobox` |
+| แถบแบ่งหน้า | เขียนเองด้วย `PAGER` + `PAGE_SIZE_SELECT` |
+| toast | `sonner` (ตั้งค่าไว้แล้วใน `App.tsx`) — เรียกผ่าน `notify` จาก `@shared` |
+
+> ⚠️ Radix **Select ค้นหาไม่ได้** — ตัวเลือกน้อย (< ~15) ใช้ `Select` ได้เลย (มี typeahead ในตัว)
+> ตัวเลือกเยอะหรือมาจาก `dropdown-search` ต้องใช้ `Popover` + `useCombobox`
 
 ---
 
-## Core components
+## สูตรที่ใช้ซ้ำบ่อย
 
-### Button
-
-```tsx
-// variant: 'primary' | 'secondary' | 'danger' | 'danger-ghost' | 'ghost' | 'link'
-<Button variant="primary" onClick={handleSave}>บันทึก</Button>
-<Button variant="ghost" icon={<AppIcons.edit />} aria-label="แก้ไข" />  // icon-only ต้องมี aria-label
-<Button variant="primary" loading={mutation.isPending}>บันทึก</Button>
-```
-
-### Table
+### ปุ่ม
 
 ```tsx
-const columns: ColumnType<Order>[] = [
-  { title: 'รหัส', dataIndex: 'sku', searchable: true },          // เพิ่ม search dropdown ในหัวคอลัมน์
-  { title: 'สถานะ', dataIndex: 'status', filters: [...], onFilter },
-  { title: 'ราคา', dataIndex: 'price', sorter: (a, b) => a.price - b.price, align: 'right' },
-];
+<button type="button" className={btn('primary')} onClick={…}>
+  <AppIcons.add />
+  เพิ่มแบรนด์
+</button>
 
-// >100 แถวโดยไม่แบ่งหน้า → ต้อง virtual + scroll.y (virtualize จริงด้วย react-virtual)
-<Table dataSource={rows} columns={columns} rowKey="id" virtual scroll={{ y: 480 }} pagination={false} />
+// icon อย่างเดียว — ต้องมี aria-label เสมอ
+<button type="button" aria-label="ลบแถวนี้" className={btnIcon('dangerGhost', 'sm')}>
+  <AppIcons.delete />
+</button>
 ```
 
-#### สูตรคอลัมน์ — ตารางที่ไม่เสียทรง
+`btn(variant, size)` — variant: `primary` `secondary` `tonal` `ghost` `danger` `dangerGhost` `link` · size: `xs` `sm` `md` `lg`
 
-อ้างอิงแนวปฏิบัติ data table ระดับ enterprise ([Pencil & Paper](https://www.pencilandpaper.io/articles/ux-pattern-analysis-enterprise-data-tables) ·
-[UX Design World](https://uxdworld.com/data-table-design-best-practices/)) แล้ว map เข้ากับ `Table` ตัวนี้:
-
-| กติกา | ทำยังไงกับ `Table` |
-| --- | --- |
-| **ข้อความชิดซ้าย · ตัวเลขเชิงปริมาณชิดขวา + mono** | `align: 'right'` + `font-mono tabular-nums` (จำนวน/เงิน) — วันที่/รหัสถือเป็นตัวเลขเชิงคุณภาพ ชิดซ้ายได้ |
-| **หนึ่งบรรทัดต่อช่อง** | ห้ามยัด 2 บรรทัดในช่องเดียว แถวสูงไม่เท่ากันแล้วกวาดสายตาไม่ได้ · ข้อมูลรองไปอยู่ใน `expandedRowRender` |
-| **คอลัมน์ยืดได้แค่คอลัมน์เดียว** | คอลัมน์นั้นใส่ `ellipsis: true` **ไม่ต้องใส่ `width`** ที่เหลือกำหนด `width` คงที่ทุกตัว |
-| **ตัดคำแล้วต้อง hover อ่านเต็มได้** | `ellipsis: true` + ให้ `render` คืน **string ล้วน** → `Table` ใส่ `title` ให้เอง |
-| **หัวคอลัมน์บอกหน่วยแล้ว ในช่องไม่ต้องซ้ำ** | หัวว่า "รายการ" → ในช่องใส่แค่ `12` ไม่ใช่ `12 รายการ` |
-
-> **`ellipsis` ไม่ใช่แค่จุดไข่ปลา — มันคือตัวบังคับ `width` ให้มีผลจริง**
-> `width` ที่ `<th>` เป็นแค่ข้อเสนอแนะใน `table-layout: auto` เนื้อหายาวๆ ดันคอลัมน์บานได้
-> ตัวที่บังคับจริงคือ `max-w-0 truncate` ที่ `ellipsis` ใส่ให้ `<td>`
-> **คอลัมน์ที่ตั้ง `width` แล้วเนื้อหาอาจยาวเกิน ต้องใส่ `ellipsis: true` เสมอ**
-
-ข้อยกเว้น: **คอลัมน์แรกของตารางที่มี `expandable` ห้ามใส่ `ellipsis`** — ปุ่มขยายแถวถูก render
-อยู่ในช่องนั้น `truncate` จะกินปุ่มได้ ให้เลือกคอลัมน์แรกเป็นอะไรที่ความยาวคงที่แทน (เวลา/รหัส)
-
-เนื้อหาใน `render` ของคอลัมน์ที่ `ellipsis` ต้องเป็น **inline** (`<span>`, fragment ของ span)
-ถ้าเป็น `flex`/`block` จะหลุดจาก `truncate` ของ `<td>`
-
-`scroll={{ x }}` ตั้งให้ ≈ ผลรวม `width` ทุกคอลัมน์ ไม่ใช่ตั้งเผื่อ — ตั้งเกินจะบังคับให้เลื่อน
-แนวนอนทั้งที่จอกว้างพอ · ความสูงแถว: `size="small"` 33px · `middle` 41px (ดีฟอลต์) · `large` 49px
-
-- `rowSelection={{ selectedRowKeys, onChange, preserveSelectedRowKeys: true }}` — `preserveSelectedRowKeys` ทำงานจริง: cache record ที่เคยเลือกไว้ให้ bulk action ข้ามหน้า
-- client-side pagination clamp หน้าให้เองเมื่อ filter แล้วจำนวนหน้าลด
-- `virtual` ใช้ไม่ได้ร่วมกับ `expandable` — จะ fallback เป็น render ปกติ
-- `expandable` มี 2 โหมด: **panel** `expandedRowRender: (record) => ReactNode` (แสดงเนื้อหาเต็มความกว้างใต้แถว) หรือ **tree** ผ่าน `childrenColumnName`; คุม expandable รายแถวด้วย `rowExpandable: (record) => boolean`
-- `render(value, record, index)` — index เป็น index ในหน้าปัจจุบัน (ตรงกับ antd)
-
-### Modal
+### ฟอร์มในโมดัล (Dialog + react-hook-form)
 
 ```tsx
-<Modal title="แก้ไขออเดอร์" open={open} onCancel={onClose} onOk={handleSave} confirmLoading={m.isPending}>
+<Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+  <Dialog.Portal>
+    <Dialog.Overlay className={DIALOG_OVERLAY} />
+    <Dialog.Content className={DIALOG_CONTENT} aria-describedby={undefined}>
+      <Dialog.Title className={DIALOG_TITLE}>เพิ่มแบรนด์</Dialog.Title>
+      <Dialog.Close asChild>
+        <button type="button" aria-label="ปิด" className={DIALOG_CLOSE_X}><AppIcons.close /></button>
+      </Dialog.Close>
+
+      <form noValidate className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
+        <div className={FIELD_ROW}>
+          <label htmlFor="brand-name" className={LABEL}>ชื่อแบรนด์</label>
+          <input id="brand-name" className={INPUT} aria-invalid={!!errors.name}
+                 {...register('name', { required: 'กรุณากรอกชื่อแบรนด์' })} />
+          {errors.name && <span className={FIELD_ERROR}>{errors.name.message}</span>}
+        </div>
+
+        <div className={DIALOG_FOOTER}>
+          <button type="button" className={btn('ghost')} onClick={onClose}>ยกเลิก</button>
+          <button type="submit" className={btn('primary')} disabled={loading}>
+            {loading && <AppIcons.loading spin />}
+            บันทึก
+          </button>
+        </div>
+      </form>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
 ```
 
-- `onOk` คืน `Promise` ได้ → ปุ่มตกลง loading + กันกดซ้ำ + **บล็อค Escape/คลิกนอก/ปุ่ม X ระหว่างรอ**
-- `maskClosable={false}` กันปิดด้วยคลิกนอก
-- `destroyOnHidden`/`destroyOnClose` = deprecated no-op (Radix unmount ตอนปิดเสมอ)
+**สิ่งที่พลาดบ่อย**
 
-### Form + FormModal
+- `aria-describedby={undefined}` — ถ้าไม่มี `Dialog.Description` Radix จะเตือนใน console
+- ต้อง `reset()` ค่าเดิม **ทุกครั้งที่เปิด** ไม่ใช่แค่ตอน mount — Radix ไม่ unmount เนื้อหาระหว่างสลับ `open`
+  ไม่งั้นกดแก้ไขรายการที่สองจะเห็นค่าของรายการแรกค้างอยู่
+- state ที่เป็นผลของ "การกด" (เช่น ซ่อน/แสดงรหัสผ่าน) รีเซ็ตใน `onOpenChange` ไม่ใช่ใน effect
+
+### เมนู action ท้ายแถว
 
 ```tsx
-const [form] = Form.useForm<ProductFormValues>();
-
-useEffect(() => { if (open && item) form.setFieldsValue(item); }, [open, item, form]);
-
-<FormModal open={open} onClose={onClose} title="เพิ่มสินค้า" form={form}
-  onFinish={(v) => mutation.mutateAsync(v)} loading={mutation.isPending}>
-  <Form.Item name="name" label="ชื่อสินค้า" rules={[{ required: true }]}>
-    <Input />
-  </Form.Item>
-</FormModal>
+<DropdownMenu.Root>
+  <DropdownMenu.Trigger asChild>
+    <button type="button" aria-label="ตัวเลือกของแถวนี้" className={btnIcon('ghost', 'sm')}>
+      <AppIcons.more />
+    </button>
+  </DropdownMenu.Trigger>
+  <DropdownMenu.Portal>
+    <DropdownMenu.Content align="end" sideOffset={4} className={MENU_CONTENT}>
+      <DropdownMenu.Item className={MENU_ITEM} onSelect={() => openEdit(r)}>แก้ไข</DropdownMenu.Item>
+      <DropdownMenu.Separator className={MENU_SEPARATOR} />
+      <DropdownMenu.Item
+        className={MENU_ITEM_DANGER}
+        onSelect={(e) => {
+          e.preventDefault();      // กัน Radix ปิดเมนูแล้วเปิดกล่องยืนยันชนกัน (focus trap)
+          setPendingDelete(r);
+        }}
+      >
+        ลบ
+      </DropdownMenu.Item>
+    </DropdownMenu.Content>
+  </DropdownMenu.Portal>
+</DropdownMenu.Root>
 ```
 
-FormModal จัดการ: footer มาตรฐาน, `validateFields()` ก่อน submit, `resetFields()` ตอนปิด, แยก validation error (เงียบ — RHF โชว์ใต้ field) จาก runtime error (log ใน dev)
+**ลำดับในเมนู**: action เพิ่มเติม → แก้ไข → เส้นคั่น → ลบ (แดง ท้ายสุดเสมอ)
 
-### Field / TextField (inline form pattern — ใช้เมื่อไม่ต้องการ Form.Item)
+### ยืนยันก่อนลบ
 
 ```tsx
-<TextField label="ชื่อสินค้า" hint="ตามที่ลูกค้าเห็น" error={errors.name?.message} required {...register('name')} />
+<AlertDialog.Root open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+  <AlertDialog.Portal>
+    <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+    <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+      <AlertDialog.Title className={DIALOG_TITLE}>ลบแบรนด์นี้?</AlertDialog.Title>
+      <AlertDialog.Description className={DIALOG_DESC}>
+        สินค้าที่ผูกอยู่กับแบรนด์นี้จะไม่มีแบรนด์
+      </AlertDialog.Description>
+      <div className={DIALOG_FOOTER}>
+        <AlertDialog.Cancel asChild>
+          <button type="button" className={btn()}>ยกเลิก</button>
+        </AlertDialog.Cancel>
+        <button type="button" className={btn('danger')} onClick={…}>ลบ</button>
+      </div>
+    </AlertDialog.Content>
+  </AlertDialog.Portal>
+</AlertDialog.Root>
 ```
+
+ใช้ `AlertDialog` ไม่ใช่ `Dialog` — มันดัก Escape/คลิกนอกไม่ให้ปิดโดยไม่ตั้งใจ และประกาศ role ให้ screen reader ถูกต้อง
+
+### ตาราง
+
+ดูหน้าอ้างอิงเต็มที่ [`src/features/brand/pages/BrandPage.tsx`](../../../../src/features/brand/pages/BrandPage.tsx) — มีครบทั้ง
+เลือกหลายแถว · เรียง · แบ่งหน้า · เมนู action · ยืนยันลบ · การ์ดสรุป
+
+```tsx
+<div className={TABLE_WRAP}>
+  <table className={TABLE}>
+    <thead>
+      <tr>
+        <th className={cn(TABLE_TH, 'w-10')}>{/* checkbox เลือกทั้งหน้า */}</th>
+        <th className={TABLE_TH}>
+          <button type="button" className={TH_SORT} onClick={() => toggleSort('name')}>
+            ชื่อแบรนด์{sortIcon('name')}
+          </button>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {isLoading ? <tr><td colSpan={N} className={TABLE_EMPTY}>…</td></tr>
+      : rows.length === 0 ? <tr><td colSpan={N} className={TABLE_EMPTY}>ข้อความว่าง + CTA</td></tr>
+      : rows.map((r) => <tr key={r.id} data-selected={checked} className={TABLE_TR}>…</tr>)}
+    </tbody>
+  </table>
+</div>
+```
+
+**สิ่งที่พลาดบ่อย**
+
+- หัวคอลัมน์ที่กดเรียงได้ต้องเป็น `<button>` จริง ไม่ใช่ `<th onClick>` — ไม่งั้นคีย์บอร์ดกดไม่ได้
+- คอลัมน์ action ใส่ `<span className="sr-only">ตัวเลือก</span>` ใน `<th>` ที่ว่าง
+- ตัวเลขทุกคอลัมน์ `text-right font-mono tabular-nums` ให้หลักตรงกัน
+- แถวเกิน ~100 ต้อง virtualize (`@tanstack/react-virtual` + spacer row) — ดู `ReportPage` แท็บ "ยอดขายตามสินค้า"
+
+### ช่องเลือกที่ค้นได้
+
+```tsx
+const listRef = useRef<HTMLDivElement>(null);
+const searchInputRef = useRef<HTMLInputElement>(null);
+const combo = useCombobox({ listRef, options, value, onChange, localFilter: false, onSearch: setSearch });
+```
+
+- `listRef` **ผู้เรียกถือเอง** แล้วส่งเข้า hook — ห้ามให้ hook คืน ref ออกมา
+  (React Compiler จะตีตราค่าที่ hook คืนทั้งก้อนว่าแตะ ref ไม่ได้ แล้วทุก `combo.x` กลายเป็น lint error)
+- `localFilter: false` เมื่อ backend ค้นให้แล้ว (`dropdown-search`) — กรองซ้ำจะตัดผลของหน้าถัดไปทิ้ง
+- `onOpenAutoFocus` ต้อง `preventDefault()` แล้วโฟกัสช่องค้นหาเอง
+- ปุ่มล้างค่าต้องอยู่ **นอก** ปุ่ม trigger — `<button>` ซ้อน `<button>` เป็น HTML ที่ใช้ไม่ได้
+
+มี component สำเร็จรูปต่อ entity อยู่แล้ว: `BrandSearchSelect` `CategorySearchSelect` `EmployeeSearchSelect`
+`ShopSearchSelect` `SupplierSearchSelect` `ProductDropdownSelect` — **ใช้ตัวเหล่านี้ อย่าเขียนใหม่**
+
+### สถานะของหน้า (loading / error / empty)
+
+เขียนเป็นฟังก์ชัน `renderBody()` ในหน้าเพจ แล้วไล่ 3 กรณีตามลำดับ — ดู `OrderHistoryPage`
+สถานะว่างต้องมี **CTA** เสมอ และแยกข้อความ "ไม่พบจากตัวกรอง" ออกจาก "ยังไม่มีข้อมูลเลย"
 
 ---
 
-## ERP Composite Components
+## Checklist ก่อนส่งงาน UI
 
-### DeleteConfirmButton — ทุกการลบต้อง confirm
-
-```tsx
-<DeleteConfirmButton onConfirm={() => del.mutateAsync(id)} />
-// onConfirm คืน Promise ได้ → ปุ่มลบ loading + popover ปิดเมื่อ settle + กันกดซ้ำ
-<DeleteConfirmButton onConfirm={handleDelete} title="ลบสินค้า?" description="สต็อกจะหายด้วย">
-  <Button variant="danger">ลบ</Button>
-</DeleteConfirmButton>
-```
-
-### ActionCell — เมนู kebab ท้ายแถว table
-
-action ท้ายแถวเป็น **ปุ่มสามจุดปุ่มเดียว** ไม่ใช่ปุ่มเรียงกัน — ประหยัดความกว้าง และไม่วางปุ่มลบ
-ไว้ปลายนิ้วทุกแถว ลำดับในเมนูคงที่เสมอ: `actions` → แก้ไข → *(เส้นคั่น)* → **ลบ (แดง ท้ายสุด)**
-
-```tsx
-{ title: '', key: 'actions', fixed: 'right', width: 56, align: 'center',
-  render: (_: unknown, record: Product) => (
-    <ActionCell onEdit={() => openEdit(record)} onDelete={() => del.mutate(record.id)} isDeleting={del.isPending} />
-  ) }
-```
-
-เพิ่ม action อื่นผ่าน `actions` — ตัวที่ `danger: true` ถูกดันไปท้ายให้เอง ไม่ต้องจัดลำดับเอง:
-
-```tsx
-<ActionCell
-  actions={[
-    { key: 'view', label: 'ดูรายละเอียด', icon: <AppIcons.view />, onSelect: () => open(record) },
-    { key: 'void', label: 'ยกเลิกบิล', icon: <AppIcons.close />, danger: true,
-      onSelect: () => voidOrder.mutateAsync(record.id),
-      confirm: { title: 'ยกเลิกบิลนี้?', description: 'สต็อกจะถูกคืนอัตโนมัติ' } },
-  ]}
-  onEdit={() => openEdit(record)}
-  onDelete={() => del.mutate(record.id)}
-/>
-```
-
-### ActionMenu — kebab menu นอกตาราง
-
-ตัวเดียวกับที่ `ActionCell` ใช้ภายใน เรียกตรงได้เมื่อต้องการเมนู action ที่มุมการ์ด/หัวหน้า:
-
-```tsx
-<ActionMenu size="middle" label="ตัวเลือกใบสั่งซื้อ" items={[...]} />
-```
-
-- `confirm` บน item ใดเปิดโมดัลยืนยันให้เอง (`danger` → ปุ่มยืนยันเป็นสีแดง) — **action ที่ย้อนกลับไม่ได้ต้องใส่ `confirm` เสมอ**
-- `onSelect` คืน Promise ได้ → โมดัลขึ้น loading จนกว่าจะ settle
-- `DeleteConfirmButton` ยังใช้ต่อสำหรับปุ่มลบเดี่ยวๆ ที่ไม่ได้อยู่ในเมนู (เช่นใน `BulkSelectionBar`)
-
-### BulkSelectionBar
-
-```tsx
-{selectedKeys.length > 0 && (
-  <BulkSelectionBar count={selectedKeys.length} onDelete={handleBulkDelete}
-    onClear={() => setSelectedKeys([])} isDeleting={bulk.isPending} itemLabel="สินค้า" />
-)}
-```
-
-### PageShell — ทุกหน้า list ต้องครบ loading / empty / error
-
-```tsx
-<PageShell isLoading={isLoading} isError={isError} errorMessage={getErrorMessage(error)}
-  onRetry={refetch} isEmpty={!data?.length} emptyDescription="ยังไม่มีสินค้า"
-  emptyAction={<Button variant="primary" onClick={onAdd}>เพิ่มสินค้าแรก</Button>}>
-  <Table … />
-</PageShell>
-```
-
-### PageHeader
-
-```tsx
-<PageHeader title="คลังสินค้า" subtitle="จัดการสต็อกทุกสาขา"
-  actions={<Button variant="primary" icon={<AppIcons.add />}>เพิ่มสินค้า</Button>} />
-```
-
-### FilterBar — แถบกรองเหนือตาราง (debounce ให้เอง 300ms สำหรับ search)
-
-```tsx
-<FilterBar
-  items={[
-    { key: 'q', label: 'ค้นหา', type: 'search' },
-    { key: 'status', label: 'สถานะ', type: 'select', options: STATUS_OPTIONS },
-    { key: 'range', label: 'ช่วงวันที่', type: 'daterange' },
-  ]}
-  values={filters} onChange={setFilters} />
-```
-
-### Table Cell Helpers
-
-```tsx
-{ title: 'รหัส', dataIndex: 'sku', render: (v: string) => <CodeCell>{v}</CodeCell> },
-{ title: 'ราคา', dataIndex: 'price', render: (v: number) => <MoneyCell value={v} /> },
-{ title: 'สต็อก', dataIndex: 'stock', render: (v: number) => <QuantityCell value={v} lowThreshold={10} criticalThreshold={3} /> },
-{ title: 'อัปเดต', dataIndex: 'updatedAt', render: (v: string) => <DateCell value={v} /> },
-// null → "—" ทุกตัว · DateCell กัน invalid date → "—" · QuantityCell ไล่สี เขียว→ส้ม→แดง
-```
-
-### StatsCard / SummaryCard
-
-```tsx
-// StatsCard — การ์ดสถิติมี delta/icon (dashboard)
-<StatsCard label="ยอดขายวันนี้" value={sales} prefix="฿" delta={12.5} deltaLabel="จากเมื่อวาน" icon={<AppIcons.report />} />
-
-// SummaryCard — แถบสรุปเหนือ filter บนหน้า list
-<Inline gap={3}>
-  <SummaryCard title="ทั้งหมด" value={total} suffix="รายการ" style={{ flex: 1 }} />
-  <SummaryCard title="มูลค่ารับเข้า" value={income} prefix="฿" formatter={(v) => Number(v).toLocaleString()} style={{ flex: 1 }} />
-</Inline>
-```
-
-### ScanInput — ช่องยิงบาร์โค้ด (Operator/Warehouse)
-
-```tsx
-<ScanInput onScan={async (code) => { await addItem(code); }} loading={m.isPending} />
-// Enter = ยิง · เคลียร์ค่า + คืนโฟกัสเองเสมอ (แม้ onScan throw หรือเพิ่งหาย disabled/loading)
-```
-
-### QuantityStepper — ช่องจำนวนพร้อมปุ่ม − / +
-
-```tsx
-<QuantityStepper size="large" label="จำนวนแพ็ค" value={qty} onChange={setQty} />
-// พิมพ์เองก็ได้ กดปุ่มก็ได้ · −/+ ถูก disable อัตโนมัติเมื่อถึง min (default 0) / max
-// size="large" = control 38px; ถ้าเป็นจอสัมผัสให้เพิ่ม hit area ด้วย wrapper/min-h-11 โดยไม่เปลี่ยน control contract
-// label ใช้ประกอบ aria-label ของปุ่ม ("เพิ่มจำนวนแพ็ค") — ใส่เสมอเมื่ออยู่ในตาราง
-```
-
-เลือกตัวไหน:
-
-| ต้องการ | ใช้ |
-| --- | --- |
-| จำนวนที่ปรับทีละ 1 บ่อยๆ ด้วยนิ้ว | `QuantityStepper` |
-| จำนวน + หน่วย (ชิ้น/กล่อง/แพ็ค) | `QuantityInput` |
-| ตัวเลขทั่วไป (ราคา, ค่า config) | `InputNumber` |
-
-### ConfirmDrawer — flow 2 ขั้น (กรอก → ยืนยัน) สำหรับงานเสี่ยง
-
-```tsx
-<ConfirmDrawer open={open} onClose={close} title="ปรับสต็อก" formContent={<…/>}
-  summary={<…/>} confirmTitle="ยืนยันการปรับสต็อก 50 รายการ?"
-  onConfirm={() => adjust.mutateAsync(payload)} loading={adjust.isPending} />
-// onConfirm throw → ค้างที่หน้ายืนยัน กดซ้ำได้ (error โดน toast โดย handleError อยู่แล้ว)
-```
-
-### Sheet import suite
-
-`SheetImportModal` = flow ครบ 3 ขั้น (อัพโหลด → จับคู่คอลัมน์ → ตรวจสอบ+นำเข้า) ประกอบจาก `DropZoneSheet` (ตรวจชนิดไฟล์ .xlsx/.xls/.csv รวมถึงลากวาง) + `SheetColumnMapper` + `SheetTable` — ดู story `SheetImportModal` เป็นตัวอย่างการต่อ `dbFields`/`validateRow`/`transformRow`/`onImport`
-
----
-
-## Conventions ที่ทุก component ทำตาม
-
-### controlled ตัดสินจาก "ส่ง prop `value` มาไหม" ไม่ใช่ค่าของมัน
-
-```tsx
-// ❌ พัง — ทุกหน้าเขียน value={status || undefined} พอเคลียร์ตัวกรอง ค่าเป็น '' → undefined
-//    component สลับไป uncontrolled เงียบๆ แล้วโชว์ internal ที่ค้างค่าเดิม
-//    (อาการที่ผู้ใช้เจอ: "ล้างตัวกรองแล้วต้องกดอีกรอบถึงจะหาย")
-const selected = value !== undefined ? value : internal;
-
-// ✅ ถูก — เช็คว่า key มีอยู่ใน props จริงไหม
-export function Select(props: SelectProps) {
-  const { value, defaultValue, onChange } = props;
-  const [internal, setInternal] = React.useState(defaultValue);
-  const isControlled = 'value' in props;
-  const selected = isControlled ? value : internal;
-
-  function pick(v: string) {
-    if (!isControlled) setInternal(v);   // controlled → ห้ามแตะ internal
-    onChange?.(v);
-  }
-}
-```
-
-ต้องรับ props เป็นก้อน (`props: XProps`) แล้ว destructure ข้างในถึงจะเช็ค `'value' in props` ได้ —
-destructure ที่ signature จะไม่เหลือ object ให้เช็ค
-
-ทำแล้วใน: `Input` · `Select` · `DatePicker` · `Segmented` · `Checkbox.Group`
-**component ใหม่ที่มี internal state ต้องทำตามนี้ด้วย** และตอนอยู่ใน `Form.Item`
-จะเป็น controlled เสมอ (`Form.Item` inject `value` ให้ผ่าน `cloneElement`) ซึ่งถูกต้องแล้ว
-
-`DateRangePicker` ไม่มีปัญหานี้ — label บนปุ่มอ่านจาก `value` ตรงๆ ส่วน state ภายในเป็นแค่
-สถานะระหว่างเลือกในปฏิทิน และ resync ทุกครั้งที่เปิด
-
-- Async callback (`onOk`/`onConfirm`) คืน Promise ได้ → loading + กันกดซ้ำอัตโนมัติ
-- `null`/`undefined` ใน cell formatter → "—" ไม่ crash
-- Popover/dropdown ปิดด้วย Escape, โฟกัสวนใน overlay, ปุ่มมี `focus-visible` ring
-- Error จาก mutation ให้ toast ผ่าน `handleError` ฝั่งผู้เรียก — component ไม่ toast เอง
+- [ ] ไม่มี class ของ control พิมพ์ซ้ำ — ทุกอย่างมาจาก `styles.ts`
+- [ ] ปุ่ม icon-only มี `aria-label`
+- [ ] `Dialog.Content` มี `Dialog.Title` และ `aria-describedby={undefined}` ถ้าไม่มี Description
+- [ ] โมดัลแก้ไข `reset()` ทุกครั้งที่เปิด
+- [ ] ตารางมีสถานะ loading / empty (พร้อม CTA) / error
+- [ ] รายการทำลายอยู่ล่างสุดของเมนูและเป็นสีแดง
+- [ ] ตัวเลขใช้ `font-mono tabular-nums`

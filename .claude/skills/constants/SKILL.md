@@ -107,13 +107,13 @@ const opts = Object.entries(OrderStatuses).map(([value, cfg]) => ({ value, label
 Usage:
 ```tsx
 import { ORDER_STATUS, OrderStatusLabel, OrderStatusColor } from '@features/order';
-import { Tag } from '@design-system';
+import { statusPill } from '@/lib/styles';
 
 // compare
 if (order.status === ORDER_STATUS.PENDING) { ... }
 
 // render
-<Tag status={OrderStatusColor[order.status]}>{OrderStatusLabel[order.status]}</Tag>
+<span className={statusPill(OrderStatusColor[order.status])}>{OrderStatusLabel[order.status]}</span>
 ```
 
 ---

@@ -50,7 +50,7 @@ Every page MUST be lazy-loaded. Direct imports in the router kill TTI.
 ```tsx
 // routes/index.tsx — ✅ required pattern
 import { lazy, Suspense } from 'react';
-import { Spinner } from '@design-system';
+import { AppIcons } from '@/lib/icons';
 
 const OrderPage = lazy(() =>
   import('@features/order/pages/OrderPage').then(m => ({ default: m.OrderPage }))

@@ -2,7 +2,7 @@
 
 > Tailwind v4 tokens, styling rules, and Storybook workflow.
 > Sub-skills: [components](./components/SKILL.md) · [icons](./icons/SKILL.md) · [feedback](./feedback/SKILL.md) · [content](./content/SKILL.md)
-> The design system lives at `src/design-system/` — import from `@design-system`.
+> **ไม่มีโฟลเดอร์ design-system แล้ว** — โทเคนอยู่ที่ `src/index.css`, class vocabulary อยู่ที่ `src/lib/styles.ts`, UI ประกอบจาก `radix-ui` ตรงในหน้าเพจ
 
 ---
 
@@ -12,8 +12,8 @@ Use this skill when:
 
 - Styling any component (color, spacing, layout, typography)
 - Tempted to write a raw `#hex` value or `px` literal
-- Adding or modifying a design-system component
-- Writing or updating a Storybook story
+- เพิ่ม/แก้ class vocabulary ใน `src/lib/styles.ts`
+- ประกอบ UI ใหม่จาก Radix primitives
 
 ---
 
@@ -26,17 +26,18 @@ antd + Emotion ถูกถอดออกทั้งหมด (ประวั
 - ใช้ **Tailwind CSS v4 เท่านั้น** สำหรับ styling: semantic utilities, variants, responsive prefixes และ `cn()`
 - ห้ามใช้ Emotion, styled-components, CSS-in-JS, `css` prop, `styled()` หรือ runtime style generation
 - ห้ามติดตั้ง `@emotion/*`, `@atlaskit/*` หรือคัดลอกตัวอย่าง Emotion จาก Atlassian
-- ใช้ `atlassian.design` เป็นแหล่งอ้างอิงด้าน semantics, accessibility และ behavior แล้ว implement ด้วย Tailwind + Radix + DS wrappers ของโปรเจกต์
+- ใช้ `atlassian.design` เป็นแหล่งอ้างอิงด้าน semantics, accessibility และ behavior แล้ว implement ด้วย Tailwind + Radix
 - Inline `style` ใช้ได้เฉพาะ runtime data ที่ Tailwind ระบุล่วงหน้าไม่ได้ ห้ามใช้แทน utility class
 
 | Layer | Where | Role |
 | --- | --- | --- |
 | **Tokens** | `src/index.css` (3 tiers) | สีทั้งหมด, เงา, radius, motion, focus ring — source of truth เดียว |
-| **Primitives** | `src/components/ui/*` | shadcn-style own-the-code, Radix-based (dialog, popover, checkbox, select, tabs, tooltip, sonner…) |
-| **ERP wrappers** | `src/design-system/components/*` | API ระดับแอป (ส่วนใหญ่คง antd-compatible surface) — export ผ่าน `@design-system` |
+| **Class vocabulary** | `src/lib/styles.ts` | หน้าตาของ control ทุกตัว (`btn()`, `INPUT`, `TABLE_TH`, `DIALOG_*`, `dataPill()`) |
+| **สูตรขอบ field** | `src/lib/fieldStyles.ts` | rest → hover → focus → open → invalid → disabled ชุดเดียวกันทุกช่องกรอก |
+| **Primitives** | `radix-ui` | import ตรงในหน้าเพจ ไม่มีชั้น wrapper |
 | **Toasts** | Sonner ผ่าน `notify.*` (`src/shared/utils/notify.tsx`) | อย่าเรียก `toast` ตรง |
-| **Forms** | react-hook-form + zod ผ่าน DS `Form` (antd-compatible surface: `Form.useForm`/`Form.Item`/rules) | |
-| **Table** | DS `Table` (antd-like API + `@tanstack/react-virtual` เมื่อส่ง `virtual` + `scroll.y`) | |
+| **Forms** | react-hook-form (+ zod เมื่อ schema ซับซ้อน) — `register`/`Controller` ตรงๆ | |
+| **Table** | `<table>` เขียนเองในหน้าเพจ + `@tanstack/react-virtual` เมื่อแถวเกิน ~100 | |
 
 - `cn()` จาก `src/lib/utils.ts` (clsx + tailwind-merge) — ใช้ประกอบ className เสมอ
 - Font: Bai Jamjuree ผ่าน `--font-sans`
@@ -111,54 +112,55 @@ hover พื้นทึบ      hover:bg-surface-200   hover ทับพื้
 
 ---
 
-## Legacy TS tokens — ลบแล้ว
+## ของที่ลบทิ้งไปแล้ว — อย่าสร้างกลับมา
 
-`src/design-system/tokens/` (colors.ts + spacing.ts ยุค antd/Emotion) ถูกลบทิ้งพร้อม barrel export ตอนโละเป็น Supabase — ใช้ Tailwind semantic utilities เท่านั้น
+| ลบเมื่อ | อะไร | ใช้อะไรแทน |
+| --- | --- | --- |
+| ตอนโละ antd | `src/design-system/tokens/` (colors.ts + spacing.ts ยุค Emotion) | Tailwind semantic utilities จาก `index.css` |
+| ตอนย้ายมา Radix | `src/design-system/` ทั้งโฟลเดอร์ (50 component) | ประกอบ Radix ตรงในหน้าเพจ + `src/lib/styles.ts` |
+| ตอนย้ายมา Radix | `src/components/ui/` (19 shadcn wrapper) | `import { … } from 'radix-ui'` ตรงๆ |
+
+> โค้ดเก่าที่ยัง `import … from '@design-system'` = ยังไม่ได้ย้าย — alias นี้ถูกถอดจาก vite/tsconfig แล้ว จะ build ไม่ผ่าน
 
 ---
 
 ## Responsive
 
-ใช้ Tailwind breakpoints ตรงๆ (`sm: md: lg: xl:`) หรือ primitive `Grid`/`Stack` จาก `@design-system`:
+ใช้ Tailwind breakpoints ตรงๆ (`sm: md: lg: xl:`) — ไม่มี primitive `Grid`/`Stack` แล้ว เขียน flex/grid ในหน้าเพจ:
 
 ```tsx
-<Grid cols={4} gap={4}>…</Grid>   {/* cols = จำนวนคอลัมน์สูงสุด — ladder มือถือ 1 → sm 2 → lg 4 ในตัว */}
-<Stack gap={4}>…</Stack>  <Inline gap={2} align="center">…</Inline>
+{/* การ์ดสรุป — มือถือ 1 คอลัมน์ ไต่ขึ้นตามจอ */}
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">…</div>
+
+{/* แถวของ control */}
+<div className="flex flex-wrap items-center gap-2">…</div>
+
+{/* คอลัมน์ */}
+<div className="flex flex-col gap-4">…</div>
 ```
 
-(`Grid` ใช้ class map แบบ literal ภายใน — ถ้าเพิ่มค่า cols/breakpoint ใหม่ต้องเพิ่มใน map ของ component ห้าม template string)
+**ต้องเขียน class เต็มเสมอ** — Tailwind สแกนหาสตริงตรงๆ `grid-cols-${n}` ที่ประกอบด้วย template string จะไม่ถูก emit
 
 ---
 
 ## Storybook
 
-- รัน `bun run storybook` (port 6006) · build `bun run build-storybook`
-- Story อยู่คู่ component: `src/design-system/components/<Name>/<Name>.stories.tsx`
-- Convention: `title: 'Design System/<หมวด>/<Name>'`, `tags: ['autodocs']`, `satisfies Meta<typeof X>`, เนื้อหาตัวอย่างเป็นภาษาไทยตามโดเมน ERP, ไอคอนผ่าน `AppIcons`
-- **หมวดใน Storybook — เพิ่ม component ใหม่ต้องเลือกหมวดให้ตรง ห้ามตั้งหมวดใหม่เองโดยไม่อัปเดตตารางนี้**
+Storybook ยังติดตั้งอยู่ (`bun run storybook`, port 6006) แต่ **ไม่มี story เหลืออยู่แล้ว** —
+story ทั้ง 51 ไฟล์ถูกลบไปพร้อมโฟลเดอร์ `src/design-system/` ตอนย้ายมาใช้ Radix
 
-  | หมวด | ใส่อะไร | ตัวอย่าง |
-  | --- | --- | --- |
-  | `Actions` | สิ่งที่ผู้ใช้ "กดแล้วเกิดอะไรขึ้น" | Button · ActionCell · ActionMenu · DeleteConfirmButton · BulkSelectionBar |
-  | `Inputs` | ทุกอย่างที่รับค่าจากผู้ใช้ รวม Form/Field/FilterBar | Input · Select · DatePicker · Checkbox · Switch · Segmented · InlineEdit |
-  | `Display` | แสดงข้อมูลอย่างเดียว ไม่รับ input | Table · TableCell · Tag · Badge · Card · StatsCard · Typography |
-  | `Feedback` | บอกสถานะ/ผลลัพธ์/ความว่างเปล่า | Alert · Banner · Spinner · Tooltip · Empty |
-  | `Overlay` | ลอยทับหน้าและกินโฟกัส | Modal · FormModal · Drawer · ConfirmDrawer |
-  | `Layout` | จัดวางล้วน ไม่มีความหมายเชิงข้อมูล | Grid · Stack · Divider · PageHeader · PageShell · Tabs |
-  | `Data Import` | flow นำเข้าไฟล์ Excel/CSV | DropZoneSheet · SheetImportModal · SheetColumnMapper · SheetTable |
-
-  เส้นแบ่งที่มักตัดสินผิด: `Tooltip` = Feedback (ไม่ใช่ Overlay เพราะไม่กินโฟกัส) · `Empty` = Feedback (ไม่ใช่ Display เพราะสื่อ "ไม่มีข้อมูล") · `Divider` = Layout (ไม่ใช่ Display)
-- **ทุก component ใหม่/แก้ API ต้องมี/อัปเดต story** — reviewer ดูของจริงจาก Storybook
-- Tailwind CSS + font โหลดผ่าน `.storybook/preview.tsx` + `preview-head.html`
+ถ้าจะเขียน story ใหม่ ให้เขียนคู่กับ component ของ feature ที่เป็นเจ้าของ
+(`src/features/<feature>/components/<Name>.stories.tsx`) — ไม่ต้องตั้งหมวดกลางแบบเดิม
+Tailwind CSS + font โหลดผ่าน `.storybook/preview.tsx` + `preview-head.html` ตามเดิม
 
 ---
 
-## Adding a New Design-System Component
+## เพิ่มของใหม่เข้า class vocabulary
 
-1. สร้าง `src/design-system/components/<Name>/index.tsx` — named export เท่านั้น
-2. ใช้ primitive จาก `src/components/ui/*` (Radix) เป็นฐานถ้ามี
-3. Semantic tokens เท่านั้น (กติกาด้านบน) + `cn()` + `focus-visible` ring + aria ครบ
-4. Async action ใน overlay ให้รองรับ Promise (ดู `Modal.onOk` / `DeleteConfirmButton.onConfirm` เป็นแบบ)
-5. Export จาก `src/design-system/index.ts`
-6. เขียน `<Name>.stories.tsx` + `tsc -b` ผ่าน
+1. เปิด `src/lib/styles.ts` แล้วหาว่ามีชื่อที่ใช้แทนกันได้อยู่แล้วไหม (อย่าตั้งซ้ำ)
+2. ตั้งชื่อเป็น **ค่าคงที่ตัวพิมพ์ใหญ่** (`TABLE_TH`) หรือ **ฟังก์ชันเมื่อมี variant** (`btn(variant, size)`)
+3. ใช้ semantic token เท่านั้น — ห้าม `#hex` / `px` ดิบ
+4. control ที่รับโฟกัสต้องมี `focus-visible` และ **ห้ามใส่ `outline-none`** (เฉพาะพื้นผิว overlay เท่านั้นที่ใส่ได้)
+5. ถ้าเป็น **ตรรกะ** ไม่ใช่หน้าตา → ไปที่ `src/lib/<useXxx>.ts` เป็น hook ที่ไม่มี JSX
+   และ**ห้ามคืน ref object ออกจาก hook** (ดูเหตุผลใน [components/SKILL.md](./components/SKILL.md))
+6. `tsc -b` + `eslint src` ผ่าน
 7. อัปเดต [components/SKILL.md](./components/SKILL.md) ถ้าเป็น pattern ใหม่

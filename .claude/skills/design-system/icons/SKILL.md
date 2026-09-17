@@ -20,13 +20,13 @@ Use this skill when adding any icon to the UI.
 ## Rules (Tabler-only, via AppIcons)
 
 - **One library: `@tabler/icons-react`.** `@ant-design/icons` has been removed.
-- **Always go through `AppIcons`** — `import { AppIcons } from '@design-system'`. NEVER import `@tabler/icons-react` (or any icon lib) directly in a component.
+- **Always go through `AppIcons`** — `import { AppIcons } from '@/lib/icons'`. NEVER import `@tabler/icons-react` (or any icon lib) directly in a component.
 - **Key by purpose, not shape** — `AppIcons.add` / `AppIcons.delete` / `AppIcons.search`, not `AppIcons.plus` / `AppIcons.trash`. The key says *what it's for / where it's used*.
 - Icons default to **`size="1em"`** (inherit font-size, like the old antd icons). Pass `size={16}` to override. Pass `spin` for a spinning loader (`<AppIcons.loading spin />`).
-- **Need an icon that's not in the map?** Add a new purpose-named entry to `src/design-system/icons.tsx` (import the Tabler glyph there, wrap with `make()`), then use `AppIcons.<key>`. Don't reach for the raw glyph in the component.
+- **Need an icon that's not in the map?** Add a new purpose-named entry to `src/lib/icons.tsx` (import the Tabler glyph there, wrap with `make()`), then use `AppIcons.<key>`. Don't reach for the raw glyph in the component.
 
 ```tsx
-import { AppIcons } from '@design-system';
+import { AppIcons } from '@/lib/icons';
 
 <AppIcons.add />               {/* 1em — matches surrounding text */}
 <AppIcons.delete size={16} />
@@ -137,7 +137,7 @@ size-10+ (40px+) empty state / dropzone (ตกแต่ง — ต้อง ari
 
 ## Adding a New Icon
 
-1. Add the Tabler import to `src/design-system/icons.tsx`
+1. Add the Tabler import to `src/lib/icons.tsx`
 2. Add a new key to the `AppIcons` object with a JSDoc comment — **ตั้งชื่อตามหน้าที่ ไม่ใช่รูปทรง**
 3. เช็คก่อนว่าคีย์เดิมสื่อความหมายเดียวกันอยู่แล้วหรือเปล่า — อย่าเพิ่มคำพ้อง
 

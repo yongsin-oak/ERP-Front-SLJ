@@ -16,7 +16,7 @@ Use this skill when:
 
 ## Atlassian reference contract
 
-ใช้ [Atlassian foundations](https://atlassian.design/foundations), [components](https://atlassian.design/components) และ accessibility guidance เป็น baseline ของทุกกฎด้านล่าง แล้ว implement ด้วย Tailwind CSS + `@design-system` เท่านั้น ห้าม Emotion/CSS-in-JS
+ใช้ [Atlassian foundations](https://atlassian.design/foundations), [components](https://atlassian.design/components) และ accessibility guidance เป็น baseline ของทุกกฎด้านล่าง แล้ว implement ด้วย Tailwind CSS + class vocabulary ใน `src/lib/styles.ts` เท่านั้น ห้าม Emotion/CSS-in-JS
 
 ---
 

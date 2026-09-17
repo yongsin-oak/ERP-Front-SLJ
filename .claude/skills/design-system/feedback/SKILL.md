@@ -34,20 +34,21 @@ Dialog ขัดจังหวะและบังคับตัดสิน�
 
 | จุดประสงค์ | ใช้ | import | อย่าใช้เมื่อ |
 | --- | --- | --- | --- |
-| ต้องให้ผู้ใช้ **ตัดสินใจ** ก่อนไปต่อ (ยืนยันลบ, ออกโดยไม่เซฟ, session หมด) | `Modal` / `FormModal` | `@design-system` | แจ้ง success (→ Toast) |
-| ยืนยัน **ลบ** รายการเดียว / ท้ายแถว | `DeleteConfirmButton` | `@design-system` | ลบหลายรายการพร้อม summary (→ `ConfirmDrawer`) |
-| ยืนยัน **งานเสี่ยงหลายรายการ** (กรอก → ทวนยอด → ยืนยัน) | `ConfirmDrawer` | `@design-system` | ยืนยันเล็ก ๆ รายการเดียว (→ `DeleteConfirmButton`) |
+| ต้องให้ผู้ใช้ **ตัดสินใจ** ก่อนไปต่อ (ออกโดยไม่เซฟ, session หมด) | `Dialog` + `DIALOG_*` | `radix-ui` + `@/lib/styles` | แจ้ง success (→ Toast) |
+| ยืนยัน **ลบ / งานที่ย้อนไม่ได้** | `AlertDialog` + `DIALOG_*` | `radix-ui` + `@/lib/styles` | งานที่ย้อนได้ (→ Toast + Undo) |
+| ยืนยัน **งานเสี่ยงหลายรายการ** (กรอก → ทวนยอด → ยืนยัน) | `Dialog` ที่มีสรุปยอดก่อนปุ่มยืนยัน | `radix-ui` | ยืนยันเล็ก ๆ รายการเดียว (→ `AlertDialog`) |
 | แจ้ง **ผลสั้น ๆ** ที่หายเองได้ (บันทึกแล้ว, คัดลอกแล้ว) | `notify.success/info` | `@shared` | Error ของ form (→ Inline) |
 | แจ้ง **error จาก mutation** | `handleError('ชื่องาน')` ใน `onError` | `@shared` | validation ของ field (→ Inline) |
 | แจ้งผล **+ ปุ่มเดียว** (Undo / Retry / ดู) | `notify.action` / `notify.undo` / `notify.retry` | `@shared` | error สำคัญที่ต้องหยุด (→ Dialog) |
-| **สถานะที่ยังมีผลบนหน้า** (ออฟไลน์, draft ค้าง, สิทธิ์ใกล้หมด) | `Banner` | `@design-system` | ผลชั่วคราวที่ควรหายเอง (→ Toast) |
-| **error ของ field** ในฟอร์ม | `Form.Item` rules / `Field`/`TextField` `error` | `@design-system` | error ระดับระบบ (→ Toast/Dialog) |
-| อธิบายเพิ่ม "อันนี้คืออะไร" | `Tooltip` | `@design-system` | ข้อมูลสำคัญที่ห้ามพลาด (→ Banner/inline text) |
-| เมนู action ย่อย / ข้อมูลเพิ่ม (⋮) | `ui/popover` primitive | `@/components/ui/popover` | ยืนยันการลบ (→ `DeleteConfirmButton`) |
-| เนื้อหาเยอะเกิน Dialog (ฟิลเตอร์, ตั้งค่า, ตะกร้า) | `Drawer` | `@design-system` | ต้องบังคับตัดสินใจสั้น ๆ (→ `Modal`) |
-| **ไม่มีข้อมูล** | `Empty` / `PageShell` emptyAction | `@design-system` | ระหว่างโหลด (→ Skeleton/Spinner) |
-| **กำลังโหลด** — รู้ layout | `ui/skeleton` | `@/components/ui/skeleton` | ไม่รู้ว่าจะโหลดอะไร (→ `Spinner`) |
-| **กำลังทำงาน** — ปลายเปิด (ปุ่ม submit) | `Spinner` / `Button loading` | `@design-system` | รู้ layout อยู่แล้ว (→ Skeleton) |
+| **สถานะที่ยังมีผลบนหน้า** (ออฟไลน์, draft ค้าง, สิทธิ์ใกล้หมด) | `alertBox('warning')` + `<div role="alert">` | `@/lib/styles` | ผลชั่วคราวที่ควรหายเอง (→ Toast) |
+| **error ของ field** ในฟอร์ม | `aria-invalid` + `<span className={FIELD_ERROR}>` | `react-hook-form` + `@/lib/styles` | error ระดับระบบ (→ Toast/Dialog) |
+| อธิบายเพิ่ม "อันนี้คืออะไร" | `Tooltip` + `TOOLTIP_CONTENT` | `radix-ui` + `@/lib/styles` | ข้อมูลสำคัญที่ห้ามพลาด (→ alertBox/inline text) |
+| เมนู action ย่อย (⋮) | `DropdownMenu` + `MENU_*` | `radix-ui` + `@/lib/styles` | ยืนยันการลบ (→ `AlertDialog`) |
+| ข้อมูลเพิ่มแบบลอย (ไม่ใช่เมนู) | `Popover` + `POPOVER_CONTENT` | `radix-ui` + `@/lib/styles` | ข้อความสั้นอธิบายปุ่ม (→ `Tooltip`) |
+| เนื้อหาเยอะเกิน Dialog (ฟิลเตอร์, ตั้งค่า, ตะกร้า) | `Dialog` + `DRAWER_CONTENT` (เลื่อนเข้าจากขอบ) | `radix-ui` + `@/lib/styles` | ต้องบังคับตัดสินใจสั้น ๆ (→ `Dialog` กลางจอ) |
+| **ไม่มีข้อมูล** | `EMPTY_WRAP` / `EMPTY_TEXT` + CTA เสมอ | `@/lib/styles` | ระหว่างโหลด (→ Skeleton/สปินเนอร์) |
+| **กำลังโหลด** — รู้ layout | `SKELETON` | `@/lib/styles` | ไม่รู้ว่าจะโหลดอะไร (→ `AppIcons.loading spin`) |
+| **กำลังทำงาน** — ปลายเปิด (ปุ่ม submit) | `<AppIcons.loading spin />` ในปุ่ม + `disabled` | `@/lib/icons` | รู้ layout อยู่แล้ว (→ Skeleton) |
 
 ---
 
