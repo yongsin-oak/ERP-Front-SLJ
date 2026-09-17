@@ -8,7 +8,7 @@ import { ActorModal } from '@features/auth';
 import { inventoryService } from '@features/inventory/react-query/services';
 import { productKeys } from '@features/inventory/react-query/queryKeys';
 import { STALE_TIME, notify, useLocalStorage } from '@shared';
-import { canAccess } from '@config/access';
+import { canAccess, ROLE_COLOR } from '@config/access';
 import { APP_CONFIG } from '@config/app.config';
 import { AppIcons } from '@/lib/icons';
 import { cn } from '@/lib/utils';
@@ -25,16 +25,10 @@ import {
   MENU_ITEM_DANGER,
   MENU_SEPARATOR,
   TOOLTIP_CONTENT,
-  type DataColor,
 } from '@/lib/styles';
 
 const SIDEBAR_WIDTH = 230;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
-
-const ROLE_COLOR: Record<Role, DataColor> = {
-  SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
-  Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
-};
 
 /* ── Nav tree ──────────────────────────────────────── */
 interface NavLeaf {

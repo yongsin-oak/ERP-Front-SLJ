@@ -1,31 +1,34 @@
 import { useState } from 'react';
+import { Dialog, Select, Switch, Tooltip } from 'radix-ui';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useAuth, DEV_USER } from '@features/auth';
 import type { Role, AuthUser } from '@features/auth/types';
 import { ENV } from '@config/env';
+import { ROLE_COLOR } from '@config/access';
+import { AppIcons } from '@/lib/icons';
+import { cn } from '@/lib/utils';
 import {
-  AppIcons,
-  Button,
-  Select,
-  Tag,
-  Tooltip,
-  Drawer,
-  Divider,
-  Text,
-  Switch,
-  Stack,
-  Inline,
-} from '@design-system';
+  btn,
+  dataPill,
+  DIALOG_CLOSE_X,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  DRAWER_CONTENT,
+  SELECT_CONTENT,
+  SELECT_ITEM,
+  SELECT_TRIGGER,
+  SELECT_VIEWPORT,
+  SEPARATOR_H,
+  SWITCH,
+  SWITCH_THUMB,
+  TEXT,
+  TOOLTIP_CONTENT,
+} from '@/lib/styles';
 
 const ALL_ROLES: Role[] = [
   'SuperAdmin', 'Admin', 'Operator', 'Warehouse',
   'Accountant', 'HR', 'Marketing', 'Sales',
 ];
-
-const ROLE_COLOR: Record<Role, string> = {
-  SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
-  Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
-};
 
 /** Preset bypass account ต่อ role — คลิกเดียว login ทันที (ไม่ต้องผ่าน backend) */
 const DEV_USER_ACCOUNTS: AuthUser[] = ALL_ROLES.map((role) => ({
@@ -67,181 +70,231 @@ export function DevTools() {
       {/* React Query DevTools — floating panel จาก library โดยตรง */}
       <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
 
-      <Tooltip title="Dev Tools" placement="left">
-        <Button
-          variant="primary"
-          size="large"
-          aria-label="เปิด Dev Tools"
-          icon={<AppIcons.debug />}
-          onClick={() => setOpen(true)}
-          className="fixed right-6 bottom-6 z-9999 size-12 rounded-full border-purple-700 bg-purple-700 shadow-overlay"
-        />
-      </Tooltip>
-
-      <Drawer
-        title={
-          <Inline gap={2}>
-            <AppIcons.debug className="text-purple-700" />
-            <span>Dev Tools</span>
-            <Tag color="purple">DEV MODE</Tag>
-          </Inline>
-        }
-        open={open}
-        onClose={() => setOpen(false)}
-        width={320}
-        styles={{ body: { padding: 16 } }}
-      >
-        <Stack gap={4} className="w-full">
-          {/* Auth bypass */}
-          <div>
-            <Label>Auth</Label>
-            <Row>
-              <Text>Bypass login</Text>
-              <Switch checked={isAuth} onChange={handleBypassToggle} />
-            </Row>
-          </div>
-
-          <Divider className="my-0" />
-
-          {/* Login as — bypass ครบทุก account + POS */}
-          <div>
-            <Label>Login as (bypass)</Label>
-            <Inline wrap gap={2} className="mt-2">
-              {DEV_USER_ACCOUNTS.map((acc) => {
-                const active = !!user && accountId(user) === accountId(acc);
-                return (
-                  <Button
-                    key={acc.sub}
-                    size="small"
-                    variant={active ? 'primary' : 'secondary'}
-                    onClick={() => setUser(acc)}
-                  >
-                    <Tag color={ROLE_COLOR[acc.role]}>{acc.role}</Tag>
-                  </Button>
-                );
-              })}
-            </Inline>
-            <Button
-              icon={<AppIcons.desktop />}
-              block
-              className="mt-2"
-              variant={user && user.type === 'terminal' ? 'primary' : 'secondary'}
-              onClick={() => setUser(DEV_POS_ACCOUNT)}
-            >
-              POS / Terminal ({DEV_POS_ACCOUNT.terminalCode})
-            </Button>
-          </div>
-
-          <Divider className="my-0" />
-
-          {/* Current user */}
-          <div>
-            <Label>Current User</Label>
-            <div className="mt-2">
-              {user ? (
-                <Stack gap={1}>
-                  <Inline gap={2}>
-                    {user.type === 'terminal' ? <AppIcons.desktop /> : <AppIcons.user />}
-                    <Text strong>{user.type === 'terminal' ? user.name : user.username}</Text>
-                    <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
-                    {user.type === 'terminal' && <Tag color="volcano">POS</Tag>}
-                  </Inline>
-                  <Text type="secondary" size="sm">
-                    {user.type === 'terminal' ? `Terminal: ${user.terminalCode}` : `ID: ${user.sub}`}
-                  </Text>
-                </Stack>
-              ) : (
-                <Text type="secondary">— ไม่ได้ login —</Text>
+      <Tooltip.Provider delayDuration={300}>
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <button
+              type="button"
+              aria-label="เปิด Dev Tools"
+              onClick={() => setOpen(true)}
+              className={cn(
+                btn('primary', 'lg'),
+                'fixed right-6 bottom-6 z-9999 size-12 rounded-full border-purple-700 bg-purple-700 shadow-overlay',
               )}
-            </div>
-          </div>
+            >
+              <AppIcons.debug />
+            </button>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content side="left" sideOffset={6} className={TOOLTIP_CONTENT}>
+              Dev Tools
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>
 
-          <Divider className="my-0" />
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className={DIALOG_OVERLAY} />
+          <Dialog.Content
+            className={cn(DRAWER_CONTENT, 'max-w-80 overflow-y-auto')}
+            aria-describedby={undefined}
+          >
+            <Dialog.Title className={cn(DIALOG_TITLE, 'flex items-center gap-2')}>
+              <AppIcons.debug className="text-purple-700" />
+              <span>Dev Tools</span>
+              <span className={dataPill('purple')}>DEV MODE</span>
+            </Dialog.Title>
+            <Dialog.Close asChild>
+              <button type="button" aria-label="ปิด" className={DIALOG_CLOSE_X}>
+                <AppIcons.close />
+              </button>
+            </Dialog.Close>
 
-          {/* Switch role */}
-          <div>
-            <Label>Switch Role</Label>
-            <Select
-              className="mt-2"
-              style={{ width: '100%' }}
-              value={user?.role}
-              disabled={!isAuth}
-              onChange={(v) => v && handleRoleChange(v as Role)}
-              options={ALL_ROLES.map((r) => ({
-                label: <Tag color={ROLE_COLOR[r]}>{r}</Tag>,
-                value: r,
-              }))}
-            />
-          </div>
-
-          <Divider className="my-0" />
-
-          {/* Quick actions */}
-          <div>
-            <Label>Quick Actions</Label>
-            <Stack gap={2} className="mt-2 w-full">
-              <Button icon={<AppIcons.user />} block onClick={() => setUser(DEV_USER)}>
-                Reset to Dev User
-              </Button>
-              <Button icon={<AppIcons.refresh />} block onClick={() => window.location.reload()}>
-                Reload Page
-              </Button>
-              <Button
-                icon={<AppIcons.database />}
-                block
-                onClick={() => {
-                  // Zustand store snapshot — print ไปยัง console devtools
-                  // eslint-disable-next-line no-console
-                  console.group('[DevTools] Zustand — useAuth store');
-                  // eslint-disable-next-line no-console
-                  console.log(useAuth.getState());
-                  // eslint-disable-next-line no-console
-                  console.groupEnd();
-                }}
-              >
-                Log Auth Store
-              </Button>
-            </Stack>
-          </div>
-
-          <Divider className="my-0" />
-
-          {/* Env info */}
-          <div>
-            <Label>Environment</Label>
-            <div className="mt-2 font-mono text-xs">
+            <div className="flex w-full flex-col gap-4">
+              {/* Auth bypass */}
               <div>
-                <Text type="secondary">VITE_ENV_MODE: </Text>
-                <Tag color="purple">{ENV.MODE}</Tag>
+                <Label>Auth</Label>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className={TEXT.base}>Bypass login</span>
+                  <Switch.Root
+                    checked={isAuth}
+                    onCheckedChange={handleBypassToggle}
+                    aria-label="Bypass login"
+                    className={SWITCH}
+                  >
+                    <Switch.Thumb className={SWITCH_THUMB} />
+                  </Switch.Root>
+                </div>
               </div>
-              <div className="mt-1">
-                <Text type="secondary">API: </Text>
-                <Text copyable className="text-[11px]">
-                  {ENV.API_URL}
-                </Text>
+
+              <div className={SEPARATOR_H} />
+
+              {/* Login as — bypass ครบทุก account + POS */}
+              <div>
+                <Label>Login as (bypass)</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {DEV_USER_ACCOUNTS.map((acc) => {
+                    const active = !!user && accountId(user) === accountId(acc);
+                    return (
+                      <button
+                        key={acc.sub}
+                        type="button"
+                        className={btn(active ? 'primary' : 'secondary', 'sm')}
+                        onClick={() => setUser(acc)}
+                      >
+                        <span className={dataPill(ROLE_COLOR[acc.role])}>{acc.role}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  className={cn(
+                    btn(user && user.type === 'terminal' ? 'primary' : 'secondary'),
+                    'mt-2 w-full',
+                  )}
+                  onClick={() => setUser(DEV_POS_ACCOUNT)}
+                >
+                  <AppIcons.desktop />
+                  POS / Terminal ({DEV_POS_ACCOUNT.terminalCode})
+                </button>
               </div>
+
+              <div className={SEPARATOR_H} />
+
+              {/* Current user */}
+              <div>
+                <Label>Current User</Label>
+                <div className="mt-2">
+                  {user ?
+                    <div className="flex flex-col gap-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {user.type === 'terminal' ? <AppIcons.desktop /> : <AppIcons.user />}
+                        <span className={TEXT.strong}>
+                          {user.type === 'terminal' ? user.name : user.username}
+                        </span>
+                        <span className={dataPill(ROLE_COLOR[user.role])}>{user.role}</span>
+                        {user.type === 'terminal' && (
+                          <span className={dataPill('volcano')}>POS</span>
+                        )}
+                      </div>
+                      <span className={TEXT.subtle}>
+                        {user.type === 'terminal' ?
+                          `Terminal: ${user.terminalCode}`
+                        : `ID: ${user.sub}`}
+                      </span>
+                    </div>
+                  : <span className={TEXT.muted}>— ไม่ได้ login —</span>}
+                </div>
+              </div>
+
+              <div className={SEPARATOR_H} />
+
+              {/* Switch role */}
+              <div>
+                <Label>Switch Role</Label>
+                <Select.Root
+                  value={user?.role}
+                  disabled={!isAuth}
+                  onValueChange={(v) => v && handleRoleChange(v as Role)}
+                >
+                  <Select.Trigger className={cn(SELECT_TRIGGER, 'mt-2')} aria-label="เปลี่ยน role">
+                    <Select.Value placeholder="เลือก role" />
+                    <Select.Icon>
+                      <AppIcons.chevronDown />
+                    </Select.Icon>
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Content position="popper" sideOffset={4} className={SELECT_CONTENT}>
+                      <Select.Viewport className={SELECT_VIEWPORT}>
+                        {ALL_ROLES.map((r) => (
+                          <Select.Item key={r} value={r} className={SELECT_ITEM}>
+                            <Select.ItemText>
+                              <span className={dataPill(ROLE_COLOR[r])}>{r}</span>
+                            </Select.ItemText>
+                            <Select.ItemIndicator className="absolute right-2 text-primary">
+                              <AppIcons.check />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </div>
+
+              <div className={SEPARATOR_H} />
+
+              {/* Quick actions */}
+              <div>
+                <Label>Quick Actions</Label>
+                <div className="mt-2 flex w-full flex-col gap-2">
+                  <button type="button" className={btn()} onClick={() => setUser(DEV_USER)}>
+                    <AppIcons.user />
+                    Reset to Dev User
+                  </button>
+                  <button
+                    type="button"
+                    className={btn()}
+                    onClick={() => window.location.reload()}
+                  >
+                    <AppIcons.refresh />
+                    Reload Page
+                  </button>
+                  <button
+                    type="button"
+                    className={btn()}
+                    onClick={() => {
+                      // Zustand store snapshot — print ไปยัง console devtools
+                      // eslint-disable-next-line no-console
+                      console.group('[DevTools] Zustand — useAuth store');
+                      // eslint-disable-next-line no-console
+                      console.log(useAuth.getState());
+                      // eslint-disable-next-line no-console
+                      console.groupEnd();
+                    }}
+                  >
+                    <AppIcons.database />
+                    Log Auth Store
+                  </button>
+                </div>
+              </div>
+
+              <div className={SEPARATOR_H} />
+
+              {/* Env info */}
+              <div>
+                <Label>Environment</Label>
+                <div className="mt-2 font-mono text-xs">
+                  <div className="flex items-center gap-1">
+                    <span className={TEXT.muted}>VITE_ENV_MODE: </span>
+                    <span className={dataPill('purple')}>{ENV.MODE}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-1">
+                    <span className={TEXT.muted}>API: </span>
+                    <span className="text-[11px] break-all">{ENV.API_URL}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={SEPARATOR_H} />
+
+              <span className={cn(TEXT.muted, 'text-[11px]')}>
+                React Query inspector อยู่มุมล่างซ้าย (ไอคอน 🌸)
+              </span>
             </div>
-          </div>
-
-          <Divider className="my-0" />
-
-          <Text type="secondary" className="text-[11px]">
-            React Query inspector อยู่มุมล่างซ้าย (ไอคอน 🌸)
-          </Text>
-        </Stack>
-      </Drawer>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+    <span className="text-xs font-medium tracking-widest text-foreground-muted uppercase">
       {children}
     </span>
   );
-}
-
-function Row({ children }: { children: React.ReactNode }) {
-  return <div className="mt-2 flex items-center justify-between">{children}</div>;
 }

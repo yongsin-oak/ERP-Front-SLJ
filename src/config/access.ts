@@ -1,4 +1,5 @@
 import type { AuthUser, Role } from '@features/auth/types';
+import type { DataColor } from '@/lib/styles';
 import { IS_DEV } from '@config/env';
 
 /**
@@ -126,6 +127,22 @@ export function resolveRedirect(user: LandingUser, from: string | null | undefin
 }
 
 /* ── Labels ──────────────────────────────────────────── */
+
+/**
+ * สีประจำ role — จานสีเชิงหมวดหมู่ (ไม่ได้แปลว่าดี/ร้าย แค่แยกออกจากกัน)
+ * เคยถูกก๊อปไว้ 5 ไฟล์ (AppLayout / TerminalPage / UserPage / ProfilePage / DevTools)
+ * ซึ่งหลุดกันไปคนละชุดเมื่อเพิ่ม role ใหม่ — รวมไว้ที่เดียวกับ ROLE_LABEL
+ */
+export const ROLE_COLOR: Record<Role, DataColor> = {
+  SuperAdmin: 'red',
+  Admin: 'orange',
+  Operator: 'blue',
+  Warehouse: 'cyan',
+  Accountant: 'green',
+  HR: 'purple',
+  Marketing: 'magenta',
+  Sales: 'gold',
+};
 
 /** ชื่อ role ภาษาไทย — ใช้ในข้อความ 403 ให้ผู้ใช้ที่ไม่คุ้นศัพท์อังกฤษเข้าใจ */
 export const ROLE_LABEL: Record<Role, string> = {

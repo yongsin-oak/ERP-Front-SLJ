@@ -1,10 +1,28 @@
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../stores';
-import { useLoginTerminals } from '../react-query';
-import { Button, Form, Input, InputPassword, Segmented, Select, Title, AppIcons } from '@design-system';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Popover, ToggleGroup } from 'radix-ui';
+import { useForm } from 'react-hook-form';
 import { showError } from '@shared';
 import { resolveRedirect } from '@config/access';
+import { AppIcons } from '@/lib/icons';
+import { useCombobox } from '@/lib/useCombobox';
+import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  FIELD_ERROR,
+  FIELD_ROW,
+  INPUT,
+  INPUT_SM,
+  LABEL,
+  POPOVER_CONTENT,
+  SEGMENTED_ITEM,
+  SEGMENTED_ROOT,
+  SELECT_ITEM,
+  SELECT_TRIGGER,
+} from '@/lib/styles';
+import { useAuth } from '../stores';
+import { useLoginTerminals } from '../react-query';
 
 type LoginMode = 'staff' | 'terminal';
 
@@ -22,16 +40,6 @@ const APP_NAME = 'SLJ Supply Center';
 /** ไฟล์ใน public/ — เสิร์ฟที่ root ไม่ต้อง import ผ่าน bundler */
 const LOGO_SRC = '/slj-supply-logo.webp';
 
-/** ป้ายในปุ่ม Segmented — span แทน div เพราะอยู่ใน <button> */
-function ModeLabel({ icon: Icon, children }: { icon: typeof AppIcons.user; children: string }) {
-  return (
-    <span className="flex items-center justify-center gap-1.5">
-      <Icon className="size-3.5" />
-      {children}
-    </span>
-  );
-}
-
 /* ── main ───────────────────────────────────────────── */
 export function LoginPage() {
   // selector ทีละค่า — subscribe เท่าที่ใช้ (ดูเหตุผลใน PrivateRoute)
@@ -42,14 +50,22 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
-  const [staffForm] = Form.useForm<{ username: string; password: string }>();
-  const [terminalForm] = Form.useForm<{ terminalCode: string; password: string }>();
 
   const stateFrom = (location.state as { from?: string } | null)?.from;
   const from = resolveFrom(stateFrom ?? params.get('from'));
 
   const [mode, setMode] = useState<LoginMode>('terminal');
   const [submitting, setSubmitting] = useState(false);
+  const [showStaffPassword, setShowStaffPassword] = useState(false);
+  const [showTerminalPassword, setShowTerminalPassword] = useState(false);
+  const [terminalCode, setTerminalCode] = useState<string | undefined>();
+  const [terminalCodeError, setTerminalCodeError] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const staffForm = useForm<{ username: string; password: string }>({
+    defaultValues: { username: '', password: '' },
+  });
+  const terminalForm = useForm<{ password: string }>({ defaultValues: { password: '' } });
 
   const {
     data: terminals,
@@ -58,19 +74,30 @@ export function LoginPage() {
     refetch: refetchTerminals,
   } = useLoginTerminals();
 
+  /** ค้นได้ทั้งรหัสเครื่องและชื่อ — พนักงานจำได้อย่างใดอย่างหนึ่ง ไม่ควรบังคับให้จำรหัส */
   const terminalOptions = useMemo(
     () =>
       (terminals ?? []).map((t) => ({
         value: t.terminalCode,
-        label: (
-          <span className="flex items-center gap-2">
-            <span className="font-mono">{t.terminalCode}</span>
-            <span className="truncate text-foreground-lighter">{t.name}</span>
-          </span>
-        ),
+        label: t.terminalCode,
+        searchText: t.name,
       })),
     [terminals],
   );
+
+  const terminalNameOf = useMemo(() => {
+    const m = new Map((terminals ?? []).map((t) => [t.terminalCode, t.name]));
+    return (code?: string) => (code ? (m.get(code) ?? '') : '');
+  }, [terminals]);
+
+  const combo = useCombobox({
+    options: terminalOptions,
+    value: terminalCode,
+    onChange: (v) => {
+      setTerminalCode(v);
+      setTerminalCodeError('');
+    },
+  });
 
   useEffect(() => {
     if (isAuth) navigate(resolveRedirect(user, from), { replace: true });
@@ -91,10 +118,14 @@ export function LoginPage() {
   }
 
   /* ── terminal login ── */
-  async function handleTerminalSubmit(values: { terminalCode: string; password: string }) {
+  async function handleTerminalSubmit(values: { password: string }) {
+    if (!terminalCode) {
+      setTerminalCodeError('กรุณาเลือกเครื่อง');
+      return;
+    }
     setSubmitting(true);
     try {
-      await loginTerminal(values.terminalCode.trim(), values.password);
+      await loginTerminal(terminalCode.trim(), values.password);
       navigate(resolveRedirect(useAuth.getState().user, from), { replace: true });
     } catch (err) {
       showError(err, 'เข้าสู่ระบบด้วย Terminal');
@@ -105,8 +136,10 @@ export function LoginPage() {
 
   function handleModeChange(v: LoginMode) {
     setMode(v);
-    staffForm.resetFields();
-    terminalForm.resetFields();
+    staffForm.reset();
+    terminalForm.reset();
+    setTerminalCode(undefined);
+    setTerminalCodeError('');
   }
 
   return (
@@ -127,88 +160,243 @@ export function LoginPage() {
 
         {/* ── ฟอร์ม ─────────────────────────────────── */}
         <div className="mt-6 rounded-lg border border-border bg-background p-6 sm:p-8">
-          <Title level={3} className="text-center">เข้าสู่ระบบ</Title>
+          <h1 className="text-center font-heading text-lg font-semibold text-foreground">
+            เข้าสู่ระบบ
+          </h1>
 
-          <Segmented
-            className="mt-6"
-            size="large"
-            block
+          <ToggleGroup.Root
+            type="single"
             value={mode}
-            onChange={(v) => handleModeChange(v as LoginMode)}
-            options={[
-              { value: 'terminal', label: <ModeLabel icon={AppIcons.terminal}>เครื่องยิงออเดอร์</ModeLabel> },
-              { value: 'staff', label: <ModeLabel icon={AppIcons.user}>เจ้าหน้าที่</ModeLabel> },
-            ]}
-          />
+            // ToggleGroup ยอมให้ "ไม่เลือกอะไรเลย" ได้ — กันค่าว่างไว้ ไม่งั้นกดปุ่มที่เลือกอยู่ซ้ำ
+            // แล้วฟอร์มจะหายไปทั้งก้อน
+            onValueChange={(v) => v && handleModeChange(v as LoginMode)}
+            className={cn(SEGMENTED_ROOT, 'mt-6 grid w-full grid-cols-2')}
+          >
+            <ToggleGroup.Item value="terminal" className={cn(SEGMENTED_ITEM, 'h-9 justify-center')}>
+              <AppIcons.terminal className="size-3.5" />
+              เครื่องยิงออเดอร์
+            </ToggleGroup.Item>
+            <ToggleGroup.Item value="staff" className={cn(SEGMENTED_ITEM, 'h-9 justify-center')}>
+              <AppIcons.user className="size-3.5" />
+              เจ้าหน้าที่
+            </ToggleGroup.Item>
+          </ToggleGroup.Root>
 
           <div className="mt-6">
-            {mode === 'terminal' ? (
-              <Form form={terminalForm} onFinish={handleTerminalSubmit}>
-                <Form.Item
-                  name="terminalCode"
-                  label="เครื่อง"
-                  rules={[{ required: true, message: 'กรุณาเลือกเครื่อง' }]}
-                  extra={
-                    terminalsError ? (
-                      <span className="flex items-center gap-1.5 text-error-text">
-                        โหลดรายชื่อเครื่องไม่สำเร็จ
-                        <button
-                          type="button"
-                          className="underline underline-offset-2 hover:text-foreground"
-                          onClick={() => void refetchTerminals()}
+            {mode === 'terminal' ?
+              <form
+                noValidate
+                className="flex flex-col gap-4"
+                onSubmit={terminalForm.handleSubmit(handleTerminalSubmit)}
+              >
+                <div className={FIELD_ROW}>
+                  <label htmlFor="login-terminal" className={LABEL}>
+                    เครื่อง
+                  </label>
+                  <Popover.Root open={combo.open} onOpenChange={combo.setOpen}>
+                    <Popover.Trigger asChild>
+                      <button
+                        type="button"
+                        id="login-terminal"
+                        aria-invalid={!!terminalCodeError}
+                        className={cn(SELECT_TRIGGER, 'h-9.5')}
+                      >
+                        {terminalCode ?
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span className="font-mono">{terminalCode}</span>
+                            <span className="truncate text-foreground-lighter">
+                              {terminalNameOf(terminalCode)}
+                            </span>
+                          </span>
+                        : <span className="text-foreground-muted">เลือกเครื่องที่ใช้งาน</span>}
+                        <AppIcons.chevronDown />
+                      </button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Content
+                        align="start"
+                        sideOffset={4}
+                        className={cn(POPOVER_CONTENT, 'w-(--radix-popover-trigger-width) p-0')}
+                        onOpenAutoFocus={(e) => {
+                          e.preventDefault();
+                          searchInputRef.current?.focus();
+                        }}
+                      >
+                        <div className="border-b border-border-muted p-1.5">
+                          <input
+                            ref={searchInputRef}
+                            value={combo.search}
+                            onChange={(e) => combo.onSearchChange(e.target.value)}
+                            onKeyDown={combo.onKeyDown}
+                            placeholder="ค้นหารหัสหรือชื่อเครื่อง..."
+                            aria-label="ค้นหาเครื่อง"
+                            className={INPUT_SM}
+                          />
+                        </div>
+                        <div
+                          ref={combo.listRef}
+                          role="listbox"
+                          className="max-h-60 overflow-y-auto p-1"
                         >
-                          ลองใหม่
-                        </button>
-                      </span>
-                    ) : undefined
-                  }
-                >
-                  <Select
-                    size="large"
-                    placeholder="เลือกเครื่องที่ใช้งาน"
-                    options={terminalOptions}
-                    loading={loadingTerminals}
-                    showSearch
-                    notFoundContent={loadingTerminals ? 'กำลังโหลด…' : 'ไม่พบเครื่องที่ใช้งานอยู่'}
-                  />
-                </Form.Item>
+                          {combo.filtered.length === 0 ?
+                            <div className="px-2 py-6 text-center text-sm text-foreground-muted">
+                              {loadingTerminals ? 'กำลังโหลด…' : 'ไม่พบเครื่องที่ใช้งานอยู่'}
+                            </div>
+                          : combo.filtered.map((opt, i) => (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                role="option"
+                                aria-selected={opt.value === terminalCode}
+                                data-index={i}
+                                onMouseEnter={() => combo.setActiveIndex(i)}
+                                onClick={() => combo.pick(opt.value)}
+                                className={cn(
+                                  SELECT_ITEM,
+                                  'text-left',
+                                  i === combo.activeIndex && 'bg-surface-200 text-foreground',
+                                )}
+                              >
+                                <span className="font-mono">{opt.label}</span>
+                                <span className="flex-1 truncate text-foreground-lighter">
+                                  {opt.searchText}
+                                </span>
+                                {opt.value === terminalCode && (
+                                  <AppIcons.check className="text-primary" />
+                                )}
+                              </button>
+                            ))
+                          }
+                        </div>
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
 
-                <Form.Item
-                  name="password"
-                  label="รหัสผ่านเครื่อง"
-                  rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน Terminal' }]}
-                >
-                  <InputPassword size="large" autoComplete="current-password" />
-                </Form.Item>
+                  {terminalCodeError && <span className={FIELD_ERROR}>{terminalCodeError}</span>}
+                  {terminalsError && (
+                    <span className="flex items-center gap-1.5 text-xs text-error-text">
+                      โหลดรายชื่อเครื่องไม่สำเร็จ
+                      <button
+                        type="button"
+                        className="underline underline-offset-2 hover:text-foreground"
+                        onClick={() => void refetchTerminals()}
+                      >
+                        ลองใหม่
+                      </button>
+                    </span>
+                  )}
+                </div>
+
+                <div className={FIELD_ROW}>
+                  <label htmlFor="login-terminal-password" className={LABEL}>
+                    รหัสผ่านเครื่อง
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="login-terminal-password"
+                      type={showTerminalPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      className={cn(INPUT, 'h-9.5 pr-10')}
+                      aria-invalid={!!terminalForm.formState.errors.password}
+                      {...terminalForm.register('password', {
+                        required: 'กรุณากรอกรหัสผ่าน Terminal',
+                      })}
+                    />
+                    <button
+                      type="button"
+                      aria-label={showTerminalPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                      onClick={() => setShowTerminalPassword((s) => !s)}
+                      className={cn(
+                        btnIcon('ghost', 'sm'),
+                        'absolute top-1/2 right-0.5 -translate-y-1/2',
+                      )}
+                    >
+                      <AppIcons.view />
+                    </button>
+                  </div>
+                  {terminalForm.formState.errors.password && (
+                    <span className={FIELD_ERROR}>
+                      {terminalForm.formState.errors.password.message}
+                    </span>
+                  )}
+                </div>
 
                 {/* h-11 = 44px ตาม UX bar สำหรับหน้าจอที่ Operator/Warehouse ใช้ทุกกะ */}
-                <Button variant="primary" htmlType="submit" size="large" block loading={submitting} className="mt-2 h-11">
-                  เข้าสู่ระบบ
-                </Button>
-              </Form>
-            ) : (
-              <Form form={staffForm} onFinish={handleStaffSubmit}>
-                <Form.Item
-                  name="username"
-                  label="ชื่อผู้ใช้"
-                  rules={[{ required: true, message: 'กรุณากรอกชื่อผู้ใช้' }]}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={cn(btn('primary', 'lg'), 'mt-2 h-11 w-full')}
                 >
-                  <Input size="large" autoComplete="username" autoFocus />
-                </Form.Item>
-
-                <Form.Item
-                  name="password"
-                  label="รหัสผ่าน"
-                  rules={[{ required: true, message: 'กรุณากรอกรหัสผ่าน' }]}
-                >
-                  <InputPassword size="large" autoComplete="current-password" />
-                </Form.Item>
-
-                <Button variant="primary" htmlType="submit" size="large" block loading={submitting} className="mt-2 h-11">
+                  {submitting && <AppIcons.loading spin />}
                   เข้าสู่ระบบ
-                </Button>
-              </Form>
-            )}
+                </button>
+              </form>
+            : <form
+                noValidate
+                className="flex flex-col gap-4"
+                onSubmit={staffForm.handleSubmit(handleStaffSubmit)}
+              >
+                <div className={FIELD_ROW}>
+                  <label htmlFor="login-username" className={LABEL}>
+                    ชื่อผู้ใช้
+                  </label>
+                  <input
+                    id="login-username"
+                    autoComplete="username"
+                    autoFocus
+                    className={cn(INPUT, 'h-9.5')}
+                    aria-invalid={!!staffForm.formState.errors.username}
+                    {...staffForm.register('username', { required: 'กรุณากรอกชื่อผู้ใช้' })}
+                  />
+                  {staffForm.formState.errors.username && (
+                    <span className={FIELD_ERROR}>
+                      {staffForm.formState.errors.username.message}
+                    </span>
+                  )}
+                </div>
+
+                <div className={FIELD_ROW}>
+                  <label htmlFor="login-password" className={LABEL}>
+                    รหัสผ่าน
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="login-password"
+                      type={showStaffPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      className={cn(INPUT, 'h-9.5 pr-10')}
+                      aria-invalid={!!staffForm.formState.errors.password}
+                      {...staffForm.register('password', { required: 'กรุณากรอกรหัสผ่าน' })}
+                    />
+                    <button
+                      type="button"
+                      aria-label={showStaffPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                      onClick={() => setShowStaffPassword((s) => !s)}
+                      className={cn(
+                        btnIcon('ghost', 'sm'),
+                        'absolute top-1/2 right-0.5 -translate-y-1/2',
+                      )}
+                    >
+                      <AppIcons.view />
+                    </button>
+                  </div>
+                  {staffForm.formState.errors.password && (
+                    <span className={FIELD_ERROR}>
+                      {staffForm.formState.errors.password.message}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={cn(btn('primary', 'lg'), 'mt-2 h-11 w-full')}
+                >
+                  {submitting && <AppIcons.loading spin />}
+                  เข้าสู่ระบบ
+                </button>
+              </form>
+            }
           </div>
         </div>
 

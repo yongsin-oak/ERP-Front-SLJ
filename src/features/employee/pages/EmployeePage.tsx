@@ -1,21 +1,61 @@
 import { useMemo, useState } from 'react';
-import {
-  Table, Button, Tag, PageHeader, BulkSelectionBar, AppIcons,
-  ActionCell, Modal, Input, InputPassword, SummaryCard, DateCell,
-  Inline, Text, Badge,
-} from '@design-system';
-import type { ColumnType } from '@design-system';
+import { AlertDialog, Checkbox, Dialog, DropdownMenu } from 'radix-ui';
 import { downloadFile, showError, useSearchState, notify } from '@shared';
+import { AppIcons } from '@/lib/icons';
+import { formatDate, DATE_FORMAT } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  BULK_BAR,
+  CHECKBOX,
+  dataPill,
+  DIALOG_CLOSE_X,
+  DIALOG_CONTENT,
+  DIALOG_DESC,
+  DIALOG_FOOTER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  DOT,
+  DOT_BASE,
+  DOT_TONE,
+  INPUT,
+  MENU_CONTENT,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_SEPARATOR,
+  PAGE_HEADER,
+  PAGE_SIZE_SELECT,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  PAGER,
+  SEARCH_CLEAR,
+  SEARCH_ICON,
+  SEARCH_INPUT,
+  STAT_CARD,
+  STAT_LABEL,
+  STAT_SUFFIX,
+  STAT_VALUE,
+  TABLE,
+  TABLE_EMPTY,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+} from '@/lib/styles';
 import {
   useEmployeeList, useCreateEmployee, useUpdateEmployee, useDeleteEmployee,
   useBulkDeleteEmployee, useSetEmployeePin, employeeService,
 } from '../react-query';
 import { EmployeeFormModal } from '../components/EmployeeFormModal';
 import { EmployeeImportModal } from '../components/EmployeeImportModal';
-import { Departments, type Department } from '../types';
+import { Departments } from '../types';
 import type { Employee, CreateEmployeeDto } from '../types';
 
 const EMPLOYEE_LIST_DEFAULTS = { search: '', page: 1, pageSize: 20 };
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const PIN_LENGTH = 4;
 
 export function EmployeePage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -24,14 +64,17 @@ export function EmployeePage() {
   const [tableState, setTableState] = useSearchState('employee-list', EMPLOYEE_LIST_DEFAULTS);
   const { search, page, pageSize } = tableState;
   const [searchInput, setSearchInput] = useState(search);
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [pinEmployee, setPinEmployee] = useState<Employee | null>(null);
   const [pinValue, setPinValue] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<Employee | null>(null);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   const params = { page, limit: pageSize, search: search || undefined };
   const { data, isLoading, refetch } = useEmployeeList(params);
-  const employees = data?.data ?? [];
+  const employees = useMemo(() => data?.data ?? [], [data]);
   const total = data?.pagination?.total ?? 0;
 
   const createEmployee = useCreateEmployee();
@@ -42,6 +85,10 @@ export function EmployeePage() {
 
   const activeCount = useMemo(() => employees.filter((e) => e.isActive).length, [employees]);
   const inactiveCount = useMemo(() => employees.filter((e) => !e.isActive).length, [employees]);
+
+  const allSelected = employees.length > 0 && employees.every((r) => selectedKeys.includes(r.id));
+  const someSelected = selectedKeys.length > 0 && !allSelected;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
 
   async function handleExport() {
     setExporting(true);
@@ -59,8 +106,9 @@ export function EmployeePage() {
   }
 
   async function handleBulkDelete() {
-    await bulkDelete.mutateAsync(selectedKeys.map(String));
+    await bulkDelete.mutateAsync(selectedKeys);
     setSelectedKeys([]);
+    setBulkConfirmOpen(false);
   }
 
   async function handleSubmit(values: CreateEmployeeDto) {
@@ -79,130 +127,313 @@ export function EmployeePage() {
     setPinValue('');
   }
 
-  const columns: ColumnType<Employee>[] = [
-    {
-      title: 'ชื่อ-นามสกุล',
-      key: 'fullName',
-      render: (_: unknown, r: Employee) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{r.firstName} {r.lastName}</div>
-          <div className="text-xs text-foreground-subtle">({r.nickname})</div>
-        </div>
-      ),
-    },
-    {
-      title: 'เบอร์โทร',
-      dataIndex: 'phoneNumber',
-      width: 130,
-      render: (v: string | null) => v ?? '-',
-    },
-    {
-      title: 'แผนก',
-      dataIndex: 'department',
-      width: 130,
-      render: (v: Department) => (
-        <Tag color={Departments[v].color}>{Departments[v].label}</Tag>
-      ),
-    },
-    {
-      title: 'วันที่เริ่มงาน',
-      dataIndex: 'startDate',
-      width: 130,
-      render: (v: string | null) => <DateCell value={v} format="DD/MM/YYYY" />,
-    },
-    {
-      title: 'สถานะ',
-      dataIndex: 'isActive',
-      width: 100,
-      render: (v: boolean) => (
-        <Badge status={v ? 'success' : 'default'} text={v ? 'ใช้งาน' : 'ระงับ'} />
-      ),
-    },
-    {
-      title: '',
-      key: 'action',
-      width: 56,
-      align: 'center' as const,
-      render: (_: unknown, r: Employee) => (
-        <ActionCell
-          actions={[
-            { key: 'pin', label: 'ตั้ง PIN', onSelect: () => { setPinEmployee(r); setPinValue(''); } },
-          ]}
-          onEdit={() => { setSelected(r); setModalOpen(true); }}
-          onDelete={() => deleteEmployee.mutate(r.id)}
-          isDeleting={deleteEmployee.isPending}
-          deleteTitle="ลบพนักงานนี้?"
-        />
-      ),
-    },
-  ];
+  function toggleAll(checked: boolean) {
+    const pageIds = employees.map((r) => r.id);
+    setSelectedKeys((keys) =>
+      checked ? [...new Set([...keys, ...pageIds])] : keys.filter((k) => !pageIds.includes(k)),
+    );
+  }
 
   return (
     <div>
-      <PageHeader
-        title="พนักงาน"
-        subtitle={`ทั้งหมด ${total} คน`}
-        actions={
-          <>
-            <Button icon={<AppIcons.refresh />} onClick={() => refetch()}>รีเฟรช</Button>
-            <Button icon={<AppIcons.exportFile size={16} />} onClick={handleExport} loading={exporting}>Export Excel</Button>
-            <Button icon={<AppIcons.importFile size={16} />} onClick={() => setImportOpen(true)}>นำเข้า Excel</Button>
-            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
-              เพิ่มพนักงาน
-            </Button>
-          </>
-        }
-      />
+      <div className={`${PAGE_HEADER} mb-4`}>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE}>พนักงาน</h1>
+          <p className={PAGE_SUBTITLE}>ทั้งหมด {total} คน</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className={btn()} onClick={() => refetch()}>
+            <AppIcons.refresh />
+            รีเฟรช
+          </button>
+          <button type="button" className={btn()} onClick={handleExport} disabled={exporting}>
+            {exporting ? <AppIcons.loading spin /> : <AppIcons.exportFile />}
+            Export Excel
+          </button>
+          <button type="button" className={btn()} onClick={() => setImportOpen(true)}>
+            <AppIcons.importFile />
+            นำเข้า Excel
+          </button>
+          <button
+            type="button"
+            className={btn('primary')}
+            onClick={() => {
+              setSelected(null);
+              setModalOpen(true);
+            }}
+          >
+            <AppIcons.add />
+            เพิ่มพนักงาน
+          </button>
+        </div>
+      </div>
 
-      <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="ทั้งหมด" value={total} suffix="คน" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ปฏิบัติงาน (หน้านี้)" value={activeCount} suffix="คน" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ระงับ (หน้านี้)" value={inactiveCount} suffix="คน" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
-      </Inline>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>ทั้งหมด</div>
+          <div className={cn(STAT_VALUE, 'text-primary')}>
+            <span>{total}</span>
+            <span className={STAT_SUFFIX}>คน</span>
+          </div>
+        </div>
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>ปฏิบัติงาน (หน้านี้)</div>
+          <div className={cn(STAT_VALUE, 'text-success-text')}>
+            <span>{activeCount}</span>
+            <span className={STAT_SUFFIX}>คน</span>
+          </div>
+        </div>
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>ระงับ (หน้านี้)</div>
+          <div className={cn(STAT_VALUE, 'text-foreground-lighter')}>
+            <span>{inactiveCount}</span>
+            <span className={STAT_SUFFIX}>คน</span>
+          </div>
+        </div>
+      </div>
 
-      <Inline gap={3} align="center" className="mb-3">
-        <Input
-          prefix={<AppIcons.search />}
+      <div className="relative mb-3 w-full sm:w-70">
+        <AppIcons.search className={SEARCH_ICON} />
+        <input
+          className={SEARCH_INPUT}
           placeholder="ค้นหาชื่อ, ชื่อเล่น..."
-          allowClear
-          style={{ width: 280 }}
+          aria-label="ค้นหาพนักงาน"
           value={searchInput}
           onChange={(e) => {
             const val = e.target.value;
             setSearchInput(val);
             if (val === '') setTableState({ ...tableState, search: '', page: 1 });
           }}
-          onPressEnter={() => setTableState({ ...tableState, search: searchInput, page: 1 })}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') setTableState({ ...tableState, search: searchInput, page: 1 });
+          }}
         />
-      </Inline>
+        {searchInput && (
+          <button
+            type="button"
+            aria-label="ล้างคำค้น"
+            className={SEARCH_CLEAR}
+            onClick={() => {
+              setSearchInput('');
+              setTableState({ ...tableState, search: '', page: 1 });
+            }}
+          >
+            <AppIcons.close className="size-3.5" />
+          </button>
+        )}
+      </div>
 
       {selectedKeys.length > 0 && (
-        <BulkSelectionBar
-          count={selectedKeys.length}
-          isDeleting={bulkDelete.isPending}
-          onDelete={handleBulkDelete}
-          onClear={() => setSelectedKeys([])}
-        />
+        <div className={`${BULK_BAR} mb-3 justify-between`}>
+          <span className={TEXT.muted}>เลือก {selectedKeys.length} รายการ</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={btn('danger', 'sm')}
+              onClick={() => setBulkConfirmOpen(true)}
+              disabled={bulkDelete.isPending}
+            >
+              {bulkDelete.isPending ? <AppIcons.loading spin /> : <AppIcons.delete />}
+              ลบที่เลือก
+            </button>
+            <button
+              type="button"
+              className={btn('ghost', 'sm')}
+              onClick={() => setSelectedKeys([])}
+              disabled={bulkDelete.isPending}
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
       )}
 
-      <Table<Employee>
-        rowKey="id"
-        columns={columns}
-        dataSource={employees}
-        loading={isLoading}
-        rowSelection={{
-          selectedRowKeys: selectedKeys,
-          onChange: setSelectedKeys,
-          preserveSelectedRowKeys: true,
-        }}
-        scroll={{ x: 'max-content' }}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
-        }}
-      />
+      <div className={TABLE_WRAP}>
+        <table className={TABLE}>
+          <thead>
+            <tr>
+              <th className={cn(TABLE_TH, 'w-10')}>
+                <Checkbox.Root
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(c) => toggleAll(c === true)}
+                  aria-label="เลือกทุกแถวในหน้านี้"
+                  className={CHECKBOX}
+                >
+                  <Checkbox.Indicator className="flex items-center justify-center">
+                    {someSelected ?
+                      <AppIcons.minus className="size-3" />
+                    : <AppIcons.check className="size-3" />}
+                  </Checkbox.Indicator>
+                </Checkbox.Root>
+              </th>
+              <th className={TABLE_TH}>ชื่อ-นามสกุล</th>
+              <th className={cn(TABLE_TH, 'w-33')}>เบอร์โทร</th>
+              <th className={cn(TABLE_TH, 'w-33')}>แผนก</th>
+              <th className={cn(TABLE_TH, 'w-33')}>วันที่เริ่มงาน</th>
+              <th className={cn(TABLE_TH, 'w-25')}>สถานะ</th>
+              <th className={cn(TABLE_TH, 'w-14 text-center')}>
+                <span className="sr-only">ตัวเลือก</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ?
+              <tr>
+                <td colSpan={7} className={TABLE_EMPTY}>
+                  <AppIcons.loading spin className="mx-auto size-5 text-primary" />
+                </td>
+              </tr>
+            : employees.length === 0 ?
+              <tr>
+                <td colSpan={7} className={TABLE_EMPTY}>
+                  {search ?
+                    `ไม่พบพนักงานที่ตรงกับ “${search}”`
+                  : 'ยังไม่มีพนักงาน — กด “เพิ่มพนักงาน” เพื่อเริ่ม'}
+                </td>
+              </tr>
+            : employees.map((r) => {
+                const checked = selectedKeys.includes(r.id);
+                const dept = Departments[r.department];
+                return (
+                  <tr key={r.id} data-selected={checked} className={TABLE_TR}>
+                    <td className={TABLE_TD}>
+                      <Checkbox.Root
+                        checked={checked}
+                        onCheckedChange={(c) =>
+                          setSelectedKeys((keys) =>
+                            c === true ? [...keys, r.id] : keys.filter((k) => k !== r.id),
+                          )
+                        }
+                        aria-label={`เลือก ${r.firstName} ${r.lastName}`}
+                        className={CHECKBOX}
+                      >
+                        <Checkbox.Indicator className="flex items-center justify-center">
+                          <AppIcons.check className="size-3" />
+                        </Checkbox.Indicator>
+                      </Checkbox.Root>
+                    </td>
+                    <td className={TABLE_TD}>
+                      <div className="font-medium">
+                        {r.firstName} {r.lastName}
+                      </div>
+                      <div className="text-xs text-foreground-subtle">({r.nickname})</div>
+                    </td>
+                    <td className={cn(TABLE_TD, 'font-mono text-xs tabular-nums')}>
+                      {r.phoneNumber ?? '-'}
+                    </td>
+                    <td className={TABLE_TD}>
+                      <span className={dataPill(dept.color)}>{dept.label}</span>
+                    </td>
+                    <td className={cn(TABLE_TD, 'font-mono text-xs tabular-nums')}>
+                      {formatDate(r.startDate, DATE_FORMAT.date)}
+                    </td>
+                    <td className={TABLE_TD}>
+                      <span className={DOT_BASE}>
+                        <span className={cn(DOT, r.isActive ? DOT_TONE.success : DOT_TONE.default)} />
+                        {r.isActive ? 'ใช้งาน' : 'ระงับ'}
+                      </span>
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-center')}>
+                      <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                          <button
+                            type="button"
+                            aria-label="ตัวเลือกของแถวนี้"
+                            className={btnIcon('ghost', 'sm')}
+                          >
+                            <AppIcons.more />
+                          </button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Portal>
+                          <DropdownMenu.Content align="end" sideOffset={4} className={MENU_CONTENT}>
+                            <DropdownMenu.Item
+                              className={MENU_ITEM}
+                              onSelect={() => {
+                                setPinEmployee(r);
+                                setPinValue('');
+                                setShowPin(false);
+                              }}
+                            >
+                              ตั้ง PIN
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Item
+                              className={MENU_ITEM}
+                              onSelect={() => {
+                                setSelected(r);
+                                setModalOpen(true);
+                              }}
+                            >
+                              แก้ไข
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Separator className={MENU_SEPARATOR} />
+                            <DropdownMenu.Item
+                              className={MENU_ITEM_DANGER}
+                              onSelect={(e) => {
+                                // กัน Radix ปิดเมนูแล้วเปิดกล่องยืนยันในจังหวะเดียวกัน
+                                e.preventDefault();
+                                setPendingDelete(r);
+                              }}
+                            >
+                              ลบ
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Content>
+                        </DropdownMenu.Portal>
+                      </DropdownMenu.Root>
+                    </td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div className={PAGER}>
+        <span className={TEXT.subtle}>
+          แสดง {employees.length ? (page - 1) * pageSize + 1 : 0}–
+          {(page - 1) * pageSize + employees.length} จาก {total}
+        </span>
+        <div className="flex items-center gap-2">
+          <label htmlFor="employee-page-size" className="sr-only">
+            จำนวนแถวต่อหน้า
+          </label>
+          <select
+            id="employee-page-size"
+            value={pageSize}
+            onChange={(e) =>
+              setTableState({ ...tableState, page: 1, pageSize: Number(e.target.value) })
+            }
+            className={PAGE_SIZE_SELECT}
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n} / หน้า
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            aria-label="หน้าก่อนหน้า"
+            className={btnIcon('secondary', 'sm')}
+            disabled={page <= 1}
+            onClick={() => setTableState({ ...tableState, page: page - 1 })}
+          >
+            <AppIcons.arrowLeft />
+          </button>
+          <span className={cn(TEXT.subtle, 'tabular-nums')}>
+            {page} / {lastPage}
+          </span>
+          <button
+            type="button"
+            aria-label="หน้าถัดไป"
+            className={btnIcon('secondary', 'sm')}
+            disabled={page >= lastPage}
+            onClick={() => setTableState({ ...tableState, page: page + 1 })}
+          >
+            <AppIcons.arrowRight />
+          </button>
+        </div>
+      </div>
 
       <EmployeeFormModal
         open={modalOpen}
@@ -212,39 +443,139 @@ export function EmployeePage() {
         loading={createEmployee.isPending || updateEmployee.isPending}
       />
 
-      <EmployeeImportModal
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-      />
+      <EmployeeImportModal open={importOpen} onClose={() => setImportOpen(false)} />
 
-      <Modal
-        open={!!pinEmployee}
-        title={`ตั้ง PIN — ${pinEmployee?.firstName} (${pinEmployee?.nickname})`}
-        onCancel={() => setPinEmployee(null)}
-        onOk={handleSetPin}
-        okText="บันทึก PIN"
-        confirmLoading={setPin.isPending}
-        okButtonProps={{ disabled: pinValue.length !== 4 }}
-      >
-        <div style={{ padding: '16px 0' }}>
-          <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-            PIN ต้องเป็นตัวเลข 4 หลัก
-          </Text>
-          <InputPassword
-            value={pinValue}
-            onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            placeholder="กรอก PIN 4 หลัก"
-            maxLength={4}
-            style={{ width: '100%', letterSpacing: 6, fontSize: 20, textAlign: 'center' }}
-          />
-          <Text
-            type={pinValue.length === 4 ? 'success' : 'secondary'}
-            style={{ fontSize: 12, marginTop: 4, display: 'block' }}
-          >
-            {pinValue.length} หลัก {pinValue.length === 4 ? '✓' : '(ต้องการ 4 หลัก)'}
-          </Text>
-        </div>
-      </Modal>
+      {/* ตั้ง PIN */}
+      <Dialog.Root open={!!pinEmployee} onOpenChange={(o) => !o && setPinEmployee(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className={DIALOG_OVERLAY} />
+          <Dialog.Content className={DIALOG_CONTENT} aria-describedby={undefined}>
+            <Dialog.Title className={DIALOG_TITLE}>
+              ตั้ง PIN — {pinEmployee?.firstName} ({pinEmployee?.nickname})
+            </Dialog.Title>
+            <Dialog.Close asChild>
+              <button type="button" aria-label="ปิด" className={DIALOG_CLOSE_X}>
+                <AppIcons.close />
+              </button>
+            </Dialog.Close>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="employee-pin" className={TEXT.muted}>
+                PIN ต้องเป็นตัวเลข {PIN_LENGTH} หลัก
+              </label>
+              <div className="relative">
+                <input
+                  id="employee-pin"
+                  type={showPin ? 'text' : 'password'}
+                  inputMode="numeric"
+                  maxLength={PIN_LENGTH}
+                  value={pinValue}
+                  onChange={(e) =>
+                    setPinValue(e.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH))
+                  }
+                  placeholder={`กรอก PIN ${PIN_LENGTH} หลัก`}
+                  className={cn(INPUT, 'pr-10 text-center text-xl tracking-[0.4em]')}
+                />
+                <button
+                  type="button"
+                  aria-label={showPin ? 'ซ่อน PIN' : 'แสดง PIN'}
+                  onClick={() => setShowPin((s) => !s)}
+                  className={cn(btnIcon('ghost', 'sm'), 'absolute top-1/2 right-0.5 -translate-y-1/2')}
+                >
+                  <AppIcons.view />
+                </button>
+              </div>
+              <span
+                className={cn(
+                  'text-xs',
+                  pinValue.length === PIN_LENGTH ? 'text-success-text' : 'text-foreground-muted',
+                )}
+              >
+                {pinValue.length} หลัก{' '}
+                {pinValue.length === PIN_LENGTH ? '✓' : `(ต้องการ ${PIN_LENGTH} หลัก)`}
+              </span>
+            </div>
+
+            <div className={DIALOG_FOOTER}>
+              <Dialog.Close asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </Dialog.Close>
+              <button
+                type="button"
+                className={btn('primary')}
+                disabled={pinValue.length !== PIN_LENGTH || setPin.isPending}
+                onClick={() => void handleSetPin()}
+              >
+                {setPin.isPending && <AppIcons.loading spin />}
+                บันทึก PIN
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <AlertDialog.Root open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+          <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <AlertDialog.Title className={DIALOG_TITLE}>ลบพนักงานนี้?</AlertDialog.Title>
+            <AlertDialog.Description className={DIALOG_DESC}>
+              ไม่สามารถยกเลิกการดำเนินการนี้ได้
+            </AlertDialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <AlertDialog.Cancel asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </AlertDialog.Cancel>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={deleteEmployee.isPending}
+                onClick={() => {
+                  if (pendingDelete) deleteEmployee.mutate(pendingDelete.id);
+                  setPendingDelete(null);
+                }}
+              >
+                {deleteEmployee.isPending && <AppIcons.loading spin />}
+                ลบ
+              </button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+
+      <AlertDialog.Root open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+          <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <AlertDialog.Title className={DIALOG_TITLE}>
+              ลบ {selectedKeys.length} รายการที่เลือก?
+            </AlertDialog.Title>
+            <AlertDialog.Description className={DIALOG_DESC}>
+              ไม่สามารถยกเลิกการดำเนินการนี้ได้
+            </AlertDialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <AlertDialog.Cancel asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </AlertDialog.Cancel>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={bulkDelete.isPending}
+                onClick={() => void handleBulkDelete()}
+              >
+                {bulkDelete.isPending && <AppIcons.loading spin />}
+                ลบที่เลือก
+              </button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </div>
   );
 }

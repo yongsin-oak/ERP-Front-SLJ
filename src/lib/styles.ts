@@ -86,6 +86,14 @@ export const INPUT_WRAP =
 /** ตัวเลขในช่องกรอก — ชิดขวา + mono ให้หลักตรงกัน */
 export const INPUT_NUMBER = `${INPUT} text-right font-mono tabular-nums`;
 
+/* ── ช่องค้นหา (ไอคอนซ้าย + ปุ่มล้างขวา) ─────────────────────────────────
+   ใส่ใน <div className="relative"> แล้ววางไอคอน/ปุ่มล้างเป็นพี่น้องของ input */
+export const SEARCH_INPUT = `${INPUT} pl-9 pr-8`;
+export const SEARCH_ICON =
+  'pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-foreground-muted';
+export const SEARCH_CLEAR =
+  'absolute top-1/2 right-2 -translate-y-1/2 rounded-sm p-0.5 text-foreground-muted transition-colors hover:text-foreground';
+
 /* ── Label / field chrome ────────────────────────────────────────────────── */
 
 export const LABEL = 'text-sm font-medium text-foreground-light';
@@ -203,7 +211,22 @@ export const TABLE_TR = 'transition-colors hover:bg-surface-200/60 data-[selecte
 export const TABLE_EMPTY = 'px-3 py-12 text-center text-sm text-foreground-muted';
 /** ตัวเลขในตาราง — mono ให้หลักตรงกัน */
 export const CELL_NUM = 'text-right font-mono tabular-nums';
-export const CELL_CODE = 'font-mono text-xs tabular-nums text-foreground-light';
+export const CELL_CODE =
+  'rounded-sm border border-border-muted bg-surface-200 px-1.5 py-px font-mono text-xs text-foreground';
+/** หัวคอลัมน์ที่กดเรียงได้ — ต้องเป็น <button> จริงเพื่อให้กดด้วยคีย์บอร์ดได้ */
+export const TH_SORT =
+  'inline-flex items-center gap-1 text-xs font-medium text-foreground-lighter transition-colors hover:text-foreground';
+/** แถบแบ่งหน้าใต้ตาราง */
+export const PAGER = 'mt-3 flex flex-wrap items-center justify-between gap-3';
+export const PAGE_SIZE_SELECT =
+  'h-7.5 rounded-md border border-border-control bg-control px-2 text-sm text-foreground';
+
+/* ── การ์ดสรุปตัวเลขเหนือตาราง ──────────────────────────────────────────── */
+
+export const STAT_CARD = 'rounded-lg border border-border bg-card px-4 py-3';
+export const STAT_LABEL = 'text-xs text-foreground-light';
+export const STAT_VALUE = 'mt-1 flex items-baseline gap-1 font-mono text-xl font-medium tabular-nums';
+export const STAT_SUFFIX = 'font-sans text-sm font-normal text-foreground-light';
 
 /* ── Tag / Badge — สถานะ ────────────────────────────────────────────────── */
 
@@ -271,6 +294,21 @@ export function statusPill(tone: StatusTone = 'default') {
 export function dataPill(color: DataColor = 'default') {
   return `${PILL_BASE} ${DATA_TAG[color]}`;
 }
+
+/* ── จุดสถานะ + ข้อความ ──────────────────────────────────────────────────
+   ใช้ตอนสถานะเป็นข้อมูลรอง (เปิด/ปิดใช้งาน) — เบากว่า pill เต็มใบในตารางที่แน่นแล้ว
+   สีไม่ใช่ตัวสื่อความหมายตัวเดียว: มีข้อความกำกับเสมอ คนตาบอดสีจึงอ่านได้ */
+export const DOT_BASE = 'inline-flex items-center gap-1.5 text-sm whitespace-nowrap';
+export const DOT = 'size-1.5 shrink-0 rounded-full';
+export const DOT_TONE = {
+  success: 'bg-success',
+  warning: 'bg-warning',
+  error: 'bg-error',
+  info: 'bg-info',
+  default: 'bg-foreground-muted',
+} as const;
+
+export type DotTone = keyof typeof DOT_TONE;
 
 /* ── Alert / Banner ─────────────────────────────────────────────────────── */
 

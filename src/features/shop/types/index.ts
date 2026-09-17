@@ -1,6 +1,9 @@
+import type { DataColor } from '@/lib/styles';
+
 export type Platform = 'Shopee' | 'Lazada' | 'TikTok' | 'LineOA' | 'LineMan' | 'Offline';
 
-export const PlatformColor: Record<Platform, string> = {
+/** ชื่อสีจากจานสีเชิงหมวดหมู่ใน styles.ts — ผูกชนิดไว้เพื่อให้พิมพ์ผิดแล้ว build ไม่ผ่าน */
+export const PlatformColor: Record<Platform, DataColor> = {
   Shopee: 'orange',
   Lazada: 'blue',
   TikTok: 'purple',

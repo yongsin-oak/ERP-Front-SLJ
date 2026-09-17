@@ -20,8 +20,14 @@ import {
   MENU_ITEM_DANGER,
   MENU_SEPARATOR,
   PAGE_HEADER,
+  PAGE_SIZE_SELECT,
   PAGE_SUBTITLE,
   PAGE_TITLE,
+  PAGER,
+  STAT_CARD,
+  STAT_LABEL,
+  STAT_SUFFIX,
+  STAT_VALUE,
   TABLE,
   TABLE_EMPTY,
   TABLE_TD,
@@ -29,6 +35,7 @@ import {
   TABLE_TR,
   TABLE_WRAP,
   TEXT,
+  TH_SORT,
 } from '@/lib/styles';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
@@ -154,19 +161,27 @@ export function BrandPage() {
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" tone="text-primary" />
-        <SummaryCard
-          title="มีรายละเอียด (หน้านี้)"
-          value={withDescCount}
-          suffix="แบรนด์"
-          tone="text-success-text"
-        />
-        <SummaryCard
-          title="ไม่มีรายละเอียด (หน้านี้)"
-          value={withoutDescCount}
-          suffix="แบรนด์"
-          tone="text-foreground-lighter"
-        />
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>แบรนด์ทั้งหมด</div>
+          <div className={cn(STAT_VALUE, 'text-primary')}>
+            <span>{total}</span>
+            <span className={STAT_SUFFIX}>แบรนด์</span>
+          </div>
+        </div>
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>มีรายละเอียด (หน้านี้)</div>
+          <div className={cn(STAT_VALUE, 'text-success-text')}>
+            <span>{withDescCount}</span>
+            <span className={STAT_SUFFIX}>แบรนด์</span>
+          </div>
+        </div>
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>ไม่มีรายละเอียด (หน้านี้)</div>
+          <div className={cn(STAT_VALUE, 'text-foreground-lighter')}>
+            <span>{withoutDescCount}</span>
+            <span className={STAT_SUFFIX}>แบรนด์</span>
+          </div>
+        </div>
       </div>
 
       {selectedKeys.length > 0 && (
@@ -211,18 +226,23 @@ export function BrandPage() {
                 </Checkbox.Root>
               </th>
               <th className={cn(TABLE_TH, 'w-40')}>
-                <SortButton label="รหัส" onClick={() => toggleSort('id')} icon={sortIcon('id')} />
+                <button type="button" className={TH_SORT} onClick={() => toggleSort('id')}>
+                  รหัส
+                  {sortIcon('id')}
+                </button>
               </th>
               <th className={TABLE_TH}>
-                <SortButton label="ชื่อแบรนด์" onClick={() => toggleSort('name')} icon={sortIcon('name')} />
+                <button type="button" className={TH_SORT} onClick={() => toggleSort('name')}>
+                  ชื่อแบรนด์
+                  {sortIcon('name')}
+                </button>
               </th>
               <th className={TABLE_TH}>รายละเอียด</th>
               <th className={cn(TABLE_TH, 'w-40')}>
-                <SortButton
-                  label="อัปเดตล่าสุด"
-                  onClick={() => toggleSort('updatedAt')}
-                  icon={sortIcon('updatedAt')}
-                />
+                <button type="button" className={TH_SORT} onClick={() => toggleSort('updatedAt')}>
+                  อัปเดตล่าสุด
+                  {sortIcon('updatedAt')}
+                </button>
               </th>
               <th className={cn(TABLE_TH, 'w-14 text-center')}>
                 <span className="sr-only">ตัวเลือก</span>
@@ -310,7 +330,7 @@ export function BrandPage() {
       </div>
 
       {/* แบ่งหน้า */}
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <div className={PAGER}>
         <span className={TEXT.subtle}>
           แสดง {rows.length ? (page - 1) * pageSize + 1 : 0}–{(page - 1) * pageSize + rows.length} จาก {total}
         </span>
@@ -324,7 +344,7 @@ export function BrandPage() {
             onChange={(e) =>
               setTableState({ ...tableState, page: 1, pageSize: Number(e.target.value) })
             }
-            className="h-7.5 rounded-md border border-border-control bg-control px-2 text-sm text-foreground"
+            className={PAGE_SIZE_SELECT}
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
               <option key={n} value={n}>
@@ -426,50 +446,6 @@ export function BrandPage() {
         onSubmit={handleSubmit}
         loading={createBrand.isPending || updateBrand.isPending}
       />
-    </div>
-  );
-}
-
-/** หัวคอลัมน์ที่กดเรียงได้ — ต้องเป็นปุ่มจริงเพื่อให้กดด้วยคีย์บอร์ดได้ */
-function SortButton({
-  label,
-  onClick,
-  icon,
-}: {
-  label: string;
-  onClick: () => void;
-  icon: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="inline-flex items-center gap-1 text-xs font-medium text-foreground-lighter transition-colors hover:text-foreground"
-    >
-      {label}
-      {icon}
-    </button>
-  );
-}
-
-function SummaryCard({
-  title,
-  value,
-  suffix,
-  tone,
-}: {
-  title: string;
-  value: number | string;
-  suffix?: string;
-  tone?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3">
-      <div className="text-xs text-foreground-light">{title}</div>
-      <div className={cn('mt-1 flex items-baseline gap-1 font-mono text-xl font-medium tabular-nums', tone)}>
-        <span>{value}</span>
-        {suffix && <span className="font-sans text-sm font-normal text-foreground-light">{suffix}</span>}
-      </div>
     </div>
   );
 }

@@ -1,12 +1,19 @@
+import type { DataColor } from '@/lib/styles';
+
+/**
+ * ผูกชนิด `color` กับจานสีเชิงหมวดหมู่ใน styles.ts — พิมพ์ชื่อสีที่ไม่มีจริงแล้ว build ไม่ผ่าน
+ * (ก่อนหน้านี้ HR ใช้ "pink" ซึ่งไม่มีในจานสี ทำให้หลุดไปใช้ CSS named color ตรงๆ
+ *  คือไม่ใช่โทเคน ไม่สลับตาม dark mode — เปลี่ยนเป็น magenta ที่ใกล้ที่สุดในจานสี)
+ */
 export const Departments = {
   Operator: { label: "ปฏิบัติการ", color: "blue" },
   Warehouse: { label: "คลังสินค้า", color: "orange" },
   Admin: { label: "แอดมิน", color: "purple" },
   Accountant: { label: "บัญชี", color: "green" },
-  HR: { label: "HR", color: "pink" },
+  HR: { label: "HR", color: "magenta" },
   Marketing: { label: "การตลาด", color: "cyan" },
   Sales: { label: "ขาย", color: "gold" },
-} as const;
+} as const satisfies Record<string, { label: string; color: DataColor }>;
 
 export type Department = keyof typeof Departments;
 
