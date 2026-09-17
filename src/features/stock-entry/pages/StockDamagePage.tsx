@@ -1,9 +1,25 @@
 import { useState } from 'react';
-import { Table, Button, PageHeader, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
-import type { ColumnType } from '@design-system';
+import { ProductDropdownSelect } from '@features/inventory';
+import { AppIcons } from '@/lib/icons';
+import { formatMoney } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import {
+  alertBox,
+  btn,
+  btnIcon,
+  INPUT_NUMBER,
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  TABLE,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+} from '@/lib/styles';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkDamage } from '../react-query';
-import { ProductDropdownSelect } from '@features/inventory';
 
 interface DamageRow {
   key: string;
@@ -24,7 +40,6 @@ export function StockDamagePage() {
   const [note, setNote] = useState('');
 
   const bulkDamage = useBulkDamage();
-
 
   function updateRow(key: string, patch: Partial<DamageRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -55,115 +70,23 @@ export function StockDamagePage() {
   const totalQty = validRows.reduce((s, r) => s + r.quantity, 0);
   const totalLoss = validRows.reduce((s, r) => s + r.quantity * (r.costPricePerUnit ?? 0), 0);
 
-  const columns: ColumnType<DamageRow>[] = [
-    {
-      title: 'สินค้า',
-      dataIndex: 'productBarcode',
-      render: (_: string, r: DamageRow) => (
-        <ProductDropdownSelect
-          placeholder="เลือกสินค้า"
-          style={{ width: '100%', minWidth: 240 }}
-          allowClear
-          value={r.productBarcode || undefined}
-          onChange={(v) =>
-            updateRow(
-              r.key,
-              v
-                ? { productBarcode: v }
-                : { productBarcode: '', currentRemaining: undefined, costPricePerUnit: 0 },
-            )
-          }
-          onSelect={(barcode, product) =>
-            updateRow(r.key, {
-              productBarcode: barcode,
-              currentRemaining: product.remaining,
-              costPricePerUnit: product.costPrice?.pack ?? 0,
-            })
-          }
-        />
-      ),
-    },
-    {
-      title: 'สต็อกปัจจุบัน',
-      dataIndex: 'currentRemaining',
-      width: 120,
-      align: 'right' as const,
-      render: (v?: number) =>
-        v != null ? <Text type="secondary">{v}</Text> : '-',
-    },
-    {
-      title: 'จำนวนที่เสีย',
-      dataIndex: 'quantity',
-      width: 130,
-      render: (_: number, r: DamageRow) => (
-        <InputNumber
-          min={1}
-          max={r.currentRemaining}
-          value={r.quantity}
-          className={r.currentRemaining != null && r.quantity > r.currentRemaining ? 'border-error focus-within:border-error' : undefined}
-          onChange={(v) => updateRow(r.key, { quantity: v ?? 1 })}
-        />
-      ),
-    },
-    {
-      title: 'ราคาทุน/แพ็ค (฿)',
-      dataIndex: 'costPricePerUnit',
-      width: 150,
-      render: (_: number, r: DamageRow) => (
-        <InputNumber
-          min={0}
-          precision={2}
-          placeholder="0.00"
-          value={r.costPricePerUnit || undefined}
-          onChange={(v) => updateRow(r.key, { costPricePerUnit: v ?? 0 })}
-        />
-      ),
-    },
-    {
-      title: 'มูลค่าที่เสีย',
-      key: 'loss',
-      width: 120,
-      align: 'right' as const,
-      render: (_: unknown, r: DamageRow) => {
-        if (!r.costPricePerUnit) return '-';
-        const loss = r.quantity * r.costPricePerUnit;
-        return (
-          <Text type="danger">฿{loss.toLocaleString()}</Text>
-        );
-      },
-    },
-    {
-      title: '',
-      key: 'action',
-      width: 50,
-      render: (_: unknown, r: DamageRow) => (
-        <Button
-          variant="danger-ghost"
-          size="small"
-          aria-label="ลบแถวนี้"
-          icon={<AppIcons.delete />}
-          onClick={() => removeRow(r.key)}
-          disabled={rows.length === 1}
-        />
-      ),
-    },
-  ];
-
   return (
     <div>
-      <PageHeader
-        title="บันทึกของเสีย"
-        subtitle="บันทึกสินค้าที่เสียหายหรือถูกทำลาย — สต็อกจะลดลงตามจำนวนที่กรอก"
-      />
+      <div className={`${PAGE_HEADER} mb-4`}>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE}>บันทึกของเสีย</h1>
+          <p className={PAGE_SUBTITLE}>
+            บันทึกสินค้าที่เสียหายหรือถูกทำลาย — สต็อกจะลดลงตามจำนวนที่กรอก
+          </p>
+        </div>
+      </div>
 
-      <Alert
-        type="warning"
-        showIcon
-        message="สต็อกจะลดลงทันที — กรุณาตรวจสอบจำนวนก่อนบันทึก"
-        className="mb-4 max-w-250"
-      />
+      <div className={cn(alertBox('warning'), 'mb-4 max-w-250')}>
+        <AppIcons.warning />
+        <span>สต็อกจะลดลงทันที — กรุณาตรวจสอบจำนวนก่อนบันทึก</span>
+      </div>
 
-      <div style={{ maxWidth: 1000 }}>
+      <div className="max-w-250">
         <EntryMetaBar
           employeeId={employeeId}
           note={note}
@@ -172,37 +95,125 @@ export function StockDamagePage() {
           onNoteChange={setNote}
         />
 
-        <Table<DamageRow>
-          rowKey="key"
-          columns={columns}
-          dataSource={rows}
-          pagination={false}
-          size="middle"
-          scroll={{ x: 'max-content' }}
-        />
+        <div className={TABLE_WRAP}>
+          <table className={TABLE}>
+            <thead>
+              <tr>
+                <th className={cn(TABLE_TH, 'min-w-60')}>สินค้า</th>
+                <th className={cn(TABLE_TH, 'w-30 text-right')}>สต็อกปัจจุบัน</th>
+                <th className={cn(TABLE_TH, 'w-33')}>จำนวนที่เสีย</th>
+                <th className={cn(TABLE_TH, 'w-38')}>ราคาทุน/แพ็ค (฿)</th>
+                <th className={cn(TABLE_TH, 'w-30 text-right')}>มูลค่าที่เสีย</th>
+                <th className={cn(TABLE_TH, 'w-13')}>
+                  <span className="sr-only">ลบแถว</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const overStock = r.currentRemaining != null && r.quantity > r.currentRemaining;
+                return (
+                  <tr key={r.key} className={TABLE_TR}>
+                    <td className={TABLE_TD}>
+                      <ProductDropdownSelect
+                        placeholder="เลือกสินค้า"
+                        allowClear
+                        value={r.productBarcode || undefined}
+                        onChange={(v) =>
+                          updateRow(
+                            r.key,
+                            v ?
+                              { productBarcode: v }
+                            : { productBarcode: '', currentRemaining: undefined, costPricePerUnit: 0 },
+                          )
+                        }
+                        onSelect={(barcode, product) =>
+                          updateRow(r.key, {
+                            productBarcode: barcode,
+                            currentRemaining: product.remaining,
+                            costPricePerUnit: product.costPrice?.pack ?? 0,
+                          })
+                        }
+                      />
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                      {r.currentRemaining != null ?
+                        <span className={TEXT.muted}>{r.currentRemaining}</span>
+                      : '-'}
+                    </td>
+                    <td className={TABLE_TD}>
+                      <input
+                        type="number"
+                        min={1}
+                        max={r.currentRemaining}
+                        aria-label="จำนวนที่เสีย"
+                        aria-invalid={overStock}
+                        value={r.quantity}
+                        onChange={(e) => updateRow(r.key, { quantity: Number(e.target.value) || 1 })}
+                        className={INPUT_NUMBER}
+                      />
+                    </td>
+                    <td className={TABLE_TD}>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        aria-label="ราคาทุนต่อแพ็ค"
+                        value={r.costPricePerUnit || ''}
+                        onChange={(e) =>
+                          updateRow(r.key, { costPricePerUnit: Number(e.target.value) || 0 })
+                        }
+                        className={INPUT_NUMBER}
+                      />
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                      {r.costPricePerUnit ?
+                        <span className="text-destructive">
+                          {formatMoney(r.quantity * r.costPricePerUnit)}
+                        </span>
+                      : '-'}
+                    </td>
+                    <td className={TABLE_TD}>
+                      <button
+                        type="button"
+                        aria-label="ลบแถวนี้"
+                        className={btnIcon('dangerGhost', 'sm')}
+                        onClick={() => removeRow(r.key)}
+                        disabled={rows.length === 1}
+                      >
+                        <AppIcons.delete />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-        <Inline gap={2} className="mt-3">
-          <Button icon={<AppIcons.add />} onClick={() => setRows((p) => [...p, newRow()])}>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" className={btn()} onClick={() => setRows((p) => [...p, newRow()])}>
+            <AppIcons.add />
             เพิ่มรายการ
-          </Button>
-          <Button
-            variant="danger"
-            loading={bulkDamage.isPending}
-            disabled={!canSave}
-            onClick={handleSave}
+          </button>
+          <button
+            type="button"
+            className={btn('danger')}
+            disabled={!canSave || bulkDamage.isPending}
+            onClick={() => void handleSave()}
           >
+            {bulkDamage.isPending && <AppIcons.loading spin />}
             บันทึกของเสีย
-          </Button>
-        </Inline>
+          </button>
+        </div>
 
         {validRows.length > 0 && (
-          <div className="mt-4 rounded-md border border-error-border bg-error-bg px-4 py-2.5">
-            <Text style={{ fontSize: 13 }}>
-              สรุป: {validRows.length} รายการ · {totalQty.toLocaleString()} แพ็ค
-              {totalLoss > 0 && (
-                <Text type="danger"> · มูลค่าที่เสีย ฿{totalLoss.toLocaleString()}</Text>
-              )}
-            </Text>
+          <div className="mt-4 rounded-md border border-error-border bg-error-bg px-4 py-2.5 text-sm">
+            สรุป: {validRows.length} รายการ · {totalQty.toLocaleString()} แพ็ค
+            {totalLoss > 0 && (
+              <span className="text-destructive"> · มูลค่าที่เสีย {formatMoney(totalLoss)}</span>
+            )}
           </div>
         )}
       </div>

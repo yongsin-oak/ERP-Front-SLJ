@@ -1,9 +1,12 @@
+import type { DataColor } from '@/lib/styles';
+
+/** สีผูกชนิดกับจานสีเชิงหมวดหมู่ใน styles.ts — พิมพ์ชื่อสีที่ไม่มีจริงแล้ว build ไม่ผ่าน */
 export const StockEntryTypes = {
   in:     { label: 'รับสินค้าเข้า', color: 'green' },
   return: { label: 'รับคืน',        color: 'blue' },
   adjust: { label: 'ปรับสต็อก',    color: 'orange' },
   damage: { label: 'ของเสีย',       color: 'red' },
-} as const;
+} as const satisfies Record<string, { label: string; color: DataColor }>;
 
 export type StockEntryType = keyof typeof StockEntryTypes;
 

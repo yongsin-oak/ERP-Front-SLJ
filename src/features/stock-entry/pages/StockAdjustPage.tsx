@@ -1,9 +1,24 @@
 import { useState } from 'react';
-import { Table, Button, PageHeader, AppIcons, Inline, InputNumber, Text, Alert } from '@design-system';
-import type { ColumnType } from '@design-system';
+import { ProductDropdownSelect } from '@features/inventory';
+import { AppIcons } from '@/lib/icons';
+import { cn } from '@/lib/utils';
+import {
+  alertBox,
+  btn,
+  btnIcon,
+  INPUT_NUMBER,
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  TABLE,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+} from '@/lib/styles';
 import { EntryMetaBar } from '../components/EntryMetaBar';
 import { useBulkAdjustStock } from '../react-query';
-import { ProductDropdownSelect } from '@features/inventory';
 
 interface AdjustRow {
   key: string;
@@ -23,7 +38,6 @@ export function StockAdjustPage() {
   const [note, setNote] = useState('');
 
   const bulkAdjust = useBulkAdjustStock();
-
 
   function updateRow(key: string, patch: Partial<AdjustRow>) {
     setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -46,106 +60,21 @@ export function StockAdjustPage() {
 
   const canSave = rows.some((r) => r.productBarcode);
 
-  const columns: ColumnType<AdjustRow>[] = [
-    {
-      title: 'สินค้า',
-      dataIndex: 'productBarcode',
-      render: (_: string, r: AdjustRow) => (
-        <ProductDropdownSelect
-          placeholder="เลือกสินค้า"
-          style={{ width: '100%', minWidth: 260 }}
-          allowClear
-          value={r.productBarcode || undefined}
-          onChange={(v) =>
-            updateRow(
-              r.key,
-              v
-                ? { productBarcode: v }
-                : { productBarcode: '', currentRemaining: undefined, actualQuantity: 0 },
-            )
-          }
-          onSelect={(barcode, product) =>
-            updateRow(r.key, {
-              productBarcode: barcode,
-              currentRemaining: product.remaining,
-              actualQuantity: product.remaining,
-            })
-          }
-        />
-      ),
-    },
-    {
-      title: 'สต็อกปัจจุบัน',
-      dataIndex: 'currentRemaining',
-      width: 130,
-      align: 'right' as const,
-      render: (v?: number) => v != null ? <Text type="secondary">{v}</Text> : '-',
-    },
-    {
-      title: 'จำนวนที่นับได้จริง',
-      dataIndex: 'actualQuantity',
-      width: 160,
-      render: (_: number, r: AdjustRow) => (
-        <InputNumber
-          min={0}
-          value={r.actualQuantity}
-          onChange={(v) => updateRow(r.key, { actualQuantity: v ?? 0 })}
-          className={
-            r.currentRemaining != null && r.actualQuantity !== r.currentRemaining
-              ? 'border-warning focus-within:border-warning'
-              : undefined
-          }
-        />
-      ),
-    },
-    {
-      title: 'ผลต่าง',
-      key: 'diff',
-      width: 90,
-      align: 'right' as const,
-      render: (_: unknown, r: AdjustRow) => {
-        if (r.currentRemaining == null) return '-';
-        const diff = r.actualQuantity - r.currentRemaining;
-        if (diff === 0) return <Text type="secondary">0</Text>;
-        return (
-          <Text type={diff > 0 ? 'success' : 'danger'}>
-            {diff > 0 ? `+${diff}` : diff}
-          </Text>
-        );
-      },
-    },
-    {
-      title: '',
-      key: 'action',
-      width: 50,
-      render: (_: unknown, r: AdjustRow) => (
-        <Button
-          variant="danger-ghost"
-          size="small"
-          aria-label="ลบแถวนี้"
-          icon={<AppIcons.delete />}
-          onClick={() => removeRow(r.key)}
-          disabled={rows.length === 1}
-        />
-      ),
-    },
-  ];
-
   return (
     <div>
-      <PageHeader
-        title="ปรับสต็อก (Stock Count)"
-        subtitle="นับสต็อกจริงแล้วตั้งค่าทีเดียวหลายรายการ"
-      />
+      <div className={`${PAGE_HEADER} mb-4`}>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE}>ปรับสต็อก (Stock Count)</h1>
+          <p className={PAGE_SUBTITLE}>นับสต็อกจริงแล้วตั้งค่าทีเดียวหลายรายการ</p>
+        </div>
+      </div>
 
-      <Alert
-        type="warning"
-        showIcon
-        message="การปรับสต็อกจะ set ค่าสต็อกเป็นตัวเลขที่กรอก ไม่ใช่บวกเพิ่ม"
-        className="mb-4 max-w-225"
-      />
+      <div className={cn(alertBox('warning'), 'mb-4 max-w-225')}>
+        <AppIcons.warning />
+        <span>การปรับสต็อกจะ set ค่าสต็อกเป็นตัวเลขที่กรอก ไม่ใช่บวกเพิ่ม</span>
+      </div>
 
-      <div style={{ maxWidth: 900 }}>
+      <div className="max-w-225">
         <EntryMetaBar
           employeeId={employeeId}
           note={note}
@@ -154,28 +83,111 @@ export function StockAdjustPage() {
           onNoteChange={setNote}
         />
 
-        <Table<AdjustRow>
-          rowKey="key"
-          columns={columns}
-          dataSource={rows}
-          pagination={false}
-          size="middle"
-          scroll={{ x: 'max-content' }}
-        />
+        <div className={TABLE_WRAP}>
+          <table className={TABLE}>
+            <thead>
+              <tr>
+                <th className={cn(TABLE_TH, 'min-w-65')}>สินค้า</th>
+                <th className={cn(TABLE_TH, 'w-33 text-right')}>สต็อกปัจจุบัน</th>
+                <th className={cn(TABLE_TH, 'w-40')}>จำนวนที่นับได้จริง</th>
+                <th className={cn(TABLE_TH, 'w-23 text-right')}>ผลต่าง</th>
+                <th className={cn(TABLE_TH, 'w-13')}>
+                  <span className="sr-only">ลบแถว</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const diff = r.currentRemaining == null ? null : r.actualQuantity - r.currentRemaining;
+                const mismatched = r.currentRemaining != null && r.actualQuantity !== r.currentRemaining;
+                return (
+                  <tr key={r.key} className={TABLE_TR}>
+                    <td className={TABLE_TD}>
+                      <ProductDropdownSelect
+                        placeholder="เลือกสินค้า"
+                        allowClear
+                        value={r.productBarcode || undefined}
+                        onChange={(v) =>
+                          updateRow(
+                            r.key,
+                            v ?
+                              { productBarcode: v }
+                            : { productBarcode: '', currentRemaining: undefined, actualQuantity: 0 },
+                          )
+                        }
+                        onSelect={(barcode, product) =>
+                          updateRow(r.key, {
+                            productBarcode: barcode,
+                            currentRemaining: product.remaining,
+                            actualQuantity: product.remaining,
+                          })
+                        }
+                      />
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                      {r.currentRemaining != null ?
+                        <span className={TEXT.muted}>{r.currentRemaining}</span>
+                      : '-'}
+                    </td>
+                    <td className={TABLE_TD}>
+                      <input
+                        type="number"
+                        min={0}
+                        aria-label="จำนวนที่นับได้จริง"
+                        value={r.actualQuantity}
+                        onChange={(e) =>
+                          updateRow(r.key, { actualQuantity: Number(e.target.value) || 0 })
+                        }
+                        className={cn(
+                          INPUT_NUMBER,
+                          // เตือนด้วยขอบเมื่อค่าที่นับได้ไม่ตรงกับระบบ — จุดที่ต้องตรวจซ้ำก่อนบันทึก
+                          mismatched && 'border-warning hover:border-warning focus-visible:border-warning',
+                        )}
+                      />
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                      {diff == null ?
+                        '-'
+                      : diff === 0 ?
+                        <span className={TEXT.muted}>0</span>
+                      : <span className={diff > 0 ? 'text-success-text' : 'text-destructive'}>
+                          {diff > 0 ? `+${diff}` : diff}
+                        </span>
+                      }
+                    </td>
+                    <td className={TABLE_TD}>
+                      <button
+                        type="button"
+                        aria-label="ลบแถวนี้"
+                        className={btnIcon('dangerGhost', 'sm')}
+                        onClick={() => removeRow(r.key)}
+                        disabled={rows.length === 1}
+                      >
+                        <AppIcons.delete />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-        <Inline gap={2} className="mt-3">
-          <Button icon={<AppIcons.add />} onClick={() => setRows((p) => [...p, newRow()])}>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" className={btn()} onClick={() => setRows((p) => [...p, newRow()])}>
+            <AppIcons.add />
             เพิ่มรายการ
-          </Button>
-          <Button
-            variant="primary"
-            loading={bulkAdjust.isPending}
-            disabled={!canSave}
-            onClick={handleSave}
+          </button>
+          <button
+            type="button"
+            className={btn('primary')}
+            disabled={!canSave || bulkAdjust.isPending}
+            onClick={() => void handleSave()}
           >
+            {bulkAdjust.isPending && <AppIcons.loading spin />}
             บันทึกการปรับสต็อก
-          </Button>
-        </Inline>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,16 +1,69 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import dayjs from 'dayjs';
-import { Table, Button, PageHeader, Tag, ActionCell, SummaryCard, AppIcons, Modal, Checkbox, Text, Inline } from '@design-system';
-import type { ColumnType } from '@design-system';
+import { Checkbox, Dialog, DropdownMenu } from 'radix-ui';
+import { AppIcons } from '@/lib/icons';
+import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  CELL_CODE,
+  CHECKBOX,
+  dataPill,
+  DIALOG_CONTENT,
+  DIALOG_FOOTER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  MENU_CONTENT,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_SEPARATOR,
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  STAT_CARD,
+  STAT_LABEL,
+  STAT_SUFFIX,
+  STAT_VALUE,
+  TABLE,
+  TABLE_EMPTY,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+  TH_SORT,
+} from '@/lib/styles';
 import { CategoryFormModal } from '../components/CategoryFormModal';
 import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../react-query';
 import type { Category, CreateCategoryDto } from '../types';
+
+type CatNode = Category & { children?: CatNode[] };
+type SortKey = 'name' | 'updatedAt';
+type SortOrder = 'asc' | 'desc';
+
+/** หนึ่งแถวที่จะถูก render จริง — ระดับความลึกใช้เยื้องชื่อให้เห็นโครงต้นไม้ */
+interface FlatRow {
+  node: CatNode;
+  depth: number;
+}
+
+/** แปลงต้นไม้เป็นรายการแถวตามลำดับที่เห็นบนจอ — ข้ามลูกของหมวดที่ถูกยุบไว้ */
+function flattenVisible(nodes: CatNode[], expanded: Set<string>, depth = 0): FlatRow[] {
+  return nodes.flatMap((node) => {
+    const row: FlatRow = { node, depth };
+    const kids = node.children ?? [];
+    if (kids.length === 0 || !expanded.has(node.id)) return [row];
+    return [row, ...flattenVisible(kids, expanded, depth + 1)];
+  });
+}
 
 export function CategoryPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Category | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<Category | null>(null);
   const [deleteChildren, setDeleteChildren] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<CatNode | null>(null);
+  const [sort, setSort] = useState<{ key: SortKey; order: SortOrder }>({ key: 'name', order: 'asc' });
 
   // limit ต้องไม่เกิน PAGINATION.MAX_LIMIT (=200) ซึ่งตรงกับ MAX_PAGE_LIMIT ของ backend
   // ไม่ส่ง params เลย → useCategories ใช้ค่า default ที่เป็น MAX_LIMIT อยู่แล้ว
@@ -36,7 +89,10 @@ export function CategoryPage() {
     });
     function collect(id: string, out: Set<string>) {
       (parentToChildren.get(id) ?? []).forEach((c) => {
-        if (!out.has(c)) { out.add(c); collect(c, out); }
+        if (!out.has(c)) {
+          out.add(c);
+          collect(c, out);
+        }
       });
     }
     categories.forEach((c) => {
@@ -91,7 +147,6 @@ export function CategoryPage() {
   );
   const confirmDescendantNames = confirmDescendantIds.map((id) => nameById.get(id) ?? id);
 
-  type CatNode = Category & { children?: CatNode[] };
   const nestedCategories = useMemo<CatNode[]>(() => {
     const byId = new Map<string, CatNode>();
     categories.forEach((c) => byId.set(c.id, { ...c, children: undefined }));
@@ -107,14 +162,12 @@ export function CategoryPage() {
     return roots;
   }, [categories]);
 
-  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const seenKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     // หมวดที่เป็น "พ่อ" = id ที่ถูกอ้างเป็น parentId ของหมวดอื่น (childrenId จาก backend ไม่เคยถูก populate)
-    const parentIds = new Set(
-      categories.filter((c) => c.parentId).map((c) => c.parentId as string),
-    );
+    const parentIds = new Set(categories.filter((c) => c.parentId).map((c) => c.parentId as string));
     const allParentIds = categories.filter((c) => parentIds.has(c.id)).map((c) => c.id);
     const seen = seenKeysRef.current;
     if (seen.size === 0) {
@@ -122,110 +175,216 @@ export function CategoryPage() {
     } else {
       const newOnes = allParentIds.filter((k) => !seen.has(k));
       if (newOnes.length > 0) {
-        setExpandedKeys((prev) => Array.from(new Set([...prev.map(String), ...newOnes])));
+        setExpandedKeys((prev) => Array.from(new Set([...prev, ...newOnes])));
       }
     }
     categories.forEach((c) => seen.add(c.id));
   }, [categories]);
 
-  const columns: ColumnType<CatNode>[] = [
-    {
-      title: 'ชื่อหมวดหมู่',
-      dataIndex: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      render: (v: string, r: CatNode) => (
-        <span className="inline-flex items-center gap-1.5">
-          <Text strong>{v}</Text>
-          {(r.children?.length ?? 0) > 0 && (
-            <Tag color="blue" style={{ margin: 0, fontSize: 10 }}>
-              {r.children!.length} หมวดย่อย
-            </Tag>
-          )}
-        </span>
-      ),
-    },
-    {
-      title: 'รหัส',
-      dataIndex: 'id',
-      width: 180,
-      render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code>,
-    },
-    {
-      title: 'รายละเอียด',
-      dataIndex: 'description',
-      ellipsis: true,
-      render: (v?: string | null) => v || '-',
-    },
-    {
-      title: 'อัปเดตล่าสุด',
-      dataIndex: 'updatedAt',
-      width: 160,
-      sorter: (a, b) => (a.updatedAt ?? '').localeCompare(b.updatedAt ?? ''),
-      render: (v?: string) => (v ? dayjs(v).format('DD/MM/YYYY HH:mm') : '-'),
-    },
-    {
-      title: '',
-      key: 'action',
-      width: 56,
-      align: 'center' as const,
-      fixed: 'right',
-      render: (_: unknown, r: CatNode) => {
-        const hasChildren = (r.children?.length ?? 0) > 0;
-        return (
-          <ActionCell
-            onEdit={() => { setSelected(r); setModalOpen(true); }}
-            // มีหมวดย่อย → handleDeleteWithChildren ถามยืนยันเองอยู่แล้ว (ต้องบอกจำนวนลูกที่จะโดนลบด้วย)
-            // จึงส่งเป็น action ตรงๆ ไม่ผ่าน confirm ของ ActionCell เพื่อไม่ให้ถามซ้ำสองชั้น
-            actions={hasChildren
-              ? [{ key: 'delete-tree', label: 'ลบ', danger: true,
-                   onSelect: () => handleDeleteWithChildren(r) }]
-              : undefined}
-            onDelete={hasChildren ? undefined : () => deleteCat.mutateAsync({ id: r.id })}
-            isDeleting={deleteCat.isPending}
-            deleteTitle={`ลบหมวดหมู่ "${r.name}"?`}
-            deleteDescription="ลบหมวดหมู่นี้ออกจากระบบ"
-          />
-        );
-      },
-    },
-  ];
+  const expandedSet = useMemo(() => new Set(expandedKeys), [expandedKeys]);
+
+  // เรียงพี่น้องในแต่ละชั้น ไม่ใช่เรียงทั้งตารางแบน — ไม่งั้นโครงต้นไม้จะพัง
+  const sortedTree = useMemo(() => {
+    const dir = sort.order === 'asc' ? 1 : -1;
+    function sortNodes(nodes: CatNode[]): CatNode[] {
+      return [...nodes]
+        .sort((a, b) => String(a[sort.key] ?? '').localeCompare(String(b[sort.key] ?? '')) * dir)
+        .map((n) => (n.children ? { ...n, children: sortNodes(n.children) } : n));
+    }
+    return sortNodes(nestedCategories);
+  }, [nestedCategories, sort]);
+
+  const rows = useMemo(
+    () => flattenVisible(sortedTree, expandedSet),
+    [sortedTree, expandedSet],
+  );
+
+  function toggleSort(key: SortKey) {
+    setSort((s) => (s.key === key ? { key, order: s.order === 'asc' ? 'desc' : 'asc' } : { key, order: 'asc' }));
+  }
+
+  function toggleExpand(id: string) {
+    setExpandedKeys((keys) => (keys.includes(id) ? keys.filter((k) => k !== id) : [...keys, id]));
+  }
+
+  function sortIcon(key: SortKey) {
+    if (sort.key !== key) return <AppIcons.sort className="size-3 text-foreground-subtle" />;
+    return sort.order === 'asc' ?
+        <AppIcons.sortAsc className="size-3 text-foreground-light" />
+      : <AppIcons.sortDesc className="size-3 text-foreground-light" />;
+  }
 
   return (
     <div>
-      <PageHeader
-        title="จัดการหมวดหมู่"
-        subtitle={`ทั้งหมด ${total} หมวดหมู่`}
-        actions={
-          <>
-            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>
-              รีเฟรช
-            </Button>
-            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
-              เพิ่มหมวดหมู่
-            </Button>
-          </>
-        }
-      />
+      <div className={`${PAGE_HEADER} mb-4`}>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE}>จัดการหมวดหมู่</h1>
+          <p className={PAGE_SUBTITLE}>ทั้งหมด {total} หมวดหมู่</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className={btn()} onClick={() => refetch()} disabled={isFetching}>
+            {isFetching ? <AppIcons.loading spin /> : <AppIcons.refresh />}
+            รีเฟรช
+          </button>
+          <button
+            type="button"
+            className={btn('primary')}
+            onClick={() => {
+              setSelected(null);
+              setModalOpen(true);
+            }}
+          >
+            <AppIcons.add />
+            เพิ่มหมวดหมู่
+          </button>
+        </div>
+      </div>
 
-      <Inline gap={3} wrap className="mb-4">
-        <SummaryCard title="หมวดหมู่ทั้งหมด" value={total} suffix="หมวด" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="หมวดหมู่หลัก" value={rootCount} suffix="หมวด" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="หมวดย่อย" value={subCount} suffix="หมวด" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
-      </Inline>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>หมวดหมู่ทั้งหมด</div>
+          <div className={cn(STAT_VALUE, 'text-primary')}>
+            <span>{total}</span>
+            <span className={STAT_SUFFIX}>หมวด</span>
+          </div>
+        </div>
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>หมวดหมู่หลัก</div>
+          <div className={cn(STAT_VALUE, 'text-success-text')}>
+            <span>{rootCount}</span>
+            <span className={STAT_SUFFIX}>หมวด</span>
+          </div>
+        </div>
+        <div className={STAT_CARD}>
+          <div className={STAT_LABEL}>หมวดย่อย</div>
+          <div className={cn(STAT_VALUE, 'text-foreground-lighter')}>
+            <span>{subCount}</span>
+            <span className={STAT_SUFFIX}>หมวด</span>
+          </div>
+        </div>
+      </div>
 
-      <Table<CatNode>
-        rowKey="id"
-        columns={columns}
-        dataSource={nestedCategories}
-        loading={isLoading}
-        expandable={{
-          expandedRowKeys: expandedKeys,
-          onExpandedRowsChange: (keys) => setExpandedKeys([...keys]),
-          rowExpandable: (r) => (r.children?.length ?? 0) > 0,
-        }}
-        pagination={false}
-        scroll={{ x: 'max-content' }}
-      />
+      <div className={TABLE_WRAP}>
+        <table className={TABLE}>
+          <thead>
+            <tr>
+              <th className={TABLE_TH}>
+                <button type="button" className={TH_SORT} onClick={() => toggleSort('name')}>
+                  ชื่อหมวดหมู่
+                  {sortIcon('name')}
+                </button>
+              </th>
+              <th className={cn(TABLE_TH, 'w-48')}>รหัส</th>
+              <th className={TABLE_TH}>รายละเอียด</th>
+              <th className={cn(TABLE_TH, 'w-40')}>
+                <button type="button" className={TH_SORT} onClick={() => toggleSort('updatedAt')}>
+                  อัปเดตล่าสุด
+                  {sortIcon('updatedAt')}
+                </button>
+              </th>
+              <th className={cn(TABLE_TH, 'w-14 text-center')}>
+                <span className="sr-only">ตัวเลือก</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ?
+              <tr>
+                <td colSpan={5} className={TABLE_EMPTY}>
+                  <AppIcons.loading spin className="mx-auto size-5 text-primary" />
+                </td>
+              </tr>
+            : rows.length === 0 ?
+              <tr>
+                <td colSpan={5} className={TABLE_EMPTY}>
+                  ยังไม่มีหมวดหมู่ — กด “เพิ่มหมวดหมู่” เพื่อเริ่ม
+                </td>
+              </tr>
+            : rows.map(({ node: r, depth }) => {
+                const childCount = r.children?.length ?? 0;
+                const hasChildren = childCount > 0;
+                const isExpanded = expandedSet.has(r.id);
+                return (
+                  <tr key={r.id} className={TABLE_TR}>
+                    <td className={TABLE_TD}>
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        style={{ paddingInlineStart: depth * 20 }}
+                      >
+                        {hasChildren ?
+                          <button
+                            type="button"
+                            aria-expanded={isExpanded}
+                            aria-label={isExpanded ? `ยุบ ${r.name}` : `ขยาย ${r.name}`}
+                            onClick={() => toggleExpand(r.id)}
+                            className="rounded-sm p-0.5 text-foreground-muted transition-colors hover:bg-surface-200 hover:text-foreground"
+                          >
+                            <AppIcons.chevronDown
+                              className={cn('size-3.5 transition-transform', !isExpanded && '-rotate-90')}
+                            />
+                          </button>
+                        : <span aria-hidden className="inline-block size-4.5" />}
+                        <span className="font-medium">{r.name}</span>
+                        {hasChildren && (
+                          <span className={cn(dataPill('blue'), 'text-[10px]')}>
+                            {childCount} หมวดย่อย
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td className={TABLE_TD}>
+                      <code className={CELL_CODE}>{r.id}</code>
+                    </td>
+                    <td className={cn(TABLE_TD, 'max-w-xs truncate')}>{r.description || '-'}</td>
+                    <td className={cn(TABLE_TD, 'font-mono text-xs tabular-nums')}>
+                      {formatDate(r.updatedAt)}
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-center')}>
+                      <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                          <button
+                            type="button"
+                            aria-label="ตัวเลือกของแถวนี้"
+                            className={btnIcon('ghost', 'sm')}
+                          >
+                            <AppIcons.more />
+                          </button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Portal>
+                          <DropdownMenu.Content align="end" sideOffset={4} className={MENU_CONTENT}>
+                            <DropdownMenu.Item
+                              className={MENU_ITEM}
+                              onSelect={() => {
+                                setSelected(r);
+                                setModalOpen(true);
+                              }}
+                            >
+                              แก้ไข
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Separator className={MENU_SEPARATOR} />
+                            <DropdownMenu.Item
+                              className={MENU_ITEM_DANGER}
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                // มีหมวดย่อย → ถามยืนยันแบบที่บอกรายชื่อลูกทั้งหมด
+                                // ไม่มีลูก → ถามยืนยันแบบสั้น
+                                if (hasChildren) handleDeleteWithChildren(r);
+                                else setPendingDelete(r);
+                              }}
+                            >
+                              ลบ
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Content>
+                        </DropdownMenu.Portal>
+                      </DropdownMenu.Root>
+                    </td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
 
       <CategoryFormModal
         open={modalOpen}
@@ -236,33 +395,92 @@ export function CategoryPage() {
         loading={createCat.isPending || updateCat.isPending}
       />
 
-      <Modal
-        open={!!confirmTarget}
-        title={confirmTarget ? `ลบหมวดหมู่ "${confirmTarget.name}"?` : ''}
-        onCancel={() => setConfirmTarget(null)}
-        onOk={handleConfirmDelete}
-        okText="ลบ"
-        cancelText="ยกเลิก"
-        confirmLoading={deleteCat.isPending}
-        okButtonProps={{ danger: true }}
-      >
-        <div>
-          <p style={{ marginBottom: 8 }}>
-            หมวดหมู่นี้มีหมวดหมู่ย่อยทั้งหมด {confirmDescendantNames.length} รายการ
-            หากเลือกลบด้วย รายการต่อไปนี้จะถูกลบทั้งหมด:
-          </p>
-          <ul style={{ margin: '0 0 8px', paddingInlineStart: 18, maxHeight: 160, overflow: 'auto' }}>
-            {confirmDescendantNames.map((name, i) => (
-              <li key={confirmDescendantIds[i]}>
-                <Text type="secondary">{name}</Text>
-              </li>
-            ))}
-          </ul>
-          <Checkbox checked={deleteChildren} onChange={(e) => setDeleteChildren(e.target.checked)}>
-            ลบหมวดหมู่ย่อยทั้งหมดด้วย (สินค้าในหมวดจะไม่ถูกลบ)
-          </Checkbox>
-        </div>
-      </Modal>
+      {/* ลบหมวดที่ไม่มีลูก */}
+      <Dialog.Root open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className={DIALOG_OVERLAY} />
+          <Dialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')} aria-describedby={undefined}>
+            <Dialog.Title className={DIALOG_TITLE}>
+              ลบหมวดหมู่ “{pendingDelete?.name}”?
+            </Dialog.Title>
+            <p className={TEXT.muted}>ลบหมวดหมู่นี้ออกจากระบบ</p>
+            <div className={DIALOG_FOOTER}>
+              <Dialog.Close asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </Dialog.Close>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={deleteCat.isPending}
+                onClick={async () => {
+                  if (pendingDelete) await deleteCat.mutateAsync({ id: pendingDelete.id });
+                  setPendingDelete(null);
+                }}
+              >
+                {deleteCat.isPending && <AppIcons.loading spin />}
+                ลบ
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      {/* ลบหมวดที่มีลูก — ต้องเห็นรายชื่อลูกก่อนตัดสินใจ */}
+      <Dialog.Root open={!!confirmTarget} onOpenChange={(o) => !o && setConfirmTarget(null)}>
+        <Dialog.Portal>
+          <Dialog.Overlay className={DIALOG_OVERLAY} />
+          <Dialog.Content className={DIALOG_CONTENT} aria-describedby={undefined}>
+            <Dialog.Title className={DIALOG_TITLE}>
+              ลบหมวดหมู่ “{confirmTarget?.name}”?
+            </Dialog.Title>
+
+            <div>
+              <p className="mb-2 text-sm text-foreground-light">
+                หมวดหมู่นี้มีหมวดหมู่ย่อยทั้งหมด {confirmDescendantNames.length} รายการ
+                หากเลือกลบด้วย รายการต่อไปนี้จะถูกลบทั้งหมด:
+              </p>
+              <ul className="mb-2 max-h-40 list-disc overflow-auto ps-5">
+                {confirmDescendantNames.map((name, i) => (
+                  <li key={confirmDescendantIds[i]} className={TEXT.muted}>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+                <Checkbox.Root
+                  checked={deleteChildren}
+                  onCheckedChange={(c) => setDeleteChildren(c === true)}
+                  className={CHECKBOX}
+                >
+                  <Checkbox.Indicator className="flex items-center justify-center">
+                    <AppIcons.check className="size-3" />
+                  </Checkbox.Indicator>
+                </Checkbox.Root>
+                ลบหมวดหมู่ย่อยทั้งหมดด้วย (สินค้าในหมวดจะไม่ถูกลบ)
+              </label>
+            </div>
+
+            <div className={DIALOG_FOOTER}>
+              <Dialog.Close asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </Dialog.Close>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={deleteCat.isPending}
+                onClick={() => void handleConfirmDelete()}
+              >
+                {deleteCat.isPending && <AppIcons.loading spin />}
+                ลบ
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
