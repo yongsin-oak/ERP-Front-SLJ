@@ -77,7 +77,8 @@ function ShopSelect({
   invalid?: boolean;
 }) {
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const combo = useCombobox({ options, value, onChange });
+  const listRef = useRef<HTMLDivElement>(null);
+  const combo = useCombobox({ listRef, options, value, onChange });
 
   return (
     <Popover.Root open={combo.open} onOpenChange={combo.setOpen}>
@@ -110,7 +111,7 @@ function ShopSelect({
               className={INPUT_SM}
             />
           </div>
-          <div ref={combo.setListEl} role="listbox" className="max-h-60 overflow-y-auto p-1">
+          <div ref={listRef} role="listbox" className="max-h-60 overflow-y-auto p-1">
             {combo.filtered.length === 0 ?
               <div className="px-2 py-6 text-center text-sm text-foreground-muted">ไม่พบร้านค้า</div>
             : combo.filtered.map((opt, i) => (

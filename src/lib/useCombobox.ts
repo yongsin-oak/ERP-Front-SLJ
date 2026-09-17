@@ -12,6 +12,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { RefObject } from 'react';
 
 /** เหลือระยะเท่าไรถึงก้นรายการจึงเริ่มโหลดหน้าถัดไป — ต้องโหลดก่อนผู้ใช้ชนก้น */
 const SCROLL_THRESHOLD_PX = 60;
@@ -39,6 +40,14 @@ export interface UseComboboxOptions {
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /**
+   * ref ของกล่องรายการ — ผู้เรียกเป็นคนถือแล้วส่งเข้ามา ไม่ใช่ hook สร้างให้แล้วคืนออกไป
+   *
+   * เหตุผล: React Compiler อนุญาตให้แตะ ref เฉพาะใน effect กับ event handler
+   * ถ้า hook คืนอะไรก็ตามที่แตะ ref ออกไป มันจะตีตราค่าที่คืนมาทั้งก้อน แล้วทุก `combo.x`
+   * ที่หน้าเพจอ่านตอน render จะกลายเป็น error — ที่นี่ hook อ่าน .current แค่ใน effect เท่านั้น
+   */
+  listRef?: RefObject<HTMLDivElement | null>;
 }
 
 export function useCombobox({
@@ -52,21 +61,11 @@ export function useCombobox({
   hasNextPage = false,
   isFetchingNextPage = false,
   onOpenChange,
+  listRef,
 }: UseComboboxOptions) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
-
-  /**
-   * เก็บ element ของรายการไว้เอง แล้วคืนออกไปเป็น "callback ref" ไม่ใช่ ref object
-   *
-   * ถ้าคืน ref object ตรงๆ React Compiler จะถือว่าทั้งก้อนที่ hook คืนมาเป็นค่าที่มี ref
-   * แล้วรายงานว่า "อ่าน ref ตอน render" กับทุก property ที่หน้าเพจใช้ (combo.open, combo.filtered …)
-   */
-  const listElRef = useRef<HTMLDivElement | null>(null);
-  const setListEl = useCallback((el: HTMLDivElement | null) => {
-    listElRef.current = el;
-  }, []);
 
   // latest-ref: ผู้เรียกมักส่ง onSearch เป็น lambda ใหม่ทุก render — ถ้าใส่ใน deps
   // การหน่วงจะถูกตั้งใหม่ตลอดจนไม่ได้หน่วงจริง
@@ -76,14 +75,24 @@ export function useCombobox({
   });
 
   /**
-   * หน่วงด้วย setTimeout เอง ไม่ใช้ debounce() ของ lodash
+   * หน่วงคำค้นด้วย effect ไม่ใช่ debounce ที่สร้างตอน render
    *
-   * debounce() ต้องถูก "สร้างตอน render" ซึ่งทำให้ React Compiler มองว่าเราส่งฟังก์ชัน
-   * ที่อ่าน ref เข้าไปในจังหวะ render แล้วมันจะตีตราค่าที่ hook คืนออกไปทั้งก้อนว่าแตะ ref ไม่ได้
-   * ตั้ง timer ใน handler แทน — อ่าน ref เฉพาะตอนผู้ใช้พิมพ์ ซึ่งเป็นจังหวะที่อ่านได้
+   * ทำไมต้องเป็น effect: React Compiler อนุญาตให้อ่าน ref ได้เฉพาะใน effect กับ event handler
+   * ถ้าตั้ง timer ไว้ใน callback ที่ hook คืนออกไป มันจะตีตราว่าค่าทั้งก้อนที่คืนมาแตะ ref ไม่ได้
+   * แล้วทุก `combo.x` ที่หน้าเพจอ่านตอน render จะกลายเป็น error ไปหมด
+   *
+   * ผลพลอยได้: การล้างคำค้นตอนปิด (setSearch('')) ก็ยิง onSearch('') ให้เองผ่านทางนี้
    */
-  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  const firstRunRef = useRef(true);
+  useEffect(() => {
+    // ข้ามรอบแรก — ไม่งั้นทุกช่องจะยิง onSearch('') ตั้งแต่ mount ทั้งที่ผู้ใช้ยังไม่พิมพ์
+    if (firstRunRef.current) {
+      firstRunRef.current = false;
+      return;
+    }
+    const t = setTimeout(() => onSearchRef.current?.(search), debounceMs);
+    return () => clearTimeout(t);
+  }, [search, debounceMs]);
 
   const filtered = useMemo(() => {
     if (!localFilter || !search.trim()) return options;
@@ -100,13 +109,9 @@ export function useCombobox({
    */
   const changeOpen = useCallback(
     (o: boolean) => {
-      if (!o) {
-        // ล้างคำค้นตอนปิด และบอกผู้เรียกด้วย — ไม่งั้นเปิดใหม่จะเห็นช่องว่าง
-        // แต่รายการยังกรองด้วยคำเดิมค้างอยู่
-        setSearch('');
-        clearTimeout(timerRef.current);
-        onSearchRef.current?.('');
-      }
+      // ล้างคำค้นตอนปิด — ไม่งั้นเปิดใหม่จะเห็นช่องว่างแต่รายการยังกรองด้วยคำเดิมค้างอยู่
+      // (effect ด้านบนจะยิง onSearch('') ให้เองเมื่อ search เปลี่ยนเป็นค่าว่าง)
+      if (!o) setSearch('');
       setActiveIndex(0);
       setOpen(o);
       onOpenChange?.(o);
@@ -124,30 +129,22 @@ export function useCombobox({
 
   const clear = useCallback(() => onChange?.(undefined), [onChange]);
 
-  const onSearchChange = useCallback(
-    (v: string) => {
-      setSearch(v);
-      setActiveIndex(0);
-      // ตั้ง timer ใหม่ทุกครั้งที่พิมพ์ — ยิงจริงเมื่อหยุดพิมพ์ครบ debounceMs
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => onSearchRef.current?.(v), debounceMs);
-    },
-    [debounceMs],
-  );
+  // แค่เก็บคำค้นลง state — การหน่วงแล้วยิง onSearch อยู่ใน effect ด้านบน
+  const onSearchChange = useCallback((v: string) => {
+    setSearch(v);
+    setActiveIndex(0);
+  }, []);
 
-  /** เลื่อนรายการให้ตัวที่ไฮไลต์อยู่ในสายตา — คำนวณเองแทน scrollIntoView เพื่อไม่เลื่อนทั้งหน้า */
+  /**
+   * เลื่อนรายการให้ตัวที่ไฮไลต์อยู่ในสายตา
+   * `block: 'nearest'` เลื่อนเฉพาะกล่องที่เลื่อนได้ใกล้สุด และเลื่อนน้อยที่สุดเท่าที่พอเห็น
+   * — ไม่กระชากทั้งหน้าเหมือน scrollIntoView แบบดีฟอลต์
+   */
   useEffect(() => {
     if (!open) return;
-    const list = listElRef.current;
-    const el = list?.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
-    if (!list || !el) return;
-    const top = el.offsetTop;
-    const bottom = top + el.offsetHeight;
-    if (top < list.scrollTop) list.scrollTop = top;
-    else if (bottom > list.scrollTop + list.clientHeight) {
-      list.scrollTop = bottom - list.clientHeight;
-    }
-  }, [activeIndex, open]);
+    const el = listRef?.current?.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
+    el?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, open, listRef]);
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -190,8 +187,6 @@ export function useCombobox({
     selected,
     activeIndex,
     setActiveIndex,
-    /** ใส่ที่ `ref` ของกล่องรายการ — เป็นฟังก์ชัน ไม่ใช่ ref object (ดูเหตุผลด้านบน) */
-    setListEl,
     onKeyDown,
     onListScroll,
     pick,

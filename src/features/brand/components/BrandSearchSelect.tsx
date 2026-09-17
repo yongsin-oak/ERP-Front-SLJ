@@ -36,6 +36,7 @@ export function BrandSearchSelect({
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   /**
    * ยิง API เมื่อ "เปิด dropdown" หรือ "มีค่าที่เลือกไว้แล้ว" เท่านั้น
@@ -65,6 +66,7 @@ export function BrandSearchSelect({
   );
 
   const combo = useCombobox({
+    listRef,
     options,
     value,
     onChange,
@@ -122,7 +124,7 @@ export function BrandSearchSelect({
             </div>
 
             <div
-              ref={combo.setListEl}
+              ref={listRef}
               onScroll={combo.onListScroll}
               role="listbox"
               className="max-h-60 overflow-y-auto p-1"

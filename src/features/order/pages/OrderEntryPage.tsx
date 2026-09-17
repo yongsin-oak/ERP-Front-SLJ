@@ -64,6 +64,7 @@ function ShopGroupedSelect({
   id?: string;
 }) {
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const shopById = useMemo(() => new Map(shops.map((s) => [s.id, s])), [shops]);
 
@@ -81,7 +82,7 @@ function ShopGroupedSelect({
     );
   }, [shops]);
 
-  const combo = useCombobox({ options, value, onChange });
+  const combo = useCombobox({ listRef, options, value, onChange });
   const selectedShop = value ? shopById.get(value) : undefined;
 
   return (
@@ -127,7 +128,7 @@ function ShopGroupedSelect({
               className={INPUT_SM}
             />
           </div>
-          <div ref={combo.setListEl} role="listbox" className="max-h-70 overflow-y-auto p-1">
+          <div ref={listRef} role="listbox" className="max-h-70 overflow-y-auto p-1">
             {combo.filtered.length === 0 ?
               <div className="px-2 py-6 text-center text-sm text-foreground-muted">ไม่พบร้านค้า</div>
             : combo.filtered.map((opt, i) => {

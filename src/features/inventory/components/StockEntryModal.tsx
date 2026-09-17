@@ -44,7 +44,9 @@ interface Props {
 
 export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
-  const [barcodeInput, setBarcodeInput] = useState('');
+  // เริ่มจาก barcode ที่ผู้เรียกส่งมา — ผู้เรียกใส่ `key` ให้ตาม barcode
+  // โมดัลจึงถูกสร้างใหม่เมื่อเปลี่ยนสินค้า ไม่ต้องคอย sync prop ลง state ใน effect
+  const [barcodeInput, setBarcodeInput] = useState(initialBarcode ?? '');
   const [lookingUp, setLookingUp] = useState(false);
   const barcodeRef = useRef<HTMLInputElement>(null);
 
@@ -72,12 +74,9 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
     }
   }
 
+  // ค้นสินค้าให้เลยเมื่อเปิดมาพร้อม barcode — ผู้ใช้กด "รับสินค้าเข้า" จากแถวไหนก็ควรเห็นสินค้านั้นทันที
   useEffect(() => {
-    if (open && initialBarcode) {
-      setBarcodeInput(initialBarcode);
-      void lookupBarcode(initialBarcode);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open && initialBarcode) void lookupBarcode(initialBarcode);
   }, [open, initialBarcode]);
 
   async function handleBarcodeSubmit() {

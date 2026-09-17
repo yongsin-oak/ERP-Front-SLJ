@@ -46,6 +46,7 @@ export function ProductDropdownSelect({
   const isScanModeRef = useRef(false);
   const scanRef = useRef({ lastTime: 0, lastValue: '' });
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   /**
    * ยิง API เมื่อเปิด / มีค่าที่เลือกไว้ / กำลังค้นหาอยู่ — ไม่ยิงตอน mount
@@ -99,6 +100,7 @@ export function ProductDropdownSelect({
   );
 
   const combo = useCombobox({
+    listRef,
     options,
     value,
     onChange: handleChange,
@@ -206,7 +208,7 @@ export function ProductDropdownSelect({
             </div>
 
             <div
-              ref={combo.setListEl}
+              ref={listRef}
               onScroll={combo.onListScroll}
               role="listbox"
               className="max-h-60 overflow-y-auto p-1"

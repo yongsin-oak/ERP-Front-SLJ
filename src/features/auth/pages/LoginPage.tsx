@@ -61,6 +61,7 @@ export function LoginPage() {
   const [terminalCode, setTerminalCode] = useState<string | undefined>();
   const [terminalCodeError, setTerminalCodeError] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const staffForm = useForm<{ username: string; password: string }>({
     defaultValues: { username: '', password: '' },
@@ -91,6 +92,7 @@ export function LoginPage() {
   }, [terminals]);
 
   const combo = useCombobox({
+    listRef,
     options: terminalOptions,
     value: terminalCode,
     onChange: (v) => {
@@ -234,7 +236,7 @@ export function LoginPage() {
                           />
                         </div>
                         <div
-                          ref={combo.setListEl}
+                          ref={listRef}
                           role="listbox"
                           className="max-h-60 overflow-y-auto p-1"
                         >

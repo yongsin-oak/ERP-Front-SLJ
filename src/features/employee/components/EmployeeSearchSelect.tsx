@@ -36,6 +36,7 @@ export function EmployeeSearchSelect({
   const [search, setSearch] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   // ยิงเมื่อเปิด หรือมีค่าอยู่แล้ว (ต้องแปลง id เป็นชื่อ) — ดูเหตุผลเต็มใน BrandSearchSelect
   const enabled = isOpen || (value != null && value !== '');
@@ -64,6 +65,7 @@ export function EmployeeSearchSelect({
   );
 
   const combo = useCombobox({
+    listRef,
     options,
     value,
     onChange,
@@ -121,7 +123,7 @@ export function EmployeeSearchSelect({
             </div>
 
             <div
-              ref={combo.setListEl}
+              ref={listRef}
               onScroll={combo.onListScroll}
               role="listbox"
               className="max-h-60 overflow-y-auto p-1"

@@ -568,6 +568,9 @@ export function InventoryPage() {
         />
 
         <StockEntryModal
+          // key ตาม barcode — เปลี่ยนสินค้าแล้วโมดัลถูกสร้างใหม่พร้อมค่าเริ่มต้นที่ถูกต้อง
+          // แทนการ sync prop ลง state ใน effect
+          key={stockEntryBarcode ?? 'blank'}
           open={stockEntryOpen}
           onClose={() => {
             setStockEntryOpen(false);
