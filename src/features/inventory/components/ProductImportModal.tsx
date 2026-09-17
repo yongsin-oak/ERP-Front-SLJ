@@ -1,5 +1,5 @@
-import { SheetImportModal } from '@design-system';
-import type { DbFieldDef } from '@design-system';
+import { SheetImportModal } from '@features/sheet-import';
+import type { DbFieldDef } from '@features/sheet-import';
 import { useBulkCreateProducts } from '../react-query';
 import type { CreateProductDto } from '../types';
 
