@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 /**
  * App-wide notification API (Sonner-backed).
  * API คงเดิมจากเวอร์ชัน antd — ผู้เรียกไม่ต้องแก้
- * mount `<Toaster/>` (จาก @/components/ui/sonner) ที่ root หนึ่งครั้ง
+ * mount `<Toaster/>` (จาก sonner โดยตรง — ตั้งค่าไว้ใน app/App.tsx) ที่ root หนึ่งครั้ง
  */
 
 // duration เป็น ms · error = ค้างไว้จนผู้ใช้ปิดเอง (เหมือน antd duration:0)

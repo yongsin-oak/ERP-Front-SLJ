@@ -6,7 +6,7 @@
  *       directly in a component, and never key by visual shape.
  *
  * Usage:
- *   import { AppIcons } from '@design-system';
+ *   import { AppIcons } from '@/lib/icons';
  *   <AppIcons.add />            // inherits font-size (1em) like the old antd icons
  *   <AppIcons.delete size={16} />
  *   <AppIcons.loading spin />
