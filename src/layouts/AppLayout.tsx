@@ -1,28 +1,37 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Dialog, DropdownMenu, Tooltip } from 'radix-ui';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
 import { ActorModal } from '@features/auth';
-import { AppIcons, Button, Modal, Tag, Tooltip } from '@design-system';
 import { inventoryService } from '@features/inventory/react-query/services';
 import { productKeys } from '@features/inventory/react-query/queryKeys';
 import { STALE_TIME, notify, useLocalStorage } from '@shared';
 import { canAccess } from '@config/access';
 import { APP_CONFIG } from '@config/app.config';
+import { AppIcons } from '@/lib/icons';
 import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  dataPill,
+  DIALOG_CONTENT,
+  DIALOG_FOOTER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  MENU_CONTENT,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_SEPARATOR,
+  TOOLTIP_CONTENT,
+  type DataColor,
+} from '@/lib/styles';
 
 const SIDEBAR_WIDTH = 230;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
 
-const ROLE_COLOR: Record<Role, string> = {
+const ROLE_COLOR: Record<Role, DataColor> = {
   SuperAdmin: 'red', Admin: 'orange', Operator: 'blue', Warehouse: 'cyan',
   Accountant: 'green', HR: 'purple', Marketing: 'magenta', Sales: 'gold',
 };
@@ -149,20 +158,28 @@ function SidebarMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
     return (
       <div className="flex flex-col items-center gap-1 px-2">
         {leaves.map((l) => (
-          <Tooltip key={l.key} title={l.label} placement="right">
-            <button
-              type="button"
-              onClick={() => go(l.key)}
-              className={cn(
-                'flex size-10 items-center justify-center rounded-md transition-colors [&_svg]:size-5',
-                selectedKey === l.key
-                  ? 'bg-primary-subtle text-primary'
-                  : 'text-foreground-light hover:bg-surface-200 hover:text-foreground',
-              )}
-            >
-              {l.icon}
-            </button>
-          </Tooltip>
+          <Tooltip.Root key={l.key}>
+            <Tooltip.Trigger asChild>
+              <button
+                type="button"
+                onClick={() => go(l.key)}
+                aria-label={l.label}
+                className={cn(
+                  'flex size-10 items-center justify-center rounded-md transition-colors [&_svg]:size-5',
+                  selectedKey === l.key
+                    ? 'bg-primary-subtle text-primary'
+                    : 'text-foreground-light hover:bg-surface-200 hover:text-foreground',
+                )}
+              >
+                {l.icon}
+              </button>
+            </Tooltip.Trigger>
+            <Tooltip.Portal>
+              <Tooltip.Content side="right" sideOffset={6} className={TOOLTIP_CONTENT}>
+                {l.label}
+              </Tooltip.Content>
+            </Tooltip.Portal>
+          </Tooltip.Root>
         ))}
       </div>
     );
@@ -473,8 +490,8 @@ function UserMenu({ user, onLogout }: { user: MenuUser | null; onLogout: () => v
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
           <button
             type="button"
             aria-label={`บัญชีผู้ใช้ ${displayName}`}
@@ -488,57 +505,69 @@ function UserMenu({ user, onLogout }: { user: MenuUser | null; onLogout: () => v
             </span>
             <AppIcons.chevronDown className="hidden size-3.5 text-foreground-muted xl:block" />
           </button>
-        </DropdownMenuTrigger>
+        </DropdownMenu.Trigger>
 
-        <DropdownMenuContent
-          className="w-56"
-          onCloseAutoFocus={(e) => {
-            if (confirmOpen) e.preventDefault();
-          }}
-        >
-          <div className="flex flex-col gap-1 px-2 py-1.5">
-            <span className="truncate text-sm font-medium text-foreground">{displayName}</span>
-            <Tag color={ROLE_COLOR[user.role]} className="self-start">
-              {user.isTerminal ? `Terminal · ${user.role}` : user.role}
-            </Tag>
-          </div>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onSelect={() => navigate('/profile')}>
-            <AppIcons.user />
-            โปรไฟล์
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            variant="destructive"
-            onSelect={(e) => {
-              // กัน Radix ปิดเมนูเอง แล้วสั่งเปิดโมดัลในจังหวะเดียวกัน (ชนกับ focus trap)
-              e.preventDefault();
-              setConfirmOpen(true);
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="end"
+            sideOffset={6}
+            className={cn(MENU_CONTENT, 'w-56')}
+            onCloseAutoFocus={(e) => {
+              if (confirmOpen) e.preventDefault();
             }}
           >
-            <AppIcons.logout />
-            ออกจากระบบ
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <div className="flex flex-col gap-1 px-2 py-1.5">
+              <span className="truncate text-sm font-medium text-foreground">{displayName}</span>
+              <span className={cn(dataPill(ROLE_COLOR[user.role]), 'self-start')}>
+                {user.isTerminal ? `Terminal · ${user.role}` : user.role}
+              </span>
+            </div>
 
-      <Modal
-        open={confirmOpen}
-        onCancel={() => setConfirmOpen(false)}
-        onOk={onLogout}
-        title="ออกจากระบบ?"
-        okText="ออกจากระบบ"
-        okButtonProps={{ danger: true }}
-        width={400}
-      >
-        <p className="m-0 text-sm text-foreground-light">
-          ข้อมูลที่ยังไม่ได้บันทึกในหน้าที่เปิดค้างไว้จะหายไป
-        </p>
-      </Modal>
+            <DropdownMenu.Separator className={MENU_SEPARATOR} />
+
+            <DropdownMenu.Item className={MENU_ITEM} onSelect={() => navigate('/profile')}>
+              <AppIcons.user />
+              โปรไฟล์
+            </DropdownMenu.Item>
+
+            <DropdownMenu.Separator className={MENU_SEPARATOR} />
+
+            <DropdownMenu.Item
+              className={MENU_ITEM_DANGER}
+              onSelect={(e) => {
+                // กัน Radix ปิดเมนูเอง แล้วสั่งเปิดโมดัลในจังหวะเดียวกัน (ชนกับ focus trap)
+                e.preventDefault();
+                setConfirmOpen(true);
+              }}
+            >
+              <AppIcons.logout />
+              ออกจากระบบ
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+
+      <Dialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className={DIALOG_OVERLAY} />
+          <Dialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <Dialog.Title className={DIALOG_TITLE}>ออกจากระบบ?</Dialog.Title>
+            <Dialog.Description className="text-sm text-foreground-light">
+              ข้อมูลที่ยังไม่ได้บันทึกในหน้าที่เปิดค้างไว้จะหายไป
+            </Dialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <Dialog.Close asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </Dialog.Close>
+              <button type="button" className={btn('danger')} onClick={onLogout}>
+                ออกจากระบบ
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }
@@ -596,6 +625,8 @@ export function AppLayout() {
   // Ctrl/⌘+K ย้ายไปอยู่ใน MenuSearch แล้ว (โฟกัสผ่าน ref ของตัวเอง ไม่ต้องยิง getElementById)
 
   return (
+    // Provider เดียวครอบทั้ง layout — Tooltip.Root ใน sidebar และ topbar ใช้จังหวะหน่วงชุดเดียวกัน
+    <Tooltip.Provider delayDuration={300}>
     <div className="min-h-screen">
       {/* ── Desktop Sidebar ── */}
       <aside
@@ -624,13 +655,14 @@ export function AppLayout() {
         <div className="flex items-center gap-1">
           {/* บนมือถือเมนูผู้ใช้ก็อยู่ขวาบนเหมือนเดสก์ท็อป — ที่เดียวเสมอ ไม่ต้องจำสองที่ */}
           <UserMenu user={menuUser} onLogout={handleLogout} />
-          <Button
-            variant="ghost"
+          <button
+            type="button"
             aria-label="เปิดเมนู"
-            icon={<AppIcons.menu />}
             onClick={() => setDrawerOpen(true)}
-            className="text-foreground-lighter"
-          />
+            className={cn(btnIcon('ghost'), 'text-foreground-lighter')}
+          >
+            <AppIcons.menu />
+          </button>
         </div>
       </header>
 
@@ -666,32 +698,37 @@ export function AppLayout() {
           <MenuSearch />
 
           {canAccess(user?.role, '/inventory') && (
-            <Tooltip
-              title={
-                lowStockCount > 0
-                  ? `สินค้าใกล้หมด ${lowStockCount} รายการ — ไปหน้าคลังสินค้า`
-                  : 'ไม่มีสินค้าใกล้หมด'
-              }
-            >
-              {/* จุดแจ้งเตือนอยู่นอก Button — ถ้าใส่เป็น children ปุ่มจะเลิกเป็น icon-only
-                  แล้วเปลี่ยนความกว้างไปมาตามว่ามีแจ้งเตือนหรือไม่ */}
-              <span className="relative inline-flex">
-                <Button
-                  variant="ghost"
-                  aria-label={
-                    lowStockCount > 0 ? `การแจ้งเตือน (${lowStockCount})` : 'การแจ้งเตือน'
-                  }
-                  icon={<AppIcons.alert />}
-                  onClick={() => navigate('/inventory')}
-                />
-                {lowStockCount > 0 && (
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute top-1 right-1 size-2 rounded-full border-2 border-background bg-primary"
-                  />
-                )}
-              </span>
-            </Tooltip>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                {/* จุดแจ้งเตือนอยู่นอกปุ่ม — ถ้าใส่เป็น children ปุ่มจะเลิกเป็น icon-only
+                    แล้วเปลี่ยนความกว้างไปมาตามว่ามีแจ้งเตือนหรือไม่ */}
+                <span className="relative inline-flex">
+                  <button
+                    type="button"
+                    aria-label={
+                      lowStockCount > 0 ? `การแจ้งเตือน (${lowStockCount})` : 'การแจ้งเตือน'
+                    }
+                    onClick={() => navigate('/inventory')}
+                    className={btnIcon('ghost')}
+                  >
+                    <AppIcons.alert />
+                  </button>
+                  {lowStockCount > 0 && (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute top-1 right-1 size-2 rounded-full border-2 border-background bg-primary"
+                    />
+                  )}
+                </span>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content side="bottom" sideOffset={6} className={TOOLTIP_CONTENT}>
+                  {lowStockCount > 0
+                    ? `สินค้าใกล้หมด ${lowStockCount} รายการ — ไปหน้าคลังสินค้า`
+                    : 'ไม่มีสินค้าใกล้หมด'}
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            </Tooltip.Root>
           )}
 
           <UserMenu user={menuUser} onLogout={handleLogout} />
@@ -704,5 +741,6 @@ export function AppLayout() {
 
       <ActorModal />
     </div>
+    </Tooltip.Provider>
   );
 }

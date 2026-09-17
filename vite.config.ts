@@ -52,7 +52,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "@assets": path.resolve(__dirname, "./src/assets"),
-        "@design-system": path.resolve(__dirname, "./src/design-system"),
         "@layouts": path.resolve(__dirname, "./src/layouts"),
         "@shared": path.resolve(__dirname, "./src/shared"),
         "@app": path.resolve(__dirname, "./src/app"),

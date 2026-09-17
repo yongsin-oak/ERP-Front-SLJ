@@ -26,7 +26,7 @@ import {
   IconPlus, IconMinus, IconSearch, IconPencil, IconTrash, IconX, IconCheck, IconMail,
   IconCircleCheck, IconRefresh, IconFilter, IconDeviceFloppy, IconCopy, IconEye,
   IconDownload, IconClearAll, IconLoader2, IconSettings, IconList, IconAdjustments,
-  IconDotsVertical,
+  IconDotsVertical, IconSelector, IconSortAscending, IconSortDescending,
   // layout / nav chrome
   IconMenu2, IconLayoutSidebarLeftCollapse, IconLayoutSidebarLeftExpand, IconLayoutGrid,
   IconDeviceDesktop, IconChevronDown,
@@ -120,6 +120,10 @@ export const AppIcons = {
   loading:      make(IconLoader2),
   /** เมนู action ท้ายแถว/มุมการ์ด (kebab) — ยุบหลายปุ่มให้เหลือปุ่มเดียว */
   more:         make(IconDotsVertical),
+  /** หัวคอลัมน์ที่เรียงได้แต่ยังไม่ถูกเลือก — ลูกศรขึ้น-ลงคู่ */
+  sort:         make(IconSelector),
+  sortAsc:      make(IconSortAscending),
+  sortDesc:     make(IconSortDescending),
   settings:     make(IconSettings),
   list:         make(IconList),
   adjust:       make(IconAdjustments),

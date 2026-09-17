@@ -1,8 +1,35 @@
 import { useMemo, useState } from 'react';
-import dayjs from 'dayjs';
-import { Table, Button, PageHeader, BulkSelectionBar, ActionCell, SummaryCard , AppIcons, Inline } from '@design-system';
-import type { ColumnType } from '@design-system';
+import { AlertDialog, Checkbox, DropdownMenu } from 'radix-ui';
 import { useSearchState, PAGINATION } from '@shared';
+import { AppIcons } from '@/lib/icons';
+import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  BULK_BAR,
+  CELL_CODE,
+  CHECKBOX,
+  DIALOG_CONTENT,
+  DIALOG_DESC,
+  DIALOG_FOOTER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  MENU_CONTENT,
+  MENU_ITEM,
+  MENU_ITEM_DANGER,
+  MENU_SEPARATOR,
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  TABLE,
+  TABLE_EMPTY,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+} from '@/lib/styles';
 import { BrandFormModal } from '../components/BrandFormModal';
 import {
   useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand, useBulkDeleteBrand,
@@ -16,10 +43,21 @@ const BRAND_LIST_DEFAULTS: { page: number; pageSize: number } = {
   pageSize: PAGINATION.DEFAULT_LIMIT,
 };
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+
+type SortKey = 'id' | 'name' | 'updatedAt';
+type SortOrder = 'asc' | 'desc';
+
 export function BrandPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<Brand | null>(null);
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [sort, setSort] = useState<{ key: SortKey; order: SortOrder }>({
+    key: 'name',
+    order: 'asc',
+  });
+  const [pendingDelete, setPendingDelete] = useState<Brand | null>(null);
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
 
   // แบ่งหน้าฝั่ง server — ไม่ดึงทั้งตารางมาไว้ในหน่วยความจำ
   const [tableState, setTableState] = useSearchState('brand-list', BRAND_LIST_DEFAULTS);
@@ -32,10 +70,40 @@ export function BrandPage() {
   const withDescCount = useMemo(() => brands.filter((b) => !!b.description).length, [brands]);
   const withoutDescCount = useMemo(() => brands.filter((b) => !b.description).length, [brands]);
 
+  // เรียงเฉพาะแถวของหน้านี้ — ข้อมูลถูกแบ่งหน้าจาก server แล้ว การเรียงจึงเป็นการ
+  // จัดระเบียบสิ่งที่เห็นอยู่ ไม่ใช่เรียงทั้งชุด (ตรงกับพฤติกรรมเดิมของตาราง)
+  const rows = useMemo(() => {
+    const dir = sort.order === 'asc' ? 1 : -1;
+    return [...brands].sort((a, b) => {
+      const av = a[sort.key] ?? '';
+      const bv = b[sort.key] ?? '';
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }, [brands, sort]);
+
   const createBrand = useCreateBrand();
   const updateBrand = useUpdateBrand();
   const deleteBrand = useDeleteBrand();
   const bulkDelete = useBulkDeleteBrand();
+
+  const allSelected = rows.length > 0 && rows.every((r) => selectedKeys.includes(r.id));
+  const someSelected = selectedKeys.length > 0 && !allSelected;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
+  function toggleSort(key: SortKey) {
+    setSort((s) => (s.key === key ? { key, order: s.order === 'asc' ? 'desc' : 'asc' } : { key, order: 'asc' }));
+  }
+
+  function toggleAll(checked: boolean) {
+    const pageIds = rows.map((r) => r.id);
+    setSelectedKeys((keys) =>
+      checked ? [...new Set([...keys, ...pageIds])] : keys.filter((k) => !pageIds.includes(k)),
+    );
+  }
+
+  function toggleRow(id: string, checked: boolean) {
+    setSelectedKeys((keys) => (checked ? [...keys, id] : keys.filter((k) => k !== id)));
+  }
 
   async function handleSubmit(values: CreateBrandDto) {
     if (selected) {
@@ -47,107 +115,309 @@ export function BrandPage() {
   }
 
   async function handleBulkDelete() {
-    await bulkDelete.mutateAsync(selectedKeys.map(String));
+    await bulkDelete.mutateAsync(selectedKeys);
     setSelectedKeys([]);
+    setBulkConfirmOpen(false);
   }
 
-  const columns: ColumnType<Brand>[] = [
-    {
-      title: 'รหัส',
-      dataIndex: 'id',
-      width: 160,
-      sorter: (a, b) => a.id.localeCompare(b.id),
-      searchable: true,
-      render: (v: string) => <code style={{ fontSize: 12 }}>{v}</code>,
-    },
-    {
-      title: 'ชื่อแบรนด์',
-      dataIndex: 'name',
-      sorter: (a, b) => a.name.localeCompare(b.name),
-      searchable: true,
-      defaultSortOrder: 'ascend',
-    },
-    {
-      title: 'รายละเอียด',
-      dataIndex: 'description',
-      ellipsis: true,
-      searchable: true,
-      render: (v?: string) => v || '-',
-    },
-    {
-      title: 'อัปเดตล่าสุด',
-      dataIndex: 'updatedAt',
-      width: 160,
-      sorter: (a, b) => (a.updatedAt ?? '').localeCompare(b.updatedAt ?? ''),
-      render: (v?: string) => (v ? dayjs(v).format('DD/MM/YYYY HH:mm') : '-'),
-    },
-    {
-      title: '',
-      key: 'action',
-      width: 56,
-      align: 'center' as const,
-      fixed: 'right',
-      render: (_: unknown, r: Brand) => (
-        <ActionCell
-          onEdit={() => { setSelected(r); setModalOpen(true); }}
-          onDelete={() => deleteBrand.mutate(r.id)}
-          isDeleting={deleteBrand.isPending}
-          deleteTitle="ลบแบรนด์นี้?"
-          deleteDescription="สินค้าที่ผูกอยู่กับแบรนด์นี้จะไม่มีแบรนด์"
-        />
-      ),
-    },
-  ];
+  function sortIcon(key: SortKey) {
+    if (sort.key !== key) return <AppIcons.sort className="size-3 text-foreground-subtle" />;
+    return sort.order === 'asc' ?
+        <AppIcons.sortAsc className="size-3 text-foreground-light" />
+      : <AppIcons.sortDesc className="size-3 text-foreground-light" />;
+  }
 
   return (
     <div>
-      <PageHeader
-        title="จัดการแบรนด์"
-        subtitle={`ทั้งหมด ${total} แบรนด์`}
-        actions={
-          <>
-            <Button icon={<AppIcons.refresh />} onClick={() => refetch()} loading={isFetching}>รีเฟรช</Button>
-            <Button variant="primary" icon={<AppIcons.add />} onClick={() => { setSelected(null); setModalOpen(true); }}>
-              เพิ่มแบรนด์
-            </Button>
-          </>
-        }
-      />
+      <div className={`${PAGE_HEADER} mb-4`}>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE}>จัดการแบรนด์</h1>
+          <p className={PAGE_SUBTITLE}>ทั้งหมด {total} แบรนด์</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className={btn()} onClick={() => refetch()} disabled={isFetching}>
+            {isFetching ? <AppIcons.loading spin /> : <AppIcons.refresh />}
+            รีเฟรช
+          </button>
+          <button
+            type="button"
+            className={btn('primary')}
+            onClick={() => {
+              setSelected(null);
+              setModalOpen(true);
+            }}
+          >
+            <AppIcons.add />
+            เพิ่มแบรนด์
+          </button>
+        </div>
+      </div>
 
-      <Inline gap={3} wrap style={{ marginBottom: 16 }}>
-        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" color="var(--color-primary)" style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="มีรายละเอียด (หน้านี้)" value={withDescCount} suffix="แบรนด์" color="var(--color-success)" style={{ flex: 1, minWidth: 140 }} />
-        <SummaryCard title="ไม่มีรายละเอียด (หน้านี้)" value={withoutDescCount} suffix="แบรนด์" color="var(--color-muted-foreground)" style={{ flex: 1, minWidth: 140 }} />
-      </Inline>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <SummaryCard title="แบรนด์ทั้งหมด" value={total} suffix="แบรนด์" tone="text-primary" />
+        <SummaryCard
+          title="มีรายละเอียด (หน้านี้)"
+          value={withDescCount}
+          suffix="แบรนด์"
+          tone="text-success-text"
+        />
+        <SummaryCard
+          title="ไม่มีรายละเอียด (หน้านี้)"
+          value={withoutDescCount}
+          suffix="แบรนด์"
+          tone="text-foreground-lighter"
+        />
+      </div>
 
       {selectedKeys.length > 0 && (
-        <BulkSelectionBar
-          count={selectedKeys.length}
-          isDeleting={bulkDelete.isPending}
-          onDelete={handleBulkDelete}
-          onClear={() => setSelectedKeys([])}
-        />
+        <div className={`${BULK_BAR} mb-3 justify-between`}>
+          <span className={TEXT.muted}>เลือก {selectedKeys.length} รายการ</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={btn('danger', 'sm')}
+              onClick={() => setBulkConfirmOpen(true)}
+              disabled={bulkDelete.isPending}
+            >
+              {bulkDelete.isPending ? <AppIcons.loading spin /> : <AppIcons.delete />}
+              ลบที่เลือก
+            </button>
+            <button
+              type="button"
+              className={btn('ghost', 'sm')}
+              onClick={() => setSelectedKeys([])}
+              disabled={bulkDelete.isPending}
+            >
+              ยกเลิก
+            </button>
+          </div>
+        </div>
       )}
 
-      <Table<Brand>
-        rowKey="id"
-        columns={columns}
-        dataSource={brands}
-        loading={isLoading}
-        rowSelection={{
-          selectedRowKeys: selectedKeys,
-          onChange: setSelectedKeys,
-          preserveSelectedRowKeys: true,
-        }}
-        scroll={{ x: 'max-content' }}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          onChange: (p, ps) => setTableState({ ...tableState, page: p, pageSize: ps }),
-        }}
-      />
+      <div className={TABLE_WRAP}>
+        <table className={TABLE}>
+          <thead>
+            <tr>
+              <th className={cn(TABLE_TH, 'w-10')}>
+                <Checkbox.Root
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(c) => toggleAll(c === true)}
+                  aria-label="เลือกทุกแถวในหน้านี้"
+                  className={CHECKBOX}
+                >
+                  <Checkbox.Indicator className="flex items-center justify-center">
+                    {someSelected ? <AppIcons.minus className="size-3" /> : <AppIcons.check className="size-3" />}
+                  </Checkbox.Indicator>
+                </Checkbox.Root>
+              </th>
+              <th className={cn(TABLE_TH, 'w-40')}>
+                <SortButton label="รหัส" onClick={() => toggleSort('id')} icon={sortIcon('id')} />
+              </th>
+              <th className={TABLE_TH}>
+                <SortButton label="ชื่อแบรนด์" onClick={() => toggleSort('name')} icon={sortIcon('name')} />
+              </th>
+              <th className={TABLE_TH}>รายละเอียด</th>
+              <th className={cn(TABLE_TH, 'w-40')}>
+                <SortButton
+                  label="อัปเดตล่าสุด"
+                  onClick={() => toggleSort('updatedAt')}
+                  icon={sortIcon('updatedAt')}
+                />
+              </th>
+              <th className={cn(TABLE_TH, 'w-14 text-center')}>
+                <span className="sr-only">ตัวเลือก</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ?
+              <tr>
+                <td colSpan={6} className={TABLE_EMPTY}>
+                  <AppIcons.loading spin className="mx-auto size-5 text-primary" />
+                </td>
+              </tr>
+            : rows.length === 0 ?
+              <tr>
+                <td colSpan={6} className={TABLE_EMPTY}>ยังไม่มีแบรนด์ — กด “เพิ่มแบรนด์” เพื่อเริ่ม</td>
+              </tr>
+            : rows.map((r) => {
+                const checked = selectedKeys.includes(r.id);
+                return (
+                  <tr key={r.id} data-selected={checked} className={TABLE_TR}>
+                    <td className={TABLE_TD}>
+                      <Checkbox.Root
+                        checked={checked}
+                        onCheckedChange={(c) => toggleRow(r.id, c === true)}
+                        aria-label={`เลือก ${r.name}`}
+                        className={CHECKBOX}
+                      >
+                        <Checkbox.Indicator className="flex items-center justify-center">
+                          <AppIcons.check className="size-3" />
+                        </Checkbox.Indicator>
+                      </Checkbox.Root>
+                    </td>
+                    <td className={TABLE_TD}>
+                      <code className={CELL_CODE}>{r.id}</code>
+                    </td>
+                    <td className={TABLE_TD}>{r.name}</td>
+                    <td className={cn(TABLE_TD, 'max-w-xs truncate')}>{r.description || '-'}</td>
+                    <td className={cn(TABLE_TD, 'font-mono text-xs tabular-nums')}>
+                      {formatDate(r.updatedAt)}
+                    </td>
+                    <td className={cn(TABLE_TD, 'text-center')}>
+                      <DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild>
+                          <button
+                            type="button"
+                            aria-label="ตัวเลือกของแถวนี้"
+                            className={btnIcon('ghost', 'sm')}
+                          >
+                            <AppIcons.more />
+                          </button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Portal>
+                          <DropdownMenu.Content align="end" sideOffset={4} className={MENU_CONTENT}>
+                            <DropdownMenu.Item
+                              className={MENU_ITEM}
+                              onSelect={() => {
+                                setSelected(r);
+                                setModalOpen(true);
+                              }}
+                            >
+                              แก้ไข
+                            </DropdownMenu.Item>
+                            <DropdownMenu.Separator className={MENU_SEPARATOR} />
+                            <DropdownMenu.Item
+                              className={MENU_ITEM_DANGER}
+                              onSelect={(e) => {
+                                // กัน Radix ปิดเมนูแล้วเปิดกล่องยืนยันในจังหวะเดียวกัน (ชนกับ focus trap)
+                                e.preventDefault();
+                                setPendingDelete(r);
+                              }}
+                            >
+                              ลบ
+                            </DropdownMenu.Item>
+                          </DropdownMenu.Content>
+                        </DropdownMenu.Portal>
+                      </DropdownMenu.Root>
+                    </td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+
+      {/* แบ่งหน้า */}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <span className={TEXT.subtle}>
+          แสดง {rows.length ? (page - 1) * pageSize + 1 : 0}–{(page - 1) * pageSize + rows.length} จาก {total}
+        </span>
+        <div className="flex items-center gap-2">
+          <label htmlFor="brand-page-size" className="sr-only">
+            จำนวนแถวต่อหน้า
+          </label>
+          <select
+            id="brand-page-size"
+            value={pageSize}
+            onChange={(e) =>
+              setTableState({ ...tableState, page: 1, pageSize: Number(e.target.value) })
+            }
+            className="h-7.5 rounded-md border border-border-control bg-control px-2 text-sm text-foreground"
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n} / หน้า
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            aria-label="หน้าก่อนหน้า"
+            className={btnIcon('secondary', 'sm')}
+            disabled={page <= 1}
+            onClick={() => setTableState({ ...tableState, page: page - 1 })}
+          >
+            <AppIcons.arrowLeft />
+          </button>
+          <span className={cn(TEXT.subtle, 'tabular-nums')}>
+            {page} / {lastPage}
+          </span>
+          <button
+            type="button"
+            aria-label="หน้าถัดไป"
+            className={btnIcon('secondary', 'sm')}
+            disabled={page >= lastPage}
+            onClick={() => setTableState({ ...tableState, page: page + 1 })}
+          >
+            <AppIcons.arrowRight />
+          </button>
+        </div>
+      </div>
+
+      {/* ยืนยันลบทีละรายการ */}
+      <AlertDialog.Root open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+          <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <AlertDialog.Title className={DIALOG_TITLE}>ลบแบรนด์นี้?</AlertDialog.Title>
+            <AlertDialog.Description className={DIALOG_DESC}>
+              สินค้าที่ผูกอยู่กับแบรนด์นี้จะไม่มีแบรนด์
+            </AlertDialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <AlertDialog.Cancel asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </AlertDialog.Cancel>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={deleteBrand.isPending}
+                onClick={() => {
+                  if (pendingDelete) deleteBrand.mutate(pendingDelete.id);
+                  setPendingDelete(null);
+                }}
+              >
+                {deleteBrand.isPending && <AppIcons.loading spin />}
+                ลบ
+              </button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
+
+      {/* ยืนยันลบหลายรายการ */}
+      <AlertDialog.Root open={bulkConfirmOpen} onOpenChange={setBulkConfirmOpen}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className={DIALOG_OVERLAY} />
+          <AlertDialog.Content className={cn(DIALOG_CONTENT, 'max-w-sm')}>
+            <AlertDialog.Title className={DIALOG_TITLE}>
+              ลบ {selectedKeys.length} รายการที่เลือก?
+            </AlertDialog.Title>
+            <AlertDialog.Description className={DIALOG_DESC}>
+              ไม่สามารถยกเลิกการดำเนินการนี้ได้
+            </AlertDialog.Description>
+            <div className={DIALOG_FOOTER}>
+              <AlertDialog.Cancel asChild>
+                <button type="button" className={btn()}>
+                  ยกเลิก
+                </button>
+              </AlertDialog.Cancel>
+              <button
+                type="button"
+                className={btn('danger')}
+                disabled={bulkDelete.isPending}
+                onClick={() => void handleBulkDelete()}
+              >
+                {bulkDelete.isPending && <AppIcons.loading spin />}
+                ลบที่เลือก
+              </button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
 
       <BrandFormModal
         open={modalOpen}
@@ -156,6 +426,50 @@ export function BrandPage() {
         onSubmit={handleSubmit}
         loading={createBrand.isPending || updateBrand.isPending}
       />
+    </div>
+  );
+}
+
+/** หัวคอลัมน์ที่กดเรียงได้ — ต้องเป็นปุ่มจริงเพื่อให้กดด้วยคีย์บอร์ดได้ */
+function SortButton({
+  label,
+  onClick,
+  icon,
+}: {
+  label: string;
+  onClick: () => void;
+  icon: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-xs font-medium text-foreground-lighter transition-colors hover:text-foreground"
+    >
+      {label}
+      {icon}
+    </button>
+  );
+}
+
+function SummaryCard({
+  title,
+  value,
+  suffix,
+  tone,
+}: {
+  title: string;
+  value: number | string;
+  suffix?: string;
+  tone?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card px-4 py-3">
+      <div className="text-xs text-foreground-light">{title}</div>
+      <div className={cn('mt-1 flex items-baseline gap-1 font-mono text-xl font-medium tabular-nums', tone)}>
+        <span>{value}</span>
+        {suffix && <span className="font-sans text-sm font-normal text-foreground-light">{suffix}</span>}
+      </div>
     </div>
   );
 }

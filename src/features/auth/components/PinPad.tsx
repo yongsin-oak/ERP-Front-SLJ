@@ -1,4 +1,4 @@
-import { AppIcons } from '@design-system';
+import { AppIcons } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 
 interface Props {

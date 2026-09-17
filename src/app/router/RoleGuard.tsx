@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@features/auth';
-import { Button, AppIcons } from '@design-system';
+import { AppIcons } from '@/lib/icons';
+import { btn } from '@/lib/styles';
 import { canAccess, getRequiredRoles, getLandingPath, ROLE_LABEL } from '@config/access';
 
 /**
@@ -30,9 +31,13 @@ export function RoleGuard({ children }: { children: React.ReactNode }) {
           </>
         : 'หน้านี้ยังไม่ได้เปิดสิทธิ์ให้บทบาทใด หากต้องการใช้งานกรุณาติดต่อผู้ดูแลระบบ'}
       </div>
-      <Button variant="primary" className="mt-2" onClick={() => navigate(getLandingPath(user), { replace: true })}>
+      <button
+        type="button"
+        className={`${btn('primary')} mt-2`}
+        onClick={() => navigate(getLandingPath(user), { replace: true })}
+      >
         กลับหน้าหลัก
-      </Button>
+      </button>
     </div>
   );
 }

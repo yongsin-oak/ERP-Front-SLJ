@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
-import { Modal, Button, Alert, Inline, Text, AppIcons } from '@design-system';
+import { Dialog } from "radix-ui";
 import { showError } from "@shared";
 import { EmployeeSearchSelect } from '@features/employee/components/EmployeeSearchSelect';
+import { AppIcons } from '@/lib/icons';
+import { cn } from '@/lib/utils';
+import {
+  alertBox,
+  btn,
+  DIALOG_CLOSE_X,
+  DIALOG_CONTENT,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  TEXT,
+} from '@/lib/styles';
 import { authService } from "../react-query/services";
 import { useActorModal, useActor } from "../stores";
-import { cn } from '@/lib/utils';
 
 const PIN_MIN = 4;
 const PIN_MAX = 4;
@@ -44,8 +54,6 @@ export function ActorModal() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-
-
   function handleKey(k: string) {
     setError("");
     if (k === "clear") return setPin("");
@@ -82,7 +90,6 @@ export function ActorModal() {
     }
   }
 
-
   const canConfirm = !!employeeId && pin.length >= PIN_MIN;
 
   // รองรับการพิมพ์ PIN ด้วยคีย์บอร์ดจริง (นอกจากกดปุ่มบนจอ):
@@ -114,108 +121,118 @@ export function ActorModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, canConfirm, loading, employeeId, pin]);
 
+  // ล้างค่าทุกครั้งที่ปิด — โมดัลนี้ mount ค้างไว้ตลอดอายุแอป ถ้าไม่ล้าง
+  // การยืนยันครั้งถัดไปจะเห็น PIN กับพนักงานของครั้งก่อนค้างอยู่
+  useEffect(() => {
+    if (open) return;
+    setPin("");
+    setEmployeeId("");
+    setError("");
+  }, [open]);
+
   return (
-    <Modal
-      open={open}
-      title={
-        <Inline>
-          <AppIcons.lock className="text-primary" />
-          ยืนยันตัวตนพนักงาน
-        </Inline>
-      }
-      onCancel={cancel}
-      footer={null}
-      width={340}
-      destroyOnHidden
-      centered
-    >
-      {/* employee */}
-      <div style={{ marginBottom: 12 }}>
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          <AppIcons.user style={{ marginRight: 4 }} />
-          พนักงาน
-        </Text>
-        <EmployeeSearchSelect
-          style={{ width: "100%", marginTop: 6 }}
-          placeholder="เลือกพนักงาน"
-          value={employeeId || undefined}
-          onChange={(v) => {
-            const next = v as string;
-            setEmployeeId(next);
-            setError("");
-            // ปล่อย focus ออกจาก select เพื่อให้พิมพ์ PIN ด้วยคีย์บอร์ดได้ทันที
-            requestAnimationFrame(() => (document.activeElement as HTMLElement | null)?.blur());
-            // กรอก PIN ครบก่อนแล้วค่อยเลือกพนักงาน → ยืนยันอัตโนมัติเช่นกัน
-            if (pin.length === PIN_MAX && !loading) void handleConfirm(pin, next);
-          }}
-        />
-      </div>
-
-      {/* PIN dots (show up to PIN_MAX slots, filled = entered digits) */}
-      <Text type="secondary" style={{ fontSize: 12 }}>
-        <AppIcons.lock style={{ marginRight: 4 }} />
-        PIN ({PIN_MAX} หลัก) · พิมพ์ด้วยคีย์บอร์ดได้
-      </Text>
-      <div className="flex justify-center gap-2.5 mt-3.5 mb-4.5">
-        {Array.from({ length: PIN_MAX }).map((_, i) => {
-          const filled = i < pin.length;
-          const active = i === pin.length;
-          return (
-            <div
-              key={i}
-              className={cn(
-                'size-3.5 rounded-full border-2 transition-all duration-100',
-                active || filled ? 'border-primary' : 'border-border-strong',
-                filled ? 'bg-primary scale-115' : 'bg-transparent scale-100',
-              )}
-            />
-          );
-        })}
-      </div>
-
-      {error && (
-        <Alert
-          type="error"
-          message={error}
-          showIcon
-          style={{ marginBottom: 12, fontSize: 13 }}
-        />
-      )}
-
-      {/* keypad */}
-      <div className="grid grid-cols-3 gap-2">
-        {KEYS.map((k) => {
-          const variant =
-            k === "clear" ? "danger" : k === "back" ? "muted" : "default";
-          return (
-            <button
-              key={k}
-              type="button"
-              disabled={loading}
-              className={cn(KEY_BASE, KEY_VARIANT[variant])}
-              onClick={() => handleKey(k)}
-              aria-label={k}
-            >
-              {k === "back" ?
-                "⌫"
-              : k === "clear" ?
-                "C"
-              : k}
+    <Dialog.Root open={open} onOpenChange={(o) => !o && cancel()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={DIALOG_OVERLAY} />
+        <Dialog.Content
+          className={cn(DIALOG_CONTENT, 'max-w-85 gap-3')}
+          aria-describedby={undefined}
+        >
+          <Dialog.Title className={cn(DIALOG_TITLE, 'flex items-center gap-2')}>
+            <AppIcons.lock className="text-primary" />
+            ยืนยันตัวตนพนักงาน
+          </Dialog.Title>
+          <Dialog.Close asChild>
+            <button type="button" aria-label="ปิด" className={DIALOG_CLOSE_X}>
+              <AppIcons.close />
             </button>
-          );
-        })}
-      </div>
+          </Dialog.Close>
 
-      <Button
-        variant="primary"
-        block
-        style={{ marginTop: 14, height: 44 }}
-        loading={loading}
-        disabled={!canConfirm}
-        onClick={() => void handleConfirm()}
-      >
-        ยืนยัน
-      </Button>
-    </Modal>
+          {/* employee */}
+          <div className="flex flex-col gap-1.5">
+            <span className={cn(TEXT.subtle, 'flex items-center gap-1')}>
+              <AppIcons.user />
+              พนักงาน
+            </span>
+            <EmployeeSearchSelect
+              placeholder="เลือกพนักงาน"
+              value={employeeId || undefined}
+              onChange={(v) => {
+                const next = v ?? '';
+                setEmployeeId(next);
+                setError("");
+                // ปล่อย focus ออกจาก select เพื่อให้พิมพ์ PIN ด้วยคีย์บอร์ดได้ทันที
+                requestAnimationFrame(() => (document.activeElement as HTMLElement | null)?.blur());
+                // กรอก PIN ครบก่อนแล้วค่อยเลือกพนักงาน → ยืนยันอัตโนมัติเช่นกัน
+                if (pin.length === PIN_MAX && !loading && next) void handleConfirm(pin, next);
+              }}
+            />
+          </div>
+
+          {/* PIN dots (show up to PIN_MAX slots, filled = entered digits) */}
+          <span className={cn(TEXT.subtle, 'flex items-center gap-1')}>
+            <AppIcons.lock />
+            PIN ({PIN_MAX} หลัก) · พิมพ์ด้วยคีย์บอร์ดได้
+          </span>
+          <div className="mb-1 flex justify-center gap-2.5">
+            {Array.from({ length: PIN_MAX }).map((_, i) => {
+              const filled = i < pin.length;
+              const active = i === pin.length;
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    'size-3.5 rounded-full border-2 transition-all duration-100',
+                    active || filled ? 'border-primary' : 'border-border-strong',
+                    filled ? 'bg-primary scale-115' : 'bg-transparent scale-100',
+                  )}
+                />
+              );
+            })}
+          </div>
+
+          {error && (
+            <div role="alert" className={alertBox('danger')}>
+              <AppIcons.alert />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* keypad */}
+          <div className="grid grid-cols-3 gap-2">
+            {KEYS.map((k) => {
+              const variant =
+                k === "clear" ? "danger" : k === "back" ? "muted" : "default";
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  disabled={loading}
+                  className={cn(KEY_BASE, KEY_VARIANT[variant])}
+                  onClick={() => handleKey(k)}
+                  aria-label={k}
+                >
+                  {k === "back" ?
+                    "⌫"
+                  : k === "clear" ?
+                    "C"
+                  : k}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            className={cn(btn('primary', 'lg'), 'mt-1 w-full')}
+            disabled={!canConfirm || loading}
+            onClick={() => void handleConfirm()}
+          >
+            {loading && <AppIcons.loading spin />}
+            ยืนยัน
+          </button>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

@@ -28,8 +28,6 @@
     "paths": {
       "@/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
-      "@design-system": ["src/design-system/index.ts"],
-      "@design-system/*": ["src/design-system/*"],
       "@layouts": ["src/layouts/index.ts"],
       "@layouts/*": ["src/layouts/*"],
       "@shared": ["src/shared/index.ts"],

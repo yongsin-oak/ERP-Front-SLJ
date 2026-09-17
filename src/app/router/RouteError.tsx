@@ -1,5 +1,5 @@
 import { useNavigate, useRouteError, isRouteErrorResponse } from 'react-router-dom';
-import { Button } from '@design-system';
+import { btn } from '@/lib/styles';
 import { getErrorMessage, getErrorStatus } from '@shared';
 
 export function RouteError() {
@@ -28,10 +28,12 @@ export function RouteError() {
         <div className="text-lg font-semibold text-foreground">{title}</div>
         <div className="max-w-md text-sm text-muted-foreground">{subtitle}</div>
         <div className="mt-2 flex gap-2">
-          <Button onClick={() => window.location.reload()}>โหลดใหม่</Button>
-          <Button variant="primary" onClick={() => navigate('/')}>
+          <button type="button" className={btn()} onClick={() => window.location.reload()}>
+            โหลดใหม่
+          </button>
+          <button type="button" className={btn('primary')} onClick={() => navigate('/')}>
             กลับหน้าหลัก
-          </Button>
+          </button>
         </div>
       </div>
     </div>

@@ -1,12 +1,25 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "@layouts";
-import { Spinner } from "@design-system";
+import { AppIcons } from "@/lib/icons";
 import { PrivateRoute } from "./PrivateRoute";
 import { RoleGuard } from "./RoleGuard";
 import { RouteError } from "./RouteError";
 import { LoginPage, useAuth } from "@features/auth";
 import { getLandingPath } from "@config/access";
+
+/** ตัวคั่นระหว่างโหลด chunk ของหน้า — กินแค่พื้นที่ content เพราะ layout ยังอยู่ */
+function PageFallback() {
+  return (
+    <div
+      className="flex min-h-[60vh] items-center justify-center"
+      role="status"
+      aria-label="กำลังโหลด"
+    >
+      <AppIcons.loading spin className="size-5 text-primary" />
+    </div>
+  );
+}
 
 /**
  * ห่อทุกหน้าด้วย RoleGuard — สิทธิ์อ่านจาก `ROUTE_ROLES` ตาม path ปัจจุบัน
@@ -15,7 +28,7 @@ import { getLandingPath } from "@config/access";
 function Page({ children }: { children: React.ReactNode }) {
   return (
     <RoleGuard>
-      <Suspense fallback={<Spinner fullPage />}>{children}</Suspense>
+      <Suspense fallback={<PageFallback />}>{children}</Suspense>
     </RoleGuard>
   );
 }
