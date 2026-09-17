@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AlertDialog, Dialog, DropdownMenu, Select } from 'radix-ui';
 import type { Role } from '@features/auth/types';
 import { useSearchState, PAGINATION } from '@shared';
@@ -84,13 +84,15 @@ export function UserPage() {
   );
   const lastPage = Math.max(1, Math.ceil(total / pageSize));
 
-  // เติมบทบาทปัจจุบันลงในกล่องแก้ไขทุกครั้งที่เปิด — ไม่งั้นกดแก้ไขคนที่สอง
-  // จะเห็นบทบาทของคนแรกค้างอยู่
-  useEffect(() => {
-    if (!editTarget) return;
-    setEditRole(editTarget.role);
+  /**
+   * เปิดกล่องแก้ไขบทบาท พร้อมเติมบทบาทปัจจุบันลงไปในจังหวะเดียวกัน
+   * ตั้งค่าตรงนี้ (ตอนกด) ไม่ใช่ใน effect — ไม่งั้นกดแก้ไขคนที่สองจะเห็นบทบาทของคนแรกค้างหนึ่งเฟรม
+   */
+  function openEditRole(user: User) {
+    setEditTarget(user);
+    setEditRole(user.role);
     setEditError('');
-  }, [editTarget]);
+  }
 
   async function handleUpdateRole() {
     if (!editTarget) return;
@@ -193,7 +195,7 @@ export function UserPage() {
                         <DropdownMenu.Content align="end" sideOffset={4} className={MENU_CONTENT}>
                           <DropdownMenu.Item
                             className={MENU_ITEM}
-                            onSelect={() => setEditTarget(r)}
+                            onSelect={() => openEditRole(r)}
                           >
                             เปลี่ยนบทบาท
                           </DropdownMenu.Item>

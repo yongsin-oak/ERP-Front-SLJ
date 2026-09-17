@@ -122,7 +122,7 @@ export function BrandSearchSelect({
             </div>
 
             <div
-              ref={combo.listRef}
+              ref={combo.setListEl}
               onScroll={combo.onListScroll}
               role="listbox"
               className="max-h-60 overflow-y-auto p-1"

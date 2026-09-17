@@ -12,7 +12,6 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { debounce } from 'lodash';
 
 /** เหลือระยะเท่าไรถึงก้นรายการจึงเริ่มโหลดหน้าถัดไป — ต้องโหลดก่อนผู้ใช้ชนก้น */
 const SCROLL_THRESHOLD_PX = 60;
@@ -57,20 +56,34 @@ export function useCombobox({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
-  const listRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * เก็บ element ของรายการไว้เอง แล้วคืนออกไปเป็น "callback ref" ไม่ใช่ ref object
+   *
+   * ถ้าคืน ref object ตรงๆ React Compiler จะถือว่าทั้งก้อนที่ hook คืนมาเป็นค่าที่มี ref
+   * แล้วรายงานว่า "อ่าน ref ตอน render" กับทุก property ที่หน้าเพจใช้ (combo.open, combo.filtered …)
+   */
+  const listElRef = useRef<HTMLDivElement | null>(null);
+  const setListEl = useCallback((el: HTMLDivElement | null) => {
+    listElRef.current = el;
+  }, []);
 
   // latest-ref: ผู้เรียกมักส่ง onSearch เป็น lambda ใหม่ทุก render — ถ้าใส่ใน deps
-  // debounce จะถูกสร้างใหม่ตลอดจนไม่ได้ debounce จริง
+  // การหน่วงจะถูกตั้งใหม่ตลอดจนไม่ได้หน่วงจริง
   const onSearchRef = useRef(onSearch);
   useEffect(() => {
     onSearchRef.current = onSearch;
   });
 
-  const debouncedSearch = useMemo(
-    () => debounce((v: string) => onSearchRef.current?.(v), debounceMs),
-    [debounceMs],
-  );
-  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
+  /**
+   * หน่วงด้วย setTimeout เอง ไม่ใช้ debounce() ของ lodash
+   *
+   * debounce() ต้องถูก "สร้างตอน render" ซึ่งทำให้ React Compiler มองว่าเราส่งฟังก์ชัน
+   * ที่อ่าน ref เข้าไปในจังหวะ render แล้วมันจะตีตราค่าที่ hook คืนออกไปทั้งก้อนว่าแตะ ref ไม่ได้
+   * ตั้ง timer ใน handler แทน — อ่าน ref เฉพาะตอนผู้ใช้พิมพ์ ซึ่งเป็นจังหวะที่อ่านได้
+   */
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const filtered = useMemo(() => {
     if (!localFilter || !search.trim()) return options;
@@ -91,14 +104,14 @@ export function useCombobox({
         // ล้างคำค้นตอนปิด และบอกผู้เรียกด้วย — ไม่งั้นเปิดใหม่จะเห็นช่องว่าง
         // แต่รายการยังกรองด้วยคำเดิมค้างอยู่
         setSearch('');
-        debouncedSearch.cancel();
+        clearTimeout(timerRef.current);
         onSearchRef.current?.('');
       }
       setActiveIndex(0);
       setOpen(o);
       onOpenChange?.(o);
     },
-    [debouncedSearch, onOpenChange],
+    [onOpenChange],
   );
 
   const pick = useCallback(
@@ -115,15 +128,17 @@ export function useCombobox({
     (v: string) => {
       setSearch(v);
       setActiveIndex(0);
-      debouncedSearch(v);
+      // ตั้ง timer ใหม่ทุกครั้งที่พิมพ์ — ยิงจริงเมื่อหยุดพิมพ์ครบ debounceMs
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => onSearchRef.current?.(v), debounceMs);
     },
-    [debouncedSearch],
+    [debounceMs],
   );
 
   /** เลื่อนรายการให้ตัวที่ไฮไลต์อยู่ในสายตา — คำนวณเองแทน scrollIntoView เพื่อไม่เลื่อนทั้งหน้า */
   useEffect(() => {
     if (!open) return;
-    const list = listRef.current;
+    const list = listElRef.current;
     const el = list?.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
     if (!list || !el) return;
     const top = el.offsetTop;
@@ -175,7 +190,8 @@ export function useCombobox({
     selected,
     activeIndex,
     setActiveIndex,
-    listRef,
+    /** ใส่ที่ `ref` ของกล่องรายการ — เป็นฟังก์ชัน ไม่ใช่ ref object (ดูเหตุผลด้านบน) */
+    setListEl,
     onKeyDown,
     onListScroll,
     pick,

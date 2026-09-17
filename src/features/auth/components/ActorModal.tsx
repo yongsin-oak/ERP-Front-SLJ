@@ -121,17 +121,20 @@ export function ActorModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, canConfirm, loading, employeeId, pin]);
 
-  // ล้างค่าทุกครั้งที่ปิด — โมดัลนี้ mount ค้างไว้ตลอดอายุแอป ถ้าไม่ล้าง
-  // การยืนยันครั้งถัดไปจะเห็น PIN กับพนักงานของครั้งก่อนค้างอยู่
-  useEffect(() => {
-    if (open) return;
+  /**
+   * ล้างค่าเมื่อปิด — โมดัลนี้ mount ค้างไว้ตลอดอายุแอป ถ้าไม่ล้าง
+   * การยืนยันครั้งถัดไปจะเห็น PIN กับพนักงานของครั้งก่อนค้างอยู่
+   * ล้างตรงจังหวะที่ปิด (เป็นผลของการกด) ไม่ใช่ใน effect ที่คอยดูค่า open
+   */
+  function handleClose() {
     setPin("");
     setEmployeeId("");
     setError("");
-  }, [open]);
+    cancel();
+  }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => !o && cancel()}>
+    <Dialog.Root open={open} onOpenChange={(o) => !o && handleClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className={DIALOG_OVERLAY} />
         <Dialog.Content

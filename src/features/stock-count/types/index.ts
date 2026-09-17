@@ -1,7 +1,13 @@
+import type { StatusTone } from '@/lib/styles';
+
+/**
+ * สีผูกชนิดกับโทนสถานะใน styles.ts
+ * (เดิมใช้ 'processing' ซึ่งเป็นชื่อของ antd ไม่มีในจานสีของระบบ → เปลี่ยนเป็น 'info')
+ */
 export const StockCountStatuses = {
-  Draft:     { label: 'กำลังนับ', color: 'processing' },
+  Draft:     { label: 'กำลังนับ', color: 'info' },
   Completed: { label: 'สิ้นสุดแล้ว', color: 'success' },
-} as const;
+} as const satisfies Record<string, { label: string; color: StatusTone }>;
 
 export type StockCountStatus = keyof typeof StockCountStatuses;
 

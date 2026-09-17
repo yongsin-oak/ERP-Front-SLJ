@@ -68,9 +68,9 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
   } = useForm<FormValues>({ defaultValues: EMPTY });
 
   // เติมค่าเดิมทุกครั้งที่เปิด — ดูเหตุผลใน BrandFormModal
+  // (การซ่อนรหัสผ่านรีเซ็ตตอนปิดใน onOpenChange ไม่ใช่ที่นี่ — เป็นผลของการกด ไม่ใช่ของข้อมูล)
   useEffect(() => {
     if (!open) return;
-    setShowPassword(false);
     reset(
       terminal ?
         {
@@ -87,15 +87,27 @@ export function TerminalFormModal({ open, terminal, onClose, onSubmit, loading }
   async function handleFinish(values: FormValues) {
     // แก้ไขแล้วไม่กรอกรหัสผ่าน = ไม่เปลี่ยนรหัส — ต้องไม่ส่ง field ไปเลย ไม่ใช่ส่งค่าว่าง
     if (isEdit && !values.password) {
-      const { password: _password, ...rest } = values;
-      await onSubmit(rest as UpdateTerminalDto);
+      const rest: UpdateTerminalDto = {
+        terminalCode: values.terminalCode,
+        name: values.name,
+        role: values.role,
+        isActive: values.isActive,
+      };
+      await onSubmit(rest);
       return;
     }
     await onSubmit(values);
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(o) => {
+        if (o) return;
+        setShowPassword(false);
+        onClose();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className={DIALOG_OVERLAY} />
         <Dialog.Content className={DIALOG_CONTENT} aria-describedby={undefined}>

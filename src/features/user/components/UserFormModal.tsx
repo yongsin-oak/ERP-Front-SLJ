@@ -47,14 +47,21 @@ export function UserFormModal({ open, roles, onClose, onSubmit, loading }: Props
   } = useForm<CreateUserDto>({ defaultValues: EMPTY });
 
   // ล้างฟอร์มทุกครั้งที่เปิด — โมดัลนี้สร้างผู้ใช้อย่างเดียว ค่าที่ค้างจากรอบก่อนไม่ควรโผล่
+  // (การซ่อนรหัสผ่านรีเซ็ตตอนปิดใน onOpenChange — เป็นผลของการกด ไม่ใช่ของข้อมูล)
   useEffect(() => {
     if (!open) return;
-    setShowPassword(false);
     reset(EMPTY);
   }, [open, reset]);
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(o) => {
+        if (o) return;
+        setShowPassword(false);
+        onClose();
+      }}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className={DIALOG_OVERLAY} />
         <Dialog.Content className={DIALOG_CONTENT} aria-describedby={undefined}>
