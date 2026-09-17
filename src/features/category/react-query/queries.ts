@@ -19,8 +19,10 @@ export function useCategories(
  * ตัวเลือกหมวดหมู่สำหรับ `CategorySearchSelect` — ยิง `/category/dropdown-search` (cursor)
  * ไม่ใช่เส้นตาราง `/category` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
  */
-export function useCategoryDropdown(search?: string) {
+export function useCategoryDropdown(search?: string, options?: { enabled?: boolean }) {
   return useInfiniteQuery({
+    // dropdown ห้ามยิงตอน mount — ดูเหตุผลใน useBrandDropdown
+    enabled: options?.enabled ?? true,
     queryKey: categoryKeys.dropdown(search),
     queryFn: ({ pageParam }) =>
       categoryService

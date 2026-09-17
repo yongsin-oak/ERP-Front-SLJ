@@ -26,8 +26,10 @@ export function useShops() {
  * ตัวเลือกร้านค้าสำหรับ `ShopSearchSelect` — ยิง `/shop/dropdown-search` (cursor)
  * ไม่ใช่เส้นตาราง `/shop` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
  */
-export function useShopDropdown(search?: string) {
+export function useShopDropdown(search?: string, options?: { enabled?: boolean }) {
   return useInfiniteQuery({
+    // dropdown ห้ามยิงตอน mount — ดูเหตุผลใน useBrandDropdown
+    enabled: options?.enabled ?? true,
     queryKey: shopKeys.dropdown(search),
     queryFn: ({ pageParam }) =>
       shopService

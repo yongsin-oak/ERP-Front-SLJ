@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Alert, type AlertType } from '../Alert';
 import { Button } from '../Button';
 import { AppIcons } from '../../icons';
+import { cn } from '@/lib/utils';
 
 /**
  * Banner — สถานะที่ "ยังมีผลอยู่บนหน้า" (ไม่หายเอง) เช่น โหมดออฟไลน์, draft ค้าง,
@@ -61,7 +62,7 @@ export function Banner({
       description={description}
       showIcon={showIcon}
       action={trailing}
-      className={className}
+      className={cn('rounded-none border-x-0 border-r-0 px-4 py-3 shadow-none', className)}
     />
   );
 }

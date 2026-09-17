@@ -5,6 +5,7 @@ import { Drawer } from '../Drawer';
 import { Button } from '../Button';
 import { Text } from '../Typography';
 import { cn } from '@/lib/utils';
+import { AppIcons } from '../../icons';
 
 export interface ConfirmDrawerProps {
   open: boolean;
@@ -115,14 +116,18 @@ export function ConfirmDrawer({
         formContent
       ) : (
         <div>
-          {confirmTitle && (
-            <div className="mb-4 rounded-md border border-warning-border bg-warning-bg px-3 py-2.5">
-              <Text size="sm" strong type="warning">
-                {confirmTitle}
-              </Text>
+          <div className="mb-5 rounded-xl border border-warning-border bg-warning-bg/60 p-4">
+            <div className="flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-warning-text ring-1 ring-warning-border">
+                <AppIcons.warning className="size-5" />
+              </span>
+              <div>
+                <Text strong>{confirmTitle ?? 'โปรดตรวจสอบข้อมูลก่อนยืนยัน'}</Text>
+                <div className="mt-1 text-sm leading-5 text-foreground-light">เมื่อยืนยันแล้ว ระบบจะดำเนินการตามรายการสรุปด้านล่าง</div>
+              </div>
             </div>
-          )}
-          {summary}
+          </div>
+          <div className="rounded-xl border border-border bg-surface-100 p-4">{summary}</div>
         </div>
       )}
     </Drawer>

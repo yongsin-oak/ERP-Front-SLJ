@@ -50,6 +50,11 @@ export interface SelectProps {
   dropdownFooter?: React.ReactNode;
   /** custom render for each option row (antd `optionRender`) */
   optionRender?: (option: SelectOption) => React.ReactNode;
+  /**
+   * เปิด/ปิด dropdown — ใช้หน่วงการยิง API ไว้จนกว่าผู้ใช้จะกดเปิดจริง
+   * (`enabled: open` ใน react-query) อย่ายิงตอน mount ถ้าไม่มีใครเปิดดู
+   */
+  onOpenChange?: (open: boolean) => void;
   className?: string;
   style?: React.CSSProperties;
   id?: string;
@@ -98,6 +103,7 @@ export function Select(props: SelectProps) {
     onPopupScroll,
     dropdownFooter,
     optionRender,
+    onOpenChange,
     className,
     style,
     id,
@@ -106,6 +112,9 @@ export function Select(props: SelectProps) {
 
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
+  // "เปิดรอบนี้ยังไม่ได้เลื่อนไปหาตัวที่เลือก" — รีเซ็ตทุกครั้งที่เปิด เพื่อให้เลื่อนแค่ครั้งเดียว
+  // ต่อการเปิดหนึ่งครั้ง ไม่ใช่เลื่อนใหม่ทุกครั้งที่ผู้ใช้พิมพ์ค้นหาแล้วลิสต์ re-render
+  const pendingScrollRef = React.useRef(false);
   const [internal, setInternal] = React.useState<string | undefined>(defaultValue);
 
   // controlled = ผู้เรียก "ส่ง prop value มา" ไม่ใช่ "ส่งค่าที่ไม่ใช่ undefined มา"
@@ -120,6 +129,12 @@ export function Select(props: SelectProps) {
   const selectedOption = all.find((o) => o.value === selected);
 
   const searchCfg = typeof showSearch === 'object' ? showSearch : null;
+  // latest-ref — ผู้เรียกส่ง showSearch เป็น object literal ใหม่ทุก render ถ้าใส่ใน deps
+  // ของ changeOpen จะได้ callback ใหม่ทุกรอบและลาม re-render ต่อไปทั้งสาย
+  const searchCfgRef = React.useRef(searchCfg);
+  React.useEffect(() => {
+    searchCfgRef.current = searchCfg;
+  });
   const searchEnabled = Boolean(showSearch);
   const localFilter = searchCfg?.filterOption !== false;
 
@@ -138,11 +153,31 @@ export function Select(props: SelectProps) {
       );
   }, [options, searchEnabled, localFilter, searchCfg, search]);
 
+  /**
+   * ทางเข้า-ออกทางเดียวของสถานะเปิด/ปิด — ทั้ง Radix และการเลือก option ต้องผ่านตัวนี้
+   * ไม่งั้น `pick()` ที่สั่ง setOpen(false) ตรงๆ จะไม่ยิง `onOpenChange` ผู้เรียกที่ใช้
+   * ค่านี้ไป gate query (`enabled: open`) ก็จะค้างคิดว่ายังเปิดอยู่ตลอด
+   */
+  const changeOpen = React.useCallback(
+    (o: boolean) => {
+      if (o) {
+        pendingScrollRef.current = true;
+      } else {
+        // ล้างคำค้นตอนปิด และ**บอกผู้เรียกด้วย** — ฝั่ง InfiniteSearchSelect เก็บ search
+        // ไว้ที่ตัวเอง ถ้าไม่บอก เปิดใหม่จะเห็นช่องค้นหาว่างแต่ลิสต์ยังกรองด้วยคำเดิม
+        setSearch('');
+        searchCfgRef.current?.onSearch?.('');
+      }
+      setOpen(o);
+      onOpenChange?.(o);
+    },
+    [onOpenChange],
+  );
+
   function pick(v: string) {
     if (!isControlled) setInternal(v);
     onChange?.(v);
-    setOpen(false);
-    setSearch('');
+    changeOpen(false);
   }
 
   function clear(e: React.MouseEvent) {
@@ -153,28 +188,50 @@ export function Select(props: SelectProps) {
 
   const showClear = allowClear && selected != null && selected !== '' && !disabled;
 
-  const renderOption = (o: SelectOption) => (
-    <button
-      key={o.value}
-      type="button"
-      role="option"
-      aria-selected={o.value === selected}
-      disabled={o.disabled}
-      onClick={() => pick(o.value)}
-      className={cn(
-        'flex w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none',
-        'hover:bg-surface-200 focus-visible:bg-surface-200',
-        o.value === selected && 'font-medium',
-        o.disabled && 'pointer-events-none opacity-50',
-      )}
-    >
-      <span className="truncate">{optionRender ? optionRender(o) : o.label}</span>
-      {o.value === selected && <IconCheck className="size-3.5 shrink-0 text-primary" />}
-    </button>
-  );
+  /**
+   * เลื่อนลิสต์ไปหาตัวที่เลือกไว้ตอนเปิด — ไม่งั้นเปิดมาเจอหัวลิสต์เสมอ
+   * ผู้ใช้ที่เลือกตัวที่ 40 ไว้ต้องเลื่อนหาเองใหม่ทุกครั้ง
+   *
+   * ใช้ callback ref เพราะ Radix unmount เนื้อ popover ตอนปิด — DOM ของ option
+   * ที่เลือกไว้จะเกิดตอนเปิดเท่านั้น พอมันเกิดเมื่อไหร่ค่อยเลื่อน
+   * คำนวณ scrollTop เองแทน scrollIntoView เพื่อไม่ให้ไปเลื่อนหน้าเว็บทั้งหน้าด้วย
+   */
+  const scrollSelectedIntoView = React.useCallback((el: HTMLButtonElement | null) => {
+    if (!el || !pendingScrollRef.current) return;
+    // หา container จาก DOM ไม่ใช่จาก ref — React ผูก ref ของลูกก่อนพ่อ ตอน callback นี้ทำงาน
+    // ref ของกล่องลิสต์จึงยังเป็น null อยู่ (จะกลายเป็น no-op เงียบๆ)
+    const list = el.closest<HTMLElement>('[data-select-list]');
+    if (!list) return;
+    pendingScrollRef.current = false;
+    list.scrollTop = el.offsetTop - list.clientHeight / 2 + el.offsetHeight / 2;
+  }, []);
+
+  const renderOption = (o: SelectOption) => {
+    const isSelected = o.value === selected;
+    return (
+      <button
+        key={o.value}
+        ref={isSelected ? scrollSelectedIntoView : undefined}
+        type="button"
+        role="option"
+        aria-selected={isSelected}
+        disabled={o.disabled}
+        onClick={() => pick(o.value)}
+        className={cn(
+          'flex w-full cursor-pointer items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-none',
+          'hover:bg-surface-200 focus-visible:bg-surface-200',
+          isSelected && 'font-medium',
+          o.disabled && 'pointer-events-none opacity-50',
+        )}
+      >
+        <span className="truncate">{optionRender ? optionRender(o) : o.label}</span>
+        {isSelected && <IconCheck className="size-3.5 shrink-0 text-primary" />}
+      </button>
+    );
+  };
 
   return (
-    <Popover open={open} onOpenChange={disabled ? undefined : setOpen}>
+    <Popover open={open} onOpenChange={disabled ? undefined : changeOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -182,7 +239,8 @@ export function Select(props: SelectProps) {
           disabled={disabled}
           aria-invalid={status === 'error' || undefined}
           className={cn(
-            'group flex w-full items-center justify-between gap-2 rounded-md bg-control px-3 text-foreground',
+            'group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md bg-control px-3 text-foreground',
+            'disabled:cursor-not-allowed',
             FIELD_BORDER,
             SIZE_H[size],
             className,
@@ -201,7 +259,7 @@ export function Select(props: SelectProps) {
                 tabIndex={-1}
                 aria-label="ล้าง"
                 onClick={clear}
-                className="hover:text-foreground"
+                className="cursor-pointer hover:text-foreground"
               >
                 <IconX className="size-3.5" />
               </span>
@@ -232,7 +290,14 @@ export function Select(props: SelectProps) {
             />
           </div>
         )}
-        <div role="listbox" className="max-h-64 overflow-y-auto" onScroll={onPopupScroll}>
+        {/* relative — ให้ offsetTop ของ option วัดเทียบกับกล่องนี้ (ใช้ตอนเลื่อนไปหาตัวที่เลือก)
+            data-select-list — จุดยึดให้ option หา container เจอผ่าน closest() */}
+        <div
+          data-select-list
+          role="listbox"
+          className="relative max-h-64 overflow-y-auto"
+          onScroll={onPopupScroll}
+        >
           {flatten(filtered).length === 0 ? (
             <div className="px-2 py-6 text-center text-sm text-foreground-lighter">
               {notFoundContent}

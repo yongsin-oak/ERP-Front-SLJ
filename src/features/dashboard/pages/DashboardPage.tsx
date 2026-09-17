@@ -80,15 +80,15 @@ function StatCard({
     <div
       onClick={onClick}
       className={cn(
-        'h-full rounded-lg border border-border bg-card p-6 text-card-foreground transition-shadow',
-        onClick ? 'cursor-pointer hover:shadow-md' : 'cursor-default',
+        'h-full rounded-xl border border-border bg-card p-5 text-card-foreground shadow-card transition-all',
+        onClick ? 'cursor-pointer hover:-translate-y-0.5 hover:border-border-stronger hover:shadow-card-hover' : 'cursor-default',
       )}
     >
       <div className="flex items-start justify-between">
         <div>
           <div className="text-sm text-muted-foreground">{title}</div>
           <div
-            className={cn('mt-1 flex items-baseline gap-1 text-[28px] font-semibold', !color && 'text-foreground')}
+            className={cn('mt-2 flex items-baseline gap-1 text-[28px] font-semibold tracking-tight', !color && 'text-foreground')}
             style={color ? { color } : undefined}
           >
             {prefix && <span>{prefix}</span>}
@@ -225,7 +225,7 @@ export function DashboardPage() {
           value={stats?.todayOrders}
           suffix="รายการ"
           icon={<AppIcons.cart />}
-          color="var(--color-info)"
+          color="var(--color-primary)"
           loading={statsLoading}
           onClick={() => navigate('/order')}
         />
@@ -309,8 +309,8 @@ export function DashboardPage() {
                 <AreaChart data={daily} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gradRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-info)" stopOpacity={0.18} />
-                      <stop offset="95%" stopColor="var(--color-info)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.16} />
+                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gradCost" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--color-error)" stopOpacity={0.12} />
@@ -327,7 +327,7 @@ export function DashboardPage() {
                     ]}
                   />
                   <Legend formatter={(v) => (v === 'revenue' ? 'รายได้' : 'ต้นทุน')} />
-                  <Area type="monotone" dataKey="revenue" stroke="var(--color-info)" fill="url(#gradRevenue)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="revenue" stroke="var(--color-primary)" fill="url(#gradRevenue)" strokeWidth={2.25} />
                   <Area type="monotone" dataKey="cost" stroke="var(--color-error)" fill="url(#gradCost)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>

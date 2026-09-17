@@ -23,8 +23,10 @@ export function Spinner({ fullPage = false, size = 'default', tip, className, st
       )}
       style={style}
     >
-      <UISpinner size={spinnerSize} className="text-foreground-light" />
-      {tip != null && <span className="text-sm text-foreground-lighter">{tip}</span>}
+      <span className="flex size-11 items-center justify-center rounded-full border border-border bg-background shadow-card">
+        <UISpinner size={spinnerSize} className="text-primary" />
+      </span>
+      {tip != null && <span className="animate-pulse text-sm font-medium text-foreground-light">{tip}</span>}
     </div>
   );
 }

@@ -1,11 +1,17 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { Role } from '@features/auth/types';
 import { useAuth } from '@features/auth';
 import { ActorModal } from '@features/auth';
-import { AppIcons, Button, Tag, Tooltip } from '@design-system';
+import { AppIcons, Button, Modal, Tag, Tooltip } from '@design-system';
 import { inventoryService } from '@features/inventory/react-query/services';
 import { productKeys } from '@features/inventory/react-query/queryKeys';
 import { STALE_TIME, notify, useLocalStorage } from '@shared';
@@ -300,75 +306,240 @@ function BrandToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: ()
   );
 }
 
-/* ── UserFooter ─────────────────────────────────────── */
-interface FooterUser { username?: string; terminalCode?: string; role: Role; isTerminal?: boolean }
+/* ── MenuSearch ─────────────────────────────────────── */
 
-function UserFooter({ collapsed, user, onLogout, onProfile }: {
-  collapsed: boolean;
-  user: FooterUser | null;
-  onLogout: () => void;
-  onProfile: () => void;
-}) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
+interface SearchHit extends NavLeaf {
+  /** ชื่อกลุ่มที่เมนูนี้อยู่ — โชว์เป็นบริบทเวลาชื่อเมนูซ้ำกันข้ามกลุ่ม */
+  group?: string;
+}
+
+/** เมนูทั้งหมด (แบนแล้ว) ที่ role นี้เข้าถึงได้ — ค้นได้เฉพาะสิ่งที่กดเข้าไปได้จริง */
+function searchableLeaves(userRole: Role | undefined): SearchHit[] {
+  return visibleNav(userRole).flatMap((s) =>
+    'groupKey' in s ? s.children.map((c) => ({ ...c, group: s.label })) : [{ ...s }],
+  );
+}
+
+/**
+ * ช่องค้นหาเมนู — ค้นหาได้จริง ไม่ใช่ช่องประดับ
+ *
+ * ขอบเขตคือ "เมนู" เท่านั้น (ไม่ใช่สินค้า/คำสั่ง) placeholder จึงเขียนตามที่ทำได้จริง —
+ * สัญญาในช่องค้นหาว่าหาสินค้าได้แล้วพิมพ์ชื่อสินค้าไปไม่เจอ แย่กว่าไม่เขียนไว้
+ *
+ * ผลลัพธ์กรองจาก NAV ที่ผ่าน `canAccess` แล้ว → ไม่มีทางค้นเจอหน้าที่ role ตัวเองเข้าไม่ได้
+ */
+function MenuSearch() {
+  const navigate = useNavigate();
+  const userRole = useAuth((s) => s.user?.role);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const leaves = useMemo(() => searchableLeaves(userRole), [userRole]);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return leaves
+      .filter((l) => `${l.label} ${l.group ?? ''}`.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [leaves, query]);
+
+  // Ctrl/⌘+K โฟกัสช่องค้นหา — ref ตรงๆ ไม่ต้องพึ่ง getElementById
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  function go(hit: SearchHit) {
+    navigate(hit.key);
+    setQuery('');
+    setOpen(false);
+    inputRef.current?.blur();
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Escape') {
+      setOpen(false);
+      inputRef.current?.blur();
+      return;
+    }
+    if (!results.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % results.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex((i) => (i - 1 + results.length) % results.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      go(results[activeIndex] ?? results[0]);
+    }
+  }
 
   return (
-    <div className="border-t border-border px-2 pt-2.5 pb-2">
-      {!collapsed && user && (
-        <div className="flex items-center gap-2.5 px-2 pt-1 pb-2.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground [&_svg]:size-4">
-            <AppIcons.user />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <div className="block truncate text-sm font-medium leading-tight text-foreground">
-              {user.username ?? user.terminalCode}
+    <div
+      className="relative hidden w-full max-w-sm lg:block"
+      // ปิดเมื่อโฟกัสออกนอกกล่องทั้งก้อน — เช็ค relatedTarget เพื่อไม่ให้ปิดตอนกดผลลัพธ์
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <AppIcons.search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-foreground-muted" />
+      <input
+        ref={inputRef}
+        role="combobox"
+        aria-expanded={open && results.length > 0}
+        aria-controls="menu-search-results"
+        aria-label="ค้นหาเมนู"
+        placeholder="ค้นหาเมนู…"
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setActiveIndex(0);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onKeyDown={onKeyDown}
+        className="h-8.5 w-full rounded-md border border-border-control bg-control pr-16 pl-9 text-sm text-foreground placeholder:text-foreground-muted"
+      />
+      <kbd className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-sm border border-border bg-surface-100 px-1.5 py-0.5 font-mono text-xs text-foreground-muted">
+        Ctrl K
+      </kbd>
+
+      {open && query.trim() !== '' && (
+        <div
+          id="menu-search-results"
+          role="listbox"
+          className="absolute inset-x-0 top-full z-(--z-overlay) mt-1 overflow-hidden rounded-md border border-overlay bg-overlay p-1 shadow-overlay"
+        >
+          {results.length === 0 ? (
+            <div className="px-2 py-3 text-center text-sm text-foreground-lighter">
+              ไม่พบเมนูที่ตรงกับ “{query.trim()}”
             </div>
-            <Tag color={ROLE_COLOR[user.role]} className="mt-0.5">
+          ) : (
+            results.map((hit, i) => (
+              <button
+                key={hit.key}
+                type="button"
+                role="option"
+                aria-selected={i === activeIndex}
+                // mouse down ยิงก่อน blur — ไม่งั้นกล่องปิดไปก่อนที่ click จะเกิด
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={() => setActiveIndex(i)}
+                onClick={() => go(hit)}
+                className={cn(
+                  'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm',
+                  '[&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-foreground-muted',
+                  i === activeIndex ? 'bg-surface-200 text-foreground' : 'text-foreground-light',
+                )}
+              >
+                {hit.icon}
+                <span className="flex-1 truncate">{hit.label}</span>
+                {hit.group && <span className="text-xs text-foreground-muted">{hit.group}</span>}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── UserMenu ───────────────────────────────────────── */
+interface MenuUser { username?: string; terminalCode?: string; role: Role; isTerminal?: boolean }
+
+/**
+ * เมนูผู้ใช้มุมบนขวา — รวมทุกอย่างที่เกี่ยวกับตัวตนไว้ที่เดียว
+ *
+ * เดิมโปรไฟล์กับออกจากระบบเป็นปุ่มค้างอยู่ท้าย sidebar ซึ่งกินพื้นที่เมนูถาวรทั้งที่
+ * เป็น action ที่กดนานๆ ครั้ง และตอน sidebar ย่อก็เหลือแค่ไอคอนสองอันที่เดาไม่ออก
+ */
+function UserMenu({ user, onLogout }: { user: MenuUser | null; onLogout: () => void }) {
+  const navigate = useNavigate();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  if (!user) return null;
+
+  const displayName = user.username ?? user.terminalCode ?? 'ผู้ใช้';
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={`บัญชีผู้ใช้ ${displayName}`}
+            className="flex items-center gap-2 rounded-md p-1 pr-2 transition-colors duration-(--duration-fast) hover:bg-surface-200"
+          >
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-sm font-medium text-primary">
+              {displayName.slice(0, 1).toUpperCase()}
+            </span>
+            <span className="hidden max-w-28 truncate text-sm text-foreground xl:block">
+              {displayName}
+            </span>
+            <AppIcons.chevronDown className="hidden size-3.5 text-foreground-muted xl:block" />
+          </button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent
+          className="w-56"
+          onCloseAutoFocus={(e) => {
+            if (confirmOpen) e.preventDefault();
+          }}
+        >
+          <div className="flex flex-col gap-1 px-2 py-1.5">
+            <span className="truncate text-sm font-medium text-foreground">{displayName}</span>
+            <Tag color={ROLE_COLOR[user.role]} className="self-start">
               {user.isTerminal ? `Terminal · ${user.role}` : user.role}
             </Tag>
           </div>
-        </div>
-      )}
-      <Button
-        variant="ghost"
-        block
-        icon={<AppIcons.user />}
-        onClick={onProfile}
-        className={cn('mb-0.5', collapsed ? 'justify-center' : 'justify-start')}
-      >
-        {!collapsed && 'โปรไฟล์'}
-      </Button>
 
-      <Popover open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="danger-ghost"
-            block
-            icon={<AppIcons.logout />}
-            className={cn(collapsed ? 'justify-center' : 'justify-start')}
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem onSelect={() => navigate('/profile')}>
+            <AppIcons.user />
+            โปรไฟล์
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            variant="destructive"
+            onSelect={(e) => {
+              // กัน Radix ปิดเมนูเอง แล้วสั่งเปิดโมดัลในจังหวะเดียวกัน (ชนกับ focus trap)
+              e.preventDefault();
+              setConfirmOpen(true);
+            }}
           >
-            {!collapsed && 'ออกจากระบบ'}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="w-48 p-3">
-          <div className="text-sm font-medium text-foreground">ออกจากระบบ?</div>
-          <div className="mt-3 flex justify-end gap-2">
-            <Button variant="ghost" size="small" onClick={() => setConfirmOpen(false)}>
-              ยกเลิก
-            </Button>
-            <Button
-              variant="danger"
-              size="small"
-              onClick={() => {
-                setConfirmOpen(false);
-                onLogout();
-              }}
-            >
-              ออกจากระบบ
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
+            <AppIcons.logout />
+            ออกจากระบบ
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Modal
+        open={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onOk={onLogout}
+        title="ออกจากระบบ?"
+        okText="ออกจากระบบ"
+        okButtonProps={{ danger: true }}
+        width={400}
+      >
+        <p className="m-0 text-sm text-foreground-light">
+          ข้อมูลที่ยังไม่ได้บันทึกในหน้าที่เปิดค้างไว้จะหายไป
+        </p>
+      </Modal>
+    </>
   );
 }
 
@@ -382,6 +553,7 @@ export function AppLayout() {
   const logout = useAuth((s) => s.logout);
   const user = useAuth((s) => s.user);
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const notifiedRef = useRef(false);
 
@@ -413,9 +585,15 @@ export function AppLayout() {
     navigate('/login');
   }
 
-  const footerUser: FooterUser | null = user
+  const menuUser: MenuUser | null = user
     ? { username: user.username, terminalCode: user.terminalCode, role: user.role, isTerminal: user.isTerminal }
     : null;
+
+  const activeLeaf = NAV.flatMap((item) => ('groupKey' in item ? item.children : [item]))
+    .sort((a, b) => b.key.length - a.key.length)
+    .find((item) => location.pathname === item.key || location.pathname.startsWith(`${item.key}/`));
+
+  // Ctrl/⌘+K ย้ายไปอยู่ใน MenuSearch แล้ว (โฟกัสผ่าน ref ของตัวเอง ไม่ต้องยิง getElementById)
 
   return (
     <div className="min-h-screen">
@@ -434,34 +612,26 @@ export function AppLayout() {
           <BrandToggle collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
         </div>
 
-        {/* nav */}
+        {/* nav — ทุกอย่างที่เกี่ยวกับตัวผู้ใช้ย้ายไปเมนูมุมบนขวาแล้ว sidebar เหลือแค่การนำทาง */}
         <div className="flex-1 overflow-auto py-2">
           <SidebarMenu collapsed={collapsed} />
         </div>
-
-        <UserFooter
-          collapsed={collapsed}
-          user={footerUser}
-          onLogout={handleLogout}
-          onProfile={() => navigate('/profile')}
-        />
       </aside>
 
       {/* ── Mobile Header ── */}
       <header className="mobile-header fixed inset-x-0 top-0 z-100 flex h-13 items-center justify-between border-b border-border bg-sidebar px-4">
         <Brand />
-        {user && (
-          <div className="flex items-center gap-2">
-            <Tag color={ROLE_COLOR[user.role]}>{user.role}</Tag>
-            <Button
-              variant="ghost"
-              aria-label="เปิดเมนู"
-              icon={<AppIcons.menu />}
-              onClick={() => setDrawerOpen(true)}
-              className="text-foreground-lighter"
-            />
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          {/* บนมือถือเมนูผู้ใช้ก็อยู่ขวาบนเหมือนเดสก์ท็อป — ที่เดียวเสมอ ไม่ต้องจำสองที่ */}
+          <UserMenu user={menuUser} onLogout={handleLogout} />
+          <Button
+            variant="ghost"
+            aria-label="เปิดเมนู"
+            icon={<AppIcons.menu />}
+            onClick={() => setDrawerOpen(true)}
+            className="text-foreground-lighter"
+          />
+        </div>
       </header>
 
       {/* ── Mobile Drawer ── */}
@@ -475,18 +645,6 @@ export function AppLayout() {
             <div className="flex-1 overflow-auto py-2">
               <SidebarMenu collapsed={false} onNavigate={() => setDrawerOpen(false)} />
             </div>
-            <UserFooter
-              collapsed={false}
-              user={footerUser}
-              onLogout={async () => {
-                await handleLogout();
-                setDrawerOpen(false);
-              }}
-              onProfile={() => {
-                navigate('/profile');
-                setDrawerOpen(false);
-              }}
-            />
           </div>
         </div>
       )}
@@ -496,7 +654,50 @@ export function AppLayout() {
         className="main-content-layout transition-[margin] duration-200"
         style={{ marginLeft: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH }}
       >
-        <main className="main-content min-h-screen bg-canvas p-6">
+        {/* พื้นทึบ ไม่ใช้ bg-background/95 + backdrop-blur — ความลึกมาจากเส้น ไม่ใช่ความโปร่ง
+            และ blur ต้อง repaint ทุกครั้งที่เลื่อนเนื้อหาข้างใต้ */}
+        <header className="app-topbar sticky top-0 z-50 flex h-14 items-center gap-3 border-b border-border bg-background px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 text-xs text-foreground-muted">
+            <span>{APP_CONFIG.shortName}</span>
+            <span aria-hidden>/</span>
+            <span className="truncate text-foreground-light">{activeLeaf?.label ?? 'ภาพรวม'}</span>
+          </div>
+
+          <MenuSearch />
+
+          {canAccess(user?.role, '/inventory') && (
+            <Tooltip
+              title={
+                lowStockCount > 0
+                  ? `สินค้าใกล้หมด ${lowStockCount} รายการ — ไปหน้าคลังสินค้า`
+                  : 'ไม่มีสินค้าใกล้หมด'
+              }
+            >
+              {/* จุดแจ้งเตือนอยู่นอก Button — ถ้าใส่เป็น children ปุ่มจะเลิกเป็น icon-only
+                  แล้วเปลี่ยนความกว้างไปมาตามว่ามีแจ้งเตือนหรือไม่ */}
+              <span className="relative inline-flex">
+                <Button
+                  variant="ghost"
+                  aria-label={
+                    lowStockCount > 0 ? `การแจ้งเตือน (${lowStockCount})` : 'การแจ้งเตือน'
+                  }
+                  icon={<AppIcons.alert />}
+                  onClick={() => navigate('/inventory')}
+                />
+                {lowStockCount > 0 && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute top-1 right-1 size-2 rounded-full border-2 border-background bg-primary"
+                  />
+                )}
+              </span>
+            </Tooltip>
+          )}
+
+          <UserMenu user={menuUser} onLogout={handleLogout} />
+        </header>
+
+        <main className="main-content min-h-[calc(100vh-3.5rem)] bg-canvas p-6">
           <Outlet />
         </main>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { debounce } from "lodash";
 import { Select, highlightText } from "@design-system";
 import type { SelectProps } from "@design-system";
@@ -27,14 +27,31 @@ export function ProductDropdownSelect({
   style,
   allowClear,
   size,
+  onOpenChange,
   ...rest
 }: ProductDropdownSelectProps) {
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
   const isScanModeRef = useRef(false);
   const scanRef = useRef({ lastTime: 0, lastValue: "" });
 
+  /**
+   * ยิง API เมื่อเปิด / มีค่าที่เลือกไว้ / กำลังค้นหาอยู่ — ไม่ยิงตอน mount
+   * `search` อยู่ในเงื่อนไขด้วยเพราะโหมดสแกน: ค่าอาจถูกเซ็ตแล้วต้องรอผลมา auto-select
+   * ต่อให้ popover ถูกปิดไประหว่างนั้น
+   */
+  const enabled = open || search !== "" || (value != null && value !== "");
+
   const { data, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useProductDropdown({ search: search || undefined });
+    useProductDropdown({ search: search || undefined }, { enabled });
+
+  const handleOpenChange = useCallback(
+    (o: boolean) => {
+      setOpen(o);
+      onOpenChange?.(o);
+    },
+    [onOpenChange],
+  );
 
   // Auto-select on exact barcode match after scan
   useEffect(() => {
@@ -120,12 +137,12 @@ export function ProductDropdownSelect({
         const p = productMap.get(opt.value);
         if (!p) return opt.label;
         return (
-          <div style={{ fontSize: 14, padding: "2px 0" }}>
-            <span className="font-mono text-muted-foreground">
+          <span className="text-sm">
+            <span className="font-mono text-foreground-lighter">
               [{highlightText(p.barcode, search)}]
             </span>{" "}
             - {highlightText(p.name, search)}
-          </div>
+          </span>
         );
       }}
       placeholder={placeholder}
@@ -135,21 +152,24 @@ export function ProductDropdownSelect({
       size={size}
       loading={isFetching && !isFetchingNextPage}
       notFoundContent={
-        isFetching ?
-          <div style={{ textAlign: "center", padding: "8px 0" }}>
-            <Spinner size="sm" />
+        isFetching ? (
+          <div className="py-2 text-center">
+            <Spinner size="sm" className="mx-auto" />
           </div>
-        : "ไม่พบสินค้า"
+        ) : (
+          "ไม่พบสินค้า"
+        )
       }
       onPopupScroll={handlePopupScroll}
       dropdownFooter={
         isFetchingNextPage ? (
-          <div className="border-t border-border py-2 text-center">
-            <Spinner size="sm" />
+          <div className="border-t border-border-muted py-2 text-center">
+            <Spinner size="sm" className="mx-auto" />
           </div>
         ) : null
       }
       {...rest}
+      onOpenChange={handleOpenChange}
     />
   );
 }

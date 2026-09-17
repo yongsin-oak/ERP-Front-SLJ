@@ -8,8 +8,10 @@ import type { SupplierParams } from './queryKeys';
  * ตัวเลือกซัพพลายเออร์สำหรับ `SupplierSearchSelect` — ยิง `/supplier/dropdown-search` (cursor)
  * ไม่ใช่เส้นตาราง `/supplier` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
  */
-export function useSupplierDropdown(search?: string) {
+export function useSupplierDropdown(search?: string, options?: { enabled?: boolean }) {
   return useInfiniteQuery({
+    // dropdown ห้ามยิงตอน mount — ดูเหตุผลใน useBrandDropdown
+    enabled: options?.enabled ?? true,
     queryKey: supplierKeys.dropdown(search),
     queryFn: ({ pageParam }) =>
       supplierService

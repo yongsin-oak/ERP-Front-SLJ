@@ -65,15 +65,18 @@ export function DeleteConfirmButton({
       <PopoverTrigger asChild>
         <span className="inline-flex">{trigger}</span>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-3">
-        <div className="flex gap-2">
-          <IconAlertTriangle className="size-4 shrink-0 text-warning" />
+      <PopoverContent align="end" className="w-72 overflow-hidden rounded-xl border-error-border p-0 shadow-overlay">
+        <div className="h-1 bg-error" />
+        <div className="flex gap-3 p-4 pb-3">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-error-bg text-error-text ring-1 ring-error-border">
+            <IconAlertTriangle className="size-5" />
+          </span>
           <div className="flex-1">
-            <div className="text-sm font-medium text-foreground">{title}</div>
-            {description && <div className="mt-0.5 text-xs text-foreground-lighter">{description}</div>}
+            <div className="text-sm font-semibold text-foreground">{title}</div>
+            {description && <div className="mt-1 text-xs leading-5 text-foreground-light">{description}</div>}
           </div>
         </div>
-        <div className="mt-3 flex justify-end gap-2">
+        <div className="flex justify-end gap-2 border-t border-border bg-surface-100 px-4 py-3">
           <Button variant="ghost" size="small" onClick={() => setOpen(false)} disabled={busy}>
             {cancelText}
           </Button>

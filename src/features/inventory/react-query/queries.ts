@@ -66,9 +66,14 @@ export function useStockEntries(params: StockEntryParams, options?: { enabled?: 
  * ผลเรียงตามชื่อ ไม่ใช่ตามความเข้ากันของคำค้น — cursor ต่อจากคีย์ `(name, barcode)` ได้
  * อย่างเดียว การยิงบาร์โค้ดตรงๆ ใช้ `ScanInput` → `productRefQuery` ซึ่งไม่ผ่านเส้นนี้
  */
-export function useProductDropdown(params: ProductDropdownSearchParams = {}) {
+export function useProductDropdown(
+  params: ProductDropdownSearchParams = {},
+  options?: { enabled?: boolean },
+) {
   const limit = params.limit ?? DROPDOWN.DEFAULT_LIMIT;
   return useInfiniteQuery({
+    // dropdown ห้ามยิงตอน mount — ดูเหตุผลใน useBrandDropdown
+    enabled: options?.enabled ?? true,
     queryKey: productKeys.dropdown({ search: params.search, limit }),
     queryFn: ({ pageParam }) =>
       inventoryService

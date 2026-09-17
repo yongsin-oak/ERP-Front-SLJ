@@ -7,9 +7,13 @@ import type { BrandListParams } from './queryKeys';
 /**
  * ตัวเลือกแบรนด์สำหรับ `BrandSearchSelect` — ยิง `/brand/dropdown-search` (cursor)
  * ไม่ใช่เส้นตาราง `/brand` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
+ *
+ * `enabled` ต้องส่งมาเสมอจากตัว SearchSelect — dropdown ห้ามยิง API ตอน mount
+ * ฟอร์มหนึ่งใบมี SearchSelect ได้หลายตัว ถ้ายิงหมดตอนเปิดฟอร์มก็เสียเน็ตฟรีทุกใบ
  */
-export function useBrandDropdown(search?: string) {
+export function useBrandDropdown(search?: string, options?: { enabled?: boolean }) {
   return useInfiniteQuery({
+    enabled: options?.enabled ?? true,
     queryKey: brandKeys.dropdown(search),
     queryFn: ({ pageParam }) =>
       brandService

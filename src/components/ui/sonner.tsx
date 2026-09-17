@@ -18,17 +18,18 @@ function Toaster({ ...props }: ToasterProps) {
       toastOptions={{
         classNames: {
           toast:
-            "group rounded-md border border-overlay bg-overlay text-popover-foreground shadow-overlay",
-          title: "text-sm font-medium text-foreground",
-          description: "!text-foreground-light text-xs leading-snug",
+            "group rounded-xl border border-overlay border-l-[4px] bg-overlay text-popover-foreground shadow-overlay",
+          title: "text-sm font-semibold text-foreground",
+          description: "!text-foreground-light text-xs leading-relaxed",
           closeButton:
             "!bg-overlay !border-border !text-foreground-lighter hover:!text-foreground",
           actionButton: "!bg-primary !text-primary-foreground !rounded-md",
           cancelButton: "!bg-surface-200 !text-foreground-light !rounded-md",
-          success: "[&_[data-icon]]:text-success",
-          error: "[&_[data-icon]]:text-error",
-          warning: "[&_[data-icon]]:text-warning",
-          info: "[&_[data-icon]]:text-info",
+          success: "!border-l-success [&_[data-icon]]:text-success",
+          error: "!border-l-error [&_[data-icon]]:text-error",
+          warning: "!border-l-warning [&_[data-icon]]:text-warning",
+          info: "!border-l-info [&_[data-icon]]:text-info",
+          loading: "!border-l-primary [&_[data-icon]]:text-primary",
         },
       }}
       style={

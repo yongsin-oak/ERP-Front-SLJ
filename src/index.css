@@ -15,6 +15,61 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Modern Minimal Enterprise foundation */
+:root {
+  --brand-50: #fef2f2;
+  --brand-500: #c81e1e;
+  --brand-600: #a91616;
+  --brand-700: #8f1212;
+  --canvas: #f6f7f9;
+  --background: #ffffff;
+  --card: #ffffff;
+  --foreground: #111827;
+  --foreground-light: #667085;
+  --foreground-lighter: #8490a2;
+  --gray-200: #e5e7eb;
+  --gray-300: #d7dbe2;
+  --radius: 0.625rem;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.035), 0 1px 3px rgb(16 24 40 / 0.025);
+  --shadow-card-hover: 0 8px 20px rgb(16 24 40 / 0.07);
+}
+
+html { background: var(--canvas); }
+
+body {
+  color: var(--foreground);
+  background: var(--canvas);
+  font-family: Inter, "Noto Sans Thai", "Bai Jamjuree", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+button, input, textarea, select { font: inherit; }
+
+::selection { color: #fff; background: var(--brand-500); }
+
+*:focus-visible { outline-color: color-mix(in srgb, var(--brand-500) 55%, transparent); }
+
+.shadow-card { box-shadow: var(--shadow-card); }
+.shadow-card-hover { box-shadow: var(--shadow-card-hover); }
+
+.desktop-sidebar { box-shadow: 1px 0 0 rgb(17 24 39 / 0.02); }
+.app-topbar { box-shadow: 0 1px 0 rgb(17 24 39 / 0.02); }
+
+/* Shared surfaces are restrained and consistent across every ERP module. */
+[data-slot="card"], .rounded-lg.border.border-border.bg-card {
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-card);
+}
+
+table thead { background: #f9fafb; }
+table th { color: #667085; font-size: 0.75rem; font-weight: 600; letter-spacing: .025em; }
+table tbody tr { transition: background-color 120ms ease; }
+table tbody tr:hover { background: #fafafa; }
+
+@media (max-width: 767px) {
+  .app-topbar { display: none !important; }
+  .main-content { padding: 1rem !important; }
+}
+
 #root {
   min-height: 100vh;
 }

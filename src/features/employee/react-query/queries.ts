@@ -16,8 +16,10 @@ export function useEmployeeList(params: EmployeeListParams) {
  * ตัวเลือกพนักงานสำหรับ `EmployeeSearchSelect` — ยิง `/employee/dropdown-search` (cursor)
  * ไม่ใช่เส้นตาราง `/employee` · `pageParam` คือ `nextCursor` ทึบๆ, `undefined` = หน้าแรก
  */
-export function useEmployeeDropdown(search?: string) {
+export function useEmployeeDropdown(search?: string, options?: { enabled?: boolean }) {
   return useInfiniteQuery({
+    // dropdown ห้ามยิงตอน mount — ดูเหตุผลใน useBrandDropdown
+    enabled: options?.enabled ?? true,
     queryKey: employeeKeys.dropdown(search),
     queryFn: ({ pageParam }) =>
       employeeService

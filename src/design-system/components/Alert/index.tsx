@@ -10,11 +10,11 @@ import { cn } from '@/lib/utils';
 export type AlertType = 'success' | 'info' | 'warning' | 'error';
 
 // className เป็น literal → tailwind scan เจอ (semantic tokens จาก index.css tier 3)
-const STYLE: Record<AlertType, { box: string; icon: string; Icon: typeof IconInfoCircle }> = {
-  success: { box: 'bg-success-bg border-success-border', icon: 'text-success', Icon: IconCircleCheck },
-  info:    { box: 'bg-info-bg border-info-border',       icon: 'text-info',    Icon: IconInfoCircle },
-  warning: { box: 'bg-warning-bg border-warning-border', icon: 'text-warning', Icon: IconAlertTriangle },
-  error:   { box: 'bg-error-bg border-error-border',     icon: 'text-error',   Icon: IconCircleX },
+const STYLE: Record<AlertType, { box: string; icon: string; iconBox: string; Icon: typeof IconInfoCircle }> = {
+  success: { box: 'border-success-border bg-success-bg/55 border-l-success', icon: 'text-success-text', iconBox: 'bg-success-bg ring-success-border', Icon: IconCircleCheck },
+  info:    { box: 'border-info-border bg-info-bg/55 border-l-info', icon: 'text-info-text', iconBox: 'bg-info-bg ring-info-border', Icon: IconInfoCircle },
+  warning: { box: 'border-warning-border bg-warning-bg/65 border-l-warning', icon: 'text-warning-text', iconBox: 'bg-warning-bg ring-warning-border', Icon: IconAlertTriangle },
+  error:   { box: 'border-error-border bg-error-bg/60 border-l-error', icon: 'text-error-text', iconBox: 'bg-error-bg ring-error-border', Icon: IconCircleX },
 };
 
 export interface AlertProps extends Omit<React.ComponentProps<'div'>, 'title'> {
@@ -42,14 +42,19 @@ export function Alert({
   return (
     <div
       role="alert"
-      className={cn('flex items-start gap-2 rounded-md border px-3 py-2 text-sm', s.box, className)}
+      data-feedback={type}
+      className={cn('flex items-start gap-3 rounded-lg border border-l-[3px] px-3.5 py-3 text-sm', s.box, className)}
       {...props}
     >
-      {showIcon && <s.Icon className={cn('mt-0.5 size-4 shrink-0', s.icon)} />}
+      {showIcon && (
+        <span className={cn('flex size-7 shrink-0 items-center justify-center rounded-full ring-1 ring-inset', s.iconBox)}>
+          <s.Icon className={cn('size-4', s.icon)} />
+        </span>
+      )}
       <div className="min-w-0 flex-1">
-        {head != null && <div className="font-medium text-foreground">{head}</div>}
+        {head != null && <div className="font-semibold leading-6 text-foreground">{head}</div>}
         {description != null && (
-          <div className="mt-0.5 text-xs text-foreground-lighter">{description}</div>
+          <div className="mt-0.5 text-sm leading-5 text-foreground-light">{description}</div>
         )}
       </div>
       {action != null && <div className="shrink-0">{action}</div>}
