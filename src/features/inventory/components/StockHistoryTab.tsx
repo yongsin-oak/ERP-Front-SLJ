@@ -1,20 +1,35 @@
 import { useState } from 'react';
 import type { Dayjs } from 'dayjs';
-import { Table, Button, Tag, Select, Input, AppIcons, Inline, DateRangePicker } from '@design-system';
-import type { ColumnType } from '@design-system';
+import dayjs from 'dayjs';
 import { downloadFile, showError, notify } from '@shared';
+import { AppIcons } from '@/lib/icons';
+import { formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
+import {
+  btn,
+  btnIcon,
+  dataPill,
+  INPUT,
+  PAGE_SIZE_SELECT,
+  PAGER,
+  SEARCH_CLEAR,
+  SEARCH_ICON,
+  SEARCH_INPUT,
+  TABLE,
+  TABLE_EMPTY,
+  TABLE_TD,
+  TABLE_TH,
+  TABLE_TR,
+  TABLE_WRAP,
+  TEXT,
+} from '@/lib/styles';
 import { useStockEntries, inventoryExportService } from '../react-query';
 import type { StockEntryParams } from '../react-query/services';
 import { StockEntryTypes } from '../types';
-import type { StockEntry, StockEntryType } from '../types';
+import type { StockEntryType } from '../types';
 
-const TYPE_OPTIONS = [
-  { label: 'ทุกประเภท', value: '' },
-  ...(Object.keys(StockEntryTypes) as StockEntryType[]).map((k) => ({
-    value: k,
-    label: StockEntryTypes[k].label,
-  })),
-];
+const TYPE_KEYS = Object.keys(StockEntryTypes) as StockEntryType[];
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 interface Props {
   active: boolean;
@@ -43,6 +58,15 @@ export function StockHistoryTab({ active }: Props) {
   const { data, isLoading, refetch } = useStockEntries(params, { enabled: active });
   const entries = data?.data ?? [];
   const total = data?.pagination?.total ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / pageSize));
+
+  /** เก็บครึ่งหนึ่งของช่วงวันที่ไว้ก่อน — ผู้ใช้เลือกทีละช่อง */
+  function setRangePart(index: 0 | 1, value: string) {
+    const next: [Dayjs | null, Dayjs | null] = [dateRange?.[0] ?? null, dateRange?.[1] ?? null];
+    next[index] = value ? dayjs(value) : null;
+    setDateRange(next[0] || next[1] ? next : null);
+    setPage(1);
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -64,119 +88,201 @@ export function StockHistoryTab({ active }: Props) {
     }
   }
 
-  const columns: ColumnType<StockEntry>[] = [
-    {
-      title: 'วันที่',
-      dataIndex: 'createdAt',
-      width: 160,
-      render: (v: string) =>
-        new Date(v).toLocaleString('th-TH', {
-          day: '2-digit', month: '2-digit', year: 'numeric',
-          hour: '2-digit', minute: '2-digit',
-        }),
-    },
-    {
-      title: 'สินค้า',
-      key: 'product',
-      render: (_: unknown, r: StockEntry) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{r.product?.name ?? '-'}</div>
-          <code className="text-[11px] text-foreground-subtle">{r.productBarcode}</code>
-        </div>
-      ),
-    },
-    {
-      title: 'ประเภท',
-      dataIndex: 'type',
-      width: 120,
-      render: (v: StockEntryType) => (
-        <Tag color={StockEntryTypes[v]?.color}>{StockEntryTypes[v]?.label ?? v}</Tag>
-      ),
-    },
-    {
-      title: 'จำนวน',
-      dataIndex: 'quantity',
-      width: 90,
-      align: 'right',
-      render: (v: number) => v?.toLocaleString(),
-    },
-    {
-      title: 'ก่อน',
-      dataIndex: 'previousRemaining',
-      width: 80,
-      align: 'right',
-      render: (v?: number) => (v != null ? v.toLocaleString() : '-'),
-    },
-    {
-      title: 'หลัง',
-      dataIndex: 'newRemaining',
-      width: 80,
-      align: 'right',
-      render: (v?: number) => (v != null ? <strong>{v.toLocaleString()}</strong> : '-'),
-    },
-    {
-      title: 'พนักงาน',
-      key: 'employee',
-      width: 140,
-      render: (_: unknown, r: StockEntry) =>
-        r.employee
-          ? `${r.employee.firstName} ${r.employee.lastName}`
-          : '-',
-    },
-    {
-      title: 'หมายเหตุ',
-      dataIndex: 'note',
-      render: (v?: string) => v ?? '-',
-    },
-  ];
-
   return (
     <div>
-      <Inline gap={2} justify="between" className="mb-3">
-        <Inline gap={2}>
-          <Input
-            prefix={<AppIcons.search />}
-            placeholder="barcode สินค้า..."
-            allowClear
-            style={{ width: 200 }}
-            value={productSearch}
-            onChange={(e) => { setProductSearch(e.target.value); setPage(1); }}
-          />
-          <Select
-            value={type}
-            onChange={(v) => { setType(v as StockEntryType | ''); setPage(1); }}
-            options={TYPE_OPTIONS}
-            style={{ width: 140 }}
-          />
-          <DateRangePicker
-            onChange={(val) => { setDateRange(val); setPage(1); }}
-            style={{ width: 240 }}
-            placeholder={['วันเริ่มต้น', 'วันสิ้นสุด']}
-          />
-          <Button aria-label="รีเฟรชประวัติสต็อก" icon={<AppIcons.refresh />} onClick={() => refetch()} />
-        </Inline>
-        <Button
-          icon={<AppIcons.exportFile size={16} />}
-          onClick={handleExport}
-          loading={exporting}
-        >
-          Export Excel
-        </Button>
-      </Inline>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-50">
+            <AppIcons.search className={SEARCH_ICON} />
+            <input
+              className={SEARCH_INPUT}
+              placeholder="barcode สินค้า..."
+              aria-label="ค้นหาด้วย barcode"
+              value={productSearch}
+              onChange={(e) => {
+                setProductSearch(e.target.value);
+                setPage(1);
+              }}
+            />
+            {productSearch && (
+              <button
+                type="button"
+                aria-label="ล้างคำค้น"
+                className={SEARCH_CLEAR}
+                onClick={() => {
+                  setProductSearch('');
+                  setPage(1);
+                }}
+              >
+                <AppIcons.close className="size-3.5" />
+              </button>
+            )}
+          </div>
 
-      <Table<StockEntry>
-        rowKey="id"
-        columns={columns}
-        dataSource={entries}
-        loading={isLoading}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-        }}
-        locale={{ emptyText: 'ไม่มีประวัติการเคลื่อนไหว' }}
-      />
+          <select
+            aria-label="ประเภทการเคลื่อนไหว"
+            value={type}
+            onChange={(e) => {
+              setType(e.target.value as StockEntryType | '');
+              setPage(1);
+            }}
+            className={cn(INPUT, 'w-35')}
+          >
+            <option value="">ทุกประเภท</option>
+            {TYPE_KEYS.map((k) => (
+              <option key={k} value={k}>
+                {StockEntryTypes[k].label}
+              </option>
+            ))}
+          </select>
+
+          {/* Radix ไม่มีตัวเลือกวันที่ — ใช้ <input type="date"> ของเบราว์เซอร์ */}
+          <div className="flex items-center gap-1">
+            <input
+              type="date"
+              aria-label="วันเริ่มต้น"
+              value={dateRange?.[0]?.format('YYYY-MM-DD') ?? ''}
+              max={dateRange?.[1]?.format('YYYY-MM-DD')}
+              onChange={(e) => setRangePart(0, e.target.value)}
+              className={cn(INPUT, 'w-38')}
+            />
+            <span aria-hidden className={TEXT.subtle}>
+              –
+            </span>
+            <input
+              type="date"
+              aria-label="วันสิ้นสุด"
+              value={dateRange?.[1]?.format('YYYY-MM-DD') ?? ''}
+              min={dateRange?.[0]?.format('YYYY-MM-DD')}
+              onChange={(e) => setRangePart(1, e.target.value)}
+              className={cn(INPUT, 'w-38')}
+            />
+          </div>
+
+          <button
+            type="button"
+            aria-label="รีเฟรชประวัติสต็อก"
+            className={btnIcon('secondary')}
+            onClick={() => refetch()}
+          >
+            <AppIcons.refresh />
+          </button>
+        </div>
+
+        <button type="button" className={btn()} onClick={handleExport} disabled={exporting}>
+          {exporting ? <AppIcons.loading spin /> : <AppIcons.exportFile />}
+          Export Excel
+        </button>
+      </div>
+
+      <div className={TABLE_WRAP}>
+        <table className={TABLE}>
+          <thead>
+            <tr>
+              <th className={cn(TABLE_TH, 'w-40')}>วันที่</th>
+              <th className={TABLE_TH}>สินค้า</th>
+              <th className={cn(TABLE_TH, 'w-30')}>ประเภท</th>
+              <th className={cn(TABLE_TH, 'w-23 text-right')}>จำนวน</th>
+              <th className={cn(TABLE_TH, 'w-20 text-right')}>ก่อน</th>
+              <th className={cn(TABLE_TH, 'w-20 text-right')}>หลัง</th>
+              <th className={cn(TABLE_TH, 'w-35')}>พนักงาน</th>
+              <th className={TABLE_TH}>หมายเหตุ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ?
+              <tr>
+                <td colSpan={8} className={TABLE_EMPTY}>
+                  <AppIcons.loading spin className="mx-auto size-5 text-primary" />
+                </td>
+              </tr>
+            : entries.length === 0 ?
+              <tr>
+                <td colSpan={8} className={TABLE_EMPTY}>
+                  ไม่มีประวัติการเคลื่อนไหว
+                </td>
+              </tr>
+            : entries.map((r) => (
+                <tr key={r.id} className={TABLE_TR}>
+                  <td className={cn(TABLE_TD, 'font-mono text-xs tabular-nums')}>
+                    {formatDate(r.createdAt)}
+                  </td>
+                  <td className={TABLE_TD}>
+                    <div className="font-medium">{r.product?.name ?? '-'}</div>
+                    <code className="text-[11px] text-foreground-subtle">{r.productBarcode}</code>
+                  </td>
+                  <td className={TABLE_TD}>
+                    <span className={dataPill(StockEntryTypes[r.type].color)}>
+                      {StockEntryTypes[r.type].label}
+                    </span>
+                  </td>
+                  <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                    {r.quantity?.toLocaleString()}
+                  </td>
+                  <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                    {r.previousRemaining != null ? r.previousRemaining.toLocaleString() : '-'}
+                  </td>
+                  <td className={cn(TABLE_TD, 'text-right font-mono tabular-nums')}>
+                    {r.newRemaining != null ? <strong>{r.newRemaining.toLocaleString()}</strong> : '-'}
+                  </td>
+                  <td className={TABLE_TD}>
+                    {r.employee ? `${r.employee.firstName} ${r.employee.lastName}` : '-'}
+                  </td>
+                  <td className={cn(TABLE_TD, 'max-w-50 truncate')}>{r.note ?? '-'}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div className={PAGER}>
+        <span className={TEXT.subtle}>
+          แสดง {entries.length ? (page - 1) * pageSize + 1 : 0}–
+          {(page - 1) * pageSize + entries.length} จาก {total.toLocaleString()}
+        </span>
+        <div className="flex items-center gap-2">
+          <label htmlFor="stock-tab-page-size" className="sr-only">
+            จำนวนแถวต่อหน้า
+          </label>
+          <select
+            id="stock-tab-page-size"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            className={PAGE_SIZE_SELECT}
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>
+                {n} / หน้า
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            aria-label="หน้าก่อนหน้า"
+            className={btnIcon('secondary', 'sm')}
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+          >
+            <AppIcons.arrowLeft />
+          </button>
+          <span className={cn(TEXT.subtle, 'tabular-nums')}>
+            {page} / {lastPage}
+          </span>
+          <button
+            type="button"
+            aria-label="หน้าถัดไป"
+            className={btnIcon('secondary', 'sm')}
+            disabled={page >= lastPage}
+            onClick={() => setPage(page + 1)}
+          >
+            <AppIcons.arrowRight />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

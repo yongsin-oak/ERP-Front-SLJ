@@ -1,19 +1,40 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  Modal, Input, Select, Button, AppIcons, Form,
-  InputNumber, Inline, Alert, Tag, Divider, Grid,
-} from '@design-system';
-import type { InputRef } from '@design-system';
+import { Dialog, Select } from 'radix-ui';
+import { Controller, useForm } from 'react-hook-form';
 import { EmployeeSearchSelect } from '@features/employee/components';
-import { inventoryService, useCreateStockEntry } from '../react-query';
 import { notify } from '@shared';
+import { AppIcons } from '@/lib/icons';
+import { cn } from '@/lib/utils';
+import {
+  alertBox,
+  btn,
+  DIALOG_CLOSE_X,
+  DIALOG_CONTENT,
+  DIALOG_FOOTER,
+  DIALOG_OVERLAY,
+  DIALOG_TITLE,
+  FIELD_ERROR,
+  FIELD_ROW,
+  INPUT,
+  INPUT_NUMBER,
+  LABEL,
+  dataPill,
+  SELECT_CONTENT,
+  SELECT_ITEM,
+  SELECT_TRIGGER,
+  SELECT_VIEWPORT,
+  SEPARATOR_H,
+  tag,
+} from '@/lib/styles';
+import { inventoryService, useCreateStockEntry } from '../react-query';
 import { StockEntryTypes } from '../types';
 import type { CreateStockEntryDto, StockEntryType, Product } from '../types';
 
-const TYPE_OPTIONS = (Object.keys(StockEntryTypes) as StockEntryType[]).map((value) => ({
-  value,
-  label: StockEntryTypes[value].label,
-}));
+const TYPE_KEYS = Object.keys(StockEntryTypes) as StockEntryType[];
+
+type FormValues = CreateStockEntryDto & { quantity: number };
+
+const EMPTY = { type: 'in', quantity: 1, employeeId: undefined, note: '' } as unknown as FormValues;
 
 interface Props {
   open: boolean;
@@ -22,11 +43,18 @@ interface Props {
 }
 
 export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
-  const [form] = Form.useForm<CreateStockEntryDto & { quantity: number }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [lookingUp, setLookingUp] = useState(false);
-  const barcodeRef = useRef<InputRef>(null);
+  const barcodeRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({ defaultValues: EMPTY });
 
   const createStockEntry = useCreateStockEntry();
 
@@ -49,16 +77,15 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
       setBarcodeInput(initialBarcode);
       void lookupBarcode(initialBarcode);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialBarcode]);
 
   async function handleBarcodeSubmit() {
     await lookupBarcode(barcodeInput.trim());
   }
 
-  async function handleOk() {
+  async function handleFinish(values: FormValues) {
     if (!product) return;
-    const values = await form.validateFields();
     await createStockEntry.mutateAsync({ ...values, productBarcode: product.barcode });
     handleClose();
   }
@@ -66,101 +93,195 @@ export function StockEntryModal({ open, onClose, initialBarcode }: Props) {
   function handleClose() {
     setBarcodeInput('');
     setProduct(null);
-    form.resetFields();
+    reset(EMPTY);
     onClose();
   }
 
   return (
-    <Modal
-      open={open}
-      title={
-        <Inline>
-          <AppIcons.inbox className="text-success" />
-          บันทึกรับสินค้าเข้าสต้อค
-        </Inline>
-      }
-      onCancel={handleClose}
-      width={520}
-      destroyOnHidden
-      footer={[
-        <Button key="cancel" onClick={handleClose}>ยกเลิก</Button>,
-        <Button
-          key="submit"
-          variant="primary"
-          onClick={handleOk}
-          disabled={!product}
-          loading={createStockEntry.isPending}
-        >
-          บันทึก
-        </Button>,
-      ]}
-    >
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 6 }}>สแกน Barcode สินค้า</div>
-        <Inline gap={2} wrap={false} className="w-full">
-          <Input
-            ref={barcodeRef}
-            className="flex-1"
-            prefix={<AppIcons.barcode />}
-            placeholder="สแกนหรือพิมพ์ barcode แล้วกด Enter"
-            value={barcodeInput}
-            onChange={(e) => setBarcodeInput(e.target.value)}
-            onPressEnter={handleBarcodeSubmit}
-          />
-          <Button onClick={handleBarcodeSubmit} loading={lookingUp}>ค้นหา</Button>
-        </Inline>
-      </div>
+    <Dialog.Root open={open} onOpenChange={(o) => !o && handleClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay className={DIALOG_OVERLAY} />
+        <Dialog.Content className={DIALOG_CONTENT} aria-describedby={undefined}>
+          <Dialog.Title className={cn(DIALOG_TITLE, 'flex items-center gap-2')}>
+            <AppIcons.inbox className="text-success" />
+            บันทึกรับสินค้าเข้าสต้อค
+          </Dialog.Title>
+          <Dialog.Close asChild>
+            <button type="button" aria-label="ปิด" className={DIALOG_CLOSE_X}>
+              <AppIcons.close />
+            </button>
+          </Dialog.Close>
 
-      {product && (
-        <Alert
-          type="success"
-          showIcon
-          className="mb-4"
-          message={
-            <div>
-              <span style={{ fontWeight: 600 }}>{product.name}</span>
-              <br />
-              <Inline gap={1} style={{ marginTop: 4 }}>
-                <Tag>{product.barcode}</Tag>
-                <span className="text-xs text-foreground-subtle">
-                  สต้อคปัจจุบัน: <strong>{product.remaining} ชิ้น</strong>
-                </span>
-              </Inline>
+          <div className={FIELD_ROW}>
+            <label htmlFor="stock-entry-barcode" className={LABEL}>
+              สแกน Barcode สินค้า
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <AppIcons.barcode className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-foreground-muted" />
+                <input
+                  id="stock-entry-barcode"
+                  ref={barcodeRef}
+                  className={cn(INPUT, 'pl-9')}
+                  placeholder="สแกนหรือพิมพ์ barcode แล้วกด Enter"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleBarcodeSubmit();
+                    }
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                className={btn()}
+                onClick={() => void handleBarcodeSubmit()}
+                disabled={lookingUp}
+              >
+                {lookingUp && <AppIcons.loading spin />}
+                ค้นหา
+              </button>
             </div>
-          }
-        />
-      )}
+          </div>
 
-      <Divider style={{ margin: '8px 0 16px' }} />
+          {product && (
+            <div className={alertBox('success')}>
+              <AppIcons.success />
+              <div>
+                <span className="font-semibold">{product.name}</span>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <span className={tag('neutral')}>{product.barcode}</span>
+                  <span className="text-xs text-foreground-subtle">
+                    สต้อคปัจจุบัน: <strong>{product.remaining} ชิ้น</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
-      <Form form={form} layout="vertical" initialValues={{ type: 'in', quantity: 1 }}>
-        <Grid cols={2} gap={4}>
-          <Form.Item name="type" label="ประเภท" rules={[{ required: true }]}>
-            <Select
-              style={{ width: '100%' }}
-              options={TYPE_OPTIONS.map((t) => ({
-                label: <Tag color={StockEntryTypes[t.value].color} style={{ margin: 0 }}>{t.label}</Tag>,
-                value: t.value,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="quantity" label="จำนวน (ชิ้น)" rules={[{ required: true }]}>
-            <InputNumber min={1} style={{ width: '100%' }} />
-          </Form.Item>
-        </Grid>
+          <div className={SEPARATOR_H} />
 
-        <Form.Item
-          name="employeeId"
-          label="พนักงานผู้บันทึก"
-          rules={[{ required: true, message: 'กรุณาเลือกพนักงาน' }]}
-        >
-          <EmployeeSearchSelect />
-        </Form.Item>
+          <form
+            noValidate
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(handleFinish)}
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className={FIELD_ROW}>
+                <label htmlFor="stock-entry-type" className={LABEL}>
+                  ประเภท
+                </label>
+                <Controller
+                  control={control}
+                  name="type"
+                  rules={{ required: 'กรุณาเลือกประเภท' }}
+                  render={({ field }) => (
+                    <Select.Root value={field.value} onValueChange={field.onChange}>
+                      <Select.Trigger
+                        id="stock-entry-type"
+                        ref={field.ref}
+                        aria-invalid={!!errors.type}
+                        className={SELECT_TRIGGER}
+                      >
+                        <Select.Value placeholder="เลือกประเภท" />
+                        <Select.Icon>
+                          <AppIcons.chevronDown />
+                        </Select.Icon>
+                      </Select.Trigger>
+                      <Select.Portal>
+                        <Select.Content position="popper" sideOffset={4} className={SELECT_CONTENT}>
+                          <Select.Viewport className={SELECT_VIEWPORT}>
+                            {TYPE_KEYS.map((t) => (
+                              <Select.Item key={t} value={t} className={SELECT_ITEM}>
+                                <Select.ItemText>
+                                  <span className={dataPill(StockEntryTypes[t].color)}>
+                                    {StockEntryTypes[t].label}
+                                  </span>
+                                </Select.ItemText>
+                                <Select.ItemIndicator className="absolute right-2 text-primary">
+                                  <AppIcons.check />
+                                </Select.ItemIndicator>
+                              </Select.Item>
+                            ))}
+                          </Select.Viewport>
+                        </Select.Content>
+                      </Select.Portal>
+                    </Select.Root>
+                  )}
+                />
+                {errors.type && <span className={FIELD_ERROR}>{errors.type.message}</span>}
+              </div>
 
-        <Form.Item name="note" label="หมายเหตุ">
-          <Input placeholder="หมายเหตุ (ถ้ามี)" />
-        </Form.Item>
-      </Form>
-    </Modal>
+              <div className={FIELD_ROW}>
+                <label htmlFor="stock-entry-qty" className={LABEL}>
+                  จำนวน (ชิ้น)
+                </label>
+                <input
+                  id="stock-entry-qty"
+                  type="number"
+                  min={1}
+                  className={INPUT_NUMBER}
+                  aria-invalid={!!errors.quantity}
+                  {...register('quantity', {
+                    required: 'กรุณากรอกจำนวน',
+                    valueAsNumber: true,
+                    min: { value: 1, message: 'ต้องอย่างน้อย 1 ชิ้น' },
+                  })}
+                />
+                {errors.quantity && <span className={FIELD_ERROR}>{errors.quantity.message}</span>}
+              </div>
+            </div>
+
+            <div className={FIELD_ROW}>
+              <label htmlFor="stock-entry-employee" className={LABEL}>
+                พนักงานผู้บันทึก
+              </label>
+              <Controller
+                control={control}
+                name="employeeId"
+                rules={{ required: 'กรุณาเลือกพนักงาน' }}
+                render={({ field }) => (
+                  <EmployeeSearchSelect
+                    id="stock-entry-employee"
+                    value={field.value ?? undefined}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.employeeId}
+                  />
+                )}
+              />
+              {errors.employeeId && <span className={FIELD_ERROR}>{errors.employeeId.message}</span>}
+            </div>
+
+            <div className={FIELD_ROW}>
+              <label htmlFor="stock-entry-note" className={LABEL}>
+                หมายเหตุ
+              </label>
+              <input
+                id="stock-entry-note"
+                className={INPUT}
+                placeholder="หมายเหตุ (ถ้ามี)"
+                {...register('note')}
+              />
+            </div>
+
+            <div className={DIALOG_FOOTER}>
+              <button type="button" className={btn()} onClick={handleClose}>
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                className={btn('primary')}
+                disabled={!product || createStockEntry.isPending}
+              >
+                {createStockEntry.isPending && <AppIcons.loading spin />}
+                บันทึก
+              </button>
+            </div>
+          </form>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
